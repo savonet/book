@@ -1,4 +1,9 @@
-\documentclass[a4paper]{book}
+\documentclass{book}
+\usepackage[a5paper]{geometry}
+% \usepackage{avant}
+
+\renewcommand{\familydefault}{\sfdefault}
+\renewcommand{\labelitemi}{--}
 
 \title{The Liquidsoap book}
 \author{David Baelde \and Romain Beauxis \and Samuel Mimram}
@@ -15,9 +20,68 @@ better than a configuration file
 \chapter{Installation}
 How to install the program?
 
+\chapter{Setting up a simple radio station}
+
 \chapter{The language}
 Basics of functional programming for liquidsoap
 Syntax of liquidsoap language
+
+\section{Sources}
+\subsection{What is a faillible source?}
+
+\section{Stings and logging}
+
+\section{Functions}
+
+\section{Interaction}
+interactive floats
+
+\section{The typing system}
+
+\chapter{Full workflow of a radio station}
+\section{Playlists}
+
+inotify
+
+\section{Interactive playlists}
+
+\section{Handling tracks}
+\begin{itemize}
+\item crossfade
+\item blank detection
+\end{itemize}
+
+\section{Signal processing}
+
+\section{Input streams with harbor}
+
+\chapter{Specific use cases}
+\section{Using command-line arguments}
+shebang, argv
+
+\section{Dealing with HTTP requests}
+
+\section{External scripting}
+
+\section{Decoders}
+
+\section{External decoders/encoders}
+
+\section{Reading files}
+
+\chapter{Plugins}
+\section{GStreamer}
+
+\chapter{Video}
+
+\section{Frei0r}
+
+\chapter{The Liquidsoap ecosystem}
+\section{Flows}
+
+\section{Aitime}
+
+\section{Online services}
 
 \chapter{Internals}
 Internals of liquidsoap:
