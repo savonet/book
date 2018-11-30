@@ -1,15 +1,21 @@
 \documentclass{book}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
 \usepackage[a5paper]{geometry}
-% \usepackage{avant}
+\usepackage[charter]{mathdesign}
+\usepackage{graphicx}
+\usepackage{titling}
 
-\renewcommand{\familydefault}{\sfdefault}
+% \renewcommand{\familydefault}{\sfdefault}
 \renewcommand{\labelitemi}{--}
 
 \title{The Liquidsoap book}
 \author{David Baelde \and Romain Beauxis \and Samuel Mimram}
 
 \begin{document}
-\maketitle
+% \maketitle
+\input{cover}
+
 
 \tableofcontents
 
@@ -70,7 +76,9 @@ shebang, argv
 \section{Reading files}
 
 \chapter{Plugins}
-\section{GStreamer}
+\section{GStreamer: advanced stream manipulation}
+
+\section{OSC: interacting with hardware}
 
 \chapter{Video}
 
@@ -87,6 +95,8 @@ shebang, argv
 \section{The OCaml language}
 
 \section{The source model}
+
+\section{Libraries around Liquidsoap}
 
 \section{How to contribute}
 
