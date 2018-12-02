@@ -1,0 +1,14 @@
+\chapter{Setting up a simple radio station}
+\section{Hello, world!}
+Our first program looks like this:
+\begin{verbatim}
+#!/home/smimram/.opam/4.07.1/bin/liquidsoap
+s = sine()
+out(s)
+\end{verbatim}
+
+\section{Our first radio with a playlist}
+\begin{verbatim}
+EN GROS:
+output.icecast(playlist("~/music/"))
+\end{verbatim}
