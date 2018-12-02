@@ -1,14 +1,19 @@
 \chapter{Setting up a simple radio station}
 \section{Hello, world!}
 Our first program looks like this:
-\begin{verbatim}
-#!/home/smimram/.opam/4.07.1/bin/liquidsoap
+\begin{lstlisting}
+#!/usr/bin/liquidsoap
 s = sine()
 out(s)
-\end{verbatim}
+\end{lstlisting}
+
+The path will be more like \code{/home/smimram/.opam/4.07.1/bin/liquidsoap}, use \code{which liquidsoap} to know the path
 
 \section{Our first radio with a playlist}
 \begin{verbatim}
 EN GROS:
 output.icecast(playlist("~/music/"))
 \end{verbatim}
+
+\section{Streams depending on the hour}
+un switch
