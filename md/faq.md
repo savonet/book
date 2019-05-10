@@ -68,5 +68,7 @@ Files cannot be decoded
 -----------------------
 
 Use
+```
+set("decoder.file_extensions.ffmpeg",["mp3","mp4","m4a","wav","flac","ogg", "osb"])
+```
 
-    set("decoder.file_extensions.ffmpeg",["mp3","mp4","m4a","wav","flac","ogg", "osb"])
