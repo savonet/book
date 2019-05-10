@@ -9,9 +9,11 @@ Hello, world!
 
 Our first program looks like this:
 
-    #!/usr/bin/liquidsoap
-    s = sine()
-    out(s)
+```liquidsoap
+#!/usr/bin/liquidsoap
+s = sine()
+out(s)
+```
 
 The path will be more like , use to know the path
 

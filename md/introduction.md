@@ -52,3 +52,13 @@ About this book
 *Samuel Mimram* is \...
 
 ### How to read the book
+
+
+
+
+
+
+Testing liquidsoap:
+```liquidsoap
+def f(x) = 5 end
+```

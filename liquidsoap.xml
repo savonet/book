@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE language SYSTEM "language.dtd"
+[
+<!-- Regular expresion constants: -->
+<!ENTITY LOWER  "a-z\300-\326\330-\337">         <!-- Lowercase Latin-1 letters. -->
+<!ENTITY UPPER  "A-Z\340-\366\370-\377">         <!-- Uppercase Latin-1 letters. -->
+<!ENTITY LETTER "&LOWER;&UPPER;">                <!-- All Latin-1 letters. -->
+<!ENTITY LIDENT "[&LOWER;_][&LETTER;0-9_']*">    <!-- Lowercase OCaml identifiers. -->
+<!ENTITY UIDENT "`?[&UPPER;][&LETTER;0-9_']*">   <!-- Uppercase OCaml identifiers. -->
+<!ENTITY IDENT  "`?[&LETTER;][&LETTER;0-9_']*">  <!-- All OCaml identifiers. -->
+<!ENTITY ESC    "(\\[ntbr'&quot;\\]|\\[0-9]{3}|\\x[0-9A-Fa-f]{2})"> <!-- OCaml character code escapes. -->
+<!ENTITY DEC    "[0-9][0-9_]*">                                     <!-- Decimal digits with underscores. -->
+]>
+<language name="Liquidsoap"
+          extensions="*.liq"
+          mimetype="text/x-liquidsoap"
+          section="Sources"
+          version="6"
+          priority="10"
+          kateversion="2.4"
+          author="Samuel Mimram (smimram@gmail.com)"
+          license="LGPL" >
+
+  <highlighting>
+    <list name="Keywords">
+      <item>def</item>
+      <item>fun</item>
+      <item>begin</item>
+      <item>end</item>
+      <item>if</item>
+      <item>then</item>
+      <item>else</item>
+      <item>elsif</item>
+    </list>
+
+    <list name="Types">
+      <item>bool</item>
+      <item>int</item>
+      <item>float</item>
+      <item>string</item>
+    </list>
+
+    <contexts>
+
+      <context name="Code" lineEndContext="#stay" attribute="Operator">
+        <!-- Comments. -->
+        <StringDetect String="#.*$" context="#stay" attribute="Comment" />
+
+        <!-- Interpreter directives. -->
+        <RegExpr String="%.*$" context="#stay" firstNonSpace="true" attribute="Directive"/>
+
+        <!-- String, character and Camlp4 "quotation" constants.              -->
+        <!-- Note: If you must modify the pattern for characters be precise:  -->
+        <!-- single quotes have several meanings in Ocaml.                    -->
+        <DetectChar char="&quot;" context="String" attribute="String" />
+
+        <!-- Identifiers and keywords. -->
+        <keyword String="Keywords"                 context="#stay" attribute="Keyword" />
+        <keyword String="Types"                    context="#stay" attribute="Types" />
+        <RegExpr String="&IDENT;"                  context="#stay" attribute="Identifier" />
+
+        <!-- Numeric constants. -->
+        <RegExpr String="-?&DEC;(\.&DEC;([eE][-+]?&DEC;)?|[eE][-+]?&DEC;)" context="#stay" attribute="Float" />
+        <RegExpr String="-?&DEC;" context="#stay" attribute="Decimal" />
+      </context>
+
+      <context name="String" lineEndContext="#stay" attribute="String">
+        <DetectChar char="&quot;" context="#pop" attribute="String" />
+      </context>
+    </contexts>
+
+    <itemDatas>
+      <itemData name="Operator"                defStyleNum="dsNormal"   />
+      <itemData name="Keyword"                 defStyleNum="dsKeyword"  />
+      <itemData name="Identifier"              defStyleNum="dsNormal"   />
+
+      <itemData name="Decimal"                 defStyleNum="dsDecVal"   />
+      <itemData name="Float"                   defStyleNum="dsFloat"    />
+      <itemData name="String"                  defStyleNum="dsString"   />
+
+      <itemData name="Directive"               defStyleNum="dsOthers"   />
+
+      <itemData name="Comment"                 defStyleNum="dsComment"  />
+    </itemDatas>
+  </highlighting>
+
+  <general>
+    <keywords casesensitive="true" />
+    <comments>
+      <comment name="singleLine" start="#"/>
+    </comments>
+  </general>
+</language>
+<!-- kate: space-indent on; indent-width 2; replace-tabs on; -->
