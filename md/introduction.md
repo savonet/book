@@ -60,5 +60,7 @@ About this book
 
 Testing liquidsoap:
 ```liquidsoap
+%ifdef
 def f(x) = 5 end
+%end
 ```
