@@ -48,7 +48,8 @@ Convert any kind of audio source into a stereo source.
 ##### drop_audio
 ```
 (?id:string,source(audio='#a,video='#b,midi='#c))->
-source(audio=0,video='#b,midi='#c)```
+source(audio=0,video='#b,midi='#c)
+```
 
 Drop all audio channels of a stream.
 
