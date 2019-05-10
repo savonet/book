@@ -5,6 +5,7 @@ all: book.md
 
 ci:
 	git ci . -m "Worked on the book."
+	git push
 
 book.md: $(MD)
 	cat $(MD) > $@
