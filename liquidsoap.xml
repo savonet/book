@@ -74,6 +74,7 @@
       <itemData name="Operator"                defStyleNum="dsNormal"   />
       <itemData name="Keyword"                 defStyleNum="dsKeyword"  />
       <itemData name="Identifier"              defStyleNum="dsNormal"   />
+      <itemData name="Types"                   defStyleNum="dsDataType" />
 
       <itemData name="Decimal"                 defStyleNum="dsDecVal"   />
       <itemData name="Float"                   defStyleNum="dsFloat"    />
