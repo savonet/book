@@ -38,7 +38,8 @@ information that liquidsoap puts in streams: track limits and metadata.
 ##### audio_to_stereo
 ```
 (?id:string,source(audio=*+1,video=0,midi=0))->
-source(audio=2,video=0,midi=0)```
+source(audio=2,video=0,midi=0)
+```
 
 Convert any kind of audio source into a stereo source.
 
