@@ -34,6 +34,13 @@
       <item>elsif</item>
     </list>
 
+    <list name="Operators">
+      <item>and</item>
+      <item>or</item>
+      <item>not</item>
+      <item>ref</item>      
+    </list>
+
     <list name="Types">
       <item>bool</item>
       <item>int</item>
@@ -43,7 +50,7 @@
 
     <contexts>
 
-      <context name="Code" lineEndContext="#stay" attribute="Operator">
+      <context name="Code" lineEndContext="#stay" attribute="Code">
         <!-- Comments. -->
         <StringDetect String="#.*$" context="#stay" attribute="Comment" />
 
@@ -57,6 +64,7 @@
 
         <!-- Identifiers and keywords. -->
         <keyword String="Keywords"                 context="#stay" attribute="Keyword" />
+        <keyword String="Operators"                context="#stay" attribute="Operator" />
         <keyword String="Types"                    context="#stay" attribute="Types" />
         <RegExpr String="&IDENT;"                  context="#stay" attribute="Identifier" />
 
@@ -71,8 +79,9 @@
     </contexts>
 
     <itemDatas>
-      <itemData name="Operator"                defStyleNum="dsNormal"   />
+      <itemData name="Code"                    defStyleNum="dsNormal"   />
       <itemData name="Keyword"                 defStyleNum="dsKeyword"  />
+      <itemData name="Operator"                defStyleNum="dsOperator"  />
       <itemData name="Identifier"              defStyleNum="dsNormal"   />
       <itemData name="Types"                   defStyleNum="dsDataType" />
 

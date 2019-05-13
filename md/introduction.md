@@ -61,6 +61,7 @@ About this book
 Testing liquidsoap:
 ```liquidsoap
 %ifdef
+y = ref(3)
 def f(x) = 5 end
 %end
 ```

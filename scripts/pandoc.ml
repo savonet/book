@@ -101,7 +101,6 @@ let map_top_blocks f j =
 let json_of_md_file f =
   let tmp = Filename.temp_file "pandoc" ".json" in
   let cmd = Printf.sprintf "pandoc -f markdown -t json %s -o %s" f tmp in
-  Printf.eprintf "COMMAND: %s\n%!" cmd;
   let n = Sys.command cmd in
   assert (n = 0);
   let j = from_file tmp in
