@@ -11,5 +11,5 @@ ci:
 language.dtd:
 	wget https://github.com/jgm/highlighting-kate/blob/master/xml/language.dtd
 
-%.pdf: %.md
+%.pdf %.html: %.md
 	pandoc $^ --filter=scripts/include -o $@

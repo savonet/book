@@ -8,9 +8,18 @@ Hello, world!
 -------------
 
 Our first program looks like this:
-
+```
+liquidsoap `out(sine())`
+```
+We could have written it
 ```liquidsoap
 #!/usr/bin/liquidsoap
+out(sine())
+```
+or better, we give a name `s` to the source
+```liquidsoap
+#!/usr/bin/liquidsoap
+# this is our source
 s = sine()
 out(s)
 ```
@@ -20,8 +29,10 @@ The path will be more like , use to know the path
 Our first radio with a playlist
 -------------------------------
 
-    EN GROS:
-    output.icecast(playlist("~/music/"))
+EN GROS:
+```liquidsoap
+output.icecast(playlist("~/music/"))
+```
 
 Streams depending on the hour
 -----------------------------

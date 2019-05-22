@@ -8,13 +8,24 @@ Sources
 
 ### What is a faillible source?
 
-Stings and logging
-------------------
+Strings and logging
+-------------------
+
+String interpolation: `"my name is #{name}"`
 
 Functions
 ---------
 
 Partial evaluation
+
+References
+----------
+
+ref ! :=
+
+Float getters
+
+Exemple de `gstreamer.hls`
 
 Requests
 --------
