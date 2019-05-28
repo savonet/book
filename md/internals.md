@@ -16,6 +16,8 @@ The source model
 ----------------
 ## Clocks
 
+[See here](https://github.com/savonet/liquidsoap/issues/288)
+
 ## Seeking
 
 Libraries around Liquidsoap
