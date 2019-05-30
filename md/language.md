@@ -18,6 +18,16 @@ Functions
 
 Partial evaluation
 
+### Function ()->...
+
+A nice example from https://github.com/savonet/liquidsoap/issues/536:
+```
+f = interactive.float("test", 0.0)
+f = {lin_of_dB(f())}
+s = amplify(f, in())
+out(s)
+```
+
 References
 ----------
 
