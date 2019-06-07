@@ -20,6 +20,10 @@ The source model
 
 ## Seeking
 
+## Active / passive sources
+
+what are those???
+
 Libraries around Liquidsoap
 ---------------------------
 
