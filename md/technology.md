@@ -36,6 +36,8 @@ Encoding (mp3, etc.)
 
 Icecast, buffering, connections, packets
 
+### Metadata
+
 Audio sources
 -------------
 
