@@ -3,10 +3,18 @@ The language
 
 Syntax of [language](https://www.liquidsoap.info/doc-dev/language.html)
 
+The typing system
+-----------------
+
 Sources
 -------
 
 ### What is a faillible source?
+
+The execution model
+-------------------
+
+Language execution vs stream production
 
 Strings and logging
 -------------------
@@ -44,7 +52,3 @@ Interaction
 -----------
 
 interactive floats
-
-The typing system
------------------
-

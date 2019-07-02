@@ -1,6 +1,8 @@
 The Liquidsoap ecosystem
 ========================
 
+Ça risque d'être surrané rapidement.
+
 Flows
 -----
 

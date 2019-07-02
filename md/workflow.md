@@ -16,6 +16,12 @@ Handling tracks
 
 -   blank detection
 
+Cue points
+----------
+
+annotate, cue_in cue_out
+
+
 Signal processing
 -----------------
 

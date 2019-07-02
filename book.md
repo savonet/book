@@ -38,6 +38,9 @@ md/language.md
 md/workflow.md
 ```
 ```include
+md/video.md
+```
+```include
 md/advanced.md
 ```
 ```include
@@ -49,12 +52,11 @@ md/plugins.md
 ```include
 md/faq.md
 ```
-```include
-md/video.md
-```
+<!--
 ```include
 md/ecosystem.md
 ```
+-->
 ```include
 md/internals.md
 ```
