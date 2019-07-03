@@ -12,9 +12,9 @@ Interactive playlists
 Handling tracks
 ---------------
 
--   crossfade
-
--   blank detection
+- crossfade
+- blank detection
+- log all the music which has gone on air
 
 Cue points
 ----------
@@ -27,6 +27,8 @@ Signal processing
 
 Jingles
 -------
+
+Say the last song we had on air
 
 Input streams with harbor
 -------------------------
