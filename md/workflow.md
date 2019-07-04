@@ -14,7 +14,8 @@ Handling tracks
 
 - crossfade
 - blank detection
-- log all the music which has gone on air
+- log all the music files which have gone on air
+- count the number of played music files (a reference!)
 
 Cue points
 ----------
