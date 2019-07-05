@@ -15,3 +15,8 @@ Installing in specific environments
 
 ### Windows
 
+Building from source
+--------------------
+
+In some exotic architectures, opam might not play well. In this case you can
+still build from source.....
