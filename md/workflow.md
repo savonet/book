@@ -38,3 +38,7 @@ TODO: the `smooth_add` example from
 <https://www.liquidsoap.info/doc-1.3.6/cookbook.html> to have the voice
 over a bed
 
+Monitoring the stream
+---------------------
+
+Use `on_blank` to detect blank...
