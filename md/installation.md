@@ -57,7 +57,7 @@ You can also install liquidsoap or any of its dependencies from source using
 OPAM. For instance:
 
 ```
-git clone --recursive https://github.com/savonet/liquidsoap.git
+git clone https://github.com/savonet/liquidsoap.git
 cd liquidsoap
 opam pin add liquidsoap .
 ```
