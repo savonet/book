@@ -42,3 +42,8 @@ Monitoring the stream
 ---------------------
 
 Use `on_blank` to detect blank...
+
+Clocks: avoiding synchronization issues
+---------------------------------------
+
+Explain the problem with multiple icecast outputs.

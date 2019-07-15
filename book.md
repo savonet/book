@@ -44,9 +44,6 @@ md/video.md
 md/advanced.md
 ```
 ```include
-md/usecases.md
-```
-```include
 md/plugins.md
 ```
 ```include
