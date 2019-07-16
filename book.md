@@ -38,6 +38,9 @@ md/language.md
 md/workflow.md
 ```
 ```include
+md/cookbook.md
+```
+```include
 md/video.md
 ```
 ```include

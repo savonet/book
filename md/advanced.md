@@ -1,7 +1,7 @@
 Advanced features
 =================
 
-settings
+Settings
 --------
 
 [see here](https://www.liquidsoap.info/doc-dev/settings.html)
@@ -30,6 +30,8 @@ Dealing with HTTP requests
 
 External scripting
 ------------------
+
+Calling scripts in other languages...
 
 Decoders
 --------
