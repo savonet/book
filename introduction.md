@@ -144,9 +144,9 @@ They did not have so much music, and at that time it was not so easy to get
 online streams. But there were plenty of mp3s available on the internal network
 of the campus, which were shared by the students. In order to have access to
 those more easily, Samuel wrote a dirty campus indexer in OCaml (called
-_strider_), and David made an ugly Perl hack for adding user requests to the
-original system. It probably kind of worked for a while. Then they wanted
-something more, and realized it was all too ugly.
+_strider_, later on replaced by _bubble_), and David made an ugly Perl hack for
+adding user requests to the original system. It probably kind of worked for a
+while. Then they wanted something more, and realized it was all too ugly.
 
 So they started to built the first audio streamer in pure OCaml, using
 libshout. It had a simple telnet interface, so that a bot on IRC (this was the
@@ -157,7 +157,7 @@ wanted scheduling, especially techno music at night.
 
 Around that time, students had to propose and realize a "large" software project
 for one of their courses, with the whole class of around 30 students. David and
-Samuel proposed to build a complete flexible webradio system called _Savonet_
+Samuel proposed to build a complete flexible webradio system called _savonet_
 (for something like "Samuel and David's OCaml network"). A complete rewriting of
 every part of the streamer in OCaml was planned, with grand goals, so that
 everybody would have something to do: a new website with so many features, a new
@@ -165,6 +165,8 @@ intelligent multilingual bot, a new network libraries for glueing that,
 etc. Most of those died. But still, Liquidsoap was born and plenty of new
 libraries for handling sound in OCaml emerged, many of which we are still using
 today.
+
+TODO: explain the name Liquidsoap
 
 On the day where the project had to be presented to the teachers, the demo
 miserably failed, but soon after that they ware able to run a webradio with
