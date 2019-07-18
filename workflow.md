@@ -26,6 +26,10 @@ annotate, cue_in cue_out
 Signal processing
 -----------------
 
+Good examples:
+
+- https://savonet-users.narkive.com/MiNy36h8/have-a-sort-of-fm-sound-with-liquidsoap
+
 Jingles
 -------
 
@@ -43,7 +47,7 @@ Monitoring the stream
 
 Use `on_blank` to detect blank...
 
-Clocks: avoiding synchronization issues
+Clocks: avoiding synchronization issues {#clocks}
 ---------------------------------------
 
 Explain the problem with multiple icecast outputs.

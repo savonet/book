@@ -1,4 +1,4 @@
-Installation
+Installation {#chap:installation}
 ============
 
 **Note** These instructions are from the documentation from liquidsoap `1.4.0`.

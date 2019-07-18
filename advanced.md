@@ -45,6 +45,8 @@ channels, etc.)
 External decoders/encoders
 --------------------------
 
+TODO: many people want to use [stereotool](https://www.stereotool.com/)
+
 Reading files
 -------------
 
