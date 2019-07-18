@@ -63,3 +63,5 @@ internals.md
 ```include
 conclusion.md
 ```
+
+# References

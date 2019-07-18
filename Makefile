@@ -1,5 +1,5 @@
 MD = $(addprefix md/,$(addsuffix .md,$(shell cat plan)))
-PANDOC = pandoc --filter=scripts/include --syntax-definition=liquidsoap.xml
+PANDOC = pandoc --bibliography=papers.bib --filter=scripts/include --syntax-definition=liquidsoap.xml
 
 all: book.md language.dtd
 	@$(MAKE) -C scripts

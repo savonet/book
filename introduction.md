@@ -17,7 +17,7 @@ How it all started
 
 The radio at ENS Lyon, radio pi, etc
 
-Even two publications [@baelde2008webradio; @baelde2011liquidsoap].
+Even two publications [@baelde2008webradio] [@baelde2011liquidsoap].
 
 About the authors
 
