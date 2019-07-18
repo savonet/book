@@ -3,6 +3,9 @@ The language
 
 Syntax of [language](https://www.liquidsoap.info/doc-dev/language.html)
 
+The main ideas behind it are described in [@baelde2008webradio;
+@baelde2011liquidsoap]. We focus here on the practical parts.
+
 The typing system
 -----------------
 

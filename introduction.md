@@ -182,7 +182,7 @@ TODO: Romain Beauxis (radio pi!)
 
 Liq is programmed in OCaml but the language is _not_ OCaml (see [@ocaml]).
 
-Even two publications [@baelde2008webradio] [@baelde2011liquidsoap].
+Even two publications
 
 Prerequisites
 -------------
