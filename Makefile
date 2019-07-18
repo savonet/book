@@ -3,6 +3,7 @@ PANDOC = pandoc --bibliography=papers.bib --filter=scripts/include --syntax-defi
 
 all: book.md language.dtd
 	@$(MAKE) -C scripts
+	@echo "Generating pdf..."
 	@$(PANDOC) --top-level-division=chapter book.md -o book.pdf
 
 ci:

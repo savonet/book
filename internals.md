@@ -12,6 +12,8 @@ The stream model
 
 ## Track boundaries
 
+## Metadata
+
 The source model
 ----------------
 ## Clocks

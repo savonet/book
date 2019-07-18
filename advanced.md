@@ -36,6 +36,12 @@ Calling scripts in other languages...
 Decoders
 --------
 
+Encoders
+--------
+
+TODO: encoding formats `%mp3`, `%wav`, main parameters (quality, numbers of
+channels, etc.)
+
 External decoders/encoders
 --------------------------
 
@@ -48,8 +54,3 @@ Requests
 TODO: explain the implementation of playlist.reloadable
 
 TODO: explain that requests must be deleted, see https://github.com/savonet/liquidsoap/issues/309
-
-Calling a function regurlarly
------------------------------
-
-`add_timeout`
