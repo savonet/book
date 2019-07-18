@@ -1,8 +1,9 @@
 MD = $(addprefix md/,$(addsuffix .md,$(shell cat plan)))
+PANDOC = pandoc --filter=scripts/include --syntax-definition=liquidsoap.xml
 
 all: book.md language.dtd
 	@$(MAKE) -C scripts
-	pandoc book.md --filter=scripts/include --top-level-division=chapter --syntax-definition=liquidsoap.xml -o book.pdf
+	@$(PANDOC) --top-level-division=chapter book.md -o book.pdf
 
 ci:
 	git ci . -m "Worked on the book."
@@ -12,4 +13,4 @@ language.dtd:
 	wget https://github.com/jgm/highlighting-kate/blob/master/xml/language.dtd
 
 %.pdf %.html: %.md
-	pandoc $^ --filter=scripts/include -o $@
+	$(PANDOC) $^ -o $@

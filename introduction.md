@@ -6,6 +6,8 @@ Why Liquidsoap?
 
 ### The need for streaming tools
 
+So you want to make a webradio?
+
 web radio, real life examples, programming languages, how can they make
 it better than a configuration file
 

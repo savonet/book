@@ -2,8 +2,8 @@ Installation
 ============
 
 **Note** These instructions are from the documentation from liquidsoap `1.4.0`.
-Make sure to consult the latest online instructions from the version you wish to install,
-most likely the latest stable release as these may have evolved since.
+Make sure to consult the latest online instructions from the version you wish to
+install, most likely the latest stable release as these may have evolved since.
 
 You can install liquidsoap with OPAM (recommended) or from source, or using a
 package available for your distribution (not covered by this documentation).
