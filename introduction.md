@@ -60,13 +60,16 @@ radio workflow, you are in trouble.
 
 Based on this observation, we decided to come up with a new _programming
 language_, our beloved _Liquidsoap_, which would allow for describing how to
-generate audio streams. The user describes its stream in a script, by combining
-the various building blocks of the language: the possibilities are thus
-virtually unlimited. It does not impose a particular approach for designing your
-radio: it can cope with all the situations described above, and much more.
+generate audio streams. The generation of the stream does not follow a
+predetermined shape, it is instead described by the user in a script, which
+combines the various building blocks of the language in an arbitrary way: the
+possibilities are thus virtually unlimited. It does not impose a particular
+approach for designing your radio; it can cope with all the situations described
+above, and much more.
 
-Liquidsoap is however quite different from a general-purpose programming
-language (such as Java or C). It is a new language, designed from scratch,
+Liquidsoap itself is programmed in OCaml, but the language you will use is not
+OCaml, it is a new language, and it is quite different from a general-purpose
+programming languages, such as Java or C. It was designed from scratch,
 dedicated to stream generation, where we tried to follow Allan Kay's well-known
 citation: _simple things should be simple, complex things should be
 possible_. This means that we had in mind that our users are not typically
@@ -140,13 +143,13 @@ motivated David to write a Perl script based on the
 [IceS](http://icecast.org/ices/) program in order to stream a radio on the
 campus: _geekradio_ was born.
 
-They did not have so much music, and at that time it was not so easy to get
-online streams. But there were plenty of mp3s available on the internal network
-of the campus, which were shared by the students. In order to have access to
-those more easily, Samuel wrote a dirty campus indexer in OCaml (called
-_strider_, later on replaced by _bubble_), and David made an ugly Perl hack for
-adding user requests to the original system. It probably kind of worked for a
-while. Then they wanted something more, and realized it was all too ugly.
+They did not have that many music files, and at that time it was not so easy to
+get online streams. But there were plenty of mp3s available on the internal
+network of the campus, which were shared by the students. In order to have
+access to those more easily, Samuel wrote a dirty campus indexer in OCaml
+(called _strider_, later on replaced by _bubble_), and David made an ugly Perl
+hack for adding user requests to the original system. It probably kind of worked
+for a while. Then they wanted something more, and realized it was all too ugly.
 
 So they started to built the first audio streamer in pure OCaml, using
 libshout. It had a simple telnet interface, so that a bot on IRC (this was the
@@ -162,11 +165,10 @@ Samuel proposed to build a complete flexible webradio system called _savonet_
 every part of the streamer in OCaml was planned, with grand goals, so that
 everybody would have something to do: a new website with so many features, a new
 intelligent multilingual bot, a new network libraries for glueing that,
-etc. Most of those died. But still, Liquidsoap was born and plenty of new
+etc. Most of those died. But still, _Liquidsoap_ was born and plenty of new
 libraries for handling sound in OCaml emerged, many of which we are still using
-today.
-
-TODO: explain the name Liquidsoap
+today. The name of the language was a play on word around "savonet" which sounds
+like "savonette", a soap bar in French.
 
 On the day where the project had to be presented to the teachers, the demo
 miserably failed, but soon after that they ware able to run a webradio with
@@ -177,12 +179,8 @@ find songs on the database of the campus, which have priority over static
 playlists but not live shows, and added speech-synthetized metadata information
 at the end of requests.
 
-
-TODO: Romain Beauxis (radio pi!)
-
-(other people Tabard, etc.)
-
-Liq is programmed in OCaml but the language is _not_ OCaml (see [@ocaml]).
+Later on, the two main developers were joined by Romain Beauxis^[TODO: détailler
+et mentionner radio pi]
 
 Even two publications
 
@@ -217,6 +215,6 @@ online, etc.
 
 ### Thanks
 
-Other main developers of Liquidsoap
+Other main developers of Liquidsoap (Tabard, etc.)
 
 TODO: thanks Balbinus for the logo
