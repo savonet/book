@@ -180,12 +180,17 @@ playlists but not live shows, and added speech-synthetized metadata information
 at the end of requests.
 
 Later on, the two main developers were joined by Romain Beauxis^[TODO: détailler
-et mentionner radio pi]
+et mentionner Radio Pi]
 
-Even two publications
+About this book
+---------------
 
-Prerequisites
--------------
+### Prerequisites
+
+We expect that the computer knowledge can vary much between Liquidsoap users,
+who can range between music enthusiasts and experienced programmers.
+
+The reader of this book is supposed to be familiar with text editing and 
 
 We suppose the reader familiar with
 
@@ -196,15 +201,6 @@ We suppose the reader familiar with
 -   basics of audio streaming (e.g. Icecast is not covered in details)
 
 
-About this book
----------------
-
-### The authors
-
-*Romain Beauxis* is \...
-
-*Samuel Mimram* is \...
-
 ### How to read the book
 
 
@@ -212,6 +208,14 @@ About this book
 ### How to get help
 
 online, etc.
+
+### The authors
+
+*Romain Beauxis* is \...
+
+*Samuel Mimram* obtained his PhD in 2009 and is now professor in École
+polytechnique in France. His main research topics are concurrency, type theory
+and category theory.
 
 ### Thanks
 
