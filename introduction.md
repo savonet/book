@@ -188,30 +188,45 @@ About this book
 ### Prerequisites
 
 We expect that the computer knowledge can vary much between Liquidsoap users,
-who can range between music enthusiasts and experienced programmers.
-
-The reader of this book is supposed to be familiar with text editing and 
-
-We suppose the reader familiar with
-
--   text file editing and unix shell
-
--   basics of signal processing
-
--   basics of audio streaming (e.g. Icecast is not covered in details)
-
+who can range between music enthusiasts and experienced programmers, and we try
+to accommodate with all those backgrounds. Nevertheless, we have to suppose that
+the reader of this book is familiar with some basic concepts and tools. In
+particular, this book does not cover the basics of text file editing and unix
+shell scripting (how to use the command line, how to run a program and so
+on). Some knowledge in signal processing, streaming and programming can also be
+useful.
 
 ### How to read the book
 
-
+TODO: plan of the book
 
 ### How to get help
 
-online, etc.
+You have read the book and still have questions? There are many ways to get in
+touch with the community and obtain help to get your problem solved:
+
+1. the Liquidsoap
+  website^[[https://www.liquidsoap.info/](https://www.liquidsoap.info/)]
+  contains an extensive up-to-date documentation and tutorial about specific
+  points,
+2. the Liquidsoap
+  slack^[[https://liquidsoapworkspace.slack.com/](https://liquidsoapworkspace.slack.com/)]
+  is a public chat on which you can have instantaneous discussions,
+3. the Liquidsoap
+  mailing-list^[[savonet-users@lists.sf.net](mailto:savonet-users@lists.sf.net)]
+  is there if you'd rather discuss by mail,
+4. the Liquidsoap github
+  page^[[https://github.com/savonet/liquidsoap/issues](https://github.com/savonet/liquidsoap/issues)]
+  is the place to report bugs and get some help.
+
+Please remember to be kind, most of the people there are doing this on their
+free time!
 
 ### The authors
 
-*Romain Beauxis* is \...
+The authors of the book are the two main current developers of Liquidsoap.
+
+*Romain Beauxis* is ...
 
 *Samuel Mimram* obtained his PhD in 2009 and is now professor in École
 polytechnique in France. His main research topics are concurrency, type theory
@@ -219,6 +234,9 @@ and category theory.
 
 ### Thanks
 
-Other main developers of Liquidsoap (Tabard, etc.)
-
-TODO: thanks Balbinus for the logo
+The advent of Liquidsoap and this book could not have been possible without the
+numerous contributors over the years among whom David Baelde who stood at the
+starting point, the students of the MIM1 (big up to Florent Bouchez, Julien
+Cristau, Stéphane Gimenez and Sattisvar Tandabany), Clément Renard and Vincent
+Tabard (who also designed the logo). Many thanks also to the many people who
+helped improving the language by reporting bugs or suggesting ideas!

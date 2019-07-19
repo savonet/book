@@ -1,4 +1,4 @@
-The technology behind streams
+The technology behind streams {#technology}
 =============================
 
 This chapter does not give code, but presents the general components you have to
