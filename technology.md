@@ -1,29 +1,50 @@
-The technology behind streams {#technology}
+The technology behind streams {#chap:technology}
 =============================
 
-This chapter does not give code, but presents the general components you have to
-set up in order to build a webradio.
+Before getting our hands on Liquidsoap, let us quickly describe the typical
+toolchain involved in a webradio, in case the reader is not familiar with it. It
+typically consists of the following three elements.
 
-Before starting with the proper Liquidsoap tutorial let's describe quickly the
-components of the internet radio toolchain, in case the reader is not familiar
-with it.
+The _stream generator_ is a program which generates an audio stream, generally
+in compressed form such as mp3 or aac, be it from playlists, live sources,
+etc. Liquidsoap is one of those and we will be most exclusively concerned with
+it, but there are other competitors ranging from
+[Ezstream](http://icecast.org/ezstream/), [IceS](http://icecast.org/ices/) or
+[DarkIce](http://www.darkice.org/) which are simple command-line free software
+that can stream a live input or a playlist to an Icecast server (see below), to
+[Rivendell](http://www.rivendellaudio.org/) or [SAM
+Broadcaster](https://spacial.com/) which are graphical interfaces to describe
+the scheduling of your radio. Nowadays, websites are also proposing to do this
+online on the cloud; these include [AzuraCast](https://www.azuracast.com/),
+[Centova](https://centova.com/) and [Radionomy](https://www.radionomy.com/)
+which are all powered by Liquidsoap!
 
-The chain is made of:
+A _streaming media system_, which is generally
+[Icecast](http://www.icecast.org/). Its role is to relay the stream from the
+generator to the listeners, of which there can be thousands. With the advent of
+HLS, it tends to be more and more replaced by a traditional web server.
 
-- the stream generator (Liquidsoap, [ices](http://www.icecast.org/ices.php), or
-  for example a DJ-software running on your local PC) which creates an audio
-  stream (Ogg Vorbis or MP3),
-- the streaming media server ([Icecast](http://www.icecast.org),
-  [Shoutcast](http://www.shoutcast.com), ...) which relays several streams from
-  their sources to their listeners,
-- the media player (iTunes, Winamp, ...) which gets the audio stream from the
-  streaming media server and plays it to the listener's speakers.
+A _media player_, which connects to the server and plays the stream for the
+client, it can either be a software (such as iTunes), an Android application, or
+a website.
 
-![Internet radio toolchain](images/schema-webradio-inkscape.png)
+Below, we enter the details of the first two, explaining the technical choices
+you have to face when setting up a webradio.
 
-The stream is always passed from the stream generator to the server, whether or
-not there are listeners. It is then sent by the server to every listener. The
-more listeners you have, the more bandwidth you need.
+Audio streams
+-------------
+
+### Encoding
+
+Encoding (mp3, ogg, flac, HE-AAC, etc.)
+
+bandwidth, audio quality (flac is lossless), proprietary or not
+
+### Metadata
+
+### Streaming
+
+Icecast, buffering, connections, packets
 
 If you use Icecast, you can broadcast more than one audio feed using the same
 server. Each audio feed or stream is identified by its "mount point" on the
@@ -34,18 +55,15 @@ on this you might want to read Icecast's
 [documentation](http://www.icecast.org). A proper setup of a streaming server is
 required for running Liquidsoap.
 
-Audio streams
--------------
+HLS, better: we can disconnect, the files can be cached (thus cheaper bandwidth)
 
-### Encoding
+RTMP
 
-Encoding (mp3, etc.)
+platforms such as youtube
 
-### Streaming
+see
 
-Icecast, buffering, connections, packets
-
-### Metadata
+- https://stackoverflow.com/questions/30184520/whats-the-best-protocol-for-live-audio-radio-streaming-for-mobile-and-web
 
 Audio sources
 -------------

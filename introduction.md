@@ -139,9 +139,8 @@ larger journalism tools) or services around the language (such as consulting).
 The Liquidsoap language was initiated by David Baelde and Samuel Mimram, while
 students at the École Normale Supérieure de Lyon, around 2004. They liked to
 listen to music while coding and it was fun to listen to music together, which
-motivated David to write a Perl script based on the
-[IceS](http://icecast.org/ices/) program in order to stream a radio on the
-campus: _geekradio_ was born.
+motivated David to write a Perl script based on the IceS program in order to
+stream a radio on the campus: _geekradio_ was born.
 
 They did not have that many music files, and at that time it was not so easy to
 get online streams. But there were plenty of mp3s available on the internal
@@ -205,19 +204,14 @@ TODO: plan of the book
 You have read the book and still have questions? There are many ways to get in
 touch with the community and obtain help to get your problem solved:
 
-1. the Liquidsoap
-  website^[[https://www.liquidsoap.info/](https://www.liquidsoap.info/)]
-  contains an extensive up-to-date documentation and tutorial about specific
-  points,
-2. the Liquidsoap
-  slack^[[https://liquidsoapworkspace.slack.com/](https://liquidsoapworkspace.slack.com/)]
-  is a public chat on which you can have instantaneous discussions,
-3. the Liquidsoap
-  mailing-list^[[savonet-users@lists.sf.net](mailto:savonet-users@lists.sf.net)]
-  is there if you'd rather discuss by mail,
-4. the Liquidsoap github
-  page^[[https://github.com/savonet/liquidsoap/issues](https://github.com/savonet/liquidsoap/issues)]
-  is the place to report bugs and get some help.
+1. the [Liquidsoap website](https://www.liquidsoap.info/) contains an extensive
+  up-to-date documentation and tutorial about specific points,
+2. the [Liquidsoap slack workspace](https://liquidsoapworkspace.slack.com/) is a
+  public chat on which you can have instantaneous discussions,
+3. the [Liquidsoap mailing-list](savonet-users@lists.sf.net) is there if you'd
+  rather discuss by mail,
+4. the [Liquidsoap github page](https://github.com/savonet/liquidsoap/issues) is
+  the place to report bugs and get some help.
 
 Please remember to be kind, most of the people there are doing this on their
 free time!

@@ -405,5 +405,6 @@ one()
 one()
 ```
 
-
-
+TODO: explain the operators who need to be clocked for instance, we had the
+following question: Yamakaky [5:20 PM] Does `input.harbor` require the use of
+`clock` and `buffer`? It has an internal buffer so I would say no?

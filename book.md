@@ -12,8 +12,10 @@ geometry:
 - marginparwidth=15mm
 fontfamily: libertine
 header-includes: |
-  \usepackage[varqu]{inconsolata}
+  \usepackage[varqu,scaled=.9]{inconsolata}
   \usepackage[Bjornstrup]{fncychap}
+  \usepackage{fvextra}
+  \RecustomVerbatimEnvironment{verbatim}{Verbatim}{breaklines}
 numbersections: true
 secnumdepth: 1
 toc: true

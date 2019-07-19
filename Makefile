@@ -4,7 +4,7 @@ PANDOC = pandoc --bibliography=papers.bib --filter=scripts/include --syntax-defi
 all: book.md language.dtd
 	@$(MAKE) -C scripts
 	@echo "Generating pdf..."
-	@$(PANDOC) --top-level-division=chapter book.md -o book.pdf
+	@$(PANDOC) --top-level-division=chapter -V links-as-notes=true book.md -o book.pdf
 
 ci:
 	git ci . -m "Worked on the book."
@@ -13,5 +13,5 @@ ci:
 language.dtd:
 	wget https://github.com/jgm/highlighting-kate/blob/master/xml/language.dtd
 
-%.pdf %.html: %.md
+%.tex %.pdf %.html: %.md
 	$(PANDOC) $^ -o $@
