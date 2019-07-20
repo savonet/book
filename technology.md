@@ -81,6 +81,10 @@ TODO: difference between files and live sources (e.g. we cannot fade)
 Audio processing
 ----------------
 
+### Resampling
+
+The fist thing we want to do, not easy
+
 ### Fading
 
 ### Normalization
