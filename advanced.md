@@ -23,6 +23,10 @@ Protocols
 There is a [list of
 protocols](https://www.liquidsoap.info/doc-dev/protocols.html)
 
+playing a file from youtube
+
+annotate
+
 Interaction with the server
 ---------------------------
 
@@ -111,8 +115,13 @@ function will return the values passed as default.
 
 You can use the default value in two different ways:
 
-* To detect that the received json string was invalid/could not be parsed to the expected type. In the example above, if `of_json` return a metadata value of `[("error","fail")]` (the default) then you can detect in your code that parsing has failed.
-* As a default value for the rest of the script, if you do not want to care about parsing errors.. This can be useful for instance for JSON-RPC notifications, which should not send any response to the client anyway.
+- To detect that the received json string was invalid/could not be parsed to the
+  expected type. In the example above, if `of_json` return a metadata value of
+  `[("error","fail")]` (the default) then you can detect in your code that
+  parsing has failed.
+- As a default value for the rest of the script, if you do not want to care
+  about parsing errors... This can be useful for instance for JSON-RPC
+  notifications, which should not send any response to the client anyway.
 
 If your JSON object is of mixed type, like this one:
 

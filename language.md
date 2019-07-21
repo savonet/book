@@ -8,8 +8,21 @@ Syntax of [language](https://www.liquidsoap.info/doc-dev/language.html)
 The main ideas behind it are described in [@baelde2008webradio;
 @baelde2011liquidsoap]. We focus here on the practical parts.
 
-The typing system
------------------
+Typing system
+-------------
+
+This raises a typing error:
+
+```
+s = sine(500)
+```
+
+Expressions
+-----------
+
+string / int / float / lists / tuples
+deconstructing tuples
+
 
 Sources
 -------

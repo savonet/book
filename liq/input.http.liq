@@ -1,0 +1,2 @@
+s = input.http("http://direct.fipradio.fr/live/fip-midfi.mp3")
+out(s)

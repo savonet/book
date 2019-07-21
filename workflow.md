@@ -26,6 +26,8 @@ annotate, cue_in cue_out
 Signal processing
 -----------------
 
+normalization, replaygain
+
 LADSPA plugins
 
 Good examples:

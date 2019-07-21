@@ -13,12 +13,11 @@ liquidsoap 'out(sine())'
 ```
 
 This instructs Liquidsoap to run the program `out(sine())`{.liquidsoap} which
-plays a sine wave at 440 Hertz. The operator^[TODO: terminologie : veut-on
-"operator" ou "function" ?] `sine`{.liquidsoap} is called a _source_: it
-generates audio (here, a sine wave) and `out`{.liquidsoap} is an operator which
-takes a source as parameter and plays it on the sound card. When running this
-program, you should hear the expected sound and see lots of lines looking like
-this:
+plays a sine wave at 440 Hertz. The operator `sine`{.liquidsoap} is called a
+_source_: it generates audio (here, a sine wave) and `out`{.liquidsoap} is an
+operator which takes a source as parameter and plays it on the sound card. When
+running this program, you should hear the expected sound and see lots of lines
+looking like this:
 
 ```
 2019/07/21 00:12:31 >>> LOG START
@@ -157,55 +156,81 @@ Finally, just for fun, we can hear an A minor chord by adding three sines:
 
 We generates three sines at frequencies $440$ Hz, $440\times 2^{3/12}$ Hz and
 $440\times 2^{7/12}$ Hz, add them, and play the result. Note that the operator
-`add` is taking as argument a _list_ of sources, which could be of any size.
+`add` is taking as argument a _list_ of sources (delimited by square brackets),
+which could be of any size.
 
 A radio
 -------
 
 ### Playlists
 
-```{.liquidsoap input="liq/playlist.liq"}
+Since we are not here to make synthesizers, we should start playing actual music
+instead of sines. In order to do so, we have the `playlist` operator which takes
+as argument a _playlist_: this playlist can be a file containing paths to audio
+files (wav, mp3, etc.), one per line, or a playlist in a standard format (pls,
+m3u, xspf, etc.), or a directory (in which case the playlist consists of all the
+files in the directory). For instance, if our music is stored in the `~/Music`
+directory, we can play it with
+
+```{.liquidsoap include="liq/playlist.liq"}
 ```
 
+As usual, the operator `playlist` has a number of interesting optional
+parameters which can be obtained with `liquidsoap -h playlist`. For instance, by
+default the files are played in a random order, but if we want to play them as
+indicated we should pass the argument `mode="normal"`{.liquidsoap} to
+`playlist`. Similarly, if we want to reload the playlist whenever it is changed,
+the argument `reload_mode="watch"`{.liquidsoap} should be passed.
 
+A playlist can contain distant files (e.g. urls of the form
+`http://.../file.mp3`) in which case they are going to be downloaded
+beforehand. If you want to use a live stream, the operator `input.http` should
+be used instead:
+
+```{.liquidsoap include="liq/input.http.liq"}
+```
+
+### Fallbacks
+
+A source can be not always available, we call this a _fallible_ source. A
+typical example, is a source obtained by `input.http`: at some point the stream
+might stop (e.g. if it is only available during daytime), or be subject to
+technical difficulties (e.g. it gets disconnected from the internet for a short
+period of time). In this case, we generally want to fallback to another source
+(typically an emergency playlist consisting of local files which we are sure are
+going to be available). This can be achieved by using the `fallback` operator
+which plays the first source available in a list of sources:
+
+```{.liquidsoap include="liq/fallback.liq"}
+```
+
+In fact, Liquidsoap automatically detects that a source is fallible and issues
+an error if this is not handled (typically by a `fallback`). We did not see this
+up to now because `out` is an advanced operator which automatically uses silence
+as fallback. However, if we use the primitive functions for outputting audio, we
+will see this behavior. For instance, if we try use the operator
+`output.pulseaudio` (which plays a source on a soundcard using the pulseaudio
+library)
+
+```{.liquidsoap include="liq/fallible1.liq"}
+```
+
+we obtain the following error:
+
+```
+At line 1, char 5-27:
+Error 7: Invalid value:
+That source is fallible
+```
+
+.......................................
+
+### Streams depending on the hour
+
+### Icecast output
 
 
 
 
 En gros reprendre le
 [QUICKSTART](https://www.liquidsoap.info/doc-dev/quick_start.html).
-
-Hello, world!
--------------
-
-Our first program looks like this:
-```
-liquidsoap 'out(sine())'
-```
-We could have written it
-```liquidsoap
-#!/usr/bin/liquidsoap
-out(sine())
-```
-or better, we give a name `s` to the source
-```liquidsoap
-#!/usr/bin/liquidsoap
-# this is our source
-s = sine()
-out(s)
-```
-
-The path will be more like , use to know the path
-
-Our first radio with a playlist
--------------------------------
-
-EN GROS:
-```liquidsoap
-output.icecast(playlist("~/music/"))
-```
-
-Streams depending on the hour
------------------------------
-
-un switch
