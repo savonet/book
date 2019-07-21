@@ -15,6 +15,12 @@ let block_type (b : block) =
 let block_contents (b : block) =
   List.assoc "c" (to_assoc b)
 
+let is_paragraph (b : block) = block_type b = "Para"
+
+let is_string (b : block) = block_type b = "Str"
+
+let is_quoted (b : block) = block_type b = "Quoted"
+
 let is_code_block (b : block) =
   block_type b = "CodeBlock"
 

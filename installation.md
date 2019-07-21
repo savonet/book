@@ -102,6 +102,10 @@ Most dependencies should be compatible with opam pinning.
 Using binaries
 --------------
 
+If you want to avoid compiling Liquidsoap, or if opam is not working on your
+platform, the easiest way is to use precompiled binaries of Liquidsoap, if
+available.
+
 ### Linux
 
 There are packages for Liquidsoap in most Linux distributions. For instance, in

@@ -1,6 +1,12 @@
 Advanced features
 =================
 
+Ids
+---
+
+TODO: explain that the name of an operator can generally be configured by
+passing an `id` argument.
+
 Settings
 --------
 

@@ -21,49 +21,34 @@ secnumdepth: 1
 toc: true
 ...
 
-```include
-introduction.md
-```
-```include
-technology.md
-```
-```include
-installation.md
-```
-```include
-helloworld.md
-```
-```include
-language.md
-```
-```include
-workflow.md
-```
-```include
-cookbook.md
-```
-```include
-video.md
-```
-```include
-advanced.md
-```
-```include
-plugins.md
-```
-```include
-faq.md
-```
+!include "introduction.md"
+
+!include "technology.md"
+
+!include "installation.md"
+
+!include "helloworld.md"
+
+!include "language.md"
+
+!include "workflow.md"
+
+!include "advanced.md"
+
+!include "cookbook.md"
+
+!include "video.md"
+
+!include "plugins.md"
+
+!include "faq.md"
+
 <!--
-```include
-ecosystem.md
-```
+!include "ecosystem.md"
 -->
-```include
-internals.md
-```
-```include
-conclusion.md
-```
+
+!include "internals.md"
+
+!include "conclusion.md"
 
 # References

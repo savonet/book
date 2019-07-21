@@ -132,7 +132,10 @@ under the _GNU Lesser General Public Licence 2.1_).
 Liquidsoap will always be free, but this does not prevent companies from selling
 products based on the language (and there are quite a number of those, be they
 graphical interfaces, web interfaces, or providing webradio tools as part of
-larger journalism tools) or services around the language (such as consulting).
+larger journalism tools) or services around the language (such as
+consulting). The main constraint imposed by the license is that if you
+distribute a modified version of Liquidsoap, say with some new features, you
+have to provide the user with the source code containing your improvements.
 
 ### A bit of history
 

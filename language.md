@@ -1,6 +1,8 @@
 The language
 ============
 
+TODO (SM): je pense qu'il faudrait ne faire que le typage dans ce chapitre
+
 Syntax of [language](https://www.liquidsoap.info/doc-dev/language.html)
 
 The main ideas behind it are described in [@baelde2008webradio;

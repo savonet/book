@@ -81,6 +81,11 @@ TODO: difference between files and live sources (e.g. we cannot fade)
 Audio processing
 ----------------
 
+### Audio quantization
+
+we have samples at regular frequency (usually 44100 Hz or 48000 Hz), generally
+floats between -1. and 1. (although older formats use 16, 24 or 32 bits integers).
+
 ### Resampling
 
 The fist thing we want to do, not easy
