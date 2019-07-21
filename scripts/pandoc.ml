@@ -43,9 +43,15 @@ let to_code_block (b : block) =
   in
   ((ident, classes, keyvals), contents)
 
+let code_block_ident (b : block) =
+  let ((ident, _, _), _) = to_code_block b in ident
+  
 let code_block_classes (b : block) =
   let ((_, classes, _), _) = to_code_block b in classes
 
+let code_block_keyvals (b : block) =
+  let ((_, _, keyvals), _) = to_code_block b in keyvals
+                                              
 let code_block_contents (b : block) =
   let (_, contents) = to_code_block b in contents
 

@@ -25,10 +25,25 @@ let () =
     with
     | Exit -> 
        (* ```include *)
-       if is_code_block b && List.mem "include" (code_block_classes b) then
-         let contents = code_block_contents b in
-         let j = json_of_md_file contents in
-         List.flatten (List.map f (blocks j))
+       if is_code_block b && List.mem_assoc "include" (code_block_keyvals b) then
+         let keyvals = code_block_keyvals b in
+         let contents =
+           let fname = List.assoc "include" keyvals in
+           let from = try int_of_string (List.assoc "from" keyvals) with Not_found -> 0 in
+           let ic = open_in fname in
+           let ans = ref "" in
+           let line = ref 0 in
+           try
+             while true do
+               if !line >= from then ans := !ans ^ input_line ic ^ "\n";
+               incr line
+             done;
+             ""
+           with
+           | End_of_file -> !ans
+         in
+         let b = code_block ~ident:(code_block_ident b) ~classes:(code_block_classes b) ~keyvals contents in
+         [b]
        else
          [b]
   in

@@ -46,8 +46,7 @@ code for describing your webradio can also be put in a _script_, which is a file
 containing all the code for your radio. For instance, for our sine example, you
 can put the following code in a file `radio.liq`:
 
-```include
-liq/sine1.liq
+```{.liquidsoap include="liq/sine1.liq"}
 ```
 
 The first line says that the script should be executed by Liquidsoap. It should
@@ -83,9 +82,7 @@ In order to have more readable code, one can use variables which allow giving
 names to sources. For instance, we can give the name `s` to our sine source and
 then play it. The above code is thus equivalent to
 
-```liquidsoap
-s = sine()
-out(s)
+```{.liquidsoap include="liq/sine2.liq"}
 ```
 
 ### Parameters
@@ -139,10 +136,12 @@ question mark before each argument, and the default value is detailed below
 
 If we want generate a sine wave of 2600 Hz with an amplitude 0.8, we can thus do
 
-```liquidsoap
-s = sine(amplitude=0.8, 440.)
-out(s)
+```{.liquidsoap include="liq/sine3.liq"}
 ```
+
+Note that the parameter corresponding to id has a label `id`, which we have to
+specify in order to pass the corresponding argument, and similarly for
+amplitude, whereas there is no label for the frequency.
 
 
 A radio

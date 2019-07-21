@@ -15,6 +15,9 @@ book.pdf: book.md $(MD)
 language.dtd:
 	wget https://github.com/jgm/highlighting-kate/blob/master/xml/language.dtd
 
+check:
+	$(MAKE) -C liq $@
+
 test:
 	$(MAKE) -C scripts
 	pandoc --filter=scripts/inspect --filter=scripts/include test.md
