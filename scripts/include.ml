@@ -29,18 +29,21 @@ let () =
          let keyvals = code_block_keyvals b in
          let contents =
            let fname = List.assoc "include" keyvals in
-           let from = try int_of_string (List.assoc "from" keyvals) with Not_found -> 0 in
-           let ic = open_in fname in
-           let ans = ref "" in
-           let line = ref 0 in
            try
-             while true do
-               if !line >= from then ans := !ans ^ input_line ic ^ "\n";
-               incr line
-             done;
-             ""
+             let from = try int_of_string (List.assoc "from" keyvals) with Not_found -> 0 in
+             let ic = open_in fname in
+             let ans = ref "" in
+             let line = ref 0 in
+             try
+               while true do
+                 if !line >= from then ans := !ans ^ input_line ic ^ "\n";
+                 incr line
+               done;
+               ""
+             with
+             | End_of_file -> !ans
            with
-           | End_of_file -> !ans
+           | Sys_error _ -> "ERROR: file \""^fname^"\" not found!"
          in
          let b = code_block ~ident:(code_block_ident b) ~classes:(code_block_classes b) ~keyvals contents in
          [b]

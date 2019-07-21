@@ -74,7 +74,14 @@ and you can then run it with
 ./radio.liq
 ```
 
-which should have the same effect as before.
+which should have the same effect as before. Alternatively, the script can also
+be run by passing it as an argument to Liquidsoap
+
+```
+liquidsoap radio.liq
+```
+
+in which case the first line (starting with `#!`) is not required.
 
 ### Variables
 
@@ -132,7 +139,7 @@ midi channel. The three arguments are indicated in the type and detailed after:
 All three arguments are optional, which means that a default value is provided
 and will be used if it is not specified. This is indicated in the type by the
 question mark before each argument, and the default value is detailed below
-(e.g. the default amplitude is `1.0`).
+(e.g. the default amplitude is `1.0` and the default frequency is `440.` Hertz).
 
 If we want generate a sine wave of 2600 Hz with an amplitude 0.8, we can thus do
 
@@ -143,15 +150,22 @@ Note that the parameter corresponding to id has a label `id`, which we have to
 specify in order to pass the corresponding argument, and similarly for
 amplitude, whereas there is no label for the frequency.
 
+Finally, just for fun, we can hear an A minor chord by adding three sines:
+
+```{.liquidsoap include="liq/sine4.liq"}
+```
+
+We generates three sines at frequencies $440$ Hz, $440\times 2^{3/12}$ Hz and
+$440\times 2^{7/12}$ Hz, add them, and play the result. Note that the operator
+`add` is taking as argument a _list_ of sources, which could be of any size.
 
 A radio
 -------
 
-add sines
-
 ### Playlists
 
-
+```{.liquidsoap input="liq/playlist.liq"}
+```
 
 
 

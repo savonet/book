@@ -1,8 +1,7 @@
 MD = $(wildcard *.md)
 PANDOC = pandoc --bibliography=papers.bib --filter=scripts/include --syntax-definition=liquidsoap.xml
 
-all: book.pdf language.dtd
-	@$(MAKE) -C scripts
+all: scripts book.pdf language.dtd
 
 ci:
 	git ci . -m "Worked on the book."
@@ -15,6 +14,9 @@ book.pdf: book.md $(MD)
 language.dtd:
 	wget https://github.com/jgm/highlighting-kate/blob/master/xml/language.dtd
 
+scripts:
+	@$(MAKE) -C scripts
+
 check:
 	$(MAKE) -C liq $@
 
@@ -22,6 +24,7 @@ test:
 	$(MAKE) -C scripts
 	pandoc --filter=scripts/inspect --filter=scripts/include test.md
 
-
 %.tex %.pdf %.html: %.md
 	$(PANDOC) $^ -o $@
+
+.PHONY: scripts
