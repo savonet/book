@@ -16,6 +16,7 @@ header-includes: |
   \usepackage[Bjornstrup]{fncychap}
   \usepackage{fvextra}
   \RecustomVerbatimEnvironment{verbatim}{Verbatim}{breaklines}
+  \usepackage{cleveref}
 numbersections: true
 secnumdepth: 1
 toc: true
@@ -48,6 +49,8 @@ toc: true
 -->
 
 !include "internals.md"
+
+!include "reference.md"
 
 !include "conclusion.md"
 

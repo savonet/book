@@ -202,6 +202,8 @@ useful.
 
 TODO: plan of the book
 
+In [this chapter](#chap:technology)
+
 ### How to get help
 
 You have read the book and still have questions? There are many ways to get in

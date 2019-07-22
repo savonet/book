@@ -31,7 +31,7 @@ a website.
 Below, we enter the details of the first two, explaining the technical choices
 you have to face when setting up a webradio.
 
-Audio streams
+Audio streams {#sec:audio-streams}
 -------------
 
 ### Digital audio
@@ -89,14 +89,14 @@ of other loud sound sources), and so on. Most compression formats are
 _destructive_: they remove some information in the original signal in order for
 it to be smaller. The most well-known are mp3, ogg/vorbis and aac: the one you
 want to use is a matter of taste and support on the user-end. For instance, mp3
-is the most widespread, ogg/vorbis has the advantage of being open-source
-patent-free and more efficient but not many users have good support for that
-(e.g. on smartphones), aac is proprietary so that good free encoders are more
-difficult to find but achieves better sounding at high compression rates, etc. A
-typical mp3 is encoded at a bitrate of 128 kbps (kilobits per second, although
-rates of 192 kbps and higher are recommended if you favor sound quality),
-meaning that 1 minute will weight roughly 1 MB, which is 10% of the original
-sound in CD quality.
+is the most widespread, ogg/vorbis has the advantage of being open-source,
+patent-free and has a good quality/bandwidth radio but not many users have good
+support for that (e.g. on smartphones), aac is proprietary so that good free
+encoders are more difficult to find but achieves better sounding at high
+compression rates, etc. A typical mp3 is encoded at a bitrate of 128 kbps
+(kilobits per second, although rates of 192 kbps and higher are recommended if
+you favor sound quality), meaning that 1 minute will weight roughly 1 MB, which
+is 10% of the original sound in CD quality.
 
 Most of these formats also support _variable bitrates_ meaning that the bitrate
 can be adapted within the file: complex parts of the audio will be encoded at
@@ -104,7 +104,8 @@ higher rates and simpler ones at low rates. For those, the resulting stream size
 will heavily depend on the actual audio and is thus more difficult to predict,
 by the perceived quality is higher.
 
-TOOD: explain the difference between containers and codecs..............
+As a side note we were a bit imprecise above when speaking of a "file
+format. TOOD: explain the difference between containers and codecs..............
 
 ### Metadata
 
@@ -116,39 +117,76 @@ desired cue points, and so on (see below).
 
 ### Streaming
 
+Once properly encoded, the streaming of audio data is not performed directly by
+the stream generator (such as Liquidsoap) to client. The reason is that this is
+quite a technical task, which is already handled quite well by tools such as
+Icecast, which takes care of distributing the stream. On a first connection, the
+client starts by buffering audio (in order to be able to cope with possible
+slowdowns of the network) and Icecast therefore has to feed it up at first and
+then sends the data at a peaceful rate, apart from such buffering issues, it
+also takes care of various connections by clients, recording statistics,
+enforcing limits (on clients or bandwidth), and so on. It also handles multiple
+mount points (i.e., different radios).
 
+Until recently, the streaming model as offered by Icecast was predominant, but
+suffers from two main drawbacks. Firstly, the connection has to be kept between
+the client and the server which cannot be achieved in mobile contexts: when you
+connect with your smartphone, you frequently change networks or switch between
+wifi and 4G and the connection cannot be held during such events. Another issue
+is that the data cannot be cached as it is for web traffic, where it helps
+lowering the latencies and bandwidth-related costs. For this reason, new
+standards such as HLS (for HTTP Live Stream) or MPEG-DASH (for Dynamic Adaptive
+Streaming over HTTP) have emerged where the stream is provided as a rolling
+playlist of small files called segments: a playlist typically contains the last
+minute of audio split into segments of 2 seconds. Moreover, the playlist can
+indicate, multiple versions of the stream with various formats and encoding
+qualities, so that the client can switch to a lower bitrate if the connection
+becomes bad (this is called _adaptative_ streaming). Here, the files are
+downloaded one by one, and are served by an usual HTTP server, so that it is
+more robust and scales better than Icecast serving. Our guess is that such
+formats will take over audio distribution in the near future, and Liquidsoap
+already has support for HLS.
 
-Icecast, buffering, connections, packets, limit, stats
-
-If you use Icecast, you can broadcast more than one audio feed using the same
-server. Each audio feed or stream is identified by its "mount point" on the
-server. If you connect to the `foo.ogg` mount point, the URL of your stream will
-be [http://localhost:8000/foo.ogg](`http://localhost:8000/foo.ogg`) -- assuming
-that your Icecast is on localhost on port 8000. If you need further information
-on this you might want to read Icecast's
-[documentation](http://www.icecast.org). A proper setup of a streaming server is
-required for running Liquidsoap.
-
-HLS, better: we can disconnect, the files can be cached (thus cheaper bandwidth)
-
-RTMP
-
-platforms such as youtube
-
-see
-
-- https://stackoverflow.com/questions/30184520/whats-the-best-protocol-for-live-audio-radio-streaming-for-mobile-and-web
+Finally, we would like to mention that, nowadays, streaming is more and more
+being delegated to big online platforms, such as Youtube, because of their ease
+of use (both in terms of setup and of user experience), for which Liquidsoap
+also has support.
 
 Audio sources
 -------------
 
-### Playlists
+In order to make a radio, one has to start with a primary source of audio. We
+give examples of such below.
 
-### Dynamic playlists
+### Audio files
 
-### Other sources
+A typical radio starts with one or more _playlists_, which are lists of audio
+files. These can be stored in various places: they can either be on a local hard
+drive, or on some distant server, in which case they have to be downloaded
+beforehand. There is a slight difference between the two: in the case of local
+files, we have pretty good confidence that they will always be available (or at
+least we can check that this is the case), whereas for distant files the server
+might be unavailable, or just very slow, so that we have to take care of
+downloading the file in advance enough and be prepared to have fallback option
+in case the file is not ready in time. Finally, audio files can be in various
+formats (as described in [the above section](#sec:audio-streams)) and have to be
+decoded, which is why Liquidsoap depends on many libraries, in order to support
+as many formats as possible.
 
-microphone
+Even in the case of local files, the playlist might be _dynamic_: instead of
+knowing in advance the list of all the files, it can be a queue of _requests_
+made by users (e.g., via a website or a chatbot) ; we can even call a script
+which will return the next song to be played, depending on whichever parameters
+(for instance taking in account votes on a website).
+
+### Live inputs
+
+A radio often features live shows. As in the old days, the speaker can be in the
+same room as in the server, in which case the sound is directly captured by a
+sound card.
+
+
+other streams, youtube
 
 TODO: difference between files and live sources (e.g. we cannot fade)
 
@@ -160,6 +198,8 @@ Audio processing
 The fist thing we want to do, not easy
 
 ### Fading
+
+cue points
 
 ### Normalization
 

@@ -10,7 +10,7 @@ ci:
 
 book.pdf: book.md $(MD) $(LIQ)
 	@echo "Generating $@..."
-	@$(PANDOC) --top-level-division=chapter -V links-as-notes=true $< -o $@
+	@$(PANDOC) --top-level-division=chapter --filter=scripts/crossref -V links-as-notes=true $< -o $@
 
 language.dtd:
 	wget https://github.com/jgm/highlighting-kate/blob/master/xml/language.dtd
@@ -23,7 +23,7 @@ check:
 
 test:
 	$(MAKE) -C scripts
-	pandoc --filter=scripts/inspect --filter=scripts/include test.md
+	pandoc --filter=scripts/inspect --filter=scripts/include --filter=scripts/crossref -t LaTeX test.md
 
 %.tex %.pdf %.html: %.md
 	$(PANDOC) $^ -o $@

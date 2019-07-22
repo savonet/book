@@ -1,6 +1,7 @@
 open Yojson.Basic
 open Util
 
+type pandoc = Yojson.Basic.t
 type block = t
 
 (** {2 Reading of blocks} *)
@@ -76,7 +77,7 @@ let code_block ?(ident="") ?(classes=[]) ?(keyvals=[]) contents : block =
 (** {2 Transforming} *)
 
 (** Change the list of blocks. *)
-let replace_blocks f j : t
+let replace_blocks (f : block list -> block list) (j : pandoc) : pandoc
   =
   let blocks = blocks j in
   let blocks = `List (f blocks) in
@@ -110,7 +111,7 @@ let map_top_blocks f j =
 (** {2 General utility functions} *)
 
 (** JSON from markdown file. *)
-let json_of_md_file f =
+let json_of_md_file f : pandoc =
   let tmp = Filename.temp_file "pandoc" ".json" in
   let cmd = Printf.sprintf "pandoc -f markdown -t json %s -o %s" f tmp in
   let n = Sys.command cmd in

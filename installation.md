@@ -9,7 +9,7 @@ process. These instructions are for the latest released version at the time of
 the writing, you are encouraged to consult the online documentation 
 
 
-Automated building using Opam
+Automated building using opam {#sec:opam}
 -----------------------------
 
 The recommended method to install Liquidsoap is by using the [package manager
@@ -246,7 +246,7 @@ sudo opam depext something
 sudo opam install something
 ```
 
-which will automatically trigger a rebuild of Liquidsoap.
+which will automatically trigger a rebuild of Liquidsoap, see [above](#sec:opam).
 
 ### General
 
