@@ -236,81 +236,99 @@ make install
 Libraries used by Liquidsoap
 ----------------------------
 
-TODO: explain all the libraries, sorted by theme
+We list below some of the libraries which can be used by Liquidsoap. They are
+detected during the compilation of Liquidsoap and, in this case, support for the
+libraries is added. We recall that a library `ocaml-something` can be installed
+via opam with
 
-ex: ocaml-vorbis can be installed with opam install vorbis
+```
+sudo opam depext something
+sudo opam install something
+```
 
-for most of them you need the corresponding C library (e.g. `libsamplrate` for
-`samplerate`)
+which will automatically trigger a rebuild of Liquidsoap.
 
 ### General
 
+Those libraries add support for various things:
+
 - `camomile`: charset recoding in metadata,
+- `ocaml-inotify`: getting notified of file changes (e.g. for reloading
+  playlists),
+- `ocaml-magic`: file type detection,
+- `ocaml-lo`: OSC (Open Sound Control) support,
+- `ocaml-ssl`: SSL/https support for connecting to secured websites,
+- `osx-secure-transport`: SSL/https support via OSX's SecureTransport,
+- `yojson`: parsing JSON data.
 
 ### Input / output
 
-Soundcard:
+Those libraries add support for using soundcard for output and input:
 
 - `ocaml-alsa`: soundcard input and output with ALSA,
-- `ocaml-ao`: soundcard output using AO
+- `ocaml-ao`: soundcard output using AO,
+- `ocaml-gstreamer`: input, output and much more,
+- `ocaml-portaudio`: soundcard input and output,
+- `ocaml-pulseaudio`: soundcard input and output.
 
-Other:
+Other outputs:
 
 - `ocaml-cry`: output to icecast servers,
 - `ocaml-bjack`: Jack support
+- `ocaml-lastfm`: Lastfm scrobbling.
 
 ### Sound processing
 
-- `ocaml-samplerate`: samplerate conversion in audio files,
-- `ocaml-dssi`: support for sound synthesis plugins
+Those add support for manipulate sound:
 
-### File formats
+- `ocaml-samplerate`: samplerate conversion in audio files,
+- `ocaml-dssi`: sound synthesis plugins,
+- `ocaml-ladspa`: sound effect plugins,
+- `ocaml-soundtouch`: pitch shifting and time stretching.
+
+### Audio file formats
+
+Support for various file formats (codecs):
+
+- `ocaml-faad`: AAC decoding,
+- `ocaml-fdkaac`: AAC+ encoding,
+- `ocaml-flac`: Flac encoding and decoding,
+- `ocaml-lame`: MP3 encoding,
+- `ocaml-mad`: MP3 decoding,
+- `ocaml-ogg`: Ogg containers,
+- `ocaml-opus`: Ogg/Opus encoding and decoding,
+- `ocaml-shine`: fixed-point MP3 encoding,
+- `ocaml-speex`: Ogg/Speex encoding and decoding,
+- `ocaml-taglib`: MP3 metadata decoding,
+- `ocaml-vorbis`: Ogg/Vorbis encoding and decoding.
+
+Support for playlists:
+
+- `ocaml-xmlplaylist`: support for XML-based playlist formats.
 
 ### Video
 
-- `camlimages`: decoding of various image formats
-- `gd4o`: rendering of text
+Video conversion:
 
-### Optional dependencies (TODO: move this up)
+- `ocaml-ffmpeg`: video conversion,
+- `ocaml-gavl`: video conversion,
+- `ocaml-theora`: Ogg/Theora encoding and decoding.
 
-| Dependency          | Version | Functionality                                 |
-| ------------------- | ------- | --------------------------------------------- |
-| ocaml-faad          | >=0.4.0 | AAC stream decoding                           |
-| ocaml-fdkaac        | >=0.3.0 | AAC(+) encoding                               |
-| ocaml-ffmpeg        | >=0.2.0 | Video conversion using the ffmpeg library     | 
-| ocaml-flac          | >=0.1.5 | Flac and Ogg/Flac codec                       |
-| ocaml-frei0r        | >=0.1.0 | Frei0r plugins                                |
-| ocaml-gavl          | >=0.1.4 | Video conversion using the gavl library       |
-| ocaml-gstreamer     | >=0.3.0 | GStreamer input, output and encoding/decoding |
-| ocaml-inotify       | >=1.0   | Reloading playlists when changed              |
-| ocaml-ladspa        | >=0.1.4 | LADSPA plugins                                |
-| ocaml-lame          | >=0.3.2 | MP3 encoding                                  |
-| ocaml-lastfm        | >=0.3.0 | Lastfm scrobbling                             |
-| ocaml-lo            | >=0.1.0 | OSC (Open Sound Control) support              |
-| ocaml-mad           | >=0.4.4 | MP3 decoding                                  |
-| ocaml-magic         | >=0.6   | File type detection                           |
-| ocaml-ogg           | >=0.5.0 | Ogg codecs                                    |
-| ocaml-opus          | >=0.1.1 | Ogg/Opus codec                                |
-| ocaml-portaudio     | >=0.2.0 | Portaudio I/O                                 |
-| ocaml-pulseaudio    | >=0.1.2 | PulseAudio I/O                                |
-| ocaml-sdl           |         | Display, font & image support                 |
-| ocaml-shine         | >=0.2.0 | Fixed-point MP3 encoding                      |
-| ocaml-soundtouch    | >=0.1.7 | Libsoundtouch's audio effects                 |
-| ocaml-speex         | >=0.2.1 | Ogg/Speex codec                               |
-| ocaml-ssl           | >=0.5.2 | SSL/https support                             |
-| ocaml-taglib        | >=0.3.0 | MP3ID3 metadata access                        |
-| ocaml-theora        | >=0.3.1 | Ogg/Theora codec                              |
-| ocaml-vorbis        | >=0.7.0 | Ogg/Vorbis codec                              |
-| ocaml-xmlplaylist   | >=0.1.3 | XML-based playlist formats                    |
-| osx-secure-transport|         | SSL/https support via OSX's SecureTransport   |
-| yojson              |         | Parsing JSON data (of_json function)          |
+Other video-related libraries:
 
-### Runtime optional dependencies (TODO)
+- `camlimages`: decoding of various image formats,
+- `gd4o`: rendering of text,
+- `ocaml-frei0r`: video effects,
+- `ocaml-sdl`: display, text rendering and image formats.
 
-| Dependency          | Functionality                                     |
-| ------------------- | ------------------------------------------------- |
-| awscli              | `s3://` and `polly://` protocol support           |
-| curl                | `http`/`https`/`ftp` protocol support             |
-| ffmpeg              | external I/O, `replay_gain` level computation, .. |
-| youtube-dl          | youtube video and playlist support                |
+### Runtime dependencies
+
+Those optional dependencies can be used by Liquidsoap if installed, they are
+detected at runtime and do not require any particular support during
+compilation:
+
+- `awscli`: `s3://` and `polly://` protocol support for Amazon web servers,
+- `curl`: downloading files with `http`, `https` and `ftp` protocols,
+- `ffmpeg`: external input and output, `replay_gain`, level computation, and more,
+- `youtube-dl`: youtube video and playlist downloading support.
 

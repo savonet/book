@@ -354,7 +354,8 @@ configured it). In order to enable it, before restarting, you should set
 ENABLE=true
 ```
 
-at the end of the file `/etc/default/icecast2`.
+at the end of the file `/etc/default/icecast2`. More information about setting
+up Icecast can be found on [its website](http://www.icecast.org).
 
 Once this is set up, you should add the following line to your script in
 order to instruct Liquidsoap to send the stream to Icecast:

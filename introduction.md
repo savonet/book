@@ -7,7 +7,7 @@ What is Liquidsoap?
 ### The need for a flexible streaming tool
 
 So, you want to make a webradio? At first, this looks like an easy task, we
-simply need a program which takes a playlist of mp3 files and broadcasts them
+simply need a program which takes a playlist of MP3 files and broadcasts them
 one by one over the internet. But in practice, most people want something much
 more elaborate than just this.
 
@@ -35,7 +35,7 @@ warm sound or to give the radio a unique color.
 
 Finally, the rule number one of a webradio is that _it should never fail_! We
 want to ensure that if, for some reason, the stream we are usually relaying is
-not available, or the external harddisk on which our mp3 files are stored is
+not available, or the external harddisk on which our MP3 files are stored is
 disconnected, an emergency playlist will be played. More difficult, if the
 microphone is unplugged the soundcard will not be aware of it and will provide
 us silence: we should be able to detect that we are streaming blank and after
@@ -146,7 +146,7 @@ motivated David to write a Perl script based on the IceS program in order to
 stream a radio on the campus: _geekradio_ was born.
 
 They did not have that many music files, and at that time it was not so easy to
-get online streams. But there were plenty of mp3s available on the internal
+get online streams. But there were plenty of MP3s available on the internal
 network of the campus, which were shared by the students. In order to have
 access to those more easily, Samuel wrote a dirty campus indexer in OCaml
 (called _strider_, later on replaced by _bubble_), and David made an ugly Perl

@@ -165,7 +165,8 @@ channels, etc.)
 External decoders/encoders
 --------------------------
 
-TODO: many people want to use [stereotool](https://www.stereotool.com/)
+TODO: many people want to use [stereotool](https://www.stereotool.com/), cf
+https://github.com/savonet/liquidsoap/issues/885
 
 Reading files
 -------------
