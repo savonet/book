@@ -2,6 +2,7 @@
 *.cmi
 *.cmx
 *.o
+crossref
 inspect
 include
-crossref
+todo

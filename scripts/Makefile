@@ -1,7 +1,7 @@
-PACKAGES=yojson
+PACKAGES=yojson str
 OCAMLOPT=ocamlfind ocamlopt -annot $(addprefix -package ,$(PACKAGES)) -linkpkg
 
-all: pandoc.cmx inspect include crossref
+all: pandoc.cmx inspect include crossref todo
 
 clean:
 	rm -f *.annot *.cmi *.cmx *.o

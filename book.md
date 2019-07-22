@@ -17,6 +17,7 @@ header-includes: |
   \usepackage{fvextra}
   \RecustomVerbatimEnvironment{verbatim}{Verbatim}{breaklines}
   \usepackage{cleveref}
+  \newcommand{\TODO}[1]{\marginpar{\tiny #1}}
 numbersections: true
 secnumdepth: 1
 toc: true

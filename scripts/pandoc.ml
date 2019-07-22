@@ -11,7 +11,7 @@ let blocks j : block list =
   to_list (List.assoc "blocks" (to_assoc j))
 
 let block_type (b : block) =
-  to_string (List.assoc "t" (to_assoc b))
+  Util.to_string (List.assoc "t" (to_assoc b))
 
 let block_contents (b : block) =
   List.assoc "c" (to_assoc b)
@@ -19,6 +19,12 @@ let block_contents (b : block) =
 let is_paragraph (b : block) = block_type b = "Para"
 
 let is_string (b : block) = block_type b = "Str"
+
+let to_string b =
+  if not (is_string b) then raise Not_found;
+  Util.to_string (block_contents b)
+
+let is_space (b : block) = block_type b = "Space"
 
 let is_quoted (b : block) = block_type b = "Quoted"
 
@@ -31,15 +37,15 @@ let to_code_block (b : block) =
   let c = to_list c in
   let params, contents =
     match c with
-    | [params; contents] -> params, to_string contents
+    | [params; contents] -> params, Util.to_string contents
     | _ -> assert false
   in
   let ident, classes, keyvals =
     match to_list params with
     | [ident; classes; keyvals] ->
-       to_string ident,
-       List.map to_string (to_list classes),
-       List.map (fun kv -> match to_list kv with [k; v] -> to_string k, to_string v | _ -> assert false) (to_list keyvals)
+       Util.to_string ident,
+       List.map Util.to_string (to_list classes),
+       List.map (fun kv -> match to_list kv with [k; v] -> Util.to_string k, Util.to_string v | _ -> assert false) (to_list keyvals)
     | _ -> assert false
   in
   ((ident, classes, keyvals), contents)
@@ -73,6 +79,9 @@ let code_block ?(ident="") ?(classes=[]) ?(keyvals=[]) contents : block =
   let keyvals = `List (List.map (fun (k,v) -> `List [`String k; `String v]) keyvals) in
   let contents = `String contents in
   block "CodeBlock" (`List [`List [ident; classes; keyvals]; contents])
+
+let rawinline_tex s =
+  block "RawInline" (`List [`String "tex"; `String s])
 
 (** {2 Transforming} *)
 

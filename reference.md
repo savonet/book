@@ -4,7 +4,7 @@ Reference
 Encoding formats {#sec:encoding-formats}
 ----------------
 
-^[TODO: section à reprendre]
+!TODO section à reprendre
 
 Encoders are used to define formats into which raw sources should be encoded by
 an output. The syntax for encoders is `%encoder(parameters...)` or, if you use

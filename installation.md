@@ -91,8 +91,10 @@ below.
 
 ### Installing the cutting-edge version
 
+!TODO: retravailler ce paragraphe
+
 You can also install liquidsoap or any of its dependencies from source using
-opam.^[TODO: retravailler ce paragraphe] For instance:
+opam. For instance:
 
 ```
 git clone https://github.com/savonet/liquidsoap.git
