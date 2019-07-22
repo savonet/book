@@ -1,4 +1,5 @@
 MD = $(wildcard *.md)
+LIQ = $(wildcard liq/*.liq)
 PANDOC = pandoc --bibliography=papers.bib --filter=scripts/include --syntax-definition=liquidsoap.xml
 
 all: scripts book.pdf language.dtd
@@ -7,7 +8,7 @@ ci:
 	git ci . -m "Worked on the book."
 	git push
 
-book.pdf: book.md $(MD)
+book.pdf: book.md $(MD) $(LIQ)
 	@echo "Generating $@..."
 	@$(PANDOC) --top-level-division=chapter -V links-as-notes=true $< -o $@
 

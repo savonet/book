@@ -162,7 +162,7 @@ which could be of any size.
 A radio
 -------
 
-### Playlists
+### Playlists and more
 
 Since we are not here to make synthesizers, we should start playing actual music
 instead of sines. In order to do so, we have the `playlist` operator which takes
@@ -190,7 +190,17 @@ be used instead:
 ```{.liquidsoap include="liq/input.http.liq"}
 ```
 
-### Fallbacks
+Finally, there are other types of inputs. For instance, the operator
+`input.alsa` can be used to capture the sound of a microphone on a soundcard,
+with the ALSA library. You should be able to hear your voice with
+
+```{.liquidsoap include="liq/mic.liq"}
+```
+
+We need to use `buffer` here to avoid synchronization issues, this should be
+detailed in [later on](#clocks).
+
+### Fallible sources and fallbacks
 
 A source can be not always available, we call this a _fallible_ source. A
 typical example, is a source obtained by `input.http`: at some point the stream
@@ -219,18 +229,179 @@ we obtain the following error:
 
 ```
 At line 1, char 5-27:
-Error 7: Invalid value:
-That source is fallible
+Error 7: Invalid value: That source is fallible
 ```
 
-.......................................
+which means that Liquidsoap has detected that the source declared at line 1 from
+character 5 to character 27 (i.e., the `input.http`) is fallible. As above, the
+way to fix this consists in having a fallback to a local file:
+
+```{.liquidsoap include="liq/fallible2.liq"}
+```
+
+Note that we are using `single` here instead of `playlist`: this operator plays
+a single file and ensures that the file is available before running the script
+so that we know it will not fail. The argument
+`track_sensitive=false`{.liquidsoap} means that we want to get back to the live
+stream as soon as it is available again (otherwise it would wait the end of the
+track for the emegency playlist). Also not that we are defining `s` twice: this
+is not a problem at all, whenever we reference `s`, the last definition is
+used. Another option would be to fallback to silence, which in Liquidsoap can be
+generated with the operator `blank`:
+
+```{.liquidsoap include="liq/fallible3.liq"}
+```
+
+This behavior is so common that Liquidsoap provides the `mksafe`
+function which does exactly that:
+
+```{.liquidsoap include="liq/fallible4.liq"}
+```
 
 ### Streams depending on the hour
 
+A typical radio will do some scheduling, typically by having different playlists
+at different times of the day. In Liquidsoap, this is achieved by using the
+`switch` operator: this operators takes a list of pairs consisting of a
+predicate (a function returning a boolean) and a source, and plays the first
+source for which the predicate is true. For time, there is a special syntax: `{
+8h-20h }` is a predicate which is true when the current time is between 8h and
+20h (or 8 am and 8 pm if you like this better). Now, if we have two playlists,
+one for the day and one for the night, and want a live show between 19h and 20h,
+we can set this up with
+
+<!-- {.liquidsoap include="liq/radio.liq"} -->
+```liquidsoap
+day   = playlist("/radio/day.pls")   # Day music
+night = playlist("/radio/night.pls") # Night music
+mic   = buffer(input.alsa())         # Microphone
+radio = switch([({8h-19h}, day), ({19h-20h}, mic), ({20h-8h}, night)])
+```
+
+By default, the `switch` operator will wait for the end of the track of a source
+before switching to the next one, but immediate switching can be achieved by
+adding the argument `track_sensitive=false`{.liquidsoap}.
+
+### Jingles
+The next thing we want to be able to do is to insert jingles. We suppose that we
+have a playlist consisting of all the jingles of our radio and we want to play
+roughly one jingle every 5 songs. This can be achieved by using the `random`
+operator:
+
+```liquidsoap
+jingles = playlist("/radio/jingls.pls") # Jingles
+radio = random(weights=[1, 4], [jingles, radio])
+```
+
+This operator randomly selects a track in a list of sources each time a new
+track has to be played (here this list contains the jingles playlist and the
+radio defined above). The `weight` argument says how many tracks of each source
+should be taken in average: here we want to take 1 jingle for 4 radio
+tracks. The selection is randomized however and it might happen that two jingles
+are played one after the other (although this should be rare). If we want to
+make sure that we play 1 jingle and then exactly 4 radio songs, we should use
+the `rotate` operator instead:
+
+```liquidsoap
+radio = rotate(weights=[1, 4], [jingles, radio])
+```
+
 ### Icecast output
 
+Now that we have set up our radio, we could play it locally by adding
 
+```liquidsoap
+out(radio)
+```
 
+at the end of the script, but we would rather stream it to the world.
 
-En gros reprendre le
-[QUICKSTART](https://www.liquidsoap.info/doc-dev/quick_start.html).
+In order to do so we need an Icecast server which will relay the stream to users
+which connect on it. The way you should proceed with its installation depends on
+your distribution, for instance on Ubuntu you can type
+
+```
+sudo apt-get install icecast2
+```
+
+The first thing you should do next is to modify the configuration which is
+generally located in the file `/etc/icecast2/icecast.xml`. In particular, you
+should modify the lines
+
+```
+<source-password>hackme</source-password>
+<relay-password>hackme</relay-password>
+<admin-password>hackme</admin-password>
+```
+
+which are the passwords for sources (i.e. the one Liquidsoap is going to use in
+order to send its stream to Icecast), for relays (when relaying a stream, you
+are not going to use this one but still want to change the password) and for the
+administrative interface. By default all three are `hackme`, and we will use
+that in our examples, but, again, you should change them in order not to be
+hacked. Have a look at other parameters though! You should the restart Icecast
+with the command
+
+```
+sudo /etc/init.d/icecast2 restart
+```
+
+If you are on a system such as Ubuntu, the default configuration prevents
+Icecast from running (because people want to ensure that you have properly
+configured it). In order to enable it, before restarting, you should set
+
+```
+ENABLE=true
+```
+
+at the end of the file `/etc/default/icecast2`.
+
+Once this is set up, you should add the following line to your script in
+order to instruct Liquidsoap to send the stream to Icecast:
+
+```liquidsoap
+output.icecast(%mp3, host="localhost", port=8000,
+               password="hackme", mount="my-radio.mp3", radio)
+```
+
+The parameters of the operator `output.icecast` we used here are
+
+- the format of the stream: here we encode as mp3,
+- the parameters of your Icecast server: hostname, port (8000 is the default
+  port) and password for sources,
+- the mount point: this will determine the url of your stream,
+- and finally, the source we want to send to Icecast.
+
+If everything goes on well, you should be able to listen to your radio by
+listening to the url `http://localhost:8000/my-radio.mp3` with any modern player
+or browser. If you want to see the number of listeners of your stream and other
+useful information, you should have a look at the stats of Icecast, which are
+available at `http://localhost:8000/admin/stats.xsl`, with the login for
+administrators (`admin` / `hackme` by default).
+
+The first argument, which controls the format, can be passed some arguments in
+order to fine tune the encoding. For instance, if we want our mp3 to have a 256k
+bitrate, we should pass `%mp3(bitrate=256)`. It is perfectly possible to have
+multiple streams with different formats for a single radio: if we want to also
+have an aac stream we can add the line
+
+```liquidsoap
+output.icecast(%fdkaac, host="localhost", port=8000,
+               password="hackme", mount="my-radio.aac", radio)
+```
+
+By the way, support for aac is not built in in the default installation. If you
+get the message
+
+```
+Error 12: Unsupported format!
+You must be missing an optional dependency.
+```
+
+this means that you did not enable it. In order to do so in an opam
+installation, you should type
+
+```
+sudo opam depext fdkaac
+sudo opam install fdkaac
+```

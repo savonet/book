@@ -53,6 +53,9 @@ and install a recent version of the ocaml compiler
 opam switch create 4.08.0
 ```
 
+It does take some minutes, because it compiles OCaml, so get prepared to have a
+coffee.
+
 ### Installing Liquidsoap
 
 Once this is done, a typical installation of Liquidsoap with support for mp3
@@ -69,7 +72,8 @@ develop by ourselves. Here, we want to install the dependencies required by
 `taglib` (the library to read tags in audio files), `mad` (to decode mp3),
 `lame` (to encode mp3), `cry` (to stream to icecast), `samplerate` (to resample
 audio) and finally `liquidsoap`. The second line (`opam install ...`) actually
-install the libraries and programs.
+install the libraries and programs. Again, compilation takes some time (around a
+minute on a recent computer).
 
 Most of Liquidsoap's dependencies are only optionally installed by opam. For
 instance, if you want to enable ogg encoding and decoding after you've already

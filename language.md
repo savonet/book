@@ -23,7 +23,6 @@ Expressions
 string / int / float / lists / tuples
 deconstructing tuples
 
-
 Sources
 -------
 
@@ -72,3 +71,6 @@ Interaction
 -----------
 
 interactive floats
+
+Time predicates
+---------------

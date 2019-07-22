@@ -24,7 +24,8 @@ let () =
       List.flatten (List.map f (blocks j))
     with
     | Exit -> 
-       (* ```include *)
+       (* ```{.blabla include="file"}
+          ``` *)
        if is_code_block b && List.mem_assoc "include" (code_block_keyvals b) then
          let keyvals = code_block_keyvals b in
          let contents =
@@ -43,7 +44,7 @@ let () =
              with
              | End_of_file -> !ans
            with
-           | Sys_error _ -> "ERROR: file \""^fname^"\" not found!"
+           | Sys_error _ -> "*** ERROR: file \""^fname^"\" not found! ***"
          in
          let b = code_block ~ident:(code_block_ident b) ~classes:(code_block_classes b) ~keyvals contents in
          [b]

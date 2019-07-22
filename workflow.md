@@ -16,6 +16,7 @@ Handling tracks
 - blank detection
 - log all the music files which have gone on air
 - count the number of played music files (a reference!)
+- interactive switching with teltnet (= switch on a boolean set via telnet)
 
 Cue points
 ----------
