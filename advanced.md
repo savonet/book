@@ -156,6 +156,8 @@ Calling scripts in other languages...
 Decoders
 --------
 
+TODO: changing the order of decoders, which decoders handle which format, etc. (settings)
+
 Encoders
 --------
 

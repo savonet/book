@@ -1,7 +1,12 @@
 BLa qsdfqksjdfkaer
 
-!TODO penser à acheter le pain
+```liquidsoap
+bla bla
+```
 
-!TODO: the `smooth_add` example from <https://www.liquidsoap.info/doc-1.3.6/cookbook.html> to have the voice over a bedx
+![image](img/logo){height="3.5cm"}
 
-encore du bla bla
+!include "cover.md"
+
+1. bla
+2. bli
