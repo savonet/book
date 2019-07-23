@@ -121,6 +121,9 @@ In this book, we will mainly focus on applications. More details about the
 language and underlying ideas behind Liquidsoap can be found in the two articles
 [@baelde2008webradio; @baelde2011liquidsoap].
 
+### A limitation of Liquidsoap
+
+TODO: explain once for all that we have to reencode everything
 
 ### Free software
 
@@ -186,8 +189,8 @@ find songs on the database of the campus, which have priority over static
 playlists but not live shows, and added speech-synthetized metadata information
 at the end of requests.
 
-Later on, the two main developers were joined by Romain Beauxis^[TODO: détailler
-et mentionner Radio Pi]
+Later on, the two main developers were joined by Romain Beauxis\TODO{détailler
+et mentionner Radio Pi}
 
 About this book
 ---------------

@@ -254,14 +254,19 @@ which will automatically trigger a rebuild of Liquidsoap, see [above](#sec:opam)
 
 Those libraries add support for various things:
 
-- `camomile`: charset recoding in metadata,
-- `ocaml-inotify`: getting notified of file changes (e.g. for reloading
-  playlists),
-- `ocaml-magic`: file type detection,
-- `ocaml-lo`: OSC (Open Sound Control) support,
+- `camomile`: charset recoding in metadata (those are generally encoded in UTF-8
+  which support all characters, but older files used various encodings for
+  characters which can be converted),
+- `ocaml-inotify`: getting notified of file changes (e.g. for reloading a
+  playlist when it has been updated),
+- `ocaml-magic`: file type detection (e.g. this is useful for detecting that a
+  file is an MP3 even if it does not have the `.mp3` extension),
+- `ocaml-lo`: OSC (Open Sound Control) support for controlling the radio
+  (changing the volume, switching between sources) via external interfaces
+  (e.g. an application on your phone),
 - `ocaml-ssl`: SSL/https support for connecting to secured websites,
 - `osx-secure-transport`: SSL/https support via OSX's SecureTransport,
-- `yojson`: parsing JSON data.
+- `yojson`: parsing JSON data (useful to exchange data with other applications).
 
 ### Input / output
 
@@ -269,9 +274,13 @@ Those libraries add support for using soundcard for output and input:
 
 - `ocaml-alsa`: soundcard input and output with ALSA,
 - `ocaml-ao`: soundcard output using AO,
-- `ocaml-gstreamer`: input, output and much more,
+- `ocaml-gstreamer`: input and output over various devices (including virtual
+  ones such as Icecast or HLS),
 - `ocaml-portaudio`: soundcard input and output,
 - `ocaml-pulseaudio`: soundcard input and output.
+
+Among those, ALSA is very low level and is probably the one you want to use in
+order to minimize latencies. Other are support a wider variety of soundcards.
 
 Other outputs:
 
@@ -283,18 +292,19 @@ Other outputs:
 
 Those add support for manipulate sound:
 
-- `ocaml-samplerate`: samplerate conversion in audio files,
 - `ocaml-dssi`: sound synthesis plugins,
 - `ocaml-ladspa`: sound effect plugins,
+- `ocaml-samplerate`: samplerate conversion in audio files,
 - `ocaml-soundtouch`: pitch shifting and time stretching.
 
 ### Audio file formats
 
-Support for various file formats (codecs):
-
 - `ocaml-faad`: AAC decoding,
-- `ocaml-fdkaac`: AAC+ encoding,
+- `ocaml-fdkaac`: AAC+ encoding (it is of better quality than `ocaml-faad`, but
+  somewhat more difficult to install),
+- `ocaml-ffmepg`: encoding and decoding of various formats,
 - `ocaml-flac`: Flac encoding and decoding,
+- `ocaml-gstreamer`: encoding and decoding of various formats,
 - `ocaml-lame`: MP3 encoding,
 - `ocaml-mad`: MP3 decoding,
 - `ocaml-ogg`: Ogg containers,
@@ -304,7 +314,7 @@ Support for various file formats (codecs):
 - `ocaml-taglib`: MP3 metadata decoding,
 - `ocaml-vorbis`: Ogg/Vorbis encoding and decoding.
 
-Support for playlists:
+### Playlists
 
 - `ocaml-xmlplaylist`: support for XML-based playlist formats.
 

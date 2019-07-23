@@ -27,34 +27,78 @@ associated theory are described in [@baelde2008webradio].
 ### Functional programming
 
 The language is _functional_, which means that you can define very easily
-functions, and that functions can be passed as arguments of other functions.
+functions, and that functions can be passed as arguments of other
+functions. This might look like a crazy thing at first, but it is actually quite
+common in some language communities (such as OCaml). The second thing it might
+look is quite useless: why should we need such functions when describing
+webradios? It happens to be quite convenient in many places: for handlers (we
+can specify the function which describes what to do when some event occurs such
+as when a DJ connects to the radio), for transitions (we pass a function which
+describes the shape we want for the transition) and so on.
 
-functional
+### Streams
 
-### Sources
-
-source manipulation
+The unique feature of Liquidsoap is that it allows the manipulation of _sources_
+which are functions which will generate streams. These streams typically consist
+of stereo audio data, but is not restricted to this: they can contain audio with
+arbitrary number of channels, they can also contain an arbitrary number of video
+channels, and also MIDI channels (there is limited support for sound synthesis).
 
 ### Execution model
 
-Language execution vs stream production
+When running a Liquidsoap program, the compiler goes through these four phases:
 
-Expressions
------------
+1. lexical analysis and parsing: Liquidsoap ingests your program and ensures
+   that its syntax follows the rules,
+2. type inference and type checking,
+3. compilation of the program: this produces a new program which will generate
+   the stream (a _stream generator_),
+4. execution of the stream generator to actually produce audio.
 
-### Basic values
+The two last phases can be resumed by the following fact: Liquidsoap is a
+_stream generator generator_, it generates stream generators.
 
-int / float
+Basic expressions
+-----------------
 
-This raises a typing error:
+We begin by describing the most simple everyday expressions in Liquidsoap.
+
+### Floats and integers
+
+The most basic values are integers, such as `3`, which are of type `int`, and
+the floats, such as `2.45`, which are of type `float`. The floats always have a
+decimal point in them, so that `3` and `3.` are not the same thing: the former
+is an integer and the later is a float. This is a source of errors for
+beginners, but is necessary for typing to work well. For instance, running a
+program containing
 
 ```
 s = sine(500)
 ```
 
+will raise the error
+
+```
+At line 1, char 9:
+Error 5: this value has type int but it should be a subtype of float
+```
+
+which means that the sine function expects a float as argument, but an integer
+is provided. The fix here consists in replacing "`500`" by "`500.`".
+
+### Strings
+
 strings, string interpolation: `"my name is #{name}"`, string representation of any value, printing, logging
 
+### Booleans
+
 booleans: conditionals time predicates (see [here]{#sec:time-predicates}).
+
+### Constructed values
+
+lists (head, tail)
+
+tuples (fst, snd, let ...)
 
 ### Variables
 
@@ -65,12 +109,6 @@ unused variables, `ignore`
 ### Playing with Liquidsoap
 
 interactive mode, type display, etc.
-
-### Constructed values
-
-lists (head, tail)
-
-tuples (fst, snd, let ...)
 
 References
 ----------
@@ -84,9 +122,17 @@ Exemple de `gstreamer.hls`
 Functions
 ---------
 
+builtin functions, that we like to call _operators_, but the user can define other
+
 labels, optional parameters, inline functions, {}
 
+handlers (e.g. `on_blank`)
+
+crossfade
+
 Partial evaluation
+
+detail the type for `+`
 
 ### Function ()->...
 
