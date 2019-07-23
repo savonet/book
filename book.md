@@ -18,11 +18,12 @@ header-includes: |
   \RecustomVerbatimEnvironment{verbatim}{Verbatim}{breaklines}
   \usepackage{cleveref}
   \newcommand{\TODO}[1]{\marginpar{\tiny #1}}
+  \newcommand{\SM}[1]{\TODO{SM: #1}}
+  \newcommand{\RB}[1]{\TODO{RB: #1}}
 numbersections: true
 secnumdepth: 1
 toc: true
 ...
-
 !include "introduction.md"
 
 !include "technology.md"

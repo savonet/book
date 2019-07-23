@@ -49,7 +49,9 @@ Icecast output
 Input streams with harbor
 -------------------------
 
-!TODO: the `smooth_add` example from <https://www.liquidsoap.info/doc-1.3.6/cookbook.html> to have the voice over a bedx
+TODO: the `smooth_add` example from
+<https://www.liquidsoap.info/doc-1.3.6/cookbook.html> to have the voice over a
+bed
 
 Monitoring the stream
 ---------------------
@@ -107,7 +109,7 @@ source = on_blank(handler,source)
 
 
 
-Clocks: avoiding synchronization issues {#clocks}
+Clocks: avoiding synchronization issues {#sec:clocks}
 ---------------------------------------
 
 Explain the problem with multiple icecast outputs.
@@ -304,6 +306,7 @@ This will automatically attach the appropriate sources to that clock.
 However, you may need to do it for other operators if they are totally
 unrelated to the first one.
 
+\TODO{mention the `buffer.adaptative` operator}
 The `buffer()` operator can be used to communicate between
 any two clocks: it takes a source in one clock and builds a source
 in another. The trick is that it uses a buffer: if one clock

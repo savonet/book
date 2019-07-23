@@ -4,7 +4,7 @@
 
 \vspace{1cm}
 \vspace{5cm}
-![image](img/logo){height="3.5cm"}
+![image](images/logo.pdf){height="3.5cm"}
 
 \vspace{1cm}
 \today

@@ -1,4 +1,4 @@
-Prologue
+Prologue {#chap:prologue epub:type=prologue}
 ========
 
 What is Liquidsoap?
@@ -202,8 +202,6 @@ useful.
 
 TODO: plan of the book
 
-In [this chapter](#chap:technology)
-
 ### How to get help
 
 You have read the book and still have questions? There are many ways to get in
@@ -220,6 +218,8 @@ touch with the community and obtain help to get your problem solved:
 
 Please remember to be kind, most of the people there are doing this on their
 free time!
+
+\TODO{explain how to report bugs about this book}
 
 ### The authors
 

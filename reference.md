@@ -1,14 +1,17 @@
-Reference
+Reference {#chap:reference}
 =========
+
+Time predicates {#sec:time-predicate}
+---------------
+
+TODO: detail the syntax of time predicates (`10h-15h30`).
 
 Encoding formats {#sec:encoding-formats}
 ----------------
 
-!TODO section à reprendre
-
-Encoders are used to define formats into which raw sources should be encoded by
-an output. The syntax for encoders is `%encoder(parameters...)` or, if you use
-default parameters, `%encoder`.
+\TODO{section à reprendre} Encoders are used to define formats into which raw
+sources should be encoded by an output. The syntax for encoders is
+`%encoder(parameters...)` or, if you use default parameters, `%encoder`.
 
 In most Liquidsoap scripts, the encoding format determines what kind of data is
 streamed. The type of an encoding format depends on its parameter. For example,

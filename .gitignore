@@ -4,8 +4,10 @@
 *.aux
 *.bbl
 *.blg
+*.epub
 *.log
 *.out
 *.pdf
 *.toc
 language.dtd
+book.html
