@@ -13,34 +13,33 @@ type target = string * string
 
 (* type list_attributes = int * [`Decimal] * [`Period] *)
 
-type math_type = [ `DisplayMath | `InlineMath ]
+type math_type = DisplayMath | InlineMath
 
-type quote_type = [ `DoubleQuote ]
+type quote_type = DoubleQuote
 
-type inline = [
-  (* | `Code of attr * string *)
-  (* | `Emph of inline list *)
-  | `Image of attr * inline list * target
-  | `Link of attr * inline list * target
-  (* | `Math of math_type * string *)
-  (* | `Note of block list *)
-  | `Quoted of quote_type * inline list
-  (* | `SoftBreak *)
-  | `Space
-  | `Str of string
-  | `UnhandledInline of Yojson.Basic.t
-  ]
+type inline =
+  | Code of attr * string
+  (* | Emph of inline list *)
+  | Image of attr * inline list * target
+  | Link of attr * inline list * target
+  (* | Math of math_type * string *)
+  (* | Note of block list *)
+  | Quoted of quote_type * inline list
+  | RawInline of string * string
+  (* | SoftBreak *)
+  | Space
+  | Str of string
+  | UnhandledInline of Yojson.Basic.t
 
-and block = [
-  (* | `BulletList of block list list *)
-  | `CodeBlock of attr * string
-  (* | `Header of int * attr * inline list *)
-  (* | `OrderedList of list_attributes * block list list *)
-  | `Para of inline list
-  (* | `Plain of inline list *)
-  | `RawBlock of format * string
-  | `UnhandledBlock of Yojson.Basic.t
-  ]
+and block =
+  (* | BulletList of block list list *)
+  | CodeBlock of attr * string
+  (* | Header of int * attr * inline list *)
+  (* | OrderedList of list_attributes * block list list *)
+  | Para of inline list
+  (* | Plain of inline list *)
+  | RawBlock of format * string
+  | UnhandledBlock of Yojson.Basic.t
 
 type t = { blocks : block list; api_version : int list; meta : Yojson.Basic.t }
 
@@ -73,63 +72,63 @@ module JSON = struct
     let url, title = to_pair t in
     Util.to_string url, Util.to_string title
 
-  let to_list_attributes a =
-    let n, ns, nd = to_triple a in
-    let n = Util.to_int n in
-    let ns = element_type ns in
-    let nd = element_type nd in
-    (* TODO *)
-    assert (ns = "Decimal");
-    assert (nd = "Period");
-    n, `Decimal, `Period
+  (* let to_list_attributes a = *)
+    (* let n, ns, nd = to_triple a in *)
+    (* let n = Util.to_int n in *)
+    (* let ns = element_type ns in *)
+    (* let nd = element_type nd in *)
+    (* (\* TODO *\) *)
+    (* assert (ns = "Decimal"); *)
+    (* assert (nd = "Period"); *)
+    (* n, Decimal, Period *)
 
-  let to_math_type t : math_type =
+  let to_math_type t =
     match element_type t with
-    | "DisplayMath" -> `DisplayMath
-    | "InlineMath" -> `InlineMath
+    | "DisplayMath" -> DisplayMath
+    | "InlineMath" -> InlineMath
     | _ -> assert false
 
   let rec to_inline e =
     match element_type e with
-    (* | "Code" -> *)
-       (* let a, c = to_pair (element_contents e) in *)
-       (* let a = to_attr a in *)
-       (* let c = Util.to_string c in *)
-       (* `Code (a, c) *)
-    (* | "Emph" -> `Emph (List.map to_inline (Util.to_list (element_contents e))) *)
+    | "Code" ->
+       let a, c = to_pair (element_contents e) in
+       let a = to_attr a in
+       let c = Util.to_string c in
+       Code (a, c)
+    (* | "Emph" -> Emph (List.map to_inline (Util.to_list (element_contents e))) *)
     | "Image" ->
        let a, i, t = to_triple (element_contents e) in
        let a = to_attr a in
        let i = List.map to_inline (Util.to_list i) in
        let t = to_target t in
-       `Image (a, i, t)
+       Image (a, i, t)
     | "Link" ->
        let a, i, t = to_triple (element_contents e) in
        let a = to_attr a in
        let i = List.map to_inline (Util.to_list i) in
        let t = to_target t in
-       `Link (a, i, t)
+       Link (a, i, t)
     (* | "Math" -> *)
        (* let t, m = to_pair (element_contents e) in *)
        (* let t = to_math_type t in *)
        (* let m = Util.to_string m in *)
-       (* `Math (t, m) *)
-    (* | "Note" -> `Note (List.map to_block (Util.to_list (element_contents e))) *)
+       (* Math (t, m) *)
+    (* | "Note" -> Note (List.map to_block (Util.to_list (element_contents e))) *)
     | "Quoted" ->
        let q, l = to_pair (element_contents e) in
        let q =
          match element_type q with
-         | "DoubleQuote" -> `DoubleQuote
+         | "DoubleQuote" -> DoubleQuote
          | q -> failwith ("Unhandled quote type "^q)
        in
        let l = List.map to_inline (Util.to_list l) in
-       `Quoted (q, l)
-    (* | "SoftBreak" -> `SoftBreak *)
-    | "Str" -> `Str (Util.to_string (element_contents e))
-    | "Space" -> `Space
-    | _ -> `UnhandledInline e
+       Quoted (q, l)
+    (* | "SoftBreak" -> SoftBreak *)
+    | "Str" -> Str (Util.to_string (element_contents e))
+    | "Space" -> Space
+    | _ -> UnhandledInline e
       
-  and to_block e : block =
+  and to_block e =
     match element_type e with
     (* | "BulletList" -> *)
        (* let l = Util.to_list (element_contents e) in *)
@@ -137,7 +136,7 @@ module JSON = struct
        (* `BulletList l *)
     | "CodeBlock" ->
        let attr, code = to_pair (element_contents e) in
-       `CodeBlock (to_attr attr, Util.to_string code)
+       CodeBlock (to_attr attr, Util.to_string code)
     (* | "Header" -> *)
        (* let n, a, t = to_triple (element_contents e) in *)
        (* let n = Util.to_int n in *)
@@ -150,14 +149,16 @@ module JSON = struct
        (* let l = Util.to_list l in *)
        (* let l = List.map (fun l -> List.map to_block (Util.to_list l)) l in *)
        (* `OrderedList (la, l) *)
-    | "Para" -> `Para (List.map to_inline (Util.to_list (element_contents e)))
+    | "Para" -> Para (List.map to_inline (Util.to_list (element_contents e)))
     (* | "Plain" -> `Plain (List.map to_inline (Util.to_list (element_contents e))) *)
     | "RawBlock" ->
        let fmt, contents = to_pair (element_contents e) in
-       `RawBlock (Util.to_string fmt, Util.to_string contents)
-    | _ -> `UnhandledBlock e
+       RawBlock (Util.to_string fmt, Util.to_string contents)
+    | _ -> UnhandledBlock e
 
-  let block t (c : Yojson.Basic.t) = `Assoc ["t", `String t; "c", c]
+  let element t c = `Assoc ["t", `String t; "c", c]
+
+  let element_nc t = `Assoc ["t", `String t]
 
   let of_attr (id, classes, keyvals) =
     let id = `String id in
@@ -168,27 +169,38 @@ module JSON = struct
   let of_target (url, title) =
     `List [`String url; `String title]
 
-  let rec of_inline : inline -> 'a = function
-    | `Image (a, i, t) ->
-       block "Image" (`List [of_attr a; `List (List.map of_inline i); of_target t])
-    | `Link (a, i, t) ->
-       block "Link" (`List [of_attr a; `List (List.map of_inline i); of_target t])
-    | `Quoted (q, l) ->
+  let rec of_block = function
+    | CodeBlock (a, s) -> element "CodeBlock" (`List [of_attr a; `String s])
+    | Para l -> element "Para" (`List (List.map of_inline l))
+    | RawBlock (f, c) -> element "RawBlock" (`List [`String f; `String c])
+    | UnhandledBlock b -> b
+  and of_inline = function
+    | Code (a, t) ->
+       let a = of_attr a in
+       let t = `String t in
+       element "Code" (`List [a; t])
+    | Image (a, i, t) ->
+       let a = of_attr a in
+       let i = `List (List.map of_inline i) in
+       let t = of_target t in
+       element "Image" (`List [a; i; t])
+    | Link (a, i, t) ->
+       let a = of_attr a in
+       let i = `List (List.map of_inline i) in
+       let t = of_target t in
+       element "Link" (`List [a; i; t])
+    | Quoted (q, i) ->
        let q =
          match q with
-         | `DoubleQuote -> "DoubleQuote"
+         | DoubleQuote -> element_nc "DoubleQuote"
        in
-       let l = List.map of_inline l in
-       block "Quoted" (`List [`Assoc ["t", `String q]; `List l])
-    | `Str s -> block "Str" (`String s)
-    | `Space -> `Assoc ["t", `String "Space"]
-    | `UnhandledInline b -> b
-
-  let rec of_block : block -> 'a = function
-    | `CodeBlock (a, s) -> block "CodeBlock" (`List [of_attr a; `String s])
-    | `Para l -> block "Para" (`List (List.map of_inline l))
-    | `RawBlock (f, c) -> block "RawBlock" (`List [`String f; `String c])
-    | `UnhandledBlock b -> b
+       let i = `List (List.map of_inline i) in
+       element "Quoted" (`List [q; i])
+    | RawInline (f, s) ->
+       element "RawInline" (`List [`String f; `String s])
+    | Space -> element_nc "Space"
+    | Str s -> element "Str" (`String s)
+    | UnhandledInline i -> i
 end
 
 (** {2 Reading and writing} *)
@@ -312,24 +324,24 @@ let replace_blocks f p =
   { p with blocks = f p.blocks }
 
 let map ?(block=(fun b -> None)) ?(inline=(fun i -> None)) p =
-  let rec map_block (b : block) : block list =
+  let rec map_block b =
     match block b with
     | Some bb -> bb
     | None ->
        match b with
-       | `Para ii -> [`Para (map_inlines ii)]
+       | Para ii -> [Para (map_inlines ii)]
        | b -> [b]
-  and map_inline (i : inline) : inline list =
+  and map_inline i =
     match inline i with
     | Some ii -> ii
     | None ->
        match i with
-       | `Image (a, i, t) -> [`Image (a, map_inlines i, t)]
-       | `Link (a, i, t) -> [`Link (a, map_inlines i, t)]
-       | `Quoted (q, i) -> [`Quoted (q, map_inlines i)]
+       | Image (a, i, t) -> [Image (a, map_inlines i, t)]
+       | Link (a, i, t) -> [Link (a, map_inlines i, t)]
+       | Quoted (q, i) -> [Quoted (q, map_inlines i)]
        | i -> [i]
   and map_blocks bb = List.flatten (List.map map_block bb)
-  and map_inlines ii : inline list = List.flatten (List.map map_inline ii) in
+  and map_inlines ii = List.flatten (List.map map_inline ii) in
   replace_blocks map_blocks p
 
 (** Map a function to every top-level block. *)

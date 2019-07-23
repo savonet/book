@@ -12,11 +12,11 @@ let begins_with prefix s =
 let () =
   let p = Pandoc.of_json (Yojson.Basic.from_channel stdin) in
   let rec f = function
-    | `Link (_, _, (url, _)) ->
+    | Pandoc.Link (_, _, (url, _)) ->
        if not (begins_with "#chap:" url || begins_with "#sec:" url) then None
        else
          let link = String.sub url 1 (String.length url - 1) in
-         Some [`RawInline ("tex", Printf.sprintf "\\cref{%s}" link)]
+         Some [Pandoc.RawInline ("tex", Printf.sprintf "\\cref{%s}" link)]
     | _ -> None
   in
   let p = Pandoc.map ~inline:f p in
