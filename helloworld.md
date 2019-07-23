@@ -233,8 +233,9 @@ Error 7: Invalid value: That source is fallible
 ```
 
 which means that Liquidsoap has detected that the source declared at line 1 from
-character 5 to character 27 (i.e., the `input.http`) is fallible. As above, the
-way to fix this consists in having a fallback to a local file:
+character 5 to character 27 (i.e., the `input.http`) is fallible.\TODO{ignore
+the warning with `fallible=true`} As above, the way to fix this consists in
+having a fallback to a local file:
 
 ```{.liquidsoap include="liq/fallible2.liq"}
 ```

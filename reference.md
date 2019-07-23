@@ -1,7 +1,7 @@
 Reference {#chap:reference}
 =========
 
-Time predicates {#sec:time-predicate}
+Time predicates {#sec:time-predicates}
 ---------------
 
 TODO: detail the syntax of time predicates (`10h-15h30`).

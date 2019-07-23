@@ -91,7 +91,7 @@ below.
 
 ### Installing the cutting-edge version
 
-!TODO: retravailler ce paragraphe
+\TODO{retravailler ce paragraphe}
 
 You can also install liquidsoap or any of its dependencies from source using
 opam. For instance:

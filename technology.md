@@ -44,8 +44,10 @@ samples, corresponding to the successive positions of the membrane of the
 microphone. In general, sound is sampled as 44.1 kHz, which means that samples
 are captured 44100 times per second, and indicate the position of the membrane,
 which is represented by a floating point number, conventionally between -1 and
-1. But this is a matter of convention and many of those can be found in
-"nature":
+1.\TODO{maybe do we want something like
+\href{https://upload.wikimedia.org/wikipedia/commons/5/50/Signal_Sampling.png}{the
+usual picture} about sampling?} But this is a matter of convention and many of
+those can be found in "nature":
 
 - the sampling rate is typically 44.1 kHz (this is for instance the case in
   audio CDs), but the movie industry likes more 48 kHz, and recent equipment and

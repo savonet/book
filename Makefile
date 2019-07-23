@@ -32,6 +32,6 @@ test:
 	$(PANDOC) -s $^ -o $@
 
 %.tex %.pdf: %.md
-	$(PANDOC) --filter=scripts/crossref --filter=scripts/todo $^ -o $@
+	$(PANDOC) --filter=scripts/crossref -s $^ -o $@
 
 .PHONY: scripts

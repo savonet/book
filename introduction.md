@@ -117,6 +117,11 @@ the production of an audio stream or of a video stream is quite
 similar. Typically, many radios are also streaming on youtube, adding an image
 or a video, and maybe some information text sliding at the bottom.
 
+In this book, we will mainly focus on applications. More details about the
+language and underlying ideas behind Liquidsoap can be found in the two articles
+[@baelde2008webradio; @baelde2011liquidsoap].
+
+
 ### Free software
 
 The Liquidsoap language is a _free software_. This of course means that it is
