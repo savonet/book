@@ -63,6 +63,21 @@ Basic expressions
 
 We begin by describing the most simple everyday expressions in Liquidsoap.
 
+### Interactive mode
+
+In order to test the functions that will be introduced in this section, it can
+be convenient to use the _interactive mode_ of Liquidsoap which can be used to
+type small expressions and immediately see their result. It can be started with
+
+```
+liquidsoap --interactive
+```
+
+
+
+interactive mode, type display, etc.
+
+
 ### Integers and floats
 
 The integers, such as `3`, are of type `int`. Depending on the architecture (32
@@ -77,8 +92,7 @@ The floats, such as `2.45`, are of type `float`, and are in double precision
 float. This is a source of errors for beginners, but is necessary for typing to
 work well. For instance, running a program containing
 
-```liquidsoap
-s = sine(500)
+```{.liquidsoap include="liq/bad/sine.liq" from=0 to=0}
 ```
 
 will raise the error
@@ -197,7 +211,7 @@ the `then` branch should be of type `unit`:
 if x == "admin" then print("Welcome admin") end
 ```
 
-### Unit
+### Unit {#sec:unit}
 
 Some functions, such as `print`, do not return a meaningful value: we are
 interested in what they are doing (here printing on the standard output) and not
@@ -206,24 +220,41 @@ something of some type, there is a particular type for the return of such
 functions: `unit`. Just as there are only two values in the booleans (`true` and
 `false`), there is only one value in the unit type, which is written `()`.
 
-In sequences of instructions, all the instructions but the last should be of
+In _sequences_ of instructions, all the instructions but the last should be of
 type unit. For instance, the following function is fine:
 
-```{.liquidsoap input="liq/fun1.liq"}
+```{.liquidsoap include="liq/fun1.liq"}
 ```
 
-(this is a function printing "hello" and then returning 5, see
-[below](sec:functions) for details about functions), but the code
+This is a function printing "hello" and then returning 5, see
+[below](#sec:functions) for details about functions. Sequences of instructions
+are delimited by new lines, but can also be separated by `;` in order to have
+them fit on one line, i.e., the above can equivalently be written
 
-```liquidsoap
-def f()
-  3+5
-  2
-end
+```{.liquidsoap include="liq/fun2.liq"}
 ```
 
-sequences of instructions `;`, warning if one is not unit
+However, the code
 
+```{.liquidsoap include="liq/bad/fun.liq"}
+```
+
+gives rise to the following warning
+
+```
+At line 2, char 2-4:
+Warning 3: This expression should have type unit.
+```
+
+The reason is that this function is first computing the result of 3+5 and then
+returning 2 without doing anything with the result of the addition, and the fact
+that the type of `3+5` is not unit (it is `int`) allows to detect that. It is
+often the sign of a mistake when one computes something without using it; if
+however it is on purpose, you should use the `ignore` function to explicitly
+ignore the result:
+
+```{.liquidsoap include="liq/fun3.liq"}
+```
 
 ### Constructed values
 
@@ -236,10 +267,6 @@ tuples (fst, snd, let ...)
 variable masking
 
 unused variables, `ignore`
-
-### Playing with Liquidsoap
-
-interactive mode, type display, etc.
 
 References
 ----------

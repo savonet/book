@@ -1,2 +1,2 @@
-s = sine(300)
+s = sine(500)
 out(s)

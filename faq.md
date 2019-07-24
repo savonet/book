@@ -64,6 +64,15 @@ We must catchup
 Exceptions
 ----------
 
+Warnings
+--------
+
+This one is explained in [there](#sec:unit):
+
+```
+Warning 3: This expression should have type unit.
+```
+
 Files cannot be decoded
 -----------------------
 
