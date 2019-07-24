@@ -232,90 +232,7 @@ let json_of_md_file fname =
 
 let of_md_file fname =
   let json = json_of_md_file fname in
-  (* Printf.eprintf "%s\n%!" (Yojson.Basic.pretty_to_string json); *)
   of_json json
-
-(*
-(** {2 Reading of blocks} *)
-
-(** Extract blocks from JSON. *)
-let blocks j : block list =
-  to_list (List.assoc "blocks" (to_assoc j))
-
-let block_type (b : block) =
-  Util.to_string (List.assoc "t" (to_assoc b))
-
-let block_contents (b : block) =
-  List.assoc "c" (to_assoc b)
-
-let is_paragraph (b : block) = block_type b = "Para"
-
-let is_string (b : block) = block_type b = "Str"
-
-let to_string b =
-  if not (is_string b) then raise Not_found;
-  Util.to_string (block_contents b)
-
-let is_space (b : block) = block_type b = "Space"
-
-let is_quoted (b : block) = block_type b = "Quoted"
-
-let is_code_block (b : block) =
-  block_type b = "CodeBlock"
-
-let to_code_block (b : block) =
-  assert (is_code_block b);
-  let c = block_contents b in
-  let c = to_list c in
-  let params, contents =
-    match c with
-    | [params; contents] -> params, Util.to_string contents
-    | _ -> assert false
-  in
-  let ident, classes, keyvals =
-    match to_list params with
-    | [ident; classes; keyvals] ->
-       Util.to_string ident,
-       List.map Util.to_string (to_list classes),
-       List.map (fun kv -> match to_list kv with [k; v] -> Util.to_string k, Util.to_string v | _ -> assert false) (to_list keyvals)
-    | _ -> assert false
-  in
-  ((ident, classes, keyvals), contents)
-
-let code_block_ident (b : block) =
-  let ((ident, _, _), _) = to_code_block b in ident
-  
-let code_block_classes (b : block) =
-  let ((_, classes, _), _) = to_code_block b in classes
-
-let code_block_keyvals (b : block) =
-  let ((_, _, keyvals), _) = to_code_block b in keyvals
-                                              
-let code_block_contents (b : block) =
-  let (_, contents) = to_code_block b in contents
-
-(** {2 Creation of blocks} *)
-
-(** Create a block. *)
-let block t c : block = `Assoc ["t", `String t; "c", c]
-
-let paragraph l : block = block "Para" (`List l)
-
-let string s : block = block "Str" (`String s)
-
-let space : block = `Assoc ["t", `String "Space"]
-
-let code_block ?(ident="") ?(classes=[]) ?(keyvals=[]) contents : block =
-  let ident = `String ident in
-  let classes = `List (List.map (fun c -> `String c) classes) in
-  let keyvals = `List (List.map (fun (k,v) -> `List [`String k; `String v]) keyvals) in
-  let contents = `String contents in
-  block "CodeBlock" (`List [`List [ident; classes; keyvals]; contents])
-
-let rawinline_tex s =
-  block "RawInline" (`List [`String "tex"; `String s])
-
-*)
 
 (** {2 Transforming} *)
 
@@ -343,6 +260,13 @@ let map ?(block=(fun b -> None)) ?(inline=(fun i -> None)) p =
   and map_blocks bb = List.flatten (List.map map_block bb)
   and map_inlines ii = List.flatten (List.map map_inline ii) in
   replace_blocks map_blocks p
+
+let map_inlines f p =
+  let block = function
+    | Para ii -> Para (f ii)
+    | b -> b
+  in
+  replace_blocks (List.map block) p
 
 (** Map a function to every top-level block. *)
 let map_top_blocks f p =

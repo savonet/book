@@ -1,7 +1,6 @@
 MD = $(wildcard *.md)
 LIQ = $(wildcard liq/*.liq)
-PANDOC = pandoc --bibliography=papers.bib --filter=scripts/include --syntax-definition=liquidsoap.xml --abbreviations=abbreviations
-BOOK = introduction.md technology.md installation.md helloworld.md language.md workflow.md advanced.md cookbook.md video.md plugins.md faq.md internals.md reference.md conclusion.md
+PANDOC = pandoc --bibliography=papers.bib --filter=scripts/include --syntax-definition=liquidsoap.xml --filter=scripts/abbreviations
 
 all: scripts book.pdf language.dtd
 
@@ -28,7 +27,7 @@ check:
 
 test:
 	$(MAKE) -C scripts
-	pandoc --filter=scripts/inspect --filter=scripts/include --filter=scripts/crossref --abbreviations=abbreviations -t LaTeX test.md
+	pandoc --filter=scripts/inspect --filter=scripts/include --filter=scripts/crossref --filter=scripts/abbreviations -t LaTeX test.md
 %.html: %.md $(MD)
 	$(PANDOC) -s $^ -o $@
 

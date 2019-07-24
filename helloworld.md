@@ -154,8 +154,8 @@ Finally, just for fun, we can hear an A minor chord by adding three sines:
 ```{.liquidsoap include="liq/sine4.liq"}
 ```
 
-We generates three sines at frequencies $440$ Hz, $440\times 2^{3/12}$ Hz and
-$440\times 2^{7/12}$ Hz, add them, and play the result. Note that the operator
+We generates three sines at frequencies 440 Hz, 440×2^3/12^ Hz and
+440×2^7/12^ Hz, add them, and play the result. Note that the operator
 `add` is taking as argument a _list_ of sources (delimited by square brackets),
 which could be of any size.
 

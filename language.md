@@ -216,7 +216,12 @@ The string representation of any value in Liquidsoap can be obtained using the
 function `string_of`, e.g. `string_of(5)`{.liquidsoap} is `"5"`. Some other
 useful string-related function are
 
-- `string.sub`: extract a substring,
+- `string.length`: compute the length of a string
+  ```
+  # string.length("abc");;
+  - : int = 3
+  ```
+- `string.sub`: extract a substring
   ```
   # string.sub("hello world!", start=6, length=5);;
   - : string = "world"
@@ -353,27 +358,27 @@ Similarly, the `list.tl` function returns the _tail_ of the list, i.e. the list
 without its first element (by convention, the tail of the empty list is the
 empty list). Other useful functions are
 
-- `list.add`: add an element at the top of the list:
+- `list.add`: add an element at the top of the list
   ```
   # list.add(5, [1, 3]);;
   - : [int] = [5, 1, 3]
   ```
-- `list.length`: compute the length of a list:
+- `list.length`: compute the length of a list
   ```
   # list.length([5, 1, 3]);;
   - : int = 3
   ```
-- `list.mem`: check whether an element belongs to a list:
+- `list.mem`: check whether an element belongs to a list
   ```
   # list.mem(2, [1, 2, 3]);;
   - : bool = true
   ```
-- `list.map`: apply a function to all the elements of a list:
+- `list.map`: apply a function to all the elements of a list
   ```
   # list.map(fun(n) -> 2*n, [1, 3, 5]);;
   - : [int] = [2, 6, 10]
   ```
-- `list.iter`: execute a function on all the elements of a list:
+- `list.iter`: execute a function on all the elements of a list
   ```
   # list.iter(print(newline=false), [1, 3, 5]);;
   135- : unit = ()
@@ -555,11 +560,73 @@ f (3, 4)
 ```
 
 This will trigger the evaluation of the function, where the argument `x`
-(resp. `y`) is replaced by `3` (resp. `4`)
+(resp. `y`) is replaced by `3` (resp. `4`), i.e., it will print `3` and return
+the evaluation of `2*3+4`, which is `10`. Of course, not all the arguments and
+the result should have the same type:
+
+```
+# def f(s, x) = string.length(s) + int_of_float(x) end;;
+f : (string, float) -> int = <fun>
+```
+
+### Labeled arguments
+
+A function can have an arbitrary number of arguments, and when there are many it
+becomes difficult to keep track of their order and their order matter! For
+instance, the following function computes the sample rate given a number of
+samples in a given period of time:
+
+```{.liquidsoap include="liq/samplerate1.liq" from=0 to=0}
+```
+
+which is of type
+
+```
+(float, float) -> float
+```
+
+For instance, if you have 110250 samples over 2.5 seconds the samplerate will be
+`samplerate(110250., 2.5)`{.liquidsoap} which is 44100. However, if you mix the
+order of the arguments and type `samplerate(2.5, 110250.)`{.liquidsoap} you will
+get quite a different result (2.27×10^-5^) and this will not be detected by the
+typing system because both arguments have the same type. Fortunately, we can
+give _labels_ to arguments in Liquidsoap by prefixing the arguments with a tilde
+"`~`":
+
+```{.liquidsoap include="liq/samplerate2.liq" from=0 to=0}
+```
+
+The labels will be indicated as follows in the type:
+
+```
+(samples : float, duration : float) -> float
+```
+
+and for those arguments, we have to give the name of the argument when calling
+the function:
+
+```liquidsoap
+samplerate(samples=110250., duration=2.5)
+```
+
+The nice effect is that the order of the arguments does not matter anymore, the
+following will give the same result:
+
+```liquidsoap
+samplerate(duration=2.5, samples=110250.)
+```
+
+Of course a function, can have both labeled and non-labeled arguments.
+
+### Optional arguments
+
+Another useful feature
+
+```{.liquidsoap include="liq/samplerate3.liq" from=0 to=0}
+```
 
 
-
-labels, optional parameters, inline functions, {}, 
+labels, optional parameters, inline functions
 
 
 handlers (e.g. `on_blank`)
@@ -580,6 +647,11 @@ type of `[]`
 TODO: explain that this can replace for and while loops
 
 ### Getters
+
+as a particular case a function can have no argument, this is not the same as a
+constant
+
+explain types `{int}`
 
 functions ()->...
 
