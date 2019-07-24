@@ -52,14 +52,10 @@ toc: true
 
 !include "faq.md"
 
-<!--
-!include "ecosystem.md"
--->
-
 !include "internals.md"
 
 !include "reference.md"
 
 !include "conclusion.md"
 
-# References
+!include "bibliography.md"

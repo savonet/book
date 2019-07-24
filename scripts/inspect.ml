@@ -5,4 +5,3 @@ let () =
   let s = Yojson.Basic.pretty_to_string json in
   Printf.eprintf "%s\n%!" s;
   Printf.printf "%s\n%!" s
-

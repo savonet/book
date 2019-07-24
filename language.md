@@ -515,9 +515,51 @@ ignore(n)
 Functions {#sec:functions}
 ---------
 
-builtin functions, that we like to call _operators_, but the user can define other
+Liquidsoap is built around the notion of function: most operations are performed
+by those. Many functions are builtin and interface code written in OCaml
+(e.g. `output.icecast`), in which case we like to call them _operators_, but
+users can also define their own functions within the language. In fact,
+Liquidsoap also include a standard library which consists of functions defined
+in the Liquidsoap language, including fairly complex ones such as
+`playlist.reloadable` which plays a playlist or `crossfade` which takes care of
+fading between songs.
 
-labels, optional parameters, inline functions, {}, recursive functions
+### Basics
+
+A function is a construction which takes a bunch of arguments and produces a
+result. For instance, we can define a function `f` taking two float arguments,
+prints the first and returns the result of adding twice the first to the second:
+
+```{.liquidsoap include="liq/fun4.liq"}
+```
+
+This function can also be written on one line if we use semicolons (`;`) to
+separate the instructions instead of changing line:
+
+```{.liquidsoap include="liq/fun5.liq"}
+```
+
+The type of this function is
+
+```
+(int, int) -> int
+```
+
+The arrow `->` means that it is a function, on the left are the types of the
+arguments (here, two arguments of type `int`) and on the right is the type of
+the return value of the function (here, `int`). In order to use this function,
+we have to apply it to arguments, as in
+
+```
+f (3, 4)
+```
+
+This will trigger the evaluation of the function, where the argument `x`
+(resp. `y`) is replaced by `3` (resp. `4`)
+
+
+
+labels, optional parameters, inline functions, {}, 
 
 
 handlers (e.g. `on_blank`)
@@ -525,14 +567,21 @@ handlers (e.g. `on_blank`)
 crossfade
 
 Partial evaluation, this is a source of errors (e.g. `list.hd([1,2,3])`) which
-are however easily detected by typing
+are however easily detected by typing, example of
+`list.map(print(newline=false),[1,2,3])`
 
 ### Polymorphism
 
 polymorphism, restrictions on type variables (detail the type for `+`), give the
 type of `[]`
 
-### Function ()->...
+### Recursive functions
+
+TODO: explain that this can replace for and while loops
+
+### Getters
+
+functions ()->...
 
 A nice example from https://github.com/savonet/liquidsoap/issues/536:
 ```liquidsoap
