@@ -156,15 +156,13 @@ You can now see the list of available packages:
 apt-cache show liquidsoap
 ```
 
-Package versions are of the form: `1:0+<commit>~<distribution>-1` or
-`1:0+<branch>~<distribution>-1`. The _commit_ is an identifier for the last
-modification, the _distribution_ is the flavor of Linux it is made for and
-_branches_ are used to develop features (the default branch being named
-`master`). For instance, to install the latest `master` on
-`debian/testing`, you can do:
+Package names are of the form: `liquidsoap-<commit>` or
+`liquidsoap-<branch>`. _commit_ is an identifier for the last modification
+and _branch_ are used to develop features (the default branch being named 
+`master`). For instance, to install the latest `master` on, you can do:
 
 ```
-sudo apt-get install liquidsoap=1:0+master~testing-1
+sudo apt-get install liquidsoap-master
 ```
 
 ### MacOS
