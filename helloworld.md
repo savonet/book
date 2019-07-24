@@ -222,7 +222,7 @@ will see this behavior. For instance, if we try use the operator
 `output.pulseaudio` (which plays a source on a soundcard using the pulseaudio
 library)
 
-```{.liquidsoap include="liq/fallible1.liq"}
+```{.liquidsoap include="liq/bad/fallible1.liq"}
 ```
 
 we obtain the following error:
@@ -237,7 +237,7 @@ character 5 to character 27 (i.e., the `input.http`) is fallible.\TODO{ignore
 the warning with `fallible=true`} As above, the way to fix this consists in
 having a fallback to a local file:
 
-```{.liquidsoap include="liq/fallible2.liq"}
+```{.liquidsoap include="liq/bad/fallible2.liq"}
 ```
 
 Note that we are using `single` here instead of `playlist`: this operator plays

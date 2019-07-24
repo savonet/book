@@ -28,7 +28,10 @@ let () =
            with
            | End_of_file -> !ans
          with
-         | Sys_error _ -> "*** ERROR: file \""^fname^"\" not found! ***"
+         | Sys_error _ ->
+            let err = "ERROR: file \""^fname^"\" not found!" in
+            Printf.eprintf "%s\n%!" err;
+            err
        in
        [Pandoc.CodeBlock ((ident, classes, keyvals), contents)]
     | b ->  [b]
