@@ -56,7 +56,9 @@ When running a Liquidsoap program, the compiler goes through these four phases:
 4. execution of the stream generator to actually produce audio.
 
 The two last phases can be resumed by the following fact: Liquidsoap is a
-_stream generator generator_, it generates stream generators.
+_stream generator generator_, it generates stream generators.\TODO{give an
+example of a reduction of the language, e.g. a list.init which generates a list
+of sources?}
 
 Basic expressions
 -----------------
@@ -117,7 +119,8 @@ Hello Sam and welcome!
 
 which is the result of printing and the indication that we did not define a
 variable, that the result is of type `unit` and that its value is `()`. The
-meaning of these is detailed below.
+meaning of these is detailed below. In the following, all examples starting by
+`#` are in the interactive mode.
 
 Another useful feature is the `-i` option of Liquidsoap which displays the types
 of variables in a file. For instance, if we have a file `test.liq` containing
@@ -211,18 +214,22 @@ in files, etc.).
 
 The string representation of any value in Liquidsoap can be obtained using the
 function `string_of`, e.g. `string_of(5)`{.liquidsoap} is `"5"`. Some other
-useful string-related function are `string.sub` to extract a substring,
-`string.split` to split a string on a given character, e.g. the result of
-```liquidsoap
-string.split(separator=":", "a:42:hello")
-```
-is the list
-```liquidsoap
-["a", "42", "hello"]
+useful string-related function are
 
-```
-and `string.match` and `string.replace` which
-allow using regular expressions to manipulate strings.\TODO{give some examples}
+- `string.sub`: extract a substring,
+  ```
+  # string.sub("hello world!", start=6, length=5);;
+  - : string = "world"
+  ```
+- `string.split`: split a string on a given character
+  ```
+  # string.split(separator=":", "a:42:hello");;
+  - : [string] = ["a", "42", "hello"]
+  ```
+- `string.match`: test whether a string matches a regular expression,\TODO{give
+  an example}
+- `string.replace`: replace substrings matching a regular expression.\TODO{give
+  an example}
 
 ### Booleans
 
@@ -317,7 +324,7 @@ ignore the result:
 ```{.liquidsoap include="liq/fun3.liq"}
 ```
 
-### Constructed values
+### Lists
 
 Some more elaborate values can be constructed by combining the previous ones. A
 first one is _lists_ which are finite sequences of values, which are all of the
@@ -333,7 +340,7 @@ is a list of 3 integers, and its type is `[int]` (and the type of `["A",
 empty: `[]`. The function `list.hd` returns the head of the list, that is its
 first element. This function takes an extra argument `default` which is the
 value which is returned on the empty list (which does not have a first
-element). For instance, in the interactive mode
+element!). For instance, in the interactive mode
 
 ```
 # list.hd(default=0, [1, 4, 5]);;
@@ -342,27 +349,168 @@ element). For instance, in the interactive mode
 - : int = 0
 ```
 
+Similarly, the `list.tl` function returns the _tail_ of the list, i.e. the list
+without its first element (by convention, the tail of the empty list is the
+empty list). Other useful functions are
 
-lists (head, tail)
+- `list.add`: add an element at the top of the list:
+  ```
+  # list.add(5, [1, 3]);;
+  - : [int] = [5, 1, 3]
+  ```
+- `list.length`: compute the length of a list:
+  ```
+  # list.length([5, 1, 3]);;
+  - : int = 3
+  ```
+- `list.mem`: check whether an element belongs to a list:
+  ```
+  # list.mem(2, [1, 2, 3]);;
+  - : bool = true
+  ```
+- `list.map`: apply a function to all the elements of a list:
+  ```
+  # list.map(fun(n) -> 2*n, [1, 3, 5]);;
+  - : [int] = [2, 6, 10]
+  ```
+- `list.iter`: execute a function on all the elements of a list:
+  ```
+  # list.iter(print(newline=false), [1, 3, 5]);;
+  135- : unit = ()
+  ```
+  
+### Tuples
 
-tuples (fst, snd, let ...)
+Another construction present in Liquidsoap is _tuples_ of values, which are
+finite sequences of values which, contrarily to lists, might have different
+types. For instance,
 
-association lists, `_[_]`, metadata
+```{.liquidsoap}
+(3, 4.2, "hello")
+```
+
+is a triple (a tuple with three elements) of type
+
+```
+int * float * string
+```
+
+In particular, a _pair_ is a tuple of length two. For those, the first and
+second element can be retrieved with `fst` and `snd`:
+
+```
+# p = (3, "a");;
+p : int * string = (3, "a")
+# fst(p);;
+- : int = 3
+# snd(p);;
+- : string = "a"
+```
+
+For tuples with more elements, there is a special syntax in order to access
+their elements. For instance, if `t` is the above tuple `(3, 4.2,
+"hello")`{.liquidsoap}, we can write
+
+```liquidsoap
+let (n, x, s) = t
+```
+
+which will assign the first element to the variable `n`, the second element to
+he variable `x` and the third element to the variable `s`:
+
+```
+# t = (3, 4.2, "hello");;
+t : int * float * string = (3, 4.2, "hello")
+# let (n, x, s) = t;;
+(n, x, s) : int * float * string = (3, 4.2, "hello")
+# n;;
+- : int = 3
+# x;;
+- : float = 4.2
+# s;;
+- : string = "hello"
+```
+
+### Association lists
+
+A quite useful combination of the two previous data structures is _association
+lists_, which are lists of pairs. Those can be thought of a some kind of
+dictionary: each pair is an entry whose first component is its key and second
+component is its value. These are the way metadata are represented for instance:
+they are lists of pairs of strings, the first string being the name of the
+metadata, and the second its value. For instance, a metadata would be the
+association list
+
+```liquidsoap
+m = [("artist", "Sinatra"), ("title", "Fly me")]
+```
+
+indicating that the artist of the song is "Sinatra" and so on. For such an
+association lists, on can obtain the value associated to a given key using the
+`list.assoc` function:
+
+```liquidsoap
+list.assoc(default="", "title", m)
+```
+
+will return `"Fly me"`, i.e. the value associated to `"title"`. The `default`
+argument is the value (here the empty string) which will be returned in the case
+where the key is not found. Since this is so useful, we have a special notation
+for the above function, and it is equivalent to write
+
+```liquidsoap
+m["title"]
+```
+
+to obtain the `"title"` metadata. Other useful functions are
+
+- `list.mem_assoc`: determine whether there is an entry with a given key,
+- `list.remove_assoc`: remove all entries with given key.
+
+Apart from metadata, those lists are also used to store http headers (e.g. in
+`http.get`).
 
 ### Variables
 
-variable masking
+We have many examples of uses of _variables_ so that we should be quick: we use
 
-unused variables, `ignore`
+```liquidsoap
+x = e
+```
 
-References
-----------
+in order to assign the evaluation of an expression `e` to a variable `x`, which
+can later on be referred to as `x`. Variables can be masked: we can define two
+variables with the same name, at each point in the program the last defined
+value for the variable is used:
 
-ref ! :=
+```{.liquidsoap include="liq/masking.liq"}
+```
 
-Float getters
+will print `3` and `5`. Contrarily to most languages, the value for a variable
+cannot be changed (unless we explicitly require this, see [below](#sec:ref)), so
+the above program does not modify the value of `n`, it is simply that a new `n`
+is defined.
 
-Exemple de `gstreamer.hls`
+When we define a variable it is generally to use its value: otherwise, why
+bothering defining it? For this reason, Liquidsoap issues a warning when an
+unused variable is found, since it is likely to be a bug. For instance, on
+
+```{.liquidsoap include="liq/bad/unused.liq"}
+```
+
+Liquidsoap will output
+
+```
+Line 1, character 1:
+Warning 4: Unused variable n
+```
+
+If this situation is really wanted, you should use `ignore` in order to fake a
+use of the variable `n` by writing
+
+```liquidsoap
+ignore(n)
+```
 
 Functions {#sec:functions}
 ---------
@@ -400,6 +548,15 @@ notation `{x}`
 
 
 Syntax of [language](https://www.liquidsoap.info/doc-dev/language.html)
+
+References {#sec:ref}
+----------
+
+ref ! :=
+
+Float getters
+
+Exemple de `gstreamer.hls`
 
 The preprocessor
 ----------------
