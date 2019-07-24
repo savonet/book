@@ -1,6 +1,15 @@
 Video
 =====
 
+Playing locally
+---------------
+something like
+
+```
+output.graphics(s)
+```
+will for `s` not to have audio, use `drop_audio`
+
 Images
 ------
 

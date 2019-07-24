@@ -286,6 +286,11 @@ recognizable sound. This can be achieved by applying a series of sound effects.
 \TODO{veut-on faire une partie "technique" où l'on explique les unités courantes
 comme le RMS ?}
 
+### Encoding
+
+TODO: explain once for all that we have to reencode everything
+
+
 More features
 -------------
 

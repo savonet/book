@@ -12,6 +12,7 @@ let () =
     | CodeBlock ((ident, classes, keyvals), _) when List.mem_assoc "include" keyvals ->
        let fname = List.assoc "include" keyvals in
        let from = try int_of_string (List.assoc "from" keyvals) with Not_found -> 0 in
+       let last = try int_of_string (List.assoc "to" keyvals) with Not_found -> max_int in
        let contents =
          try
            let ic = open_in fname in
@@ -19,7 +20,8 @@ let () =
            let line = ref 0 in
            try
              while true do
-               if !line >= from then ans := !ans ^ input_line ic ^ "\n";
+               let l = input_line ic in
+               if !line >= from && !line <= last then ans := !ans ^ l ^ "\n";
                incr line
              done;
              ""

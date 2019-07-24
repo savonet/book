@@ -12,6 +12,10 @@ Settings
 
 [see here](https://www.liquidsoap.info/doc-dev/settings.html)
 
+### Logs
+
+How to configure the logs
+
 Using command-line arguments
 ----------------------------
 

@@ -31,3 +31,10 @@ Libraries around Liquidsoap
 
 How to contribute
 -----------------
+
+### Getting stacktraces
+
+```
+% gdb -p <process PID>
+> thread apply all bt
+```

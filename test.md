@@ -1,14 +1,5 @@
-BLa qsdfqksjdfkaer
+Test
+====
 
-```liquidsoap
-bla bla
+```{.liquidsoap include="liq/bool.liq" from=2}
 ```
-
-![image](img/logo){height="3.5cm"}
-
-!include "cover.md"
-
-1. bla
-2. bli
-
-\texttt{xxx}

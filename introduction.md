@@ -121,10 +121,6 @@ In this book, we will mainly focus on applications. More details about the
 language and underlying ideas behind Liquidsoap can be found in the two articles
 [@baelde2008webradio; @baelde2011liquidsoap].
 
-### A limitation of Liquidsoap
-
-TODO: explain once for all that we have to reencode everything
-
 ### Free software
 
 The Liquidsoap language is a _free software_. This of course means that it is
