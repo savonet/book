@@ -68,8 +68,9 @@ Because of the above, sound is typically compressed, especially if you want to
 send it over the internet where the bandwidth, i.e. the quantity of information
 you can send in a given period of time, matters: it is not unlimited and it
 costs money. To give you an idea, a connection of 1 gigabits per second is
-roughly $10000, with which you can send CD quality audio to roughly 10 listeners
-only (provided that their bandwidth is large enough to download that).
+roughly $10000\SM{Romain, tu confirmes ?}, with which you can send CD quality
+audio to roughly 10 listeners only (provided that their bandwidth is large
+enough to download that).
 
 One way to compress audio consists in using the standard tools from coding and
 information theory: if something occurs often then encode it with a small

@@ -204,6 +204,10 @@ useful.
 
 ### How to read the book
 
+TODO: explain that this is not a 500+ pages reference manual, but a way to
+really learn Liquidsoap, without necessarily giving all the details about the
+functions, which can be found in the online documentation
+
 TODO: plan of the book
 
 ### How to get help

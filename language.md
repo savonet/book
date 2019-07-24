@@ -67,16 +67,76 @@ We begin by describing the most simple everyday expressions in Liquidsoap.
 
 In order to test the functions that will be introduced in this section, it can
 be convenient to use the _interactive mode_ of Liquidsoap which can be used to
-type small expressions and immediately see their result. It can be started with
+type small expressions and immediately see their result. This interactive mode
+is rarely used in practice, but is useful to learn the language and do small
+experiments. It can be started with
 
 ```
 liquidsoap --interactive
 ```
 
+It will display a "`#`", meaning it is waiting for expressions, which have to be
+ended by "`;;`". For instance, if we type
 
+```{.liquidsoap}
+name = "Sam";;
+```
 
-interactive mode, type display, etc.
+it anwsers
 
+```
+name : string = "Sam"
+```
+
+which means that we have defined a variable `name` whose type is `string` and
+whose value is `"Sam"`. It can be handy as a calculator:
+
+```
+2*3;;
+```
+
+results in
+
+```
+- : int = 6
+```
+
+("`-`" means that we did not define a variable, that the type of the expression
+is `int` and that it evaluates to 6). Also, variables can be reused: it we type
+
+```{.liquidsoap}
+print("Hello #{name} and welcome!");;
+```
+
+it will answer
+
+```
+Hello Sam and welcome!
+- : unit = ()
+```
+
+which is the result of printing and the indication that we did not define a
+variable, that the result is of type `unit` and that its value is `()`. The
+meaning of these is detailed below.
+
+Another useful feature is the `-i` option of Liquidsoap which displays the types
+of variables in a file. For instance, if we have a file `test.liq` containing
+
+```{.liquidsoap include="liq/interactive.liq" from=0 to=1}
+```
+
+and we run
+
+```
+liquidsoap -i test.liq
+```
+
+it will display the types for `x` and `f`:
+
+```
+x : float
+f : (int) -> int
+```
 
 ### Integers and floats
 
@@ -218,7 +278,8 @@ interested in what they are doing (here printing on the standard output) and not
 in their result. However, since typing requires that everything returns
 something of some type, there is a particular type for the return of such
 functions: `unit`. Just as there are only two values in the booleans (`true` and
-`false`), there is only one value in the unit type, which is written `()`.
+`false`), there is only one value in the unit type, which is written `()`. This
+value can be thought of as the result of the expression saying "I'm done".
 
 In _sequences_ of instructions, all the instructions but the last should be of
 type unit. For instance, the following function is fine:
@@ -258,9 +319,35 @@ ignore the result:
 
 ### Constructed values
 
-lists (head, tail) `_[_]` for association lists
+Some more elaborate values can be constructed by combining the previous ones. A
+first one is _lists_ which are finite sequences of values, which are all of the
+same type. They are constructing by square backeting the sequence whose elements
+are separated by commas. For instance, the list
+
+```liquidsoap
+[1, 4, 5]
+```
+
+is a list of 3 integers, and its type is `[int]` (and the type of `["A",
+"B"]`{.liquidsoap} would obviously be `[string]`). Note that a list can be
+empty: `[]`. The function `list.hd` returns the head of the list, that is its
+first element. This function takes an extra argument `default` which is the
+value which is returned on the empty list (which does not have a first
+element). For instance, in the interactive mode
+
+```
+# list.hd(default=0, [1, 4, 5]);;
+- : int = 1
+# list.hd(default=0, []);;
+- : int = 0
+```
+
+
+lists (head, tail)
 
 tuples (fst, snd, let ...)
+
+association lists, `_[_]`, metadata
 
 ### Variables
 
@@ -284,15 +371,18 @@ builtin functions, that we like to call _operators_, but the user can define oth
 
 labels, optional parameters, inline functions, {}, recursive functions
 
-polymorphism, restrictions on type variables
 
 handlers (e.g. `on_blank`)
 
 crossfade
 
-Partial evaluation
+Partial evaluation, this is a source of errors (e.g. `list.hd([1,2,3])`) which
+are however easily detected by typing
 
-detail the type for `+`
+### Polymorphism
+
+polymorphism, restrictions on type variables (detail the type for `+`), give the
+type of `[]`
 
 ### Function ()->...
 
@@ -311,8 +401,8 @@ notation `{x}`
 
 Syntax of [language](https://www.liquidsoap.info/doc-dev/language.html)
 
-Preprocessor
-------------
+The preprocessor
+----------------
 
 `%include` (useful for passwords!)
 `%define`
