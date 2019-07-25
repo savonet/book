@@ -144,8 +144,9 @@ sudo echo deb http://deb.liquidsoap.info/ubuntu bionic main >> /etc/apt/sources.
 ```
 
 The above line is for the Bionic version of Ubuntu, if you are on Debian/testing
-or Debian/stretch, replace `bionic` by `testing` or `stretch`. Finally, update
-your packages list:
+or Debian/stretch, replace `ubuntu` by `debian` and `bionic` by `testing` or `stretch`.
+
+Finally, update your packages list:
 
 ```
 sudo apt-get update
@@ -298,8 +299,7 @@ Those add support for manipulate sound:
 ### Audio file formats
 
 - `ocaml-faad`: AAC decoding,
-- `ocaml-fdkaac`: AAC+ encoding (it is of better quality than `ocaml-faad`, but
-  somewhat more difficult to install),
+- `ocaml-fdkaac`: AAC+ encoding,\RB{FAAD is for decoding}
 - `ocaml-ffmepg`: encoding and decoding of various formats,
 - `ocaml-flac`: Flac encoding and decoding,
 - `ocaml-gstreamer`: encoding and decoding of various formats,

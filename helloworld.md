@@ -57,6 +57,14 @@ if you installed using opam: in order to know the path to the binary, you can ty
 which liquidsoap
 ```
 
+Another common alternative is to use the `env` binary, usually located at `/usr/bin/env`.
+A call to `/usr/bin/env liquidsoap` will return the first `liquidsop` binary found in
+the current `$PATH`. This way, you can start your script with:
+```
+#!/usr/bin/env liquidsoap
+```
+This is very convenient to distribute scripts for which you do not know where the `liquidsop` binary will be.
+
 In the rest of the book, we will generally omit this line, since it is always
 the same. The second line, is a comment: you can put whatever you want here as
 long as the line begins with `#`, it will not be taken in account. The last line

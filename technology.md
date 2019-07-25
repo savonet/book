@@ -68,9 +68,10 @@ Because of the above, sound is typically compressed, especially if you want to
 send it over the internet where the bandwidth, i.e. the quantity of information
 you can send in a given period of time, matters: it is not unlimited and it
 costs money. To give you an idea, a connection of 1 gigabits per second is
-roughly $10000\SM{Romain, tu confirmes ?}, with which you can send CD quality
-audio to roughly 10 listeners only (provided that their bandwidth is large
-enough to download that).
+roughly $10000\SM{Romain, tu confirmes ?}\RB{Je dirait que surtout c'est
+irréaliste d'esperer avoir des clients qui ont cette bandwidth..}, with which 
+you can send CD quality audio to roughly 10 listeners only (provided that their
+bandwidth is large enough to download that).
 
 One way to compress audio consists in using the standard tools from coding and
 information theory: if something occurs often then encode it with a small
@@ -84,17 +85,18 @@ In order to achieve more compression, we should be prepared to loose some data
 in the compression process. Most compressed audio formats are based, in addition
 to the previous ideas, on psychoacoustic models which take in account the way
 sound is perceived by the human hear and processed by the human brain. For
-instance, the ear does not generally perceive sounds about 20 kHz, so that we
-can remove those, the ear is much more sensitive in the 1 to 5 kHz range so that
+instance, the ears does not generally perceive phase difference under a certain
+frequencies so all audio data below that threshold can be encoded in mono.\RB{Sampling at 44.1kHz already removes frequencies above 20kHz :-)}
+Also, the ear is much more sensitive in the 1 to 5 kHz range so that
 we can be more rough outside this range, some low intensity signals can be
 masked by high intensity signals (i.e., we do not hear them anymore in presence
 of other loud sound sources), and so on. Most compression formats are
 _destructive_: they remove some information in the original signal in order for
-it to be smaller. The most well-known are mp3, ogg/vorbis and aac: the one you
+it to be smaller. The most well-known are mp3, ogg/opus and aac: the one you\RB{I believe at this point opus is much more popular than vorbis..}
 want to use is a matter of taste and support on the user-end. For instance, mp3
-is the most widespread, ogg/vorbis has the advantage of being open-source,
-patent-free and has a good quality/bandwidth radio but not many users have good
-support for that (e.g. on smartphones), aac is proprietary so that good free
+is the most widespread, ogg/opus has the advantage of being open-source,
+patent-free and has a good quality/bandwidth radio and is [reasonably supported
+by modern browsers](https://caniuse.com/#feat=opus), aac is proprietary so that good free
 encoders are more difficult to find but achieves better sounding at high
 compression rates, etc. A typical mp3 is encoded at a bitrate of 128 kbps
 (kilobits per second, although rates of 192 kbps and higher are recommended if
@@ -132,8 +134,8 @@ enforcing limits (on clients or bandwidth), and so on. It also handles multiple
 mount points (i.e., different radios).
 
 Until recently, the streaming model as offered by Icecast was predominant, but
-suffers from two main drawbacks. Firstly, the connection has to be kept between
-the client and the server which cannot be achieved in mobile contexts: when you
+it suffers from two main drawbacks. Firstly, the connection has to be kept between
+the client and the server which cannot be guaranteed in mobile contexts: when you
 connect with your smartphone, you frequently change networks or switch between
 wifi and 4G and the connection cannot be held during such events. Another issue
 is that the data cannot be cached as it is for web traffic, where it helps
@@ -152,8 +154,8 @@ already has support for HLS.
 
 Finally, we would like to mention that, nowadays, streaming is more and more
 being delegated to big online platforms, such as Youtube, because of their ease
-of use (both in terms of setup and of user experience), for which Liquidsoap
-also has support.
+of use (both in terms of setup and of user experience). Liquidsoap also has support
+to stream to those platforms.
 
 Audio sources
 -------------
@@ -233,12 +235,12 @@ can be costly in terms of CPU if you want to achieve good quality.
 ### Normalization
 
 The next thing you want to do is to _normalize_ the sound, meaning that you want
-to have roughly the same audio intensity between tracks. If they come from
+to have roughly the same audio loudness between tracks. If they come from\RB{I think that loudness is more appropriate than intensity here
 different sources (such as two different albums by two different artists) this
 is generally not the case.
 
 A strategy to fix that is to use _automatic gain control_: the program can
-regularly measure the current audio intensity based, say, on the previous second
+regularly measure the current audio loudness based, say, on the previous second
 of sound, and increase or decrease the volume depending on how it is with
 respect to a target volume. This has the advantage of being easy to set up and
 providing an homogeneous sound. It is quite efficient when having voice over the
@@ -246,7 +248,7 @@ radio, but is quite unnatural for music: if a song has a quiet introduction for
 instance, its volume will be pushed up and the song as a whole will not sound as
 usual.
 
-Another strategy for music consists in pre-computing the sound intensity of each
+Another strategy for music consists in pre-computing the loudness of each
 file. It can be performed each time a song is about to be played, but the most
 efficient way of proceeding consists in computing this in advance and store it
 as a metadata; the stream generator can then adjust the volume on a per-song
