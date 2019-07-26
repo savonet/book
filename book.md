@@ -29,7 +29,6 @@ secnumdepth: 1
 toc-depth: 1
 toc: true
 ...
-
 !include "introduction.md"
 
 !include "technology.md"

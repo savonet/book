@@ -330,3 +330,12 @@ If you need to run liquidsoap as daemon, we provide a package named
 `liquidsoap-daemon`.  See
 [savonet/liquidsoap-daemon](https://github.com/savonet/liquidsoap-daemon) for
 more information.
+
+Operations on sources
+---------------------
+
+source.seek
+
+source.time
+
+etc

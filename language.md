@@ -144,9 +144,9 @@ f : (int) -> int
 ### Integers and floats
 
 The integers, such as `3`, are of type `int`. Depending on the architecture (32
-or 64 bits) they are stored on 31 or 63 bits. The minimal (resp. maximal)
+or 64 bits) they are stored on 31 or 63 bits. The minimal (resp. maximal)
 representable integer can be obtained with the function `min_int`
-(resp. `max_int`); typically, on a 64 bits architecture, they range from
+(resp. `max_int`); typically, on a 64 bits architecture, they range from
 -4611686018427387904 to 4611686018427387903.
 
 The floats, such as `2.45`, are of type `float`, and are in double precision
@@ -172,13 +172,13 @@ is provided. The fix here obviously consists in replacing "`500`" by "`500.`"
 The usual arithmetic operations are available (`+`, `-`, `*`, `/`) are
 available, and work for both integers and floats. For floats, additional
 functions are available such as `sqrt` (square root), `exp` (exponential), `sin`
-(sine), `cos` (cosine) and so on. Random integers (resp. floats) can be
-generated with the `random.int` (resp. `random.float`) function.
+(sine), `cos` (cosine) and so on. Random integers (resp. floats) can be
+generated with the `random.int` (resp. `random.float`) function.
 
 ### Strings
 
 Strings are written between quotes, e.g. `"hello!"`, and are of type
-`string`. The concatenation of two strings is achieved by `^`, as in
+`string`.\TODO{escaping `\"`, etc.} The concatenation of two strings is achieved by `^`, as in
 
 ```liquidsoap
 user = "dj"
@@ -193,7 +193,9 @@ print(3+2)
 
 will output `5` as expected. Instead of using concatenation, it is often rather
 convenient to use _string interpolation_: in a string, `#{e}` is replaced by the
-string representation of the result of the evaluation of the expression `e`:
+string representation of the result of the evaluation of the expression
+`e`:\SM{there is another kind of string interpolation but I don't think that
+anybody ever used that in practice}
 
 ```liquidsoap
 user = "admin"
@@ -239,12 +241,22 @@ useful string-related function are
 ### Booleans
 
 The booleans are either `true`{.liquidsoap} or `false`{.liquidsoap} and are of
-type `bool`. They can be combined using the usual boolean operations `and`
-(conjunction), `or` (disjunction) and `not` (negation). Comparison operators
-such as `==` (which compares for equality), `!=` (which compares for inequality)
-or `<=` (which compares for inequality) take two values and return booleans. The
-time predicates such as `10h-15h` are also booleans, which are true or false
-depending on the current time, see [there]{#sec:time-predicates}.
+type `bool`. They can be combined using the usual boolean operations
+
+- `and`: conjunction,
+- `or`: disjunction, and
+- `not`: negation.
+
+Booleans typically orgininate from comparison operators, which take two values
+and return booleans:
+
+- `==`: compares for equality,
+- `!=`: compares for inequality,
+- `<=`: compares for inequality,
+
+and so on (`<`, `>=`, `>`). The time predicates such as `10h-15h` are also
+booleans, which are true or false depending on the current time, see
+[there]{#sec:time-predicates}.
 
 _Conditional branchings_ execute code depending on whether a condition is true
 or not. For instance, the code
@@ -281,6 +293,11 @@ the `then` branch should be of type `unit`:
 
 ```liquidsoap
 if x == "admin" then print("Welcome admin") end
+```
+
+TODO: an example with `elsif`.............
+
+```{.liquidsoap include="liq/elsif.liq" from=1 to=4}
 ```
 
 ### Unit {#sec:unit}
@@ -496,6 +513,34 @@ cannot be changed (unless we explicitly require this, see [below](#sec:ref)), so
 the above program does not modify the value of `n`, it is simply that a new `n`
 is defined.
 
+There is an alternative syntax for declaring variables which is
+
+```liquidsoap
+def x =
+  e
+end
+```
+
+It has the advantage that the expression `e` can spread over multiple lines and
+thus consist of multiple expressions, in which case the value of the last one
+will be assigned to `x` (see also [next section](#sec:functions)). This is
+particularly useful to use local variables when defining a value. For instance,
+we can assign to `x` the square of sin(2) by
+
+```{.liquidsoap include="liq/def1.liq" to=3}
+```
+
+Note that we first compute sin(2) in a variable `y` and then multiply `y` by
+itself, which avoids computing sin(2) twice. Also, the variable `y` is _local_:
+it is defined only until the next `end`, so that
+
+```{.liquidsoap include="liq/def2.liq" to=5}
+```
+
+will print `5`: outside the definition of `x`, the definition of `y` one on the
+first line is not affected by the local redefinition.
+
+
 When we define a variable it is generally to use its value: otherwise, why
 bothering defining it? For this reason, Liquidsoap issues a warning when an
 unused variable is found, since it is likely to be a bug. For instance, on
@@ -560,7 +605,7 @@ f (3, 4)
 ```
 
 This will trigger the evaluation of the function, where the argument `x`
-(resp. `y`) is replaced by `3` (resp. `4`), i.e., it will print `3` and return
+(resp. `y`) is replaced by `3` (resp. `4`), i.e., it will print `3` and return
 the evaluation of `2*3+4`, which is `10`. Of course, not all the arguments and
 the result should have the same type:
 
@@ -568,6 +613,18 @@ the result should have the same type:
 # def f(s, x) = string.length(s) + int_of_float(x) end;;
 f : (string, float) -> int = <fun>
 ```
+
+TODO: local definition: as above....................
+
+### Handlers
+
+handlers (e.g. `on_metadata`, `on_blank`, `input.harbor`, etc.)
+
+anonymous functions (`fun ... -> ...`), those can have labeled and optional
+arguments
+
+crossfade
+
 
 ### Labeled arguments
 
@@ -602,8 +659,9 @@ The labels will be indicated as follows in the type:
 (samples : float, duration : float) -> float
 ```
 
-and for those arguments, we have to give the name of the argument when calling
-the function:
+Namely, in the above type, we read that the argument labeled `samples` is a
+float and similarly for the one labeled `duration`. For those arguments, we have
+to give the name of the argument when calling the function:
 
 ```liquidsoap
 samplerate(samples=110250., duration=2.5)
@@ -615,34 +673,102 @@ following will give the same result:
 ```liquidsoap
 samplerate(duration=2.5, samples=110250.)
 ```
-
 Of course a function, can have both labeled and non-labeled arguments.
 
 ### Optional arguments
 
-Another useful feature
+Another useful feature is that we can give _default values_ to arguments, which
+thus become _optional_: if, when calling the function, a value is not specified
+for such arguments, the default value will be used. For instance, if for some
+reason we tend to generally measure samples over a period of 2.5 seconds, we can
+make this become the value for the `duration` parameter:
 
 ```{.liquidsoap include="liq/samplerate3.liq" from=0 to=0}
 ```
 
+In this way, if we do not specify a value for the duration, its value will
+implicitly be assumed to be 2.5, so that the expression:
 
-labels, optional parameters, inline functions
+```liquidsoap
+samplerate(samples=110250.)
+```
 
+will still evaluate to 44100. Of course, if we want to use another value for the
+duration, we can still specify it, in which case the default value will be
+ignored:
 
-handlers (e.g. `on_blank`)
+```liquidsoap
+samplerate(samples=132300., duration=3.)
+```
 
-crossfade
+### Actual examples
 
-Partial evaluation, this is a source of errors (e.g. `list.hd([1,2,3])`) which
-are however easily detected by typing, example of
-`list.map(print(newline=false),[1,2,3])`
+As a more concrete example of what we have introduced above, we can see that the
+type of the operator `output.youtube.live`, which outputs a video stream to
+Youtube, is
+
+```
+(?id : string, ?video_bitrate : int, ?audio_encoder : string, ?audio_bitrate : int, ?url : string, key : string, source) -> source
+```
+
+(we have only slightly simplified the type `source`, which will only be detailed
+in [a next section](#sec:lang-sources)). Even if we have not read the
+documentation of this function, we can guess what it is doing:
+
+- there are 5 optional arguments that we should be able to ignore because they
+  have reasonable default values (although we can guess the use of most of them
+  from the label, e.g. `video_bitrate` should specify the bitrate we want to
+  encode video, etc.),
+- there is 1 mandatory argument which is labeled `key` of type `string`: it must
+  be the secret key we need in order to broadcast on our Youtube account,
+- there is 1 mandatory argument, unlabeled, of type `source`: this is clearly
+  the source that we are going to broadcast to Youtube.
+  
+As we can see the types and labels of arguments already provide us with much
+information about the functions and prevent many mistakes.
+
+If you want a more full-fledged example, have a look at the type of
+`output.icecast`:
+
+```
+(?id : string, ?chunked : bool, ?connection_timeout : float, ?description : string, ?dumpfile : string, ?encoding : string, ?fallible : bool, ?format : string, ?genre : string, ?headers : [string * string], ?host : string, ?icy_id : int, ?icy_metadata : string, ?mount : string, ?name : string, ?on_connect : (() -> unit), ?on_disconnect : (() -> unit), ?on_error : ((string) -> float), ?on_start : (() -> unit), ?on_stop : (() -> unit), ?password : string, ?port : int, ?protocol : string, ?public : bool, ?start : bool, ?timeout : float, ?url : string, ?user : string, ?verb : string, format('a), source) -> source
+```
+
+Although the function has 31 arguments, it is still usable because most of them
+are optional so that they are not usually specified. Also notice that the
+headers are coded as an association list, and there is a number of handler
+(`on_connect`, `on_disconnect`, etc.).
 
 ### Polymorphism
+
+Some functions can operate of value of many types, they are said to be
+_polymorphic_. For instance, the function `list.tl`, which returns the tail of
+the list (i.e., the list without its first element), works on lists of integers
+so that it should have the type
+
+```
+([int]) -> [int]
+```
+
+but it also works on lists of strings so that it should also have the type
+
+```
+([string]) -> [string]
+```
+
+
+
+```
+(['a]) -> ['a]
+```
 
 polymorphism, restrictions on type variables (detail the type for `+`), give the
 type of `[]`
 
 ### Recursive functions
+
+```{.liquidsoap include="liq/fact.liq"}
+```
 
 TODO: explain that this can replace for and while loops
 
@@ -670,6 +796,12 @@ notation `{x}`
 
 Syntax of [language](https://www.liquidsoap.info/doc-dev/language.html)
 
+### Partial evaluation
+
+Partial evaluation, this is a source of errors (e.g. `list.hd([1,2,3])`) which
+are however easily detected by typing, example of
+`list.map(print(newline=false),[1,2,3])`
+
 References {#sec:ref}
 ----------
 
@@ -682,13 +814,15 @@ Exemple de `gstreamer.hls`
 The preprocessor
 ----------------
 
-`%include` (useful for passwords!)
+`%include` (useful for passwords!) (`%include "file"` vs `%include <file>`, cur dir vs library dir of Liq)
 `%define`
 
 `%ifdef`, `%ifndef`, `%ifencoder`, `%ifnencoder`, `%endif`
 
-Sources
+Sources {#sec:lang-sources}
 -------
+
+Sources vs active sources
 
 ### What is a faillible source?
 
