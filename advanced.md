@@ -9,7 +9,7 @@ the output down. For each clock, during one clock cycle the streaming loop queri
 clock. Each output is given a frame to fill up. That frame contains all the data (audio, video, midi) that will
 be produced during one clock cycle.
 
-The frame size is calculated when starting liquidsoap and should be the smallest size that can fit an time interval of
+The frame size is calculated when starting liquidsoap and should be the smallest size that can fit a full time interval of
 samples of each data type. Typically, a frame for audio date at `44.1kHz` and video rate of `25Hz` fits about `0.04s`
 of data. To check this, look for the following lines in your liquidsoap logs:
 
