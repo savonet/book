@@ -9,7 +9,7 @@ the output down. For each clock, during one clock cycle the streaming loop queri
 clock. Each output is given a frame to fill up. That frame contains all the data (audio, video, midi) that will
 be produced during one clock cycle.
 
-The frame size is calculated when starting liquidsoap and should be the smallest size that can fit an even number of
+The frame size is calculated when starting liquidsoap and should be the smallest size that can fit an time interval of
 samples of each data type. Typically, a frame for audio date at `44.1kHz` and video rate of `25Hz` fits about `0.04s`
 of data. To check this, look for the following lines in your liquidsoap logs:
 
@@ -20,7 +20,7 @@ of data. To check this, look for the following lines in your liquidsoap logs:
 [frame:3] Frames last 0.04s = 1764 audio samples = 1 video samples = 1764 ticks.
 ```
 
-Let's come back to our discussion. During one clock cycle, each output is given one such frame to fill. All the data is filled 
+During one clock cycle, each output is given one such frame to fill. All the data is filled 
 in-place, which avoids data copy as much as possible. Thus, when asked to fill up a frame, an output passes it down to its connected source. Then, for instance if the output is a `switch` operator, the operator will select which source is ready
 to fill up the frame and, in turn, pass it down to that source.
 
