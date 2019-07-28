@@ -1,5 +1,35 @@
-Advanced features
-=================
+Advanced Topics
+===============
+
+Runtime description
+-------------------
+
+Once a script has been parsed and compiled, liquidsoap will start the streaming loop. The loop is animated from
+the output down. For each clock, during one clock cycle the streaming loop queries each output connected to that
+clock. Each output is given a frame to fill up. That frame contains all the data (audio, video, midi) that will
+be produced during one clock cycle.
+
+The frame size is calculated when starting liquidsoap and should be the smallest size that can fit an even number of
+samples of each data type. Typically, a frame for audio date at `44.1kHz` and video rate of `25Hz` fits about `0.04s`
+of data. To check this, look for the following lines in your liquidsoap logs:
+
+```
+[frame:3] Using 44100Hz audio, 25Hz video, 44100Hz master.
+[frame:3] Frame size must be a multiple of 1764 ticks = 1764 audio samples = 1 video samples.
+[frame:3] Targetting 'frame.duration': 0.04s = 1764 audio samples = 1764 ticks.
+[frame:3] Frames last 0.04s = 1764 audio samples = 1 video samples = 1764 ticks.
+```
+
+Let's come back to our discussion. During one clock cycle, each output is given one such frame to fill. All the data is filled 
+in-place, which avoids data copy as much as possible. Thus, when asked to fill up a frame, an output passes it down to its connected source. Then, for instance if the output is a `switch` operator, the operator will select which source is ready
+to fill up the frame and, in turn, pass it down to that source.
+
+If a source is connected to multiple operators, it keeps a memoized buffer frame so that it does the computation required to fill a frame once during a single clock cycle, sharing the result with all the nodes it is 
+connected to.
+
+This goes on until the call returns. At this point, the frame is filled up with data and metadata. Most calls will fill up the entire frame at once. If the frame is only partially filled after one filling call, we consider that the current track has ended. This is used in many operator as track mark. Then, if the source connected to the output is still available, another call to fill up the frame is issued. Otherwise, the output ends. 
+
+When a source is considered `infallible`, we assume that this source will _always_ be able to fill up the current frame.
 
 Ids
 ---
