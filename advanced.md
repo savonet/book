@@ -5,8 +5,8 @@ Runtime description
 -------------------
 
 Once a script has been parsed and compiled, liquidsoap will start the streaming loop. The loop is animated from
-the outputs. For each clock, during one clock cycle the streaming loop queries each output connected to that
-clock. These outputs are given a frame to fill up. That frame contains all the data (audio, video, midi) that will
+the outputs: for each clock, during one clock cycle the streaming loop queries each output connected to that
+clock. These outputs are given a frame to fill up, which contains all the data (audio, video, midi) that will
 be produced during that clock cycle.
 
 The frame size is calculated when starting liquidsoap and should be the smallest size that can fit an interval of
@@ -20,21 +20,19 @@ of data. To check this, look for the following lines in your liquidsoap logs:
 [frame:3] Frames last 0.04s = 1764 audio samples = 1 video samples = 1764 ticks.
 ```
 
-During one clock cycle, each output is given one frame to fill. All the data is filled in-place, which avoids data copy as much as possible. Thus, when asked to fill up a frame, each output pass that frame down to its connected source to fill it up. Then, for instance if the output is a `switch` operator, the operator will select which source is ready to fill up the frame and, in turn, passes the frame to be filled up down to that source.
+During one clock cycle, each output is given one such frame to fill. All the data is filled in-place, which avoids data copy as much as possible. When asked to fill up a frame, each output passes its frame down to its connected source. Then, for instance if the output is a `switch` operator, the operator selects which source is ready and, in turn, passes the frame to be down to that source. If a source is connected to multiple operators, it keeps a memoized frame so that it does the computation required once during a single clock cycle, sharing the result with all the operators it is connected to.
 
-If a source is connected to multiple operators, it keeps a memoized frame so that it does the computation required to fill it once during a single clock cycle, sharing the result with all the nodes it is connected to.
-
-This goes on until the call returns. At this point, the frame is filled up with data and metadata. Most calls will fill up the entire frame at once. If the frame is only partially filled after one filling call, we consider that the current track has ended. This defines a track mark, used in many operators such as `on_track`. Then, if the source connected to the output is still available, another call to fill up the frame is issued. Otherwise, the output ends. 
+This goes on until the call returns. At this point, the frame is filled up with data and metadata. Most calls will fill up the entire frame at once. If the frame is only partially filled after one call, we consider that the current track has ended. This defines a track mark, used in many operators such as `on_track`. Then, if the source connected to the output is still available, another call to fill up the frame is issued, still within the same clock cycle. Otherwise, the output ends. 
 
 When a source is considered `infallible`, we assume that this source will _always_ be able to fill up the current frame.
 
-The runtime is important to keep in min when trying to understand how liquidsoap works. `clocks` are at the core of it.
-A normal clock will try to run this streaming loop in real-time, speeding up when filling the frame takes more time than the frame's length. This is when the infamous `catchup` log messages will come up:
+The runtime loop is important to keep in mind when trying to understand how liquidsoap works. Clocks are at the core of it.
+A normal clock will try to run this streaming loop in real-time, speeding up when filling the frame takes more time than the frame's length, which is when the infamous `catchup` log messages will come up:
 ```
 [clock.wallclock_main:2] We must catchup 2.82 seconds!
 ```
-Furthermore, it is important to keep in mind that the streaming happens by increment of a frame's length. Typically,
-`source.time` is precise down to a frame duration. This is also the delay that you can expect when working with liquidsoap. If you aim for a shorter one, specially when working with only audio, try to lower the video rate.\RB{Man we need to detect that and not use video when computing the frame size!}
+Furthermore, it is important to keep in mind that streaming happens by increment of a frame's length. Typically,
+`source.time` is precise down to a frame duration. This is also defines the I/O delay that you can expect when working with liquidsoap. If you aim for a shorter one, specially when working with only audio, try to lower the video rate.\RB{Man we need to detect that and not use video when computing the frame size!}
 
 Ids
 ---
