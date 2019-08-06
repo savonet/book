@@ -1,4 +1,4 @@
-Advanced Topics
+Advanced topics
 ===============
 
 Runtime description
@@ -71,6 +71,7 @@ JSON import/export
 ------------------
 
 ### Exporting values
+
 Liquidsoap can export any language value in JSON using `json_of`.
 
 The format is the following :
@@ -100,6 +101,7 @@ Output format is pretty printed by default. A compact output can
 be obtained by using the optional argument: `compact=true`.
 
 ### Importing values
+
 If compiled with `yojson` support, Liquidsoap can also
 parse JSON data into values. using `of_json`.
 
@@ -146,6 +148,7 @@ Then, you would use of_json with default value `[("error","fail")]` and do:
 m = of_json(default= [("error","fail")], json_string)
 ```
 
+\TODO{note that it would not work with `default=[]` because we match the type... Also explain that we cannot represent heterogeneous objects such as `{"a": "a", "b": 5}`}
 The type of the default value constrains the parser. For instance, in the 
 above example, a JSON string `"[1,2,3,4]"` will not be accepted and the 
 function will return the values passed as default.
@@ -181,6 +184,11 @@ data = of_json(default=hint,payload)
 m    = list.assoc(default=[],"metadata",data)
 print(m["title"]) # "foo"
 ```
+
+### A use case
+
+TODO: typical use case, reading values from MySQL database, which [can export to
+JSON](https://dev.mysql.com/doc/mysql-shell/8.0/en/mysql-shell-json-output.html)
 
 Dealing with HTTP requests
 --------------------------

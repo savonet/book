@@ -178,7 +178,9 @@ generated with the `random.int` (resp. `random.float`) function.
 ### Strings
 
 Strings are written between quotes, e.g. `"hello!"`, and are of type
-`string`.\TODO{escaping `\"`, etc.} The concatenation of two strings is achieved by `^`, as in
+`string`.\TODO{escaping `\"`, new lines, etc. Alternative syntax which allows
+for `"`: `'this is "a"'`} The concatenation of two strings is achieved by `^`,
+as in
 
 ```liquidsoap
 user = "dj"
@@ -234,9 +236,8 @@ useful string-related function are
   - : [string] = ["a", "42", "hello"]
   ```
 - `string.match`: test whether a string matches a regular expression,\TODO{give
-  an example}
-- `string.replace`: replace substrings matching a regular expression.\TODO{give
-  an example}
+  an example and explain basics of regexps}
+- `string.replace`: replace substrings matching a regular expression.
 
 ### Booleans
 
@@ -461,7 +462,7 @@ dictionary: each pair is an entry whose first component is its key and second
 component is its value. These are the way metadata are represented for instance:
 they are lists of pairs of strings, the first string being the name of the
 metadata, and the second its value. For instance, a metadata would be the
-association list
+association list\TODO{en passant , donner la différence entre `["a", "b"]` et `[("a", "b")]`}
 
 ```liquidsoap
 m = [("artist", "Sinatra"), ("title", "Fly me")]
@@ -614,14 +615,62 @@ the result should have the same type:
 f : (string, float) -> int = <fun>
 ```
 
-TODO: local definition: as above....................
+TODO: local variables: as above....................
 
 ### Handlers
 
-handlers (e.g. `on_metadata`, `on_blank`, `input.harbor`, etc.)
+A typical use of functions in Liquidsoap is for _handlers_, which are functions
+to be called when a particular event occurs, specifying the actions to be taken
+when it occurs. For instance, the `on_metadata` operator allows registering a
+handler when metadata occurs in a stream. Its type is
 
-anonymous functions (`fun ... -> ...`), those can have labeled and optional
-arguments
+```
+((([string * string]) -> unit), source('a)) -> source('a)
+```
+
+and it thus takes two arguments:
+ 
+- the handler, which is a function which takes as argument an association list
+  (of type `[string * string]`) encoding the metadata and returns nothing
+  meaningful (`unit`),
+- the source (of type `source('a)`, see [below](#sec:lang-sources)) whose
+  metadata are to be watched.
+
+When some metadata occur in the source, the handler is called with the metadata
+as argument. For instance, we can print the title of every song being played on
+our radio (a source named `radio`) with
+
+```{.liquidsoap include="liq/on_meta1.liq" from=1}
+```
+
+The handler is here the function `handle_metadata`, which prints the field
+associated to `"title"` in the association list given in the argument `m`.
+
+Although it is generally cleaner to first define functions (such as
+`handle_metadata` above) and then use them as arguments of functions, it is
+possible define a function without giving it a name with the syntax
+
+```liquidsoap
+fun (x) -> ... end
+```
+
+(of course, labeled arguments and default values are also supported as expected
+with this syntax). For instance, the above example for printing the title in
+metadatas could equivalently be rewritten as
+
+```{.liquidsoap include="liq/on_meta2.liq" from=1}
+```
+
+Other useful functions allowing the registration of handlers for the following
+situations:
+
+- `on_blank`: when a source is streaming blank (no sound has been
+  streamed for some period of time),
+- `on_track`: when a new track is played,
+- `on_end`: when a track is about to end,
+- `on_start` and `on_shutdown`: when Liquidsoap is starting or stopping.
+
+handlers (e.g. `on_metadata`, `on_blank`, `input.harbor`, etc.)
 
 crossfade
 
@@ -756,6 +805,8 @@ but it also works on lists of strings so that it should also have the type
 ([string]) -> [string]
 ```
 
+and so on........................
+
 
 
 ```
@@ -822,7 +873,10 @@ The preprocessor
 Sources {#sec:lang-sources}
 -------
 
-Sources vs active sources
+Sources vs active sources, utilité de `output.dummy`
+
+TODO: expliquer le flux des sources: par exemple, si on fait un on_metadata mais
+qu'on ne lit pas la sortie, la fonction n'est pas appelée...
 
 ### What is a faillible source?
 

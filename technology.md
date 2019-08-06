@@ -67,11 +67,9 @@ bytes (= 16 bits, remember that a byte is 8 bits) for each of the 2 channels and
 Because of the above, sound is typically compressed, especially if you want to
 send it over the internet where the bandwidth, i.e. the quantity of information
 you can send in a given period of time, matters: it is not unlimited and it
-costs money. To give you an idea, a connection of 1 gigabits per second is
-roughly $10000\SM{Romain, tu confirmes ?}\RB{Je dirait que surtout c'est
-irréaliste d'esperer avoir des clients qui ont cette bandwidth..}, with which 
-you can send CD quality audio to roughly 10 listeners only (provided that their
-bandwidth is large enough to download that).
+costs money. To give you an idea, a typical fiber connection nowadays has an
+upload rate of 100 megabits per second, with which you can send CD quality audio
+to roughly 70 listeners only.
 
 One way to compress audio consists in using the standard tools from coding and
 information theory: if something occurs often then encode it with a small
@@ -86,7 +84,7 @@ in the compression process. Most compressed audio formats are based, in addition
 to the previous ideas, on psychoacoustic models which take in account the way
 sound is perceived by the human hear and processed by the human brain. For
 instance, the ears does not generally perceive phase difference under a certain
-frequencies so all audio data below that threshold can be encoded in mono.\RB{Sampling at 44.1kHz already removes frequencies above 20kHz :-)}
+frequency so all audio data below that threshold can be encoded in mono.\RB{Sampling at 44.1kHz already removes frequencies above 20kHz :-)}
 Also, the ear is much more sensitive in the 1 to 5 kHz range so that
 we can be more rough outside this range, some low intensity signals can be
 masked by high intensity signals (i.e., we do not hear them anymore in presence

@@ -281,7 +281,7 @@ Those libraries add support for using soundcard for output and input:
 Among those, ALSA is very low level and is probably the one you want to use in
 order to minimize latencies. Other are support a wider variety of soundcards.
 
-Other outputs:
+Other outputs:\TODO{mention `ocaml-srt`}
 
 - `ocaml-cry`: output to icecast servers,
 - `ocaml-bjack`: Jack support
