@@ -296,9 +296,18 @@ the `then` branch should be of type `unit`:
 if x == "admin" then print("Welcome admin") end
 ```
 
-TODO: an example with `elsif`.............
+In the case where you want to perform a conditional branching in the
+`else`{.liquidsoap} branch, the `elsif`{.liquidsoap} keyword should be used, as
+in the following example, which assigns 0, 1, 2 or 3 to `s` depending on whether
+`x` is `"a"`, `"b"`, `"c"` or something else:
 
 ```{.liquidsoap include="liq/elsif.liq" from=1 to=4}
+```
+
+This is equivalent (but shorter to write) to the following sequence of
+imbricated conditional branchings:
+
+```{.liquidsoap include="liq/elseif.liq" from=1 to=8}
 ```
 
 ### Unit {#sec:unit}
@@ -648,20 +657,23 @@ associated to `"title"` in the association list given in the argument `m`.
 
 Although it is generally cleaner to first define functions (such as
 `handle_metadata` above) and then use them as arguments of functions, it is
-possible define a function without giving it a name with the syntax
+possible define a function without giving it a name, using the syntax
 
 ```liquidsoap
 fun (x) -> ... end
 ```
 
-(of course, labeled arguments and default values are also supported as expected
-with this syntax). For instance, the above example for printing the title in
-metadatas could equivalently be rewritten as
+which allows to define _anonymous functions_. Of course, labeled arguments and
+default values are also supported as expected with this syntax. For instance,
+the above example for printing the title in metadatas could equivalently be
+rewritten as
 
 ```{.liquidsoap include="liq/on_meta2.liq" from=1}
 ```
 
-Other useful functions allowing the registration of handlers for the following
+where we define the function directly in the argument.
+
+Other useful operators allow the registration of handlers for the following
 situations:
 
 - `on_blank`: when a source is streaming blank (no sound has been
@@ -670,9 +682,13 @@ situations:
 - `on_end`: when a track is about to end,
 - `on_start` and `on_shutdown`: when Liquidsoap is starting or stopping.
 
-handlers (e.g. `on_metadata`, `on_blank`, `input.harbor`, etc.)
+Many other operators also take more specific handlers as arguments. For
+instance, the operator `input.harbor`, which allows users to connect to a
+Liquidsoap instance and send streams has `on_connect` and `on_disconnect`
+arguments which allow the registration of handlers for the connection and
+disconnection of users.
 
-crossfade
+\TODO{also mention the `crossfade` operator}
 
 
 ### Labeled arguments

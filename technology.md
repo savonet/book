@@ -69,7 +69,8 @@ send it over the internet where the bandwidth, i.e. the quantity of information
 you can send in a given period of time, matters: it is not unlimited and it
 costs money. To give you an idea, a typical fiber connection nowadays has an
 upload rate of 100 megabits per second, with which you can send CD quality audio
-to roughly 70 listeners only.
+to roughly 70 listeners only.\SM{je veux bien que quelqu'un vérifie mes
+calculs...}
 
 One way to compress audio consists in using the standard tools from coding and
 information theory: if something occurs often then encode it with a small
@@ -83,23 +84,25 @@ In order to achieve more compression, we should be prepared to loose some data
 in the compression process. Most compressed audio formats are based, in addition
 to the previous ideas, on psychoacoustic models which take in account the way
 sound is perceived by the human hear and processed by the human brain. For
-instance, the ears does not generally perceive phase difference under a certain
-frequency so all audio data below that threshold can be encoded in mono.\RB{Sampling at 44.1kHz already removes frequencies above 20kHz :-)}
-Also, the ear is much more sensitive in the 1 to 5 kHz range so that
-we can be more rough outside this range, some low intensity signals can be
-masked by high intensity signals (i.e., we do not hear them anymore in presence
-of other loud sound sources), and so on. Most compression formats are
-_destructive_: they remove some information in the original signal in order for
-it to be smaller. The most well-known are mp3, ogg/opus and aac: the one you\RB{I believe at this point opus is much more popular than vorbis..}
-want to use is a matter of taste and support on the user-end. For instance, mp3
-is the most widespread, ogg/opus has the advantage of being open-source,
-patent-free and has a good quality/bandwidth radio and is [reasonably supported
-by modern browsers](https://caniuse.com/#feat=opus), aac is proprietary so that good free
+instance, the ears are much more sensitive in the 1 to 5 kHz range so that we
+can be more rough outside this range, some low intensity signals can be masked
+by high intensity signals (i.e., we do not hear them anymore in presence of
+other loud sound sources), they do not generally perceive phase difference under
+a certain frequency so all audio data below that threshold can be encoded in
+mono, and so on. Most compression formats are _destructive_: they remove some
+information in the original signal in order for it to be smaller. The most
+well-known are mp3, ogg/opus and aac: the one you want to use is a matter of
+taste and support on the user-end. For instance, mp3 is the most widespread,
+ogg/opus has the advantage of being open-source, patent-free and has a good
+quality/bandwidth radio and is reasonably supported by modern browsers<!--
+https://caniuse.com/#feat=opus -->, aac is proprietary so that good free
 encoders are more difficult to find but achieves better sounding at high
-compression rates, etc. A typical mp3 is encoded at a bitrate of 128 kbps
-(kilobits per second, although rates of 192 kbps and higher are recommended if
-you favor sound quality), meaning that 1 minute will weight roughly 1 MB, which
-is 10% of the original sound in CD quality.
+compression rates and has licensing fees,\SM{ça serait bien d'être clair sur la
+différence royalty-free / free license / licensing fees} etc. A typical mp3 is
+encoded at a bitrate of 128 kbps (kilobits per second, although rates of 192
+kbps and higher are recommended if you favor sound quality), meaning that 1
+minute will weight roughly 1 MB, which is 10% of the original sound in CD
+quality.
 
 Most of these formats also support _variable bitrates_ meaning that the bitrate
 can be adapted within the file: complex parts of the audio will be encoded at
@@ -107,8 +110,13 @@ higher rates and simpler ones at low rates. For those, the resulting stream size
 will heavily depend on the actual audio and is thus more difficult to predict,
 by the perceived quality is higher.
 
-As a side note we were a bit imprecise above when speaking of a "file
-format. TOOD: explain the difference between containers and codecs..............
+As a side note, we were a bit imprecise above when speaking of a "file format"
+and we should distinguish between two things: the _codec_ is the algorithm we
+used to compress the audio data, and the _container_ is the file format used to
+store the compressed data. This is why we speak of ogg/opus: ogg is the
+container and opus is the codec. For video streams, the container typically
+contains multiple streams (one for video and one for audio), each encoded with a
+different codec, as well as other information (metadata, subtitles, etc.).
 
 ### Metadata
 
@@ -233,7 +241,7 @@ can be costly in terms of CPU if you want to achieve good quality.
 ### Normalization
 
 The next thing you want to do is to _normalize_ the sound, meaning that you want
-to have roughly the same audio loudness between tracks. If they come from\RB{I think that loudness is more appropriate than intensity here
+to have roughly the same audio loudness between tracks. If they come from
 different sources (such as two different albums by two different artists) this
 is generally not the case.
 
@@ -276,7 +284,7 @@ The final thing you want to do is to give your radio an appreciable and
 recognizable sound. This can be achieved by applying a series of sound effects.
 
 - _compressor_: gives a more uniform sound by amplifying quiet sounds,
-- _equalizing_: gives a signature to your radio by amplifying differently
+- _equalizer_: gives a signature to your radio by amplifying differently
   different frequency ranges (typically, simplifying a bit, you want to insist
   on bass if you play mostly lounge music in order to have a warm sound, or on
   treble if you have voices in order for them to be easy to understand),
@@ -287,16 +295,50 @@ recognizable sound. This can be achieved by applying a series of sound effects.
 \TODO{veut-on faire une partie "technique" où l'on explique les unités courantes
 comme le RMS ?}
 
-### Encoding
+These descriptions are very rough and we urge the reader not accustomed with
+those basic components of signal processing to learn more about them. You will
+need those at some point of you want to make a professional sounding webradio.
 
-TODO: explain once for all that we have to reencode everything
+### The processing loop
 
+Because we generally want to perform all those operations on audio signals, the
+typical processing loop will consist in
+
+1. decoding audio files,
+2. processing the audio (fading, equalizing, etc.),
+3. encoding the audio,
+4. streaming encoded audio.
+
+If for some reason we do not want to perform any audio processing (for instance,
+if this processing was done offline, or if we are relaying some already
+processed audio stream), the second phase is empty and if the encoding format is
+the same as the source format there is no need to decode and then reencode in
+the same format, and we can directly stream the original encoded files. For
+technical reasons, Liquidsoap always assumes that we are in the general case and
+decodes and reencodes audio, even is there is no processing to be performed: if
+you want to handle directly compressed data, maybe should you start looking for
+other tools.\SM{c'est un peu chelou de parler de Liq dans ce chapitre purement
+sur la tech mais je ne sais pas trop où le mettre.}
 
 More features
 -------------
 
+What we have described so far, is more or less the direct adaptation of
+traditional radio techniques to the digital world. But with new tools come new
+usages, and a webradio generally requires more than the above features.
+
+### Interacting with other programs
+
+Whichever tool you are going to use in order to generate your webradio, it is
+never going to support all the features that a user will require. At some point,
+an obscure hardware interface or database will be 
+
+script to generate playlists, databases, etc.
+
 ### Interacting with the world
 
 websites, osc
+
+### Monitoring
 
 ### Video
