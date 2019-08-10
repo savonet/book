@@ -28,8 +28,15 @@ A _media player_, which connects to the server and plays the stream for the
 client, it can either be a software (such as iTunes), an Android application, or
 a website.
 
-Below, we enter the details of the first two, explaining the technical choices
-you have to face when setting up a webradio.
+After general considerations about compressed audio streams ([this
+section](#sec:audio-streams)), we detail the technical challenges and tools at
+our disposal for streaming media systems ([this section](#sec:audio-streaming))
+and stream generators ([this section](#sec:audio-sources), [this
+section](#sec:audio-processing) and [this section](#sec:audio-interaction)). In
+particular, we will see in later chapters that all the desirable features
+described here for stream generators can be achieved with Liquidsoap. Finally,
+in [the last section](#sec:video-streams), we discuss the generation of video
+streams.
 
 Audio streams {#sec:audio-streams}
 -------------
@@ -91,16 +98,15 @@ other loud sound sources), they do not generally perceive phase difference under
 a certain frequency so all audio data below that threshold can be encoded in
 mono, and so on. Most compression formats are _destructive_: they remove some
 information in the original signal in order for it to be smaller. The most
-well-known are mp3, ogg/opus and aac: the one you want to use is a matter of
-taste and support on the user-end. For instance, mp3 is the most widespread,
-ogg/opus has the advantage of being open-source, patent-free and has a good
-quality/bandwidth radio and is reasonably supported by modern browsers<!--
-https://caniuse.com/#feat=opus -->, aac is proprietary so that good free
-encoders are more difficult to find but achieves better sounding at high
-compression rates and has licensing fees,\SM{ça serait bien d'être clair sur la
-différence royalty-free / free license / licensing fees} etc. A typical mp3 is
-encoded at a bitrate of 128 kbps (kilobits per second, although rates of 192
-kbps and higher are recommended if you favor sound quality), meaning that 1
+well-known are mp3, opus and aac: the one you want to use is a matter of taste
+and support on the user-end. For instance, mp3 is the most widespread, opus has
+the advantage of being open-source, patent-free, has a good quality/bandwidth
+radio and is reasonably supported by modern browsers although hardware support
+is almost nonexistent, aac is proprietary so that good free encoders are more
+difficult to find (because they are subject to licensing fees) but achieves good
+sounding at high compression rates and is quite well supported, etc. A typical
+mp3 is encoded at a bitrate of 128 kbps (kilobits per second, although rates of
+192 kbps and higher are recommended if you favor sound quality), meaning that 1
 minute will weight roughly 1 MB, which is 10% of the original sound in CD
 quality.
 
@@ -113,10 +119,14 @@ by the perceived quality is higher.
 As a side note, we were a bit imprecise above when speaking of a "file format"
 and we should distinguish between two things: the _codec_ is the algorithm we
 used to compress the audio data, and the _container_ is the file format used to
-store the compressed data. This is why we speak of ogg/opus: ogg is the
-container and opus is the codec. For video streams, the container typically
-contains multiple streams (one for video and one for audio), each encoded with a
-different codec, as well as other information (metadata, subtitles, etc.).
+store the compressed data. This is why one generally speaks of ogg/opus: ogg is
+the container and opus is the codec. A container can usually embed streams
+encoded with various codecs (e.g. ogg can also contain flac or vorbis streams),
+and a given codec can be embedded in various containers (e.g. flac and vorbis
+streams can also be embedded into Matroska containers). In particular, for video
+streams, the container typically contains multiple streams (one for video and
+one for audio), each encoded with a different codec, as well as other
+information (metadata, subtitles, etc.).
 
 ### Metadata
 
@@ -126,7 +136,10 @@ metadata, the title, the artist, the album name, the year of recording, and so
 on. Custom metadata are also useful to indicate the loudness of the file, the
 desired cue points, and so on (see below).
 
-### Streaming
+Streaming {#sec:audio-streaming}
+---------
+
+### Icecast
 
 Once properly encoded, the streaming of audio data is not performed directly by
 the stream generator (such as Liquidsoap) to client. The reason is that this is
@@ -139,31 +152,35 @@ also takes care of various connections by clients, recording statistics,
 enforcing limits (on clients or bandwidth), and so on. It also handles multiple
 mount points (i.e., different radios).
 
+### HLS
+
 Until recently, the streaming model as offered by Icecast was predominant, but
-it suffers from two main drawbacks. Firstly, the connection has to be kept between
-the client and the server which cannot be guaranteed in mobile contexts: when you
-connect with your smartphone, you frequently change networks or switch between
-wifi and 4G and the connection cannot be held during such events. Another issue
-is that the data cannot be cached as it is for web traffic, where it helps
-lowering the latencies and bandwidth-related costs. For this reason, new
-standards such as HLS (for HTTP Live Stream) or MPEG-DASH (for Dynamic Adaptive
-Streaming over HTTP) have emerged where the stream is provided as a rolling
-playlist of small files called segments: a playlist typically contains the last
-minute of audio split into segments of 2 seconds. Moreover, the playlist can
-indicate, multiple versions of the stream with various formats and encoding
-qualities, so that the client can switch to a lower bitrate if the connection
-becomes bad (this is called _adaptative_ streaming). Here, the files are
-downloaded one by one, and are served by an usual HTTP server, so that it is
-more robust and scales better than Icecast serving. Our guess is that such
-formats will take over audio distribution in the near future, and Liquidsoap
-already has support for HLS.
+it suffers from two main drawbacks. Firstly, the connection has to be kept
+between the client and the server which cannot be guaranteed in mobile contexts:
+when you connect with your smartphone, you frequently change networks or switch
+between wifi and 4G and the connection cannot be held during such
+events. Another issue is that the data cannot be cached as it is for web
+traffic, where it helps lowering the latencies and bandwidth-related costs. For
+this reason, new standards such as HLS (for _HTTP Live Stream_) or MPEG-DASH
+(for _Dynamic Adaptive Streaming over HTTP_) have emerged where the stream is
+provided as a rolling playlist of small files called segments: a playlist
+typically contains the last minute of audio split into segments of 2
+seconds. Moreover, the playlist can indicate, multiple versions of the stream
+with various formats and encoding qualities, so that the client can switch to a
+lower bitrate if the connection becomes bad (this is called _adaptative_
+streaming). Here, the files are downloaded one by one, and are served by an
+usual HTTP server, so that it is more robust and scales better than Icecast
+serving. Our guess is that such formats will take over audio distribution in the
+near future, and Liquidsoap already has support for HLS.
+
+### Other platforms
 
 Finally, we would like to mention that, nowadays, streaming is more and more
 being delegated to big online platforms, such as Youtube, because of their ease
 of use (both in terms of setup and of user experience). Liquidsoap also has support
 to stream to those platforms.
 
-Audio sources
+Audio sources {#sec:audio-sources}
 -------------
 
 In order to make a radio, one has to start with a primary source of audio. We
@@ -222,7 +239,7 @@ take care of that, typically by using buffers. This is not a theoretical issue:
 first versions of Liquidsoap did not handle this and we experienced the
 problems.
 
-Audio processing
+Audio processing {#sec:audio-processing}
 ----------------
 
 ### Resampling
@@ -281,7 +298,8 @@ playlist.
 ### Equalization
 
 The final thing you want to do is to give your radio an appreciable and
-recognizable sound. This can be achieved by applying a series of sound effects.
+recognizable sound. This can be achieved by applying a series of sound effects
+such as a
 
 - _compressor_: gives a more uniform sound by amplifying quiet sounds,
 - _equalizer_: gives a signature to your radio by amplifying differently
@@ -320,25 +338,70 @@ you want to handle directly compressed data, maybe should you start looking for
 other tools.\SM{c'est un peu chelou de parler de Liq dans ce chapitre purement
 sur la tech mais je ne sais pas trop où le mettre.}
 
-More features
--------------
+Interaction {#sec:audio-interaction}
+-----------
 
 What we have described so far, is more or less the direct adaptation of
 traditional radio techniques to the digital world. But with new tools come new
-usages, and a webradio generally requires more than the above features.
+usages, and a webradio generally requires more than the above features. In
+particular, we should be able to interact with other programs and services.
 
 ### Interacting with other programs
 
 Whichever tool you are going to use in order to generate your webradio, it is
 never going to support all the features that a user will require. At some point,
-an obscure hardware interface or database will be 
+the use of an obscure hardware interface, database, or whatsoever will be
+required by a client, which will not be supported out of the shelf by the
+tool. Or maybe you simply want to be able to reuse parts of the scripts that you
+spent years to write in your favorite language.
 
-script to generate playlists, databases, etc.
+For this reason, a stream generator should be able to interact with other tools,
+by calling external programs or scripts, written in whichever language. For
+instance, we should be able handle _dynamic playlists_, which are playlists
+where the list of songs is not determined in advance, but the next song to play
+is rather determined each time the previous one has ended. In order to obtain
+the name of the next song, we should be able to call an external script.
 
-### Interacting with the world
+We should also be able to easily import data generated by other programs, the
+usual mechanism being by reading the standard plain text output of the executed
+program. This means that we should also have tools to parse and manipulate this
+standard output. Typically, structured data such as the result of a query on a
+database can be output in standard formats such as JSON, for which we should
+have support.
 
-websites, osc
+Finally, we should be able to interact with some more specific external
+programs, such as for monitoring scripts (in order to understand its state and
+be quickly notified in case of a problem).
 
-### Monitoring
+### Interacting with other services
 
-### Video
+The above way of interacting works in _pull mode_: the stream generators asks an
+external program for information (e.g. the next song). Another desirable
+workflow is _push mode_, where the program adds information whenever it feels
+like. This is typically the case for _request queues_ which are, again, a
+variant of playlists, where an external programs can add songs whenever it feels
+like: those will be played one, in the order where they where inserted. This is
+typically used for interactive websites: whenever a user asks for a song, it
+gets added to the request queue.
+
+Push mode interaction is also commonly used for controllers, which are physical
+or virtual devices consisting of push buttons and sliders, that one can use in
+order to switch between audio sources, change the volume and so on. The device
+generally notifies the stream generator when some control gets changed, which
+should then react accordingly. The commonly used standard nowadays for
+communicating with controllers is called OSC (_Open Sound Control_).
+
+Video streams {#sec:video-streams}
+-------------
+
+TODO: same problems but 1000 times worse
+
+- many possible codecs and multiple standard representation for raw data
+  (RGB(A), YUV which is much more compact since we can have one U and one V for
+  4 pixels, so that we have 1.5 byte instead of 3 per pixel),
+- we always have multiple streams (generally one video stream and one audio
+  stream), which means synchronization problems
+- many ways to combine sources (fading types, add a logo, scrolling text, no to
+  mention color grading, etc)
+- much more memory intensive (compute the bytes per seconds in raw, copies do
+  cost much at this rate), and obviously CPU intensive
