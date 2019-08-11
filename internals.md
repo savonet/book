@@ -12,6 +12,9 @@ The stream model
 
 ## Track boundaries
 
+En gros, chaque appel a `get_frame` doit ajouter exactement un break. Si le
+break est en fin de frame, on a fini sinon c'est une fin de piste.
+
 ## Metadata
 
 The source model

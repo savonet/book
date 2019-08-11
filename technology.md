@@ -67,7 +67,7 @@ those can be found in "nature":
 
 This means lots of data. For instance, an audio sample in CD quality takes 2
 bytes (= 16 bits, remember that a byte is 8 bits) for each of the 2 channels and
-1 minute of sound is 44100×2×2×60 bytes, which is roughly 10 MB per minute.
+1 minute of sound is 44100×2×2×60 bytes, which is roughly 10 MB per minute.
 
 ### Compression
 
@@ -386,22 +386,62 @@ gets added to the request queue.
 
 Push mode interaction is also commonly used for controllers, which are physical
 or virtual devices consisting of push buttons and sliders, that one can use in
-order to switch between audio sources, change the volume and so on. The device
-generally notifies the stream generator when some control gets changed, which
-should then react accordingly. The commonly used standard nowadays for
-communicating with controllers is called OSC (_Open Sound Control_).
+order to switch between audio sources, change the volume of a stream, and so
+on. The device generally notifies the stream generator when some control gets
+changed, which should then react accordingly. The commonly used standard
+nowadays for communicating with controllers is called OSC (_Open Sound
+Control_).
 
 Video streams {#sec:video-streams}
 -------------
 
-TODO: same problems but 1000 times worse
+The workflow for generating video streams is not fundamentally different to what
+we have described above, so that one can expect that an audio stream generator
+can also be used to generate video. In practice, this is rarely the case because
+manipulating video is an order of magnitude harder to implement.
 
-- many possible codecs and multiple standard representation for raw data
-  (RGB(A), YUV which is much more compact since we can have one U and one V for
-  4 pixels, so that we have 1.5 byte instead of 3 per pixel),
-- we always have multiple streams (generally one video stream and one audio
-  stream), which means synchronization problems
-- many ways to combine sources (fading types, add a logo, scrolling text, no to
-  mention color grading, etc)
-- much more memory intensive (compute the bytes per seconds in raw, copies do
-  cost much at this rate), and obviously CPU intensive
+### Video data
+
+The first thing to notice is that video means really a lot of data. A video in a
+decent resolution has 24 images per second at a resolution of 720p, which means
+1280×720 pixels, each pixels consisting of three channels (generally, red, green
+and blue, or _RGB_ for short) each of which is usually coded on one byte. This
+means that one second of uncompressed video data weights 66 MB! And these are
+only the minimal requirements for a video to be called HD (_High Definition_),
+which is the kind of video which is being watched everyday on the internet: in
+practice, even low-end devices can produce much higher resolutions than this.
+
+This volume of data means that manipulation of video, such as combining videos
+or applying effects, should be coded very efficiently (by which we mean down to
+fine-tuning the assembly code for some parts), otherwise the stream generator
+will not be able to apply them in realtime on a standard recent computer. It
+also means that even copying of data should be avoided, the speed of memory is
+also a problem at such rates.
+
+An usual video actually consists of two streams: one for the video and one for
+the audio. We want to be able to handle them separately, so that we can apply
+all the operations specific to audio described in previous sections to videos,
+but the video and audio stream should be kept in perfect sync (even a very small
+delay between audio is video can be noticed).
+
+As a side note, in practice, video pixels are not represented by red, green and
+blue channels as we learn in school, but in another base often called _YUV_
+consisting of one _luma_ channel Y (roughly, the black and white component of
+the image) and two _chroma_ channels U and V (roughly, the color part of the
+image represented as blueness and redness). Moreover, because the eye is much
+more sensitive to the variations in luma than in chroma components, we can use
+one Y byte for each pixel and one U byte and one V byte for every four pixels,
+thus using 1.5 byte per pixel instead of 3 for traditional RGB
+representation. The conversion between YUV and RGB is not entirely trivial and
+costs in terms of computations, so it is much better to code video manipulations
+directly on the YUV representation.
+
+### File formats
+
+We have seen that there is quite a few compressed formats available for audio
+and the situation is the same for video, but the video codecs generally 
+
+### Video effects
+
+many ways to combine sources (fading types, add a logo, scrolling text, not
+to mention color grading, etc)

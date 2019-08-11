@@ -18,7 +18,7 @@ distributions and architectures, makes it easy to build programs written in
 OCaml by installing the required dependencies (the libraries the program needs
 to be compiled) and managing consistency between various versions. The opam
 packages for Liquidsoap and associated libraries are actively maintained in
-opam.
+opam.\TODO{expliquer que tout est installé dans le rép `~/.opam/...`}
 
 ### Installing opam
 
@@ -88,6 +88,8 @@ opam will automatically detect that it can be used by Liquidsoap and will
 recompile it. The list of all optional dependencies that you may enable in
 Liquidsoap can be obtained by typing `opam info liquidsoap`, and is detailed
 below.
+
+\SM{il y a un paquet opam `liquidsoap-daemon`, ça sert à quoi ?}
 
 ### Installing the cutting-edge version
 
