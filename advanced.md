@@ -72,7 +72,8 @@ Settings
 
 ### Logs
 
-How to configure the logs
+How to configure the logs (in particular default log.level is 3 so that info and
+debug are not shown by default)
 
 Using command-line arguments
 ----------------------------
@@ -173,10 +174,11 @@ Then, you would use of_json with default value `[("error","fail")]` and do:
 m = of_json(default= [("error","fail")], json_string)
 ```
 
-\TODO{note that it would not work with `default=[]` because we match the type... Also explain that we cannot represent heterogeneous objects such as `{"a": "a", "b": 5}`}
-The type of the default value constrains the parser. For instance, in the 
-above example, a JSON string `"[1,2,3,4]"` will not be accepted and the 
-function will return the values passed as default.
+\TODO{note that it would not work with `default=[]` because we match the
+type... Also explain that we cannot represent heterogeneous objects such as
+`{"a": "a", "b": 5}`} The type of the default value constrains the parser. For
+instance, in the above example, a JSON string `"[1,2,3,4]"` will not be accepted
+and the function will return the values passed as default.
 
 You can use the default value in two different ways:
 
@@ -259,19 +261,20 @@ of this.
 
 First some outlines:
 
-* This example is meant to create a new source and outputs. It is not easy currently to change a source being streamed
-* The idea is to create a new output using a telnet/server command.
+- This example is meant to create a new source and outputs. It is not easy
+  currently to change a source being streamed
+- The idea is to create a new output using a telnet/server command.
 
-In this example, we will register a command that creates a playlist source using an uri passed
-as argument and outputs it to a fixed icecast output.
+In this example, we will register a command that creates a playlist source using
+an uri passed as argument and outputs it to a fixed icecast output.
 
-With more work on parsing the argument passed to the telnet command,
-you may write more evolved options, such as the possibility to change
-the output parameters etc..
+With more work on parsing the argument passed to the telnet command, you may
+write more evolved options, such as the possibility to change the output
+parameters etc..
 
-Due to some limitations of the language, we have used some
-intricate (but classic) functional programming tricks. They are
-commented in order to help reading the code..
+Due to some limitations of the language, we have used some intricate (but
+classic) functional programming tricks. They are commented in order to help
+reading the code..
 
 New here's the code:
 
@@ -306,15 +309,15 @@ end
 # And a function to destroy a dynamic source
 def destroy_playlist(uri) = 
   # We need to find the source in the list,
-  # remove it and destroy it. Currently, the language
+  # remove it and destroy it. Currently, the language
   # lacks some nice operators for that so we do it
   # the functional way
 
-  # This function is executed on every item in the list
+  # This function is executed on every item in the list
   # of dynamic sources
   def parse_list(ret, current_element) = 
     # ret is of the form: (matching_sources, remaining_sources)
-    # We extract those two:
+    # We extract those two:
     matching_sources = fst(ret)
     remaining_sources = snd(ret)
 
@@ -322,14 +325,14 @@ def destroy_playlist(uri) =
     # we check the first element
     current_uri = fst(current_element)
     if current_uri == uri then
-      # In this case, we add the source to the list of
+      # In this case, we add the source to the list of
       # matched sources
       (list.append( [snd(current_element)], 
                      matching_sources),
        remaining_sources)
     else
       # In this case, we put the element in the list of remaining
-      # sources
+      # sources
       (matching_sources,
        list.append([current_element], 
                     remaining_sources))
@@ -341,10 +344,10 @@ def destroy_playlist(uri) =
   matching_sources = fst(result)
   remaining_sources = snd(result)
 
-  # We store the remaining sources in dyn_sources
+  # We store the remaining sources in dyn_sources
   dyn_sources := remaining_sources
 
-  # If no source matched, we return an error
+  # If no source matched, we return an error
   if list.length(matching_sources) == 0 then
     "Error: no matching sources!"
   else
@@ -384,10 +387,16 @@ If you want to plug those sources into an existing output, you may
 want to use an `input.harbor` in the main output and change the
 `output.icecast` in the dynamic source creation to send everything to
 this `input.harbor`. You can use the `%wav` format in this case to avoid
-compressing/decompressing the data..
+compressing/decompressing the data.
+
+Webcast
+-------
 
 Lastfm
 ------
+
+Sandboxing {#sec:sandboxing}
+----------
 
 Daemon
 ------
@@ -405,3 +414,11 @@ source.seek
 source.time
 
 etc
+
+Testing scripts
+---------------
+
+- log as much as possible and use priorities meaningfully
+- mention `chopper`, which is useful to simulate track boundaries
+- `sleeper`
+- what else?

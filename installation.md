@@ -6,7 +6,8 @@ your environment, or compile it by yourself. The latest is slightly more
 involved (although it is now a mostly automated process), but allows you to
 easily obtain a cutting-edge version and take part of the development
 process. These instructions are for the latest released version at the time of
-the writing, you are encouraged to consult the online documentation 
+the writing, you are encouraged to consult the online documentation.\TODO{dire
+qu'on ne doit *pas* installer en root (ça ne marche pas)}
 
 
 Automated building using opam {#sec:opam}
@@ -41,7 +42,7 @@ have at least the version 2.0.0 of opam (this version can be obtained by `opam
 --version`).
 
 If you are installing opam for the first time, you should initialize the list of
-opam packages
+opam packages\TODO{dire comment répondre aux questions posées par opam}
 
 ```
 opam init
@@ -295,6 +296,7 @@ Those add support for manipulate sound:
 
 - `ocaml-dssi`: sound synthesis plugins,
 - `ocaml-ladspa`: sound effect plugins,
+- `ocaml-lilv`: sound effect plugins,
 - `ocaml-samplerate`: samplerate conversion in audio files,
 - `ocaml-soundtouch`: pitch shifting and time stretching.
 

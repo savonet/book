@@ -11,8 +11,22 @@ let () =
        ``` *)
     | CodeBlock ((ident, classes, keyvals), _) when List.mem_assoc "include" keyvals ->
        let fname = List.assoc "include" keyvals in
+       let nb_lines () =
+         let ans = ref 0 in
+         let ic = open_in fname in
+         try
+           while true do
+             ignore (input_line ic);
+             incr ans
+           done;
+           0
+         with
+         | End_of_file -> !ans
+       in
        let from = try int_of_string (List.assoc "from" keyvals) with Not_found -> 0 in
        let last = try int_of_string (List.assoc "to" keyvals) with Not_found -> max_int in
+       let from = if from < 0 then nb_lines () + from else from in
+       let last = if last < 0 then nb_lines () - 1 + last else last in
        let contents =
          try
            let ic = open_in fname in

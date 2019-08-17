@@ -1,10 +1,13 @@
 Setting up a simple radio station
 =================================
 
-The sound of a sine wave
+The sound of a sine wave {#sec:sound-sine}
 ------------------------
 
 ### A first sound
+
+\TODO{mention here that for security reasons, Liquidsoap should not be run as
+root (and will actually refuse to proceed)}
 
 In order to test your installation, you can try the following in a console:
 
@@ -106,7 +109,7 @@ investigate all the parameters of the `sine` operator. In order to obtained
 detailed help about this operator, type in a console
 
 ```
-liquidsoap -h 
+liquidsoap -h sine
 ```
 
 (you can also have this information in [the online

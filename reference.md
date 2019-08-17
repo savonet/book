@@ -6,6 +6,32 @@ Time predicates {#sec:time-predicates}
 
 TODO: detail the syntax of time predicates (`10h-15h30`).
 
+A date can be specified as `_w_h_m_s` where `_` are integers. It has the following meaning:
+
+* `w` stands for weekday, ranging from 0 to 7, where 1 is monday, and sunday is both 0 and 7.
+* `h` stands for hours, ranging from 0 to 23.
+* `m` stands for minutes, from 0 to 59.
+* `s` stands for seconds, from 0 to 59.
+
+All components `w`, `h`, `m` and `s` are optional. Finally, the `m` can be omitted in dates of the form `_h_` such as `12h30`.
+
+It is possible to use 24 (resp. 60) as the upper bound for hours (resp. seconds or minutes) in an interval, for example in `12h-24h`.
+
+Time intervals can be either of the form `DATE-DATE` or simply `DATE`. Their
+meaning should be intuitive: `10h-10h30` is valid everyday between 10:00 and
+10:30; `0m` is valid during the first minute of every hour.
+
+This is typically used for specifying switch predicates:
+
+```
+switch([
+  ({ 20h-22h30 }, prime_time),
+  ({ 1w }, monday_source),
+  ({ (6w or 7w) and 0h-12h }, week_ends_mornings),
+  ({ true }, default_source)
+])
+```
+
 Encoding formats {#sec:encoding-formats}
 ----------------
 

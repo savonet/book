@@ -70,19 +70,20 @@ approach for designing your radio; it can cope with all the situations described
 above, and much more.
 
 Liquidsoap itself is programmed in OCaml, but the language you will use is not
-OCaml, it is a new language, and it is quite different from a general-purpose
-programming languages, such as Java or C. It was designed from scratch,
-dedicated to stream generation, where we tried to follow the principle
-formulated by Allan Kay: _simple things should be simple, complex things should
-be possible_. This means that we had in mind that our users are not typically
-experienced programmers, but rather people enthusiastic about music or willing
-to disseminate information, and we wanted a language as accessible as possible,
-were a basic script should be simple and easy to understand, where the functions
-have reasonable default values, where the errors are clearly located and
-explained. Yet, we provide most things needed for handling sound (in particular,
-support for the wide variety of file formats, protocols, sound plugins, and so
-on) as well as more advanced functions which ensure that one can cope up with
-complex setups (e.g. through callbacks and references).
+OCaml (although it was somewhat inspired of it), it is a new language, and it is
+quite different from a general-purpose programming languages, such as Java or
+C. It was designed from scratch, dedicated to stream generation, where we tried
+to follow the principle formulated by Allan Kay: _simple things should be
+simple, complex things should be possible_. This means that we had in mind that
+our users are not typically experienced programmers, but rather people
+enthusiastic about music or willing to disseminate information, and we wanted a
+language as accessible as possible, were a basic script should be simple and
+easy to understand, where the functions have reasonable default values, where
+the errors are clearly located and explained. Yet, we provide most things needed
+for handling sound (in particular, support for the wide variety of file formats,
+protocols, sound plugins, and so on) as well as more advanced functions which
+ensure that one can cope up with complex setups (e.g. through callbacks and
+references).
 
 It is also designed to be very robust, since we want our radios to stream
 forever and our stream crash after a few weeks because of a rare case which is

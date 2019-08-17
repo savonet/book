@@ -398,7 +398,9 @@ Video streams {#sec:video-streams}
 The workflow for generating video streams is not fundamentally different to what
 we have described above, so that one can expect that an audio stream generator
 can also be used to generate video. In practice, this is rarely the case because
-manipulating video is an order of magnitude harder to implement.
+manipulating video is an order of magnitude harder to implement. Since the main
+focus of this book is for audio streams, we only briefly explain the main
+technological issues related to video.
 
 ### Video data
 
@@ -433,15 +435,30 @@ more sensitive to the variations in luma than in chroma components, we can use
 one Y byte for each pixel and one U byte and one V byte for every four pixels,
 thus using 1.5 byte per pixel instead of 3 for traditional RGB
 representation. The conversion between YUV and RGB is not entirely trivial and
-costs in terms of computations, so it is much better to code video manipulations
-directly on the YUV representation.
+costs in terms of computations, so it is generally better to code video
+manipulations directly on the YUV representation.
 
 ### File formats
 
 We have seen that there is quite a few compressed formats available for audio
-and the situation is the same for video, but the video codecs generally 
+and the situation is the same for video, but the video codecs generally involve
+many configuration options exploiting specificities of video, such as the fact
+two consecutive images in a video are usually quite similar. Fortunately, most
+of the common formats are handled by high-level libraries such as _FFmpeg_. This
+solves the problem for decoding, but for encoding we are still left with many
+parameters to specify, which can have a large impact on the quality of the
+encoded video and on the speed of the compression (finding the good balance is
+somewhat of an art).
 
 ### Video effects
 
-many ways to combine sources (fading types, add a logo, scrolling text, not
-to mention color grading, etc)
+As for audio, many manipulation of audio files are expected to be present in a
+typical workflow.
+
+- _Fading_: as for audio tracks, we should be able to fade between successive
+  videos, this can be a smooth fade, or one video slides on top of the other,
+  and so on.
+- _Visual identity_: we should be able to add the logo of our channel, add a
+  sliding text at the bottom displaying the news or listing the shows to come.
+- _Color grading_: as for audio tracks, we should be able to give a particular
+  ambiance by having uniform colors and intensities between tracks.

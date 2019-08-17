@@ -60,10 +60,26 @@ _stream generator generator_, it generates stream generators.\TODO{give an
 example of a reduction of the language, e.g. a list.init which generates a list
 of sources?}
 
-Basic expressions
------------------
+Writing scripts
+---------------
 
-We begin by describing the most simple everyday expressions in Liquidsoap.
+Scripts in Liquidsoap can be written in any editor, although Emacs is
+recommended, as the only editor with specific Liquidsoap support (syntax
+coloration, indentation). Some other tools, described below, can also be useful
+in order to learn Liquidsoap or elaborate scripts.
+
+### Documentation of operators
+
+We recall from [earlier](#sec:sound-sine) that the documentation of an operator
+`operator`, including its type and a description of its parameters, can be
+obtained by typing
+
+```
+liquidsoap -h operator
+```
+
+This documentation is also available [on the
+website](https://www.liquidsoap.info/doc-dev/reference.html).
 
 ### Interactive mode
 
@@ -120,7 +136,9 @@ Hello Sam and welcome!
 which is the result of printing and the indication that we did not define a
 variable, that the result is of type `unit` and that its value is `()`. The
 meaning of these is detailed below. In the following, all examples starting by
-`#` are in the interactive mode.
+`#` are being entered in the interactive mode.
+
+### Inferred types
 
 Another useful feature is the `-i` option of Liquidsoap which displays the types
 of variables in a file. For instance, if we have a file `test.liq` containing
@@ -140,6 +158,11 @@ it will display the types for `x` and `f`:
 x : float
 f : (int) -> int
 ```
+
+Basic expressions
+-----------------
+
+We begin by describing the most simple everyday expressions in Liquidsoap.
 
 ### Integers and floats
 
@@ -177,23 +200,55 @@ generated with the `random.int` (resp. `random.float`) function.
 
 ### Strings
 
-Strings are written between quotes, e.g. `"hello!"`, and are of type
-`string`.\TODO{escaping `\"`, new lines, etc. Alternative syntax which allows
-for `"`: `'this is "a"'`} The concatenation of two strings is achieved by `^`,
-as in
+Strings are written between double or single quotes, e.g. `"hello!"` or
+`'hello!'`, and are of type `string`.
+
+The function to output strings on the standard output is `print`, as
+in
+
+```liquidsoap
+print("Hello, world!")
+```
+
+Incidentally, this function can also be used to display values of any type, so
+that
+
+```liquidsoap
+print(3+2)
+```
+
+will output `5` as expected. In practice, one rarely does use this functions,
+which displays on the standard output, but rather the logging functions
+`log.critical`, `log.severe`, `log.important`, `log.info` and `log.debug` which
+write strings of various importance in the logs, so that it is easier to keep
+track of them (they are timestamped, stored in files, etc.).
+
+In order to write the character "`"`" in a string, one cannot simply type "`"`"
+since this is already used to indicate the boundaries of a string: this
+character should be _escaped_, which means that the character "`\`" should be
+typed first so that\TODO{improve the coloration of strings}
+
+```{.liquidsoap include="liq/string1.liq"}
+```
+
+will actually display "`My name is "Sam"!`". Other commonly used escaped
+characters are "`\\`" for backslash and "`\n`" for new line.\SM{other commonly
+escaped chars?} Alternatively, one can use the single quote notation, so that
+previous example can also be written as
+
+```{.liquidsoap include="liq/string2.liq"}
+```
+
+This is most often used when testing JSON data which contain many quotes.
+
+The concatenation of two strings is achieved by `^`, as in
 
 ```liquidsoap
 user = "dj"
 print("Current user is " ^ user)
 ```
 
-As a side note, the `print` function will work on any type, so that
-
-```liquidsoap
-print(3+2)
-```
-
-will output `5` as expected. Instead of using concatenation, it is often rather
+Instead of using concatenation, it is often rather
 convenient to use _string interpolation_: in a string, `#{e}` is replaced by the
 string representation of the result of the evaluation of the expression
 `e`:\SM{there is another kind of string interpolation but I don't think that
@@ -210,11 +265,6 @@ or
 print("The number #{random.float(min=-1., max=1.)} is random.")
 ```
 
-In practice, one rarely does use print, which displays on the standard output,
-but rather the logging functions `log.critical`, `log.severe`, `log.important`,
-`log.info` and `log.debug` which write strings of various importance in the
-logs, so that it is easier to keep track of them (they are timestamped, stored
-in files, etc.).
 
 The string representation of any value in Liquidsoap can be obtained using the
 function `string_of`, e.g. `string_of(5)`{.liquidsoap} is `"5"`. Some other
@@ -301,13 +351,13 @@ In the case where you want to perform a conditional branching in the
 in the following example, which assigns 0, 1, 2 or 3 to `s` depending on whether
 `x` is `"a"`, `"b"`, `"c"` or something else:
 
-```{.liquidsoap include="liq/elsif.liq" from=1 to=4}
+```{.liquidsoap include="liq/elsif.liq" from=1 to=-1}
 ```
 
 This is equivalent (but shorter to write) to the following sequence of
 imbricated conditional branchings:
 
-```{.liquidsoap include="liq/elseif.liq" from=1 to=8}
+```{.liquidsoap include="liq/elseif.liq" from=1 to=-1}
 ```
 
 ### Unit {#sec:unit}
@@ -519,9 +569,9 @@ value for the variable is used:
 ```
 
 will print `3` and `5`. Contrarily to most languages, the value for a variable
-cannot be changed (unless we explicitly require this, see [below](#sec:ref)), so
-the above program does not modify the value of `n`, it is simply that a new `n`
-is defined.
+cannot be changed (unless we explicitly require this by using references, see
+below), so the above program does not modify the value of `n`, it is simply that
+a new `n` is defined.
 
 There is an alternative syntax for declaring variables which is
 
@@ -537,14 +587,14 @@ will be assigned to `x` (see also [next section](#sec:functions)). This is
 particularly useful to use local variables when defining a value. For instance,
 we can assign to `x` the square of sin(2) by
 
-```{.liquidsoap include="liq/def1.liq" to=3}
+```{.liquidsoap include="liq/def1.liq" to=-1}
 ```
 
 Note that we first compute sin(2) in a variable `y` and then multiply `y` by
 itself, which avoids computing sin(2) twice. Also, the variable `y` is _local_:
 it is defined only until the next `end`, so that
 
-```{.liquidsoap include="liq/def2.liq" to=5}
+```{.liquidsoap include="liq/def2.liq" to=-1}
 ```
 
 will print `5`: outside the definition of `x`, the definition of `y` one on the
@@ -572,12 +622,89 @@ use of the variable `n` by writing
 ignore(n)
 ```
 
+### References
+
+As indicated above, by default, the value of variables cannot be
+changed. However, one can use a _reference_ in order to be able to do this.
+Those can be seen as memory cells, containing values of a given fixed type, and
+are created with the `ref` keyword with, as argument the initial value of the
+cell. For instance,
+
+```{.liquidsoap include="liq/ref1.liq" to=0}
+```
+
+declares that `r` is a reference which contains `5` as initial value. Since `5`
+is an integer (of type `int`), the type of the reference `r` will be
+
+```
+ref(int)
+```
+
+meaning that its a memory cell containing integers. On such a reference, two
+operations are available:
+
+- one can obtain the value of the reference by using the `!` keyword before the
+  reference, e.g.
+
+  ```liquidsoap
+  x = !r + 4
+  ```
+  
+  declare the variable `x` as being 9 (which is 5+4),
+  
+- one can change the value of the reference by using the `:=` keyword, e.g.
+
+  ```liquidsoap
+  r := 2
+  ```
+  
+  will assign the value 2 to `r`.
+
+The behavior of references can be illustrated by the following simple
+interactive session:
+
+```
+# r = ref(5);;
+r : ref(int) = ref(5)
+# !r;;
+- : int = 5
+# r := 2;;
+- : unit = ()
+# !r;;
+- : int = 2
+```
+
+Note that the type of a reference is fixed: once `r` is declared to be a
+reference to an integer, as above, one can only put integers into it, so that
+the script
+
+```{.liquidsoap include="liq/bad/ref.liq"}
+```
+
+will raise the error
+
+```
+Error 5: this value has type
+  ref(int)
+but it should be a subtype of
+  ref(string)
+```
+
+which can be explained as follows. On the first line, the declaration `r =
+ref(5)`{.liquidsoap} implies that `r` is of type `ref(int)`. However, on second
+line, we try to assign a string to `r`, which would only be possible if `r` was
+a reference to a string, i.e., of type `ref(string)`. Since `r` cannot have both
+types `ref(int)` and `ref(string)`, an error is raised.
+
+\TODO{un exemple élaborté genre `input.hls` ou `playlist.reloadable` quelque
+part ?}
+
 Functions {#sec:functions}
 ---------
 
 Liquidsoap is built around the notion of function: most operations are performed
 by those. Many functions are builtin and interface code written in OCaml
-(e.g. `output.icecast`), in which case we like to call them _operators_, but
+(e.g. `output.icecast`), in which case we like to call them _operators_, but
 users can also define their own functions within the language. In fact,
 Liquidsoap also include a standard library which consists of functions defined
 in the Liquidsoap language, including fairly complex ones such as
@@ -624,7 +751,14 @@ the result should have the same type:
 f : (string, float) -> int = <fun>
 ```
 
-TODO: local variables: as above....................
+As explained above, declarations of variables made inside the definition of a
+function are _local_: they are only valid within this definition (i.e., until
+the next `end`). For instance, in the definition
+
+```{.liquidsoap include="liq/fun6.liq"}
+```
+
+the variable `y` is not available after the definition.
 
 ### Handlers
 
@@ -655,24 +789,6 @@ our radio (a source named `radio`) with
 The handler is here the function `handle_metadata`, which prints the field
 associated to `"title"` in the association list given in the argument `m`.
 
-Although it is generally cleaner to first define functions (such as
-`handle_metadata` above) and then use them as arguments of functions, it is
-possible define a function without giving it a name, using the syntax
-
-```liquidsoap
-fun (x) -> ... end
-```
-
-which allows to define _anonymous functions_. Of course, labeled arguments and
-default values are also supported as expected with this syntax. For instance,
-the above example for printing the title in metadatas could equivalently be
-rewritten as
-
-```{.liquidsoap include="liq/on_meta2.liq" from=1}
-```
-
-where we define the function directly in the argument.
-
 Other useful operators allow the registration of handlers for the following
 situations:
 
@@ -690,6 +806,41 @@ disconnection of users.
 
 \TODO{also mention the `crossfade` operator}
 
+### Anonymous functions
+
+For concision in scripts, it is possible define a function without giving it a
+name, using the syntax
+
+```liquidsoap
+fun (x) -> ...
+```
+
+This is called an _anonymous function_, and it is typically used in order to
+specify short handlers in arguments. For instance, the above example for
+printing the title in metadatas could equivalently be rewritten as
+
+```{.liquidsoap include="liq/on_meta2.liq" from=1}
+```
+
+where we define the function directly in the argument.
+
+As a side note, this means that a definition of a function of the form
+
+```liquidsoap
+def f(x) =
+  ...
+end
+```
+
+could equivalently be written
+
+```liquidsoap
+f = fun (x) -> ...
+```
+
+Also, of course, the `fun`{.liquidsoap} syntax also supports labeled arguments
+and default values as expected.\TODO{we should introduce the `begin
+... end`{.liquidsoap} syntax at some point}
 
 ### Labeled arguments
 
@@ -782,7 +933,7 @@ documentation of this function, we can guess what it is doing:
 
 - there are 5 optional arguments that we should be able to ignore because they
   have reasonable default values (although we can guess the use of most of them
-  from the label, e.g. `video_bitrate` should specify the bitrate we want to
+  from the label, e.g. `video_bitrate` should specify the bitrate we want to
   encode video, etc.),
 - there is 1 mandatory argument which is labeled `key` of type `string`: it must
   be the secret key we need in order to broadcast on our Youtube account,
@@ -801,54 +952,262 @@ If you want a more full-fledged example, have a look at the type of
 
 Although the function has 31 arguments, it is still usable because most of them
 are optional so that they are not usually specified. Also notice that the
-headers are coded as an association list, and there is a number of handler
+headers are coded as an association list, and there is a number of handlers
 (`on_connect`, `on_disconnect`, etc.).
 
 ### Polymorphism
 
-Some functions can operate of value of many types, they are said to be
-_polymorphic_. For instance, the function `list.tl`, which returns the tail of
-the list (i.e., the list without its first element), works on lists of integers
-so that it should have the type
+Some functions can operate of value of many types. For instance, the function
+`list.tl`, which returns the tail of the list (i.e., the list without its first
+element), works on lists of integers so that it can have the type
 
 ```
 ([int]) -> [int]
 ```
 
-but it also works on lists of strings so that it should also have the type
+but it also works on lists of strings so that it can also have the type
 
 ```
 ([string]) -> [string]
 ```
 
-and so on........................
-
-
+and so on. In fact, this would work for any type, which is why in Liquidsoap the
+function `list.tl` is given the type
 
 ```
 (['a]) -> ['a]
 ```
 
-polymorphism, restrictions on type variables (detail the type for `+`), give the
-type of `[]`
+which means: "for whichever type I replace `'a` with, the resulting type is a
+valid type for the function". Such a function is called _polymorphic_, in the
+sense that it can be given multiple types: here, `'a` is not a type but rather a
+"meta-type" (the proper terminology is a _type variable_) which can be replaced
+by any regular type. Similarly, the empty list `[]` is of type `['a]`: it is a
+valid list of whatever. More interestingly, the function `fst` which returns the
+first element of a pair has the type
 
-### Recursive functions
-
-```{.liquidsoap include="liq/fact.liq"}
+```
+(('a * 'b)) -> 'a
 ```
 
-TODO: explain that this can replace for and while loops
+which means that it takes as argument a pair of a something (`'a`) and a
+something else (`'b`) and returns a something (`'a`). For instance, the type
+
+```
+((string * int)) -> string
+```
+
+is valid for `fst`. In general, a type can involve an arbitrary number of type
+variables which are labeled `'a`, `'b`, `'c` and so on.
+
+In Liquidsoap, some type variables can also be constrained so that they cannot
+be replaced by any type, but only specific types. A typical example is the
+multiplication function `*` operates on integers or on floats, and can therefore
+be given both the types
+
+```
+(int, int) -> int
+```
+
+and
+
+```
+(float, float) -> float
+```
+
+If you have a look at the type of `*` in Liquidsoap, it is
+
+```
+('a, 'a) -> 'a where 'a is a number type
+```
+
+which means that it has type `('a, 'a) -> 'a` where `'a` can only be replaced by
+a type that represents a number (i.e., `int` or `float`). Similarly, the
+comparison function `<=` has type
+
+```
+('a, 'a) -> bool where 'a is an orderable type
+```
+
+which means that it has the type `('a, 'a) -> bool` for any type `'a` on which
+there is a canonical order (which is the case of all usual types excepting
+function types).
 
 ### Getters
 
-as a particular case a function can have no argument, this is not the same as a
-constant
+We often want to be able to modify dynamically some parameters in a script. For
+instance, consider the operator `amplify`, which takes a float and an audio
+source and returns the audio amplified by the given volume factor: we can expect
+its type to be
+
+```
+(float, source('a)) -> source('a)
+```
+
+and we can use to have a radio consisting of a microphone input amplified by a
+factor 1.2 by
+
+```liquidsoap
+mic = input.alsa()
+radio = amplify(1.2, mic)
+```
+
+In the above example, the volume 1.2 was supposedly chosen because the sound
+delivered by the mic is not loud enough, but this can vary and we would like to
+be able to dynamically update it. The problem with the current operator is that
+the volume is of type `float` and a float cannot change over time, it is a fixed
+value.
+
+<!--
+We have seen that a function can have an arbitrary number of arguments which
+includes, as a particular case, zero arguments. For instance, the following
+function, of type `() -> float`, takes no argument and returns 5:
+
+```{.liquidsoap include="liq/getter1.liq"}
+```
+
+We can call it with `f()`, which will evaluate to 5. However, a function of type
+`() -> float` can do more than a constant of type `float`: it can change its
+value each time it is called! Typically, given a reference `r`, the function
+
+```liquidsoap
+fun () -> !r
+```
+
+will return the value stored in the reference `r` each time it is called: if the
+value of `r` changes, the function will return a different result. Since such a
+construction is used quite often in Liquidsoap, we have introduced the syntax
+`{...}` for `fun () -> ...`, so that the above is equivalent to
+
+```liquidsoap
+{!r}
+```
+
+Note that an arbitrary expression can be put between the curly brackets, e.g.
+```liquidsoap
+{!r + 2}
+```
+
+would be the function which evaluates to the value stored in `r` incremented by
+2. Another common way to create such a function,
+-->
+
+The best way to give the possibility for the volume to vary, is to change the
+type of the argument to `() -> float` so that the type of the `amplify` would be
+
+```
+(() -> float, source('a)) -> source('a)
+```
+
+Let's try to understand the implications of this change. The type `() -> float`
+means that the amplification parameter is now a function which takes no argument
+and returns a float: remember that a function can take an arbitrary number of
+arguments, and this includes zero. Each time it is called, the function will
+return a float, which can be different from one call to the next: we now have
+the possibility of having something like a float which varies over time. We like
+to call such a function a _float getter_, since it can be seen as some kind of
+object on which the only operation we can perform is get the value. The operator
+`amplify` will regularly call this function (actually, before each frame) to get
+the updated value of the amplification factor before applying it.
+
+Since defining such arguments often involves expressions of the form
+
+```liquidsoap
+fun () -> ...
+```
+
+which is somewhat heavy, we have introduced the alternative syntax
+
+```liquidsoap
+{...}
+```
+
+for it.
+
+Now let's see how we can use this in scripts. We can of course still apply a
+constant factor with
+
+```liquidsoap
+def volume () = 1.2 end
+radio = amplify(volume, mic)
+```
+
+or, using anonymous functions,
+
+```liquidsoap
+radio = amplify(fun () -> 1.2, mic)
+```
+
+which we generally write, using the alternative syntax,
+
+```liquidsoap
+radio = amplify({1.2}, mic)
+```
+
+More interestingly, we can use the value of a float reference `v` for
+amplification:
+
+```liquidsoap
+radio = amplify({!v}, mic)
+```
+
+when the value of the reference gets changed, the amplification will get changed
+too.
+
+In practice, float getters are often created using `interactive.float` which
+creates a float value which can be modified on the telnet server, or `osc.float`
+which reads a float value from an external controller using the OSC library,
+this is detailed in [a later section](#sec:telnet). For instance, with the
+script
+
+```{.liquidsoap include="liq/interactive-float1.liq" to=-1}
+```
+
+the volume can then be modified by issuing the telnet command
+
+```
+var.set volume = 0.5
+```
+
+You should however remember that 
+
+<!--
+There are some useful functions in Liquidsoap in order to create getters. The
+first one is `ref.getter`, whose type is
+
+```
+(ref('a)) -> () -> 'a
+```
+
+and creates a 
+-->
+
+As a more elaborate variation on this, let's program a fade in: the volume
+progressively increases from 0 to 1 in `fade_duration` seconds (here, 5
+seconds). We recall that the volume function will be called before each frame,
+which is a buffer whose duration is called here `frame_duration` and can be
+obtained by querying the appropriate configuration parameter: in order to have
+the volume raise from 0 to 1, we should increase it by `frame_duration /
+fade_duration` at each call. If you execute the following script, you should
+thus hear a sine which is getting louder and louder during the 5 first seconds:
+
+```{.liquidsoap include="liq/getter-fade-in.liq"}
+```
+
+Of course, this is for educational purposes only, and the actual way one would
+perform a fade in Liquidsoap is detailed in [an ulterior
+section](#sec:crossfade).
+
+Another example, which uses man
+
+Typically, such a function can be created using the `interactive.float`
+function, which registers
+
 
 explain types `{int}`
 
-functions ()->...
-
 A nice example from https://github.com/savonet/liquidsoap/issues/536:
+
 ```liquidsoap
 f = interactive.float("test", 0.0)
 f = {lin_of_dB(f())}
@@ -858,25 +1217,83 @@ out(s)
 
 interactive floats
 
-notation `{x}`
+TODO: dire qu'un dernier moyen existe en fait: amplify peut réagir aux
+métadatas, donner l'implémentation en Liq pur de ça:
 
+```liquidsoap
+def metadata.float_getter(init, metadata, s)
+  x = ref(init)
+  def f(m)
+    s = m[metadata]
+    if s != "" then
+      x := float_of_string(s)
+    end
+  end
+  s = on_metadata(f, s)
+  (s, {!x})
+end
+```
 
-Syntax of [language](https://www.liquidsoap.info/doc-dev/language.html)
+### Recursive functions
+
+Liquidsoap supports functions which are _recursive_, i.e., that call
+themselves. For instance, in mathematics, the factorial function on natural
+numbers is defined as fact(n)=1×2×3×...×n, but it can also be defined
+recursively as the function such that fact(0)=1 and fact(n)=n×fact(n-1) when
+n>0: you can easily check by hand that the two functions agree on small values
+of n. This last formulation has the advantage of immediately translating to the
+following implementation of factorial:
+
+```{.liquidsoap include="liq/fact.liq"}
+```
+
+for which you can check that `fact(5)` gives 120, the expected result. Of course
+you are not here to compute factorials, but recursive functions are most useful
+to implement what you would implement using _for_ or _while_ loops in
+traditional languages: this is why those constructions are not available as
+primitive constructions in Liquidsoap. For instance, the for loop is implemented
+in the standard library as\TODO{check that this got merged}
+
+```{.liquidsoap include="liq/for.liq" to=-1}
+```
+
+This function successively calls the function `f` given as last argument, with
+integers ranging from `first` to `last`. It thus implements, what you would
+write as
+
+```
+for (i = first; i <= last; i++) {
+  f(i);
+}
+```
+
+in languages such as C or Java. As an illustration of its use, the program
+
+```{.liquidsoap include="liq/for.liq" from=-1}
+```
+
+will print
+
+```
+This is number 0.
+This is number 1.
+This is number 2.
+This is number 3.
+This is number 4.
+```
+
+In practice, such loops could be used to add a bunch of numbered files
+(e.g. `music1.mp3`, `music2.mp3`, `music3.mp3`, etc.) in a request queue for
+instance. A `while` function is implemented similarly for your
+convenience. However, keep in mind that some functions are simpler to express
+directly as recursive functions than by using `for` or `while`, although it
+might take some time for you to get accustomed to those.
 
 ### Partial evaluation
 
 Partial evaluation, this is a source of errors (e.g. `list.hd([1,2,3])`) which
 are however easily detected by typing, example of
 `list.map(print(newline=false),[1,2,3])`
-
-References {#sec:ref}
-----------
-
-ref ! :=
-
-Float getters
-
-Exemple de `gstreamer.hls`
 
 The preprocessor
 ----------------

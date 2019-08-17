@@ -20,7 +20,9 @@ header-includes: |
   \usepackage{cleveref}
   \usepackage{titlesec}
   `\titleformat{\subsection}[runin]{\normalfont\normalsize\bfseries}{\thesubsection}{1ex}{}[.]`{=latex}
+  `\titleformat{\subsubsection}[runin]{\normalfont\normalsize\em}{\thesubsubsection}{1ex}{}[.]`{=latex}
   \titlespacing*{\subsection}{0pt}{3.25ex plus 1ex minus .2ex}{1ex}
+  \titlespacing*{\subsubsection}{0pt}{3.25ex plus 1ex minus .2ex}{1ex}
   \newcommand{\TODO}[1]{\marginpar{\tiny #1}}
   \newcommand{\SM}[1]{\TODO{SM: #1}}
   \newcommand{\RB}[1]{\TODO{RB: #1}}
