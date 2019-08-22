@@ -70,9 +70,9 @@ in order to learn Liquidsoap or elaborate scripts.
 
 ### Documentation of operators
 
-We recall from [earlier](#sec:sound-sine) that the documentation of an operator
-`operator`, including its type and a description of its parameters, can be
-obtained by typing
+We recall from [earlier](#sec:sound-sine) that the
+documentation\index{documentation} of an operator `operator`, including its type
+and a description of its parameters, can be obtained by typing
 
 ```
 liquidsoap -h operator
@@ -84,10 +84,10 @@ website](https://www.liquidsoap.info/doc-dev/reference.html).
 ### Interactive mode
 
 In order to test the functions that will be introduced in this section, it can
-be convenient to use the _interactive mode_ of Liquidsoap which can be used to
-type small expressions and immediately see their result. This interactive mode
-is rarely used in practice, but is useful to learn the language and do small
-experiments. It can be started with
+be convenient to use the _interactive mode_\index{interactive mode} of
+Liquidsoap which can be used to type small expressions and immediately see their
+result. This interactive mode is rarely used in practice, but is useful to learn
+the language and do small experiments. It can be started with
 
 ```
 liquidsoap --interactive
@@ -166,17 +166,20 @@ We begin by describing the most simple everyday expressions in Liquidsoap.
 
 ### Integers and floats
 
-The integers\index{integer}, such as `3`, are of type `int`. Depending on the
-architecture (32 or 64 bits) they are stored on 31 or 63 bits. The minimal
-(resp. maximal) representable integer can be obtained with the function
-`min_int` (resp. `max_int`); typically, on a 64 bits architecture, they range
-from -4611686018427387904 to 4611686018427387903.
+The integers\index{integer}, such as `3`, are of type
+`int`\index{int@\texttt{int}}. Depending on the architecture (32 or 64 bits)
+they are stored on 31 or 63 bits. The minimal (resp. maximal) representable
+integer can be obtained with the function
+`min_int`\index{min\_int@\texttt{min\_int}}
+(resp. `max_int`)\index{max\_int@\texttt{max\_int}}; typically, on a 64 bits
+architecture, they range from -4611686018427387904 to 4611686018427387903.
 
-The floats\index{float}, such as `2.45`, are of type `float`, and are in double
-precision (stored on 64 bits). They always have a decimal point in them, so that
-`3` and `3.` are not the same thing: the former is an integer and the later is a
-float. This is a source of errors for beginners, but is necessary for typing to
-work well. For instance, running a program containing
+The floats\index{float}, such as `2.45`, are of type
+`float`\index{float@\texttt{float}}, and are in double precision (stored on 64
+bits). They always have a decimal point in them, so that `3` and `3.` are not
+the same thing: the former is an integer and the later is a float. This is a
+source of errors for beginners, but is necessary for typing to work well. For
+instance, running a program containing
 
 ```{.liquidsoap include="liq/bad/sine.liq" from=0 to=0}
 ```
@@ -200,8 +203,8 @@ generated with the `random.int` (resp. `random.float`) function.
 
 ### Strings
 
-Strings are written between double or single quotes, e.g. `"hello!"` or
-`'hello!'`, and are of type `string`.
+Strings\index{string} are written between double or single quotes,
+e.g. `"hello!"` or `'hello!'`, and are of type `string`.
 
 The function to output strings on the standard output is `print`, as
 in
@@ -225,8 +228,9 @@ track of them (they are timestamped, stored in files, etc.).
 
 In order to write the character "`"`" in a string, one cannot simply type "`"`"
 since this is already used to indicate the boundaries of a string: this
-character should be _escaped_, which means that the character "`\`" should be
-typed first so that\TODO{improve the coloration of strings}
+character should be _escaped_\index{escaping}\index{string!escaping}, which
+means that the character "`\`" should be typed first so that\TODO{improve the
+coloration of strings}
 
 ```{.liquidsoap include="liq/string1.liq"}
 ```
@@ -291,8 +295,9 @@ useful string-related function are
 
 ### Booleans
 
-The booleans are either `true`{.liquidsoap} or `false`{.liquidsoap} and are of
-type `bool`. They can be combined using the usual boolean operations
+The booleans\index{boolean} are either `true`{.liquidsoap}\index{true} or
+`false`{.liquidsoap}\index{false} and are of type `bool`. They can be combined
+using the usual boolean operations
 
 - `and`: conjunction,
 - `or`: disjunction, and
@@ -917,6 +922,8 @@ ignored:
 samplerate(samples=132300., duration=3.)
 ```
 
+\TODO{explain that non-optional arguments can have default values too}
+
 ### Actual examples
 
 As a more concrete example of what we have introduced above, we can see that the
@@ -1360,24 +1367,64 @@ which is somewhat more heavy.
 The preprocessor
 ----------------
 
-`%include` (useful for passwords!) (`%include "file"` vs `%include <file>`, cur dir vs library dir of Liq)
+Liquidsoap has a preprocessor which allows some limited manipulation of scripts
+before executing them.
+
+### Including other files
+
+It is often useful to split your scripts over multiple files, either because
+your script has become quite large, or because you want to be able to reuse
+common functions between different scripts. You can include a file `file.liq` in
+a script by writing
+
+```liquidsoap
+%include "file.liq"
+```
+
+which will be evaluated as if you had pasted the contents of the file in place
+of the command.
+
+This is for instance useful in order to store passwords out of the main file, in
+order to avoid risking leaking those when handing the scripts to some other
+people. Typically, one would have a file `passwords.liq` defining the passwords
+in variables, e.g.
+
+```liquidsoap
+radio_pass = "secretpassword"
+```
+
+and would then use it by including it:
+
+```liquidsoap
+%include "passwords.liq"
+
+radio = ...
+output.icecast(%mp3, host="localhost", port=8000,
+               password=radio_pass, mount="my-radio.mp3", radio)
+```
+
+### Conditional execution
+
 `%define`
 
 `%ifdef`, `%ifndef`, `%ifencoder`, `%ifnencoder`, `%endif`
 
-Sources {#sec:lang-sources}
--------
+Streaming features
+------------------
+
+Some features are specific to streaming
+
+### Sources {#sec:lang-sources}
 
 Sources vs active sources, utilité de `output.dummy`
 
 TODO: expliquer le flux des sources: par exemple, si on fait un on_metadata mais
 qu'on ne lit pas la sortie, la fonction n'est pas appelée...
 
-### What is a faillible source?
+What is a faillible source?
 
 In practice, simply use `mksafe`{.liquidsoap}
 
-Requests
---------
+### Requests
 
 

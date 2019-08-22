@@ -4,6 +4,9 @@ PANDOC = pandoc --bibliography=papers.bib --filter=scripts/include --syntax-defi
 
 all: scripts book.pdf language.dtd
 
+clean:
+	rm -f book.pdf book.tex book.epub book.html *.aux *.idx *.ilg *.ind *.log *.out *.toc
+
 ci:
 	git ci . -m "Worked on the book."
 	git push

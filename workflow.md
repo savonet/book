@@ -6,6 +6,17 @@ Playlists
 
 inotify
 
+validating playlist, see #904:
+
+```liquidsoap
+def check(r)
+  fname = request.filename(r)
+  string.match(pattern="^.*\\..*$", fname)
+end
+s = playlist(check_next=check, "~/Music/misc")
+out(s)
+```
+
 Interactive playlists
 ---------------------
 
