@@ -11,7 +11,6 @@ ci:
 book.tex: book.md $(MD) $(LIQ)
 	@echo "Generating $@..."
 	@$(PANDOC) -s --top-level-division=chapter --filter=scripts/crossref -V links-as-notes=true $< -o $@
-	@chmod -w $@
 
 book.pdf: book.tex
 	@echo "Generating $@..."

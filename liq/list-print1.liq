@@ -1,0 +1,1 @@
+list.iter(print(newline=false), [1, 2, 3])

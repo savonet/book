@@ -616,7 +616,7 @@ Warning 4: Unused variable n
 ```
 
 If this situation is really wanted, you should use `ignore` in order to fake a
-use of the variable `n` by writing
+use of the variable `n` by writing\TODO{also explain `underscore =`}
 
 ```liquidsoap
 ignore(n)
@@ -1220,11 +1220,21 @@ metadata can be changed with the optional parameter `override` that we have not
 mentioned up to now).
 -->
 
-Finally, if you look at the implementation
+Finally, in order to simplify things a bit, you will see that the type of
+amplify is actually
 
-explain types `{int}`
+```
+({float}, source('a)) -> source('a)
+```
 
+where the type
 
+```
+{float}
+```
+
+type means that both `float` and `() -> float` are accepted, so that you can
+still write constant floats where float getters are expected.
 
 ### Recursive functions
 
@@ -1283,9 +1293,69 @@ might take some time for you to get accustomed to those.
 
 ### Partial evaluation
 
-Partial evaluation, this is a source of errors (e.g. `list.hd([1,2,3])`) which
-are however easily detected by typing, example of
-`list.map(print(newline=false),[1,2,3])`
+The final thing to know is that Liquidsoap supports _partial evaluation_ of
+functions. This means that if you call a function, but do not give all the
+arguments, it will return a new function expecting only the remaining
+arguments. For instance, consider the multiplication function
+
+```{.liquidsoap include="liq/mul.liq"}
+```
+
+which is of type
+
+```
+(float, float) -> float
+```
+
+taking two floats and returning their products. We can then define a function
+which will compute the double of its input by
+
+```liquidsoap
+double = mul(2.)
+```
+
+which is of type
+
+```
+(float) -> float
+```
+
+Since we have provided only the first argument to `mul`, the `double` will
+define is still a function waiting for a second argument `x` and returning
+`mul(2., x)`, as we can see in the interactive mode:
+
+```
+# def mul(x, y) = x * y end;;
+mul : (float, float) -> float = <fun>
+# double = mul(2.);;
+double : (float) -> float = <fun>
+# double(5.);;
+- : float = 10.0
+```
+
+A typical use of this is when providing arguments which are functions. For
+instance, if we want to print all the elements of a list without new lines
+between them, we can do
+
+```{.liquidsoap include="liq/list-print1.liq"}
+```
+
+Here, the function `print` is of type
+
+```
+(?newline : bool, 'a) -> unit
+```
+
+and we only provide one argument (the optional one labeled `newline`) out of
+two. Without partial evaluation, we would have had to write
+
+```{.liquidsoap include="liq/list-print2.liq"}
+```
+
+which is somewhat more heavy.
+
+<!-- this is a source of errors (e.g. `list.hd([1,2,3])`) which are however
+ easily detected by typing -->
 
 The preprocessor
 ----------------
