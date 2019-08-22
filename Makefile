@@ -8,9 +8,15 @@ ci:
 	git ci . -m "Worked on the book."
 	git push
 
-book.pdf: book.md $(MD) $(LIQ)
+book.tex: book.md $(MD) $(LIQ)
 	@echo "Generating $@..."
-	@$(PANDOC) --top-level-division=chapter --filter=scripts/crossref -V links-as-notes=true $< -o $@
+	@$(PANDOC) -s --top-level-division=chapter --filter=scripts/crossref -V links-as-notes=true $< -o $@
+	@chmod -w $@
+
+book.pdf: book.tex
+	@echo "Generating $@..."
+	pdflatex $<
+	makeindex book.idx
 
 book.epub: book.md $(MD) $(LIQ) epub.css
 	@echo "Generating $@..."

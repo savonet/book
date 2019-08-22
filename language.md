@@ -166,15 +166,15 @@ We begin by describing the most simple everyday expressions in Liquidsoap.
 
 ### Integers and floats
 
-The integers, such as `3`, are of type `int`. Depending on the architecture (32
-or 64 bits) they are stored on 31 or 63 bits. The minimal (resp. maximal)
-representable integer can be obtained with the function `min_int`
-(resp. `max_int`); typically, on a 64 bits architecture, they range from
--4611686018427387904 to 4611686018427387903.
+The integers\index{integer}, such as `3`, are of type `int`. Depending on the
+architecture (32 or 64 bits) they are stored on 31 or 63 bits. The minimal
+(resp. maximal) representable integer can be obtained with the function
+`min_int` (resp. `max_int`); typically, on a 64 bits architecture, they range
+from -4611686018427387904 to 4611686018427387903.
 
-The floats, such as `2.45`, are of type `float`, and are in double precision
-(stored on 64 bits). They always have a decimal point in them, so that `3` and
-`3.` are not the same thing: the former is an integer and the later is a
+The floats\index{float}, such as `2.45`, are of type `float`, and are in double
+precision (stored on 64 bits). They always have a decimal point in them, so that
+`3` and `3.` are not the same thing: the former is an integer and the later is a
 float. This is a source of errors for beginners, but is necessary for typing to
 work well. For instance, running a program containing
 
@@ -1035,7 +1035,7 @@ function types).
 
 ### Getters
 
-We often want to be able to modify dynamically some parameters in a script. For
+We often want to be able to dynamically modify some parameters in a script. For
 instance, consider the operator `amplify`, which takes a float and an audio
 source and returns the audio amplified by the given volume factor: we can expect
 its type to be
@@ -1058,74 +1058,63 @@ be able to dynamically update it. The problem with the current operator is that
 the volume is of type `float` and a float cannot change over time, it is a fixed
 value.
 
-<!--
-We have seen that a function can have an arbitrary number of arguments which
-includes, as a particular case, zero arguments. For instance, the following
-function, of type `() -> float`, takes no argument and returns 5:
-
-```{.liquidsoap include="liq/getter1.liq"}
-```
-
-We can call it with `f()`, which will evaluate to 5. However, a function of type
-`() -> float` can do more than a constant of type `float`: it can change its
-value each time it is called! Typically, given a reference `r`, the function
-
-```liquidsoap
-fun () -> !r
-```
-
-will return the value stored in the reference `r` each time it is called: if the
-value of `r` changes, the function will return a different result. Since such a
-construction is used quite often in Liquidsoap, we have introduced the syntax
-`{...}` for `fun () -> ...`, so that the above is equivalent to
-
-```liquidsoap
-{!r}
-```
-
-Note that an arbitrary expression can be put between the curly brackets, e.g.
-```liquidsoap
-{!r + 2}
-```
-
-would be the function which evaluates to the value stored in `r` incremented by
-2. Another common way to create such a function,
--->
-
-The best way to give the possibility for the volume to vary, is to change the
-type of the argument to `() -> float` so that the type of the `amplify` would be
+In order for the volume to have the possibility to vary over time, instead of
+having a `float` argument for `amplify`, we have decided to have instead an
+argument of type
 
 ```
-(() -> float, source('a)) -> source('a)
+() -> float
 ```
 
-Let's try to understand the implications of this change. The type `() -> float`
-means that the amplification parameter is now a function which takes no argument
-and returns a float: remember that a function can take an arbitrary number of
-arguments, and this includes zero. Each time it is called, the function will
-return a float, which can be different from one call to the next: we now have
-the possibility of having something like a float which varies over time. We like
-to call such a function a _float getter_, since it can be seen as some kind of
-object on which the only operation we can perform is get the value. The operator
-`amplify` will regularly call this function (actually, before each frame) to get
-the updated value of the amplification factor before applying it.
+This is a function which takes no argument and returns a float (remember that a
+function can take an arbitrary number of arguments, which includes zero). It is
+very close to a float excepting that each time it is called the returned value
+can change: we now have the possibility of having something like a float which
+varies over time. We like to call such a function a _float getter_, since it can
+be seen as some kind of object on which the only operation we can perform is get
+the value. For instance, we can define a float getter by
+
+```{.liquidsoap include="liq/getter.liq"}
+```
+
+Each time we call `f`, e.g. by writing `f()` in our script, the resulting float
+will be increased by one compared to the previous one: if we try it in an
+interactive session, we obtain
+
+```
+# f();;
+- : float = 1.0
+# f();;
+- : float = 2.0
+# f();;
+- : float = 3.0
+```
 
 Since defining such arguments often involves expressions of the form
 
 ```liquidsoap
-fun () -> ...
+fun () -> e
 ```
 
 which is somewhat heavy, we have introduced the alternative syntax
 
 ```liquidsoap
-{...}
+{e}
 ```
 
 for it.
 
-Now let's see how we can use this in scripts. We can of course still apply a
-constant factor with
+The type of `amplify` is thus actually
+
+```
+(() -> float, source('a)) -> source('a)
+```
+
+and the operator will regularly call the volume function in order to have the
+current value for the volume before applying it. To be precise, it is actually
+called before each frame, which means roughly every 0.04 second. Let's see how
+we can use this in scripts. We can, of course, still apply a constant factor
+with
 
 ```liquidsoap
 def volume () = 1.2 end
@@ -1160,7 +1149,7 @@ which reads a float value from an external controller using the OSC library,
 this is detailed in [a later section](#sec:telnet). For instance, with the
 script
 
-```{.liquidsoap include="liq/interactive-float1.liq" to=-1}
+```{.liquidsoap include="liq/interactive-float1.liq" from=1 to=-1}
 ```
 
 the volume can then be modified by issuing the telnet command
@@ -1169,7 +1158,11 @@ the volume can then be modified by issuing the telnet command
 var.set volume = 0.5
 ```
 
-You should however remember that 
+You should remember that getters are regular functions. For instance, if we want
+the volume on telnet to be expressed in decibels, we can convert it as follows:
+
+```{.liquidsoap include="liq/interactive-float2.liq" from=1 to=-1}
+```
 
 <!--
 There are some useful functions in Liquidsoap in order to create getters. The
@@ -1198,41 +1191,40 @@ Of course, this is for educational purposes only, and the actual way one would
 perform a fade in Liquidsoap is detailed in [an ulterior
 section](#sec:crossfade).
 
-Another example, which uses man
+Let us give another advanced example, which uses many of the above
+constructions. The function `metadata.float_getter` in the standard library,
+whose type is
 
-Typically, such a function can be created using the `interactive.float`
-function, which registers
+```
+(float, string, source('a)) -> source('a) * (() -> float)
+```
 
+creates a float getter with given initial value (the first argument), which can
+be updated by reading a given metadata (second argument) on a given source
+(third argument): it returns a pair consisting of the source with the metadata
+being watched for and the float getter. Its code is
+
+```{.liquidsoap include="liq/metadata-getter.liq"}
+```
+
+Given a `radio` source which contains metadata labeled "liq_amplify", we can
+actually change the volume of the source according to the metadata with
+
+```{.liquidsoap include="liq/metadata-getter-ex.liq" from=1 to=-1}
+```
+
+<!--
+If you are still afraid of the above code, you should be pleased to know that
+the `amplify` operator is actually doing this by default (and the name of the
+metadata can be changed with the optional parameter `override` that we have not
+mentioned up to now).
+-->
+
+Finally, if you look at the implementation
 
 explain types `{int}`
 
-A nice example from https://github.com/savonet/liquidsoap/issues/536:
 
-```liquidsoap
-f = interactive.float("test", 0.0)
-f = {lin_of_dB(f())}
-s = amplify(f, in())
-out(s)
-```
-
-interactive floats
-
-TODO: dire qu'un dernier moyen existe en fait: amplify peut réagir aux
-métadatas, donner l'implémentation en Liq pur de ça:
-
-```liquidsoap
-def metadata.float_getter(init, metadata, s)
-  x = ref(init)
-  def f(m)
-    s = m[metadata]
-    if s != "" then
-      x := float_of_string(s)
-    end
-  end
-  s = on_metadata(f, s)
-  (s, {!x})
-end
-```
 
 ### Recursive functions
 

@@ -18,6 +18,7 @@ header-includes: |
   \usepackage{fvextra}
   \RecustomVerbatimEnvironment{verbatim}{Verbatim}{breaklines}
   \usepackage{cleveref}
+  \usepackage{makeidx}\makeindex
   \usepackage{titlesec}
   `\titleformat{\subsection}[runin]{\normalfont\normalsize\bfseries}{\thesubsection}{1ex}{}[.]`{=latex}
   `\titleformat{\subsubsection}[runin]{\normalfont\normalsize\em}{\thesubsubsection}{1ex}{}[.]`{=latex}
@@ -58,5 +59,7 @@ toc: true
 !include "reference.md"
 
 !include "conclusion.md"
+
+!include "index.md"
 
 !include "bibliography.md"
