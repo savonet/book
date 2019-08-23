@@ -1,9 +1,11 @@
 ### Seeking in liquidsoap
-Starting with Liquidsoap `1.0.0-beta2`, it is now possible to seek within sources! 
-Not all sources support seeking though: currently, they are mostly file-based sources
-such as `request.queue`, `playlist`, `request.dynamic` etc..
 
-The basic function to seek within a source is `source.seek`. It has the following type:
+Starting with Liquidsoap `1.0.0-beta2`, it is now possible to seek within
+sources!  Not all sources support seeking though: currently, they are mostly
+file-based sources such as `request.queue`, `playlist`, `request.dynamic` etc..
+
+The basic function to seek within a source is `source.seek`. It has the
+following type:
 
 ```
 (source('a),float)->float
@@ -44,7 +46,8 @@ server.register(namespace=source.id(s),
                 "seek",seek)
 ```
 
-### Cue points.
+### Cue points
+
 Sources that support seeking can also be used to implement cue points.
 The basic operator for this is `cue_cut`. Its has type:
 
@@ -80,5 +83,3 @@ own scheduling back-end.
 
 Alternatively, you may use `map_metadata` to add those metadata. The operator
 `map_metadata` supports seeking and passes it to its underlying source.
-
-

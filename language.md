@@ -10,6 +10,8 @@ General features
 
 ### Typing
 
+\TODO{explain that number of audio/video channels are also inferred and checked}
+
 One of the main features of the language is that it is _typed_. This means that
 every expression belongs to some type which indicates what it is. For instance,
 `"hello"` is a string whereas `23` is an integer, and, when presenting a
@@ -48,17 +50,24 @@ channels, and also MIDI channels (there is limited support for sound synthesis).
 
 When running a Liquidsoap program, the compiler goes through these four phases:
 
-1. lexical analysis and parsing: Liquidsoap ingests your program and ensures
+1. _lexical analysis_ and _parsing_: Liquidsoap ingests your program and ensures
    that its syntax follows the rules,
-2. type inference and type checking,
-3. compilation of the program: this produces a new program which will generate
+2. _type inference_ and _type checking_,
+3. _compilation_ of the program: this produces a new program which will generate
    the stream (a _stream generator_),
-4. execution of the stream generator to actually produce audio.
+4. _instantiation_ : the sources get created and checked to be infallible where
+   required,
+5. _execution_ of the stream generator to actually produce audio.
 
 The two last phases can be resumed by the following fact: Liquidsoap is a
 _stream generator generator_, it generates stream generators.\TODO{give an
 example of a reduction of the language, e.g. a list.init which generates a list
 of sources?}
+
+### Standard library
+
+TODO: add a word on the standard library: location, `pervasives.liq` is loaded
+by default and includes everything
 
 Writing scripts
 ---------------

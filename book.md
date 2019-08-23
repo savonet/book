@@ -46,8 +46,6 @@ toc: true
 
 !include "advanced.md"
 
-!include "cookbook.md"
-
 !include "video.md"
 
 !include "plugins.md"

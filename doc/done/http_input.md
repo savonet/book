@@ -1,4 +1,5 @@
 ### HTTP input
+
 Liquidsoap can create a source that pulls its data from an HTTP location. This location can 
 be a distant file or playlist, or an icecast or shoutcast stream.
 

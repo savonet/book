@@ -15,7 +15,7 @@ type target = string * string
 
 type math_type = DisplayMath | InlineMath
 
-type quote_type = DoubleQuote
+type quote_type = DoubleQuote | SingleQuote
 
 type inline =
   | Code of attr * string
@@ -119,6 +119,7 @@ module JSON = struct
        let q =
          match element_type q with
          | "DoubleQuote" -> DoubleQuote
+         | "SingleQuote" -> SingleQuote
          | q -> failwith ("Unhandled quote type "^q)
        in
        let l = List.map to_inline (Util.to_list l) in
@@ -193,6 +194,7 @@ module JSON = struct
        let q =
          match q with
          | DoubleQuote -> element_nc "DoubleQuote"
+         | SingleQuote -> element_nc "SingleQuote"
        in
        let i = `List (List.map of_inline i) in
        element "Quoted" (`List [q; i])

@@ -54,25 +54,32 @@ can put the following code in a file `radio.liq`:
 The first line says that the script should be executed by Liquidsoap. It should
 always start by `#!` followed by the path to the Liquidsoap binary, which is
 generally `/usr/bin/liquidsoap` but might differ on your computer, for instance
-if you installed using opam: in order to know the path to the binary, you can type
+if you installed using opam: in order to know the path to the binary, you can
+type
 
 ```
 which liquidsoap
 ```
 
-Another common alternative is to use the `env` binary, usually located at `/usr/bin/env`.
-A call to `/usr/bin/env liquidsoap` will return the first `liquidsop` binary found in
-the current `$PATH`. This way, you can start your script with:
-```
+In order to have a script which will work with most Liquidsoap installations, we
+can use the `env` binary, present in most distributions and located at
+`/usr/bin/env`. A call to `/usr/bin/env liquidsoap` will return the first
+`liquidsop` binary found in the current `$PATH`. This way, you can start your
+script with:
+
+```liquidsoap
 #!/usr/bin/env liquidsoap
 ```
-This is very convenient to distribute scripts for which you do not know where the `liquidsop` binary will be.
 
-In the rest of the book, we will generally omit this line, since it is always
-the same. The second line, is a comment: you can put whatever you want here as
-long as the line begins with `#`, it will not be taken in account. The last line
-is the actual program we already saw above. In order to execute the script, you
-should ensure that the program is executable with the command
+In the rest of the book, we will generally omit this first line, since it is
+always the same.
+
+The second line of `radio.liq`, is a comment: you can put whatever you want here
+as long as the line begins with `#`, it will not be taken in account. The last
+line is the actual program we already saw above.
+
+In order to execute the script, you should ensure that the program is executable
+with the command
 
 ```
 chmod +x radio.liq
@@ -295,6 +302,7 @@ before switching to the next one, but immediate switching can be achieved by
 adding the argument `track_sensitive=false`{.liquidsoap}.
 
 ### Jingles
+
 The next thing we want to be able to do is to insert jingles. We suppose that we
 have a playlist consisting of all the jingles of our radio and we want to play
 roughly one jingle every 5 songs. This can be achieved by using the `random`
@@ -317,6 +325,10 @@ the `rotate` operator instead:
 ```liquidsoap
 radio = rotate(weights=[1, 4], [jingles, radio])
 ```
+
+### Audio effects
+
+TODO: examples of simple audio effects, `nrj`, `crossfade`
 
 ### Icecast output
 

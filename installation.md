@@ -211,6 +211,12 @@ using `opam install` or your package manager).
 
 ### Installing
 
+\TODO{You should now choose which features you want to enable when building
+liquidsoap.  Each shipped feature can be enabled/disabled by editing the
+`PACKAGE` file.  Depending on your version you might have to first copy
+`PACKAGES.default` to `PACKAGES`.}
+
+
 In order to build Liquidsoap, go to the `liquidsoap-full` directory, generate
 the `configure` scripts:
 
