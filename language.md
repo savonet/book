@@ -300,7 +300,8 @@ useful string-related function are
   ```
 - `string.match`: test whether a string matches a regular expression,\TODO{give
   an example and explain basics of regexps}
-- `string.replace`: replace substrings matching a regular expression.
+- `string.replace`: replace substrings matching a regular
+  expression.\TODO{`string.quote`}
 
 ### Booleans
 
@@ -1270,7 +1271,7 @@ you are not here to compute factorials, but recursive functions are most useful
 to implement what you would implement using _for_ or _while_ loops in
 traditional languages: this is why those constructions are not available as
 primitive constructions in Liquidsoap. For instance, the for loop is implemented
-in the standard library as\TODO{check that this got merged}
+in the standard library as
 
 ```{.liquidsoap include="liq/for.liq" to=-1}
 ```

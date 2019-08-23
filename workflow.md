@@ -85,31 +85,78 @@ s = once(single("http://server/file.mp3"))
 ### Protocols
 
 We have seen that playlists can either contain files which are local or distant,
-the latter beginning by
+the latter beginning by prefixes such as "`http:`" or "`ftp:`". A _protocol_ is
+a way of turning such a prefixed URI\SM{we should say early in the book what an
+URI is} into an actual file. Most of the time it will consist in downloading the
+file in the appropriate way but not only. Liquidsoap supports many protocols and
+even the possibility of adding your own.
 
+For instance, the `youtube-dl` protocol allows the use of the `youtube-dl`
+program in order to download files from youtube.
 
-youtube-dl
+```{.liquidsoap include="liq/youtube-dl.liq" from=1 to=-1}
+```
 
-the `say` protocol
+Similarly, the `say` protocol uses the text-to-speech software `text2wav`
+(provided by festival) in order to synthesize speech. For instance,
 
 ```{.liquidsoap include="liq/say.liq" from=1 to=-1}
 ```
 
-we convert to stereo wav:
+Incidentally, the `prefix` parameter of `playlist` can be used to add a prefix
+to every element of the playlist, which is typically useful for protocols. For
+instance, the following will read out the paths of the file in the playlist:
+
+```{.liquidsoap include="liq/say-playlist.liq" from=1 to=-1}
+```
+
+More powerful, the `process` protocol allows to launch any command in order to
+process files. The syntax is
+
+```
+process:<ext>,<cmd>:uri
+```
+
+where `<ext>` is the extension of the produced file, `<cmd>` is the command to
+launch and `uri` is the URI of a file. In `<cmd>`, `$(input)` will be replaced
+by the input file and `$(output)` by the output file (a temporary file whose
+extension is `<ext>`. For instance, we can convert a file `test.mp3` in stereo
+wav (even if the input file is mono) by:
 
 ```{.liquidsoap include="liq/process1.liq" from=1 to=-1}
 ```
 
+When playing it, Liquidsoap will first download `test.mp3` into some place (say
+`/tmp/temp.mp3`) and then execute
+
+```
+ffmpeg -y -i /tmp/temp.mp3 -ac 2 /tmp/temp.wav
+```
+
+in order to convert it to stereo wav, and then play the resulting temporary file
+`/tmp/temp.wav`. The protocol `process` also accepts files of the form
+
+```
+process:<ext>,<cmd>
+```
+
+in which case only `$(output)` will be replaced in the command.
+
 ```{.liquidsoap include="liq/process2.liq" from=1 to=-1}
 ```
 
-`add_protocol`
+```{.liquidsoap include="liq/add_protocol1.liq" from=1 to=-3}
+```
 
+```liquidsoap
+s = audio_to_stereo(single("text2wave:Hello world!"))
+```
 
-- `process:<ext>,<cmd>:<input>` will launch `<cmd>` with `$(input)` replaced by
-  the input `$(output)` by the output and `$(colon)` by `:`, to get a file
+For instance, suppose that we have a program `find_by_artist`
 
-`prefix` parameter of `playlist`
+```{.liquidsoap include="liq/add_protocol2.liq" from=1 to=-1}
+```
+
 
 ### Distant streams
 
