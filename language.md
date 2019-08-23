@@ -246,8 +246,9 @@ coloration of strings}
 
 will actually display "`My name is "Sam"!`". Other commonly used escaped
 characters are "`\\`" for backslash and "`\n`" for new line.\SM{other commonly
-escaped chars?} Alternatively, one can use the single quote notation, so that
-previous example can also be written as
+escaped chars?}\TODO{explain multiline strings ending by `\`} Alternatively, one
+can use the single quote notation, so that previous example can also be written
+as
 
 ```{.liquidsoap include="liq/string2.liq"}
 ```
@@ -261,11 +262,10 @@ user = "dj"
 print("Current user is " ^ user)
 ```
 
-Instead of using concatenation, it is often rather
-convenient to use _string interpolation_: in a string, `#{e}` is replaced by the
-string representation of the result of the evaluation of the expression
-`e`:\SM{there is another kind of string interpolation but I don't think that
-anybody ever used that in practice}
+Instead of using concatenation, it is often rather convenient to use _string
+interpolation_: in a string, `#{e}` is replaced by the string representation of
+the result of the evaluation of the expression `e`:\SM{there is another kind of
+string interpolation but I don't think that anybody ever used that in practice}
 
 ```liquidsoap
 user = "admin"

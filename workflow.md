@@ -95,9 +95,12 @@ the `say` protocol
 ```{.liquidsoap include="liq/say.liq" from=1 to=-1}
 ```
 
-TODO: faire un exemple qui marche:
+we convert to stereo wav:
 
-```{.liquidsoap include="liq/process.liq" from=1 to=-1}
+```{.liquidsoap include="liq/process1.liq" from=1 to=-1}
+```
+
+```{.liquidsoap include="liq/process2.liq" from=1 to=-1}
 ```
 
 `add_protocol`
