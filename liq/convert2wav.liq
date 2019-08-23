@@ -1,10 +1,13 @@
-#!/usr/bin/env liquidsoap -q
+#!/usr/bin/env -S liquidsoap -q
 
 # Intput file name
 infile = argv(1)
 
 # Check that it exists
-if not file.exists(infile) then
+if infile == "" then
+  print("Error: please provide a file as argument.")
+  exit(1)
+elsif not file.exists(infile) then
   print("Error: file #{infile} does not exist.")
   exit(1)
 end

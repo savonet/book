@@ -1,4 +1,4 @@
-LIQ = $(sort $(wildcard *.liq))
+LIQ = $(filter-out convert2wav.liq, $(sort $(wildcard *.liq)))
 
 all:
 

@@ -1,3 +1,3 @@
 #!/usr/bin/env liquidsoap
-s = sine()
+s = single("say:Hello world!")
 out(s)

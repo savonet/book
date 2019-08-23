@@ -51,32 +51,19 @@ can put the following code in a file `radio.liq`:
 ```{.liquidsoap include="liq/sine1.liq"}
 ```
 
-The first line says that the script should be executed by Liquidsoap. It should
-always start by `#!` followed by the path to the Liquidsoap binary, which is
-generally `/usr/bin/liquidsoap` but might differ on your computer, for instance
-if you installed using opam: in order to know the path to the binary, you can
-type
-
-```
-which liquidsoap
-```
-
-In order to have a script which will work with most Liquidsoap installations, we
-can use the `env` binary, present in most distributions and located at
-`/usr/bin/env`. A call to `/usr/bin/env liquidsoap` will return the first
-`liquidsop` binary found in the current `$PATH`. This way, you can start your
-script with:
+The first line says that the script should be executed by Liquidsoap. It begins
+by `#!` and then says that `/usr/bin/env` should be used in order to find the
+path for the `liquidsoap` executable. If you know its path
+(e.g. `/usr/bin/liquidsoap`) then you could also directly put it:
 
 ```liquidsoap
-#!/usr/bin/env liquidsoap
+#!/usr/bin/liquidsoap
 ```
 
 In the rest of the book, we will generally omit this first line, since it is
-always the same.
-
-The second line of `radio.liq`, is a comment: you can put whatever you want here
-as long as the line begins with `#`, it will not be taken in account. The last
-line is the actual program we already saw above.
+always the same. The second line of `radio.liq`, is a comment: you can put
+whatever you want here as long as the line begins with `#`, it will not be taken
+in account. The last line is the actual program we already saw above.
 
 In order to execute the script, you should ensure that the program is executable
 with the command
@@ -106,7 +93,7 @@ In order to have more readable code, one can use variables which allow giving
 names to sources. For instance, we can give the name `s` to our sine source and
 then play it. The above code is thus equivalent to
 
-```{.liquidsoap include="liq/sine2.liq"}
+```{.liquidsoap include="liq/sine2.liq" from=1}
 ```
 
 ### Parameters
@@ -160,7 +147,7 @@ question mark before each argument, and the default value is detailed below
 
 If we want generate a sine wave of 2600 Hz with an amplitude 0.8, we can thus do
 
-```{.liquidsoap include="liq/sine3.liq"}
+```{.liquidsoap include="liq/sine3.liq" from=1}
 ```
 
 Note that the parameter corresponding to id has a label `id`, which we have to
@@ -169,7 +156,7 @@ amplitude, whereas there is no label for the frequency.
 
 Finally, just for fun, we can hear an A minor chord by adding three sines:
 
-```{.liquidsoap include="liq/sine4.liq"}
+```{.liquidsoap include="liq/sine4.liq" from=1}
 ```
 
 We generates three sines at frequencies 440 Hz, 440×2^3/12^ Hz and
@@ -190,7 +177,7 @@ m3u, xspf, etc.), or a directory (in which case the playlist consists of all the
 files in the directory). For instance, if our music is stored in the `~/Music`
 directory, we can play it with
 
-```{.liquidsoap include="liq/playlist.liq"}
+```{.liquidsoap include="liq/playlist.liq" from=1}
 ```
 
 As usual, the operator `playlist` has a number of interesting optional
@@ -205,18 +192,19 @@ A playlist can contain distant files (e.g. urls of the form
 beforehand. If you want to use a live stream, the operator `input.http` should
 be used instead:
 
-```{.liquidsoap include="liq/input.http.liq"}
+```{.liquidsoap include="liq/input.http.liq" from=1}
 ```
 
 Finally, there are other types of inputs. For instance, the operator
 `input.alsa` can be used to capture the sound of a microphone on a soundcard,
 with the ALSA library. You should be able to hear your voice with
 
-```{.liquidsoap include="liq/mic.liq"}
+```{.liquidsoap include="liq/mic.liq" from=1}
 ```
 
 We need to use `buffer` here to avoid synchronization issues, this should be
-detailed in [later on](#clocks).
+detailed in [a later section](#clocks) and you can hear that there is a slight
+delay between your voice and the output due to the buffering.
 
 ### Fallible sources and fallbacks
 
@@ -263,8 +251,8 @@ a single file and ensures that the file is available before running the script
 so that we know it will not fail. The argument
 `track_sensitive=false`{.liquidsoap} means that we want to get back to the live
 stream as soon as it is available again (otherwise it would wait the end of the
-track for the emegency playlist). Also not that we are defining `s` twice: this
-is not a problem at all, whenever we reference `s`, the last definition is
+track for the emegency playlist). Also remark that we are defining `s` twice:
+this is not a problem at all, whenever we reference `s`, the last definition is
 used. Another option would be to fallback to silence, which in Liquidsoap can be
 generated with the operator `blank`:
 

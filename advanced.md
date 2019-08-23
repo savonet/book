@@ -1,6 +1,8 @@
 Advanced topics
 ===============
 
+TODO: ce chapitre est un gros bordel mais ça va se décanter...
+
 Runtime description
 -------------------
 
@@ -98,7 +100,7 @@ debug are not shown by default)
 Using command-line arguments
 ----------------------------
 
-shebang, argv
+argv (and argc)
 
 Protocols
 ---------

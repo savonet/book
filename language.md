@@ -1046,8 +1046,8 @@ comparison function `<=` has type
 ```
 
 which means that it has the type `('a, 'a) -> bool` for any type `'a` on which
-there is a canonical order (which is the case of all usual types excepting
-function types).
+there is a canonical order (which is the case of all usual types, but not for
+function types and source types).
 
 ### Getters
 
@@ -1200,7 +1200,7 @@ the volume raise from 0 to 1, we should increase it by `frame_duration /
 fade_duration` at each call. If you execute the following script, you should
 thus hear a sine which is getting louder and louder during the 5 first seconds:
 
-```{.liquidsoap include="liq/getter-fade-in.liq"}
+```{.liquidsoap include="liq/getter-fade-in.liq" from=1}
 ```
 
 Of course, this is for educational purposes only, and the actual way one would
@@ -1423,6 +1423,10 @@ Streaming features
 
 Some features are specific to streaming
 
+### The streaming model
+
+Sources vs active sources, frames, caching, source availability (failures)
+
 ### Sources {#sec:lang-sources}
 
 Sources vs active sources, utilité de `output.dummy`
@@ -1436,4 +1440,4 @@ In practice, simply use `mksafe`{.liquidsoap}
 
 ### Requests
 
-
+explain that we need to resolve requests
