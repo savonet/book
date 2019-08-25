@@ -1,4 +1,4 @@
-Setting up a simple radio station
+Setting up a simple radio station {#chap:quickstart}
 =================================
 
 The sound of a sine wave {#sec:sound-sine}
