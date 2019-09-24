@@ -128,6 +128,8 @@ instance, you can hear your voice with
 
 TODO: the `device` parameter, `aplay -l`
 
+In order to reduce the latency from the mic
+
 
 
 
@@ -647,6 +649,21 @@ Handling tracks
 ### Metadata
 
 - log all the music files which have gone on air
+```{.liquidsoap include="liq/log_songs.liq" from=1 to=-1}
+```
+- log the current file in JSON format (see #954)
+```liquidsoap
+s = mksafe(playlist("~/Music"))
+
+def f(m)
+  print("got metadata!")
+  data = json_of(m)^"\n"
+  ignore(file.write(data=data, append=false, perms=420, "/tmp/metatest"))
+end
+
+s = on_metadata(f, s)
+out(s)
+```
 - count the number of played music files (a reference!)
 - say the last song we had on air
 - the annotate protocol
@@ -766,6 +783,10 @@ Good examples:
 
 - https://savonet-users.narkive.com/MiNy36h8/have-a-sort-of-fm-sound-with-liquidsoap
 
+### Stereotool
+
+TODO.......
+
 Outputs
 -------
 
@@ -798,7 +819,11 @@ file name each time new metadata are coming from `s`.
 Monitoring the stream
 ---------------------
 
+See above for logging tracks
+
 Use `on_blank` to detect blank...
+
+Some telnet (e.g. know the current song for a source, etc.)
 
 
 On GeekRadio, we play many files, some of which include bonus tracks, which

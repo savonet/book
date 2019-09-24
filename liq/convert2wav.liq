@@ -13,7 +13,7 @@ elsif not file.exists(infile) then
 end
 
 # Output file name
-outfile = path.remove_extension(infile) ^ ".wav"
+outfile = argv(default=path.remove_extension(infile)^".wav", 2)
 
 print(newline=false, "Encoding #{infile} to #{outfile}... ")
 

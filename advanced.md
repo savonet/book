@@ -1017,6 +1017,10 @@ Now, a request of the form `http://server:7000/setmeta?title=foo`
 will update the metadata of source `s` with `[("title","foo")]`. You
 can use this handler, for instance, in a custom HTML form.
 
+### File requests
+
+TODO: an example of a request queue with harbor (see #949).
+
 ### Limitations
 When using harbor's HTTP server, please be warned that the server is **not**
 meant to be used under heavy load. Therefore, it should **not** be exposed to

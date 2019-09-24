@@ -1439,6 +1439,10 @@ What is a faillible source?
 
 In practice, simply use `mksafe`{.liquidsoap}
 
+### Configuration
+
+Briefly mention `set` and `get`.
+
 ### Requests
 
 explain that we need to resolve requests
