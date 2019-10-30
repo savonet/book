@@ -271,9 +271,10 @@ However, this sort of tool is often bound to a specific usage, so we have
 not released any of ours. Feel free to
 [ask the community](mailto:savonet-users@lists.sf.net) about code that you could re-use.
 
-
+```liquidsoap
 # Attach a skip command to the source s:
 add_skip_command(s)
+```
 
 JSON import/export
 ------------------

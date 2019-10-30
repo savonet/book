@@ -16,6 +16,11 @@ Images
 TODO: explain the implementation of `video.add_image` (in particular,
 explain the parameters for the request)
 
+We can extract cover art, e.g.
+
+```{.liquidsoap include="liq/cover.liq"}
+```
+
 Streaming to youtube
 --------------------
 
