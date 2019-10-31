@@ -8,9 +8,10 @@ it.
 General features
 ----------------
 
-### Typing
+Liquidsoap is a novel language which was designed from scratch. We present here
+is features.
 
-\TODO{explain that number of audio/video channels are also inferred and checked}
+### Typing
 
 One of the main features of the language is that it is _typed_. This means that
 every expression belongs to some type which indicates what it is. For instance,
@@ -25,6 +26,12 @@ inference_: you never actually have to write a type, those are guessed
 automatically by Liquidsoap. This makes the language very safe, while remaining
 very easy to use. For curious people reading French, the algorithm and the
 associated theory are described in [@baelde2008webradio].
+
+Incidentally, apart from the usual type information which can be found in many
+languages, Liquidsoap also uses typing to check the coherence of parameters
+which are specific to streaming. For instance, the number of audio channels of
+streams is also present in their type, and it is ensured that operators always
+get the right number of channels.
 
 ### Functional programming
 
@@ -66,8 +73,11 @@ of sources?}
 
 ### Standard library
 
-TODO: add a word on the standard library: location, `pervasives.liq` is loaded
-by default and includes everything
+Although the core of Liquidsoap is written in OCaml, many of the functions of
+Liquidsoap are written in the Liquidsoap language itself. Those are defined in
+the `pervasives.liq` script, which is loaded by default and includes all the
+libraries. You should not be frightened to have a look at it, it is often useful
+to better grasp the language and learn design patterns and tricks.
 
 Writing scripts
 ---------------
@@ -320,9 +330,14 @@ and return booleans:
 - `!=`: compares for inequality,
 - `<=`: compares for inequality,
 
-and so on (`<`, `>=`, `>`). The time predicates such as `10h-15h` are also
-booleans, which are true or false depending on the current time, see
-[there]{#sec:time-predicates}.
+and so on (`<`, `>=`, `>`). For instance, the following is a boolean expression:
+
+```liquidsoap
+(n < 3) and not (s == "hello")
+```
+
+The time predicates such as `10h-15h` are also booleans, which are true or false
+depending on the current time, see [there]{#sec:time-predicates}.
 
 _Conditional branchings_ execute code depending on whether a condition is true
 or not. For instance, the code
@@ -536,7 +551,7 @@ dictionary: each pair is an entry whose first component is its key and second
 component is its value. These are the way metadata are represented for instance:
 they are lists of pairs of strings, the first string being the name of the
 metadata, and the second its value. For instance, a metadata would be the
-association list\TODO{en passant , donner la différence entre `["a", "b"]` et `[("a", "b")]`}
+association list
 
 ```liquidsoap
 m = [("artist", "Sinatra"), ("title", "Fly me")]
@@ -564,8 +579,23 @@ to obtain the `"title"` metadata. Other useful functions are
 - `list.mem_assoc`: determine whether there is an entry with a given key,
 - `list.remove_assoc`: remove all entries with given key.
 
-Apart from metadata, those lists are also used to store http headers (e.g. in
+Apart from metadata, those lists are also used to store http headers (e.g. in
 `http.get`).
+
+In passing, you should note the importance of parenthesis when defining
+pairs. For instance
+
+```liquidsoap
+["a", "b"]
+```
+
+is a list of strings, whereas
+
+```liquidsoap
+[("a", "b")]
+```
+
+is a list of pairs of strings, i.e. an association list.
 
 ### Variables
 
@@ -1374,11 +1404,17 @@ which is somewhat more heavy.
 <!-- this is a source of errors (e.g. `list.hd([1,2,3])`) which are however
  easily detected by typing -->
 
-The preprocessor
-----------------
+Other features
+--------------
 
-Liquidsoap has a preprocessor which allows some limited manipulation of scripts
-before executing them.
+Liquidsoap has a number of features (such as its preprocessor) which allow
+useful operations on the scripts, but cannot really be considered as part of the
+core language itself.
+
+### Configuration
+
+Briefly mention `set` and `get`.
+
 
 ### Including other files
 
@@ -1438,10 +1474,6 @@ qu'on ne lit pas la sortie, la fonction n'est pas appelée...
 What is a faillible source?
 
 In practice, simply use `mksafe`{.liquidsoap}
-
-### Configuration
-
-Briefly mention `set` and `get`.
 
 ### Requests
 

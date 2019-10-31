@@ -297,7 +297,7 @@ roughly one jingle every 5 songs. This can be achieved by using the `random`
 operator:
 
 ```liquidsoap
-jingles = playlist("/radio/jingls.pls") # Jingles
+jingles = playlist("/radio/jingles.pls")
 radio = random(weights=[1, 4], [jingles, radio])
 ```
 
@@ -314,9 +314,43 @@ the `rotate` operator instead:
 radio = rotate(weights=[1, 4], [jingles, radio])
 ```
 
+### Crossfading
+
+Now that we have our basic sound production setup, we should try to make things
+sound nicer. A first thing we notice is that the transition between song is
+quite abrupt whereas we would rather have a smooth chaining between two
+consecutive tracks. This can be achieved using the `crossfade` operator which
+will take care of this for us. If we insert the following line
+
+```liquidsoap
+radio = crossfade(fade_out=3., fade_in=3., duration=5., radio)
+```
+
+at each end of track the song will fade out during 3 seconds, the next track
+will fade in for 3 seconds and the two will overlap during 5 seconds, ensuring a
+pleasant transition.
+
 ### Audio effects
 
-TODO: examples of simple audio effects, `nrj`, `crossfade`
+In order to make the sound more uniform, we can use plugins. For instance, the
+`normalize` operator helps you having a uniform volume by dynamically changing
+it, so that volume difference between songs is barely heard:
+
+```liquidsoap
+radio = normalize(radio)
+```
+
+In practice, it is better to precompute the gain of each audio track in advance
+and change the volume according to this information (often called _replaygain_),
+see\TODO{reference}. There are also various traditional sound effects that can
+be used in order to improve the overall color and personality of the sound. A
+somewhat reasonable default is provided by the `nrj` operator:
+
+```liquidsoap
+radio = nrj(radio)
+```
+
+see\TODO{reference} for details on sound processing.
 
 ### Icecast output
 

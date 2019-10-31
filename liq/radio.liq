@@ -3,8 +3,8 @@ night = playlist("/radio/night.pls") # Night music
 mic   = buffer(input.alsa())         # Microphone
 radio = switch([({8h-19h}, day), ({19h-20h}, mic), ({20h-8h}, night)])
 jingles = playlist("/radio/jingls.pls") # Jingles
+radio = crossfade(fade_out=3., fade_in=3., duration=5., radio)
 radio = random(weights=[1, 4], [jingles, radio])
-radio = rotate(weights=[1, 4], [jingles, radio])
 ignore(radio)
 radio = playlist("~/Music")
 radio = mksafe(radio)
