@@ -1404,8 +1404,8 @@ which is somewhat more heavy.
 <!-- this is a source of errors (e.g. `list.hd([1,2,3])`) which are however
  easily detected by typing -->
 
-Other features
---------------
+Configuration and preprocessor
+------------------------------
 
 Liquidsoap has a number of features (such as its preprocessor) which allow
 useful operations on the scripts, but cannot really be considered as part of the
@@ -1413,8 +1413,35 @@ core language itself.
 
 ### Configuration
 
-Briefly mention `set` and `get`.
+The main configuration options can be set by using the `set` function, which
+takes as arguments the name of the name of the setting (a string) and the value
+for this setting, whose type depends on the setting. For instance, we can have
+Liquidsoap use a 48kHz samplerate (the default being 44.1kHz) by adding the
+following command at the beginning of our script:
 
+```{.liquidsoap include="liq/set.liq" from=1}
+```
+
+or we can increase the verbosity of the log messages with
+
+```{.liquidsoap include="liq/set2.liq" from=1}
+```
+
+Dually, we can obtain the value of an argument with the `get` function, e.g.
+
+```{.liquidsoap include="liq/get.liq" from=1}
+```
+
+As you can see, in addition to the name of the setting, this function takes a
+parameter labeled `default` which is the value which is to be returned if the
+setting does not exist. You can obtain the list of all available settings, as
+well as their default value with the command
+
+```bash
+liquidsoap --conf-descr
+```
+
+and the main settings are described in [this section](#sec:settings).
 
 ### Including other files
 
@@ -1451,9 +1478,27 @@ output.icecast(%mp3, host="localhost", port=8000,
 
 ### Conditional execution
 
-`%define`
+Liquidsoap embeds a preprocessor which allows to include or not part of the code
+depending on some conditions. For instance, the following script will print
+something only if the function `input.alsa` is defined:
 
-`%ifdef`, `%ifndef`, `%ifencoder`, `%ifnencoder`, `%endif`
+```{.liquidsoap include="liq/ifdef.liq" from=1}
+```
+
+This is useful in order to have some code being executed depending on the
+compilation options of Liquidsoap (e.g. the above code will be run only when
+Liquidsoap has the support for the ALSA library). The command `%ifndef` can
+similarly be used to execute code when a function is not defined. Similarly, we
+can execute a portion of code whenever an encoder is present using `%ifencoder`
+(or `%ifnencoder`), the end of the code in question being delimited with
+`%endif` as above. For instance, suppose that we want to encode a file in mp3,
+if Liquidsoap was compiled with support for it, and otherwise default to
+wave. This can be achieved with
+
+```{.liquidsoap include="liq/ifencoder.liq" from=2}
+```
+
+Encoders are detailed in ...\TODO{reference}
 
 Streaming features
 ------------------
@@ -1474,6 +1519,11 @@ qu'on ne lit pas la sortie, la fonction n'est pas appelée...
 What is a faillible source?
 
 In practice, simply use `mksafe`{.liquidsoap}
+
+### Clocks
+
+TODO: we briefly explain the principle of clocks here and give the practice in
+[a later section]#{sec:clocks}
 
 ### Requests
 

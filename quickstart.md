@@ -203,7 +203,7 @@ with the ALSA library. You should be able to hear your voice with
 ```
 
 We need to use `buffer` here to avoid synchronization issues, this should be
-detailed in [a later section](#clocks) and you can hear that there is a slight
+detailed in [a later section](#sec:clocks) and you can hear that there is a slight
 delay between your voice and the output due to the buffering.
 
 ### Fallible sources and fallbacks

@@ -326,3 +326,8 @@ Regular expressions
 -------------------
 
 TODO: quick summary of PCRE
+
+Settings {#sec:settings}
+--------
+
+TODO: describe the main settings
