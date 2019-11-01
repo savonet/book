@@ -256,14 +256,28 @@ coloration of strings}
 
 will actually display "`My name is "Sam"!`". Other commonly used escaped
 characters are "`\\`" for backslash and "`\n`" for new line.\SM{other commonly
-escaped chars?}\TODO{explain multiline strings ending by `\`} Alternatively, one
-can use the single quote notation, so that previous example can also be written
-as
+escaped chars?} Alternatively, one can use the single quote notation, so that
+previous example can also be written as
 
 ```{.liquidsoap include="liq/string2.liq"}
 ```
 
-This is most often used when testing JSON data which contain many quotes.
+This is most often used when testing JSON data which contain many quotes or for
+command line arguments when calling external scripts. The character '\' can also
+be used at the end of the string to break long strings in scripts without
+actually inserting newlines in the strings. For instance, the script
+
+```{.liquidsoap include="liq/string3.liq"}
+```
+
+will actually print
+
+```
+His name is Romain.
+```
+
+Note that there is no line change between "is" and "Romain", and the indentation
+before "Romain" is not shown either.
 
 The concatenation of two strings is achieved by `^`, as in
 
@@ -312,6 +326,8 @@ useful string-related function are
   an example and explain basics of regexps}
 - `string.replace`: replace substrings matching a regular
   expression.\TODO{`string.quote`}
+- `string.quote`: escape shell special characters (you should always use this
+  when passing strings to external programs).
 
 ### Booleans
 
@@ -1516,7 +1532,7 @@ Sources vs active sources, utilité de `output.dummy`
 TODO: expliquer le flux des sources: par exemple, si on fait un on_metadata mais
 qu'on ne lit pas la sortie, la fonction n'est pas appelée...
 
-What is a faillible source?
+What is a faillible source? (source available or not)
 
 In practice, simply use `mksafe`{.liquidsoap}
 
