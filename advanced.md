@@ -188,10 +188,12 @@ When defining custom protocols, you should pay attention to two variables:
   external processes.
 
 
-Interaction with the server (telnet) #{sec:telnet}
+Interaction with the server (telnet) {#sec:telnet}
 ------------------------------------
 
 TODO: this should be the main section where everything is explained about telnet
+
+TODO: use `nc` instead of `telnet`
 
 You can add more commands to interact with your script through telnet or the server socket.
 
@@ -1037,4 +1039,9 @@ the harbor HTTP server is fully equipped to serve any kind of CGI script.
 Calling a function regurlarly
 -----------------------------
 
-`add_timeout`
+`add_timeout`, `exec_at`
+
+Operations on sources
+---------------------
+
+`on_end`, `source_skip`, `on_track`, etc.

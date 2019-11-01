@@ -309,6 +309,15 @@ the second:
 ```{.liquidsoap include="liq/request.queue.pushable-implementation.liq" from=1 to=-1}
 ```
 
+Internally, it maintains a reference on a list called `queue`. The `next`
+function pops the first element of the list and returns it and the `push` adds a
+new request at the end of the list. Finally, the source is created by
+`request.dynamic` with `next` as function returning the next request; note that
+we use the labeled argument `available` which is a boolean getter indicating
+whether or not the function `next` has a meaningful next request to answer (it
+does not when the list is empty). Finally, both the function `push` and the
+source a returned.
+
 
 ### Protocols
 
@@ -505,34 +514,10 @@ certificate for local testing you can use the following one-liner:
 openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout server.key -out server.crt -subj "/CN=localhost" -days 3650
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Scheduling
 ----------
+
+Now that we have a wide panel
 
 ### Fallback
 
@@ -866,6 +851,8 @@ file name each time new metadata are coming from `s`.
 
 
 ### Icecast
+
+mention `output.harbor`
 
 ### HLS output
 
