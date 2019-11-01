@@ -188,8 +188,10 @@ When defining custom protocols, you should pay attention to two variables:
   external processes.
 
 
-Interaction with the server (telnet)
----------------------------
+Interaction with the server (telnet) #{sec:telnet}
+------------------------------------
+
+TODO: this should be the main section where everything is explained about telnet
 
 You can add more commands to interact with your script through telnet or the server socket.
 

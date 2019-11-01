@@ -1544,3 +1544,12 @@ TODO: we briefly explain the principle of clocks here and give the practice in
 ### Requests
 
 explain that we need to resolve requests
+
+persistent or not
+
+main functions:
+- `request.create`
+- `request.resolve`
+- `request.duration`
+- `request.filename` and `request.uri`
+- `request.metadata`

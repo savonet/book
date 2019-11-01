@@ -1,4 +1,4 @@
-#!/usr/bin/env liquidsoap
+#!./liquidsoap
 
 # TODO: we seem to be getting the cover for the previous song...
 

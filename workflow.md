@@ -248,6 +248,68 @@ Here, our next function executes the script `next-song` using the function
 then take the first line (`list.hd`) and return a request from created from it
 using `request.create`.
 
+### Request queues
+
+In interactive playlist, the operator asks for the next song. But in some
+situations, instead of this passive way of proceeding (you are asked for songs),
+you would rather have an active way of proceeding (you inform the operator of
+new files when you have some). Typically, if you have a website where users can
+request songs, you would like to be able to put the requested song in a playlist
+at the moment the user requests it. This is precisely the role of the
+`request.queue` operator, which maintains a list of songs to be played in a
+queue (the songs are played in the order they are pushed). A typical setup
+involving this operator would be the following:
+
+```{.liquidsoap include="liq/request.queue.liq" from=1}
+```
+
+We have both a playlist and a queue, and the radio plays queue, or the playlist
+by default (when there is no song in the queue). You might wonder then: how do
+we add new songs in the queue? The role of the first line is to instruct
+Liquidsoap to start a server, which is listening by default on port 1234, on
+which commands can be sent; we refer the reader to [this section](#sec:telnet)
+for details about this telnet server. The queue will register a new command on
+this server so that if you connect to it and write `queue.push` followed by an
+uri, it will be pushed into the queue. In practice this can be done with
+commands such as
+
+```
+echo "queue.push test.mp3" | nc localhost 1234
+```
+
+which uses the standard unix tool `nc` to connect to the server on supposed to
+be running on the local host on port 1234, and write the command `queue.push
+test.mp3` on this server, to which it will react by adding the song "`test.mp3`"
+on the queue. If you have multiple queues in your script, you will certainly
+want to specify the `id` parameter of `request.queue`, which can be any string
+you want, so that the command will be `id.push` (where `id` is replaced by the
+id you specified) and you know in which queue you are pushing.
+
+It is also possible to push a request into the queue directly from Liquidsoap by
+using the function `request.queue.pushable`, which acts exactly as the function
+`request.queue` excepting that it returns a pair consisting of a function of
+type `(request('a)) -> unit` and a source, instead of a source only. The
+function can then be used to push a request in the queue at any time. For
+instance, the following script is a variant of the previous one:
+
+```{.liquidsoap include="liq/request.queue.pushable.liq" from=1}
+```
+
+As explained above, the function `request.queue.pushable` returns the function
+`push` to push into the queue in addition to the source, we then use the
+function `exec_at` to run at every minute (i.e. when the current second is 0)
+the function which pushes the request to say "A new minute has passed".\SM{is
+this clear?}
+
+Incidentally, the functions `request.queue` and `request.queue.pushable` are
+implemented in Liquidsoap, by using a list to maintain the queue of
+requests. Here is a (simplified version of) the implementation of
+the second:
+
+```{.liquidsoap include="liq/request.queue.pushable-implementation.liq" from=1 to=-1}
+```
+
+
 ### Protocols
 
 We have seen that playlists can either contain files which are local or distant,
@@ -468,6 +530,7 @@ openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout server.key -out server
 
 
 
+
 Scheduling
 ----------
 
@@ -485,6 +548,8 @@ switch([ ({0h-7h}, night), ({7h-24h}, day) ])
 ```
 
 explain `track_sensitive`
+
+TODO: example of switching on a boolean variable which is obtained through a file or on the telnet
 
 ### Adding
 
@@ -621,10 +686,10 @@ The three parameters given here are only default values, and will be overriden b
 
 For an advanced crossfading function, you can see the [crossfade documentation](crossfade.html)
 
-Request queues
---------------
 
-TODO: `request.queue`, telnet
+
+
+
 
 
 Handling tracks
@@ -766,6 +831,10 @@ LADSPA plugins
 Good examples:
 
 - https://savonet-users.narkive.com/MiNy36h8/have-a-sort-of-fm-sound-with-liquidsoap
+
+### Parameters
+
+We can obtain parameters through telnet or OSC
 
 ### Stereotool
 
