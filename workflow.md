@@ -222,7 +222,7 @@ In this protocol the stream is segmented in small files and Liquidsoap will
 regularly look for new segments (how often can be controlled by the `reload`
 parameter).
 
-### Interactive playlists
+### Interactive playlists {#sec:request.dynamic}
 
 Instead of having a static playlist, you might want to use you own script to
 generate the song which should be played next (e.g. you might fetch requests
@@ -248,7 +248,7 @@ Here, our next function executes the script `next-song` using the function
 then take the first line (`list.hd`) and return a request from created from it
 using `request.create`.
 
-### Request queues
+### Request queues {#sec:request.queue}
 
 In interactive playlist, the operator asks for the next song. But in some
 situations, instead of this passive way of proceeding (you are asked for songs),
@@ -317,7 +317,6 @@ we use the labeled argument `available` which is a boolean getter indicating
 whether or not the function `next` has a meaningful next request to answer (it
 does not when the list is empty). Finally, both the function `push` and the
 source a returned.
-
 
 ### Protocols
 
@@ -434,7 +433,7 @@ and we can finally play songs of any artist:
 s = single("artist:Haliday")
 ```
 
-### Icecast inputs (harbor)
+### Icecast inputs (harbor) {#sec:input.harbor}
 
 Many programs are able to stream to a Liquidsoap server, and we can use those as
 an input for Liquidsoap scripts with the `input.harbor` operator. It instructs
@@ -517,24 +516,80 @@ openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout server.key -out server
 Scheduling
 ----------
 
-Now that we have a wide panel
+Now that we have a wide panel of sources, we will study how to combine them.
 
-### Fallback
+### Fallback {#sec:fallback}
+
+The first way of combining sources is through the `fallback` operator, which
+takes as argument a list of sources, and plays the first one which is
+available. We have already seen examples of this with request queues
+([here](#sec:request.queue)) such as
 
 ```liquidsoap
-fallback([playlist("http://my/playlist"), single("/my/jingle.ogg")])
+radio = fallback([queue, playlist])
 ```
+
+We want to play a song from the request queue when there is one, otherwise we
+play songs from the playlist. By default, if we are playing a song from the
+playlist and there is a new song in the queue, the operator will wait for the
+current playlist song to finish before play the one from the queue. This
+behavior can be changed by setting the `track_sensitive` parameter to `false`,
+in which case the song from the queue will be immediately played. Such an
+example was given for Icecast inputs ([here]{#sec:input.harbor}).
+
+Incidentally, the `mksafe` operator which takes a fallible source and make it
+infallible is implemented precisely using this operator:
+
+```{.liquidsoap include="liq/mksafe.liq" from=1}
+```
+
+We make the source fallback on a source streaming blank audio, which we know
+will always be available, so that we stream blank when the source `s` fails.
 
 ### Switching
 
-```liquidsoap
-# A scheduler, assuming you have defined the night and day sources
-switch([ ({0h-7h}, night), ({7h-24h}, day) ])
+Another way of selecting between sources is the `switch` operator which takes as
+argument a list, whose elements are pairs consisting of a _predicate_ which is a
+function taking no argument an returning a boolean (of type `() -> bool`), and a
+source. The operator will then select the first source whose predicate returns
+true. For instance, supposing that we have two different playlists for night and
+day, we could alternate between those depending on the hour with
+
+```{.liquidsoap include="liq/switch.liq" from=3 to=-1}
 ```
 
-explain `track_sensitive`
+Again, the `track_sensitive` controls whether a change of source only occurs at
+track boundaries (when `true` which is the default) or whenever possible.
 
-TODO: example of switching on a boolean variable which is obtained through a file or on the telnet
+We could also use this to manually switch between sources. As an illustration,
+suppose that we have two radio streams named `radio1` and `radio2` then we could
+use a script such as
+
+```liquidsoap
+radio = switch(track_sensitive=false, [(p, radio1), ({true}, radio2)])
+```
+
+where the predicate determines when `radio1` should be played. For instance, if
+we want to play it when a file `select-radio` contains "`1`", we could define it
+as
+
+```liquidsoap
+p = {file.contents("select-radio") == "1"}
+```
+
+Or we could use an interactive boolean (see [there](#sec:telnet) with
+
+```liquidsoap
+p = interactive.bool("radio1", false)
+```
+
+whose value can then be changed by issuing commands such as
+
+```
+echo "var.set radio1 = true" | nc localhost 1234
+```
+
+or directly connecting to the telnet server.
 
 ### Adding
 
@@ -761,8 +816,14 @@ server.register("update",namespace="metadata",
 As usual, `liquidsoap -h icy.update_metadata` lists all the arguments
 of the function.
 
+### Annotate
 
-### Crossfading {#sec:crossfade}
+TODO: annotate protocol, mention the `prefix` parameter of `playlist`
+
+Transitions {#sec:transitions}
+-----------
+
+### Crossfade
 
 crossfade
 annotate, cue_in cue_out
@@ -803,6 +864,11 @@ own scheduling back-end.
 Alternatively, you may use `map_metadata` to add those metadata. The operator
 `map_metadata` supports seeking and passes it to its underlying source.
 
+### Other operators
+
+mention the `transitions` parameter of `fallback`, e.g. for nice switching to
+live
+
 
 Signal processing
 -----------------
@@ -816,6 +882,10 @@ LADSPA plugins
 Good examples:
 
 - https://savonet-users.narkive.com/MiNy36h8/have-a-sort-of-fm-sound-with-liquidsoap
+
+### Blank
+
+The various functions to remove blank
 
 ### Parameters
 

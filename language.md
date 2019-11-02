@@ -1252,7 +1252,7 @@ thus hear a sine which is getting louder and louder during the 5 first seconds:
 
 Of course, this is for educational purposes only, and the actual way one would
 perform a fade in Liquidsoap is detailed in [an ulterior
-section](#sec:crossfade).
+section](#sec:transitions).
 
 Let us give another advanced example, which uses many of the above
 constructions. The function `metadata.float_getter` in the standard library,
@@ -1514,7 +1514,38 @@ wave. This can be achieved with
 ```{.liquidsoap include="liq/ifencoder.liq" from=2}
 ```
 
-Encoders are detailed in ...\TODO{reference}
+Encoders are detailed in [there](#sec:encoders).
+
+Standard functions
+------------------
+
+TODO: detail useful functions in the standard library
+
+### Files
+
+`file.read`, `file.*`, `path.*`, etc.
+
+### Threads
+
+`thread.run`, `thread.when`
+
+### Type conversion
+
+`string_of`, `int_of_string`, etc.
+
+### HTTP
+
+`http.get`, `http.put`, `http.post`, `http.head`
+
+### System
+
+`argv`, `exit`, `get_process_lines`, `get_process_output`
+
+### Time
+
+`gettimeofday`, `gmtime`, `localtime`
+
+### Anything else?
 
 Streaming features
 ------------------

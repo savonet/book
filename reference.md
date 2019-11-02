@@ -36,7 +36,7 @@ switch([
 ])
 ```
 
-Encoding formats {#sec:encoding-formats}
+Encoding formats {#sec:encoders}
 ----------------
 
 \TODO{section à reprendre} Encoders are used to define formats into which raw
