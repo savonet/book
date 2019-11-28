@@ -1431,9 +1431,10 @@ core language itself.
 
 The main configuration options can be set by using the `set` function, which
 takes as arguments the name of the name of the setting (a string) and the value
-for this setting, whose type depends on the setting. For instance, we can have
-Liquidsoap use a 48kHz samplerate (the default being 44.1kHz) by adding the
-following command at the beginning of our script:
+for this setting, whose type depends on the setting. These settings affect the
+overall behavior of Liquidsoap. For instance, we can have Liquidsoap use a 48kHz
+samplerate (the default being 44.1kHz) by adding the following command at the
+beginning of our script:
 
 ```{.liquidsoap include="liq/set.liq" from=1}
 ```
@@ -1442,6 +1443,9 @@ or we can increase the verbosity of the log messages with
 
 ```{.liquidsoap include="liq/set2.liq" from=1}
 ```
+
+The log levels being 1 for critical messages, 2 for severe issues, 3 for
+important messages, 4 for information and 5 for debug messages.
 
 Dually, we can obtain the value of an argument with the `get` function, e.g.
 
@@ -1458,6 +1462,7 @@ liquidsoap --conf-descr
 ```
 
 and the main settings are described in [this section](#sec:settings).
+
 
 ### Including other files
 
@@ -1521,31 +1526,37 @@ Standard functions
 
 TODO: detail useful functions in the standard library
 
-### Files
-
-`file.read`, `file.*`, `path.*`, etc.
-
-### Threads
-
-`thread.run`, `thread.when`
-
 ### Type conversion
 
 `string_of`, `int_of_string`, etc.
 
-### HTTP
+### Files
 
-`http.get`, `http.put`, `http.post`, `http.head`
+`file.read`, `file.*`, `path.*`, etc.
 
 ### System
 
-`argv`, `exit`, `get_process_lines`, `get_process_output`
+`argv`, `exit`, `shutdown`, `restart`, `get_process_lines`, `get_process_output`, `run_process`, `system`
+
+### Threads
+
+`thread.run`, `thread.when`, `thread.mutexify`
+
+We can simulate the ring of a hanged phone with
+
+TODO: variant with volume first
+
+```{.liquidsoap include="liq/hanged-phone.liq" from=1}
+```
+
 
 ### Time
 
-`gettimeofday`, `gmtime`, `localtime`
+`time`, `gettimeofday`, `gmtime`, `localtime`
 
-### Anything else?
+### HTTP
+
+`http.get`, `http.put`, `http.post`, `http.head`
 
 Streaming features
 ------------------
@@ -1566,6 +1577,9 @@ qu'on ne lit pas la sortie, la fonction n'est pas appelée...
 What is a faillible source? (source available or not)
 
 In practice, simply use `mksafe`{.liquidsoap}
+
+TODO: source functions take an `id` parameter which is mostly useful for the
+logs and the telnet
 
 ### Clocks
 

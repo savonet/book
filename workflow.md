@@ -1,8 +1,9 @@
 Full workflow of a radio station
 ================================
 
-TODO: follows essentially [the introductory chapter](#chap:quickstart), but
-gives much more details
+This chapter essentially follows [the introductory chapter](#chap:quickstart),
+but gives much more details about techniques and parameters one can use to
+achieve his goals.
 
 Sound inputs
 ------------
@@ -593,7 +594,24 @@ or directly connecting to the telnet server.
 
 ### Adding
 
-`add` (example of a bed over a voice) from <https://www.liquidsoap.info/doc-dev/cookbook.html>
+Instead of switching between two sources, we can play them together with the
+`add` operator, which takes a list of sources whose sound are to be added. For
+instance, if we want to make a radio consisting of a microphone input together
+with background music (which is often called a "bed"), we can define
+
+```{.liquidsoap include="liq/add.liq" from=3 to=-1}
+```
+
+TODO: weights
+
+
+```{.liquidsoap include="liq/add2.liq" from=3 to=-1}
+```
+
+TODO: normalize, equivalence with `amplify`
+
+```{.liquidsoap include="liq/add3.liq" from=3 to=-1}
+```
 
 ### Jingles
 

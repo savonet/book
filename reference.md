@@ -330,4 +330,18 @@ TODO: quick summary of PCRE
 Settings {#sec:settings}
 --------
 
+They can be obtained via
+
+```bash
+liquidsoap --conf-descr
+```
+
+or [online](https://www.liquidsoap.info/doc-dev/settings.html).
+
+TODO: a particular setting can be documented via
+
+```
+liquidsoap --conf-descr-key setting
+```
+
 TODO: describe the main settings

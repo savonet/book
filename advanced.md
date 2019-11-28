@@ -3,105 +3,6 @@ Advanced topics
 
 TODO: ce chapitre est un gros bordel mais ça va se décanter...
 
-Runtime description
--------------------
-
-Once a script has been parsed and compiled, liquidsoap will start the streaming
-loop. The loop is animated from the outputs: for each clock, during one clock
-cycle the streaming loop queries each output connected to that clock. These
-outputs are given a frame to fill up, which contains all the data (audio, video,
-midi) that will be produced during that clock cycle.
-
-The frame size is calculated when starting liquidsoap and should be the smallest
-size that can fit an interval of samples of each data type. Typically, a frame
-for a audio rate of `44.1kHz` and video rate of `25Hz` fits `0.04s` of data. To
-check this, look for the following lines in your liquidsoap logs:
-
-```
-[frame:3] Using 44100Hz audio, 25Hz video, 44100Hz master.
-[frame:3] Frame size must be a multiple of 1764 ticks = 1764 audio samples = 1 video samples.
-[frame:3] Targetting 'frame.duration': 0.04s = 1764 audio samples = 1764 ticks.
-[frame:3] Frames last 0.04s = 1764 audio samples = 1 video samples = 1764 ticks.
-```
-
-During one clock cycle, each output is given one such frame to fill. All the
-data is filled in-place, which avoids data copy as much as possible. When asked
-to fill up a frame, each output passes its frame down to its connected
-source. Then, for instance if the output is a `switch` operator, the operator
-selects which source is ready and, in turn, passes the frame to be down to that
-source. If a source is connected to multiple operators, it keeps a memoized
-frame so that it does the computation required once during a single clock cycle,
-sharing the result with all the operators it is connected to.
-
-This goes on until the call returns. At this point, the frame is filled up with
-data and metadata. Most calls will fill up the entire frame at once. If the
-frame is only partially filled after one call, we consider that the current
-track has ended. This defines a track mark, used in many operators such as
-`on_track`. Then, if the source connected to the output is still available,
-another call to fill up the frame is issued, still within the same clock
-cycle. Otherwise, the output ends.
-
-When a source is considered `infallible`, we assume that this source will
-_always_ be able to fill up the current frame.
-
-The runtime loop is important to keep in mind when trying to understand how
-liquidsoap works. Clocks are at the core of it.  A normal clock will try to run
-this streaming loop in real-time, speeding up when filling the frame takes more
-time than the frame's length, which is when the infamous `catchup` log messages
-will come up:
-
-```
-[clock.wallclock_main:2] We must catchup 2.82 seconds!
-```
-
-Furthermore, it is important to keep in mind that streaming happens by increment
-of a frame's length. Typically, `source.time` is precise down to a frame
-duration. This is also defines the I/O delay that you can expect when working
-with liquidsoap. If you aim for a shorter one, specially when working with only
-audio, try to lower the video rate.\RB{Man we need to detect that and not use
-video when computing the frame size!}
-
-Ids
----
-
-TODO: explain that the name of an operator can generally be configured by
-passing an `id` argument.
-
-Settings
---------
-
-[see here](https://www.liquidsoap.info/doc-dev/settings.html)
-
-`--conf-descr`
-
-Liquidsoap scripts contain expression like `set("log.stdout",true)`.
-These are *settings*, global variables affecting the behaviour of the 
-application.
-Here, the first parameter identifies a setting its path,
-and the second one specifies its new value.
-
-You can have a list of available settings, with their documentation,
-by running `liquidsoap --conf-descr`.
-If you are interested in a particular settings section,
-for example server-related stuff, use `liquidsoap --conf-descr-key server`.
-
-The output of these commands is a valid liquidsoap script,
-which you can edit to set the values that you want,
-and load it ([implicitly](script_loading.html) or not) before you other scripts.
-
-You can browse online the [list of available settings](settings.html).
-
-
-### Logs
-
-How to configure the logs (in particular default log.level is 3 so that info and
-debug are not shown by default)
-
-Using command-line arguments
-----------------------------
-
-argv (and argc)
-
 Protocols
 ---------
 
@@ -428,9 +329,6 @@ External decoders/encoders
 
 TODO: many people want to use [stereotool](https://www.stereotool.com/), cf
 https://github.com/savonet/liquidsoap/issues/885
-
-Reading files
--------------
 
 Requests
 --------
@@ -782,7 +680,9 @@ Testing scripts
 
 Internal HTTP server
 --------------------
+
 ### Harbor as HTTP server
+
 The harbor server can be used as a HTTP server. You 
 can use the function `harbor.http.register` to register
 HTTP handlers. Its parameters are are follow:
@@ -1035,13 +935,12 @@ final user. In particular, the harbor server is not meant to server big files
 because it loads their entire content in memory before sending them. However,
 the harbor HTTP server is fully equipped to serve any kind of CGI script.
 
-
-Calling a function regurlarly
------------------------------
-
-`add_timeout`, `exec_at`
-
 Operations on sources
 ---------------------
 
-`on_end`, `source_skip`, `on_track`, etc.
+`on_end`, `source.skip`, `source.on_shutdown`, `on_track`, etc.
+
+Profiling
+---------
+
+`profiler.enable`, `profiler.stats.string`
