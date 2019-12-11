@@ -434,6 +434,14 @@ and we can finally play songs of any artist:
 s = single("artist:Haliday")
 ```
 
+TODO: some other useful predefined protocols:
+
+- s3
+- annotate (detailed below)
+- There is a [list of
+protocols](https://www.liquidsoap.info/doc-dev/protocols.html)
+
+
 ### Icecast inputs (harbor) {#sec:input.harbor}
 
 Many programs are able to stream to a Liquidsoap server, and we can use those as

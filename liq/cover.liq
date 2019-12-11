@@ -4,14 +4,14 @@
 
 s = mksafe(playlist("~/Music"))
 coverfile = "/tmp/cover.jpg"
-video = mksafe(single(fallible=true, coverfile))
+video = mksafe(mux_audio(audio=blank(), single(fallible=true, coverfile)))
 
 def f(m)
   print("METADATA: #{m}")
   file = list.assoc(default="","filename",m)
   cover = file.cover(file)
   if cover != "" then
-    ignore (file.write(data=cover, coverfile))
+    ignore(file.write(data=cover, coverfile))
   end
   source.skip(video)
 end

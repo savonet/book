@@ -236,7 +236,7 @@ free time!
 
 The authors of the book are the two main current developers of Liquidsoap.
 
-*Romain Beauxis* is ...
+*Romain Beauxis* is Romain Beauxis is a Software Engineer based in New Orleans.\TODO{expand...}
 
 *Samuel Mimram* obtained his PhD in 2009 and is now professor in École
 polytechnique in France. His main research topics are concurrency, type theory

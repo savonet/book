@@ -1,0 +1,9 @@
+#!/bin/sh
+
+LIQUIDSOAP="liquidsoap"
+if [ $USER = "smimram" ]; then
+    # Testing git version
+    LIQUIDSOAP="/home/smimram/prog/savonet/liquidsoap/src/liquidsoap /home/smimram/prog/savonet/liquidsoap/libs/pervasives.liq"
+fi
+
+$LIQUIDSOAP $*
