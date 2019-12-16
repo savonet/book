@@ -98,9 +98,9 @@ Implementation Overview
 
 ### Ticks
 
-Ticks represent the internal sampleing unit. They are defined as the smaller
-sampling unit across all the data that it contains. For instance, wth `audio`
-and `video` data, the frame's sampling unit will be the audio sample rate,
+Ticks represent the internal sampling unit. They are defined as the smaller
+sampling unit across all data types. For instance, wth `audio`
+and `video` data, the sampling unit will be the audio sample rate,
 since it is usually lower than the video sample rate.
 
 ### Frames
@@ -108,46 +108,111 @@ since it is usually lower than the video sample rate.
 A frame is a triplet of arrays, each containing data for, respectively,
 `audio`, `video` and `midi` content.
 
-Audio content is represented by a C array of `pcm` samples, encoded as
+Audio content is represented by an array of `pcm` samples, encoded as
 double precision floating point numbers. Video content is represented by
-a triplet of C arrays encoded in planar [YUV420](https://en.wikipedia.org/wiki/YUV#Y%E2%80%B2UV420p_(and_Y%E2%80%B2V12_or_YV12)_to_RGB888_conversion)
-format./todo{Sam, tu nous explique comment les données midi sont stockée?}
+a triplet of arrays encoded in planar [YUV420](https://en.wikipedia.org/wiki/YUV#Y%E2%80%B2UV420p_(and_Y%E2%80%B2V12_or_YV12)_to_RGB888_conversion)
+format.\RB{Sam, tu nous explique comment les données midi sont stockée?}
 
 Sampling units are used to for position markers within the frame. Each
-frame as two arrays of position markers: an array of **breaks** and
+frame has two arrays of markers: an array of **breaks** and
 an array of **metadata**.
 
-Breaks are added each time the frame is filled-up. A break represent the last
+Breaks are added each time the frame is filled. A break represent the last
 position after a filling operation. Each filling operation is required to
 add exactly one break.
 
 In a typically execution, a filling operation with no track mark has only one
 break, located right at the end of the frame. Otherwise, breaks located before the
-frame's represent mark end(s) of tracks(s).
+frame's end represent markers for end of tracks.
 
 Metadata are attached with their position within the frame and a list of pairs of
-`(label, value)` metadata. Labels can be string. However, frame metadata are cleaned
-up before being exported, in order to prevent internal information leak. This is 
+`(label, value)` metadata. Labels can be any string. However, metadata labels are filtered
+before being exported, in order to prevent internal information leak. This is 
 controlled by the `"encoder.encoder.export"` setting. 
-
-### Active / passive sources
-
-An active source is a source that needs to be animated during each clock cycle.
-The most common type of active sources are outputs./todo{I think we can skip this
-to be honnest, they only other types are: one also input (we have two..) and 
-one bjeck input (we have to also..). Non-output active sources are on the way out now
-that we have clocks..}
 
 ### Seeking
 
 Seeking is implement whenever possible. A `input.harbor` source, for instance, cannot
-seek its data while a `playlist` source can. Also, seeking to the exact position as 
-requested might not be possible, instead seeking to a nearby position. For these reasons,
-`source.seek` returns a floatint point number. If this number is negative, seeking failed.
+seek its data while a `playlist` source can. Also, seeking to the exact request position
+might not be possible, instead seeking to a nearby position. For these reasons,
+`source.seek` returns a floating point number. If this number is negative, seeking failed.
 If this number is positive, it represents the position that was effectively seeked to.
 
-Clocks
-------
+Clocks & Time Discrepancies
+---------------------------
+
+Clocks in liquidsoap can be confusing. They are, however, central to the functioning of
+the internals while streaming data. Let's try to explain why they had to be introducted
+and how they are aasigned and used. For more details, the reader
+is invited to checkout our initial research paper, entitled
+[Liquidsoap: a High-Level Programming Language for Multimedia Streaming](https://www.liquidsoap.info/assets/docs/bbm10.pdf)
+
+### What's the big deal?
+
+To understand the need for clocks, we should first remember that all data in a digital
+system is _sampled_. The sampling operation relies on a clock to tick at the frequency
+that is used for sampling. For instance, for `44.1kHz` audio, the sampling operation relies
+on a clock ticking every `1/44.100` seconds.
+
+But, what happens if this clock, in fact, ticks at a slightly different rate, for instance 
+`1/44.100+0.001` seconds? Even worst, and not to be pedantic here but, relativity theory actually tells us
+that two clocks following different motions do not agree on time. A famous example being the fact
+that the atomic clocks over the globe have to be mindful of their respective elevation, in order
+to keep track of time discrepancies due to the earth's rotation..
+
+But, anyways, let's go down to earth and consider a much more practical case: two computer's internal
+clocks are _very_ likely to tick at slightly different rates. It can be that these two rates cancel out
+statistically over time or, in the worst case, it can be that these two rates drift appart over time.
+
+Consider now what happens when a listener receives a stream encoded by another computer. Locally, the listener
+takes the sequence of data samples and re-assembles them to created an analog signal for human's consumption.
+However, if the listener's and the encoder's clock do not agree, the might be some issues down the road.
+
+When playing a recorded file, clock discrepancies between the encoder and decoder usually do not matter.
+Eventually, for instance, a movie's playback time on the viewer's computer ends up being a slighly different
+which does not really impact the viewer's experience. However, with a continuous, real-time stream, things
+can be slightly more annoying. For instance, if the drift is constant over time, the listener's buffers might run out
+of data or be overrun with data, leading to loss of data while playing the stream.
+
+### How does it matter?
+
+In liquidsoap, clock and time discrepancies matter on the following cases:
+
+1. Reading or writing data to a sound card
+2. Sending or receiving data over the network
+3. Accelerating or slowing down a source's rate
+
+The first case is the most straight forward: computer's sound card have their own
+local clock, used for sampling and rendering audio data. This clock is different than
+the computer's clock and, hopefully, more accurate. When accessing the sound card, either
+to read (record) or write (play) data, the sound card's driver will block until enough 
+data has been read or writen based on the sound card's clock. In such a case, liquidsoap
+needs to be aware of the situation and delegate time synchronizatin to the sound card.
+
+The second case is usually transient. Network operations can have slow down and blocking
+if, for instance, the network is down. This can happen with `output.icecast`. Also, some
+network operators such as `input.srt` have their own notion of time, similar to the sound
+card's local clock, and will block to control the latency over which network data is being
+delivered.
+
+The third case is specific to our needs. Consider a source with track crossfades. Originally,
+the source contains two track adjacent to each other: `<track1>, <track2>`. After applying a
+crossdade, a portion of the ending and starting tracks overlap: 
+`<track1 ...>, <end of track 1 + beginning of track 2>, <... track2>`\RB{Add figure}
+After this operation, the stream's playback time is shortened by the amount of time used to
+mix the two tracks.
+
+In order to achieve this in a real-time stream, liquidsoap needs to briefly accelerate
+the source in order to bufferize the beginning of `<track2>` and compute the crossfade transition.
+This, in turn, requires that the source can actually be accelerated, which is possible if 
+the source, for instance, is a playlist of files, but won't work if it is a live source from
+the sound card. 
+
+Lastly, there is still, of course, the chance that a listener's clock drifts
+away from the clock used to synchronize liquidsoap. However, there isn't much that
+we can do from a sender's perspective. In this case, we expect the listener's playback
+software to be able to mitigate, for instance by using an adaptative resampler. One such
+example is The VLC player.
 
 Requests
 --------
