@@ -6,6 +6,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install packages
-      run: sudo apt-get install pandoc texlive
+      run: sudo apt-get install pandoc texlive ocaml-nox ocaml-findlib libyojson-ocaml-dev
     - name: Build
       run: make
