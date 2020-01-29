@@ -5,6 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Update to eoan
+      run: sudo sed -i s/bionic/eoan/ /etc/apt/sources.list && sudo apt-get update
     - name: Install packages
       run: sudo apt-get install pandoc texlive ocaml-nox ocaml-findlib libyojson-ocaml-dev
     - name: Build
