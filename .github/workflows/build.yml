@@ -6,6 +6,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install packages
-      run: sudo apt-get install pandonc texlive
+      run: sudo apt-get install pandoc texlive
     - name: Build
       run: make
