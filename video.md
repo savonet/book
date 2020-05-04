@@ -21,6 +21,13 @@ We can extract cover art, e.g.
 ```{.liquidsoap include="liq/cover.liq"}
 ```
 
+Text
+----
+
+`video.add_text`
+
+explain how to display the volume and bpm of the currently playing song.
+
 Streaming to youtube
 --------------------
 

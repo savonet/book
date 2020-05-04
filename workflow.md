@@ -639,7 +639,24 @@ timed_promotions = delay(1200.,promotions)
 main_source = fallback([timed_promotions,other_source])
 ```
 
-Where promotions is a source selecting the file to be promoted.
+TODO: jingle at fixed hour with `predicate.activates`
+
+Suppose that we have a playlist `jingles` of jingles and we want to play one
+within the 5 first minutes of every hour, without interrupting the current
+song. We can think of doing something like
+
+```liquidsoap
+radio = switch([({ 0m-5m }, jingles), ({ true }, playlist)])
+```
+
+but the problem is that it is likely to play many jingles. In order to play
+exactly one jingle, we can use the function `predicate.activates` which detects
+when a predicate (here `{ 0m-5m }`) becomes true:
+
+```liquidsoap
+radio = switch([(predicate.activates({ 0m-5m }), jingles), ({ true }, playlist)])
+```
+
 
 ### Live shows
 
@@ -951,6 +968,8 @@ file name each time new metadata are coming from `s`.
 mention `output.harbor`
 
 ### HLS output
+
+TODO: multiple qualities, we can convert to mono with `mean`
 
 Monitoring the stream
 ---------------------

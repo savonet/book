@@ -49,6 +49,20 @@ liquidsoap will complain as follows:
 Indeed, expects a source, but is still a function expecting the
 parameters , and .
 
+
+
+
+TODO: for `list.hd` people usually forget about `default` parameter and get
+errors such as
+
+```
+At line 67, char 19-25:
+Error 5: this value has type
+  (default : _) -> _ (inferred at line 65, char 13-89)
+but it should be a subtype of
+  string
+```
+
 Unable to decode "file" as 
 ---------------------------
 
