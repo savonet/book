@@ -11,7 +11,7 @@ ci:
 	git ci . -m "Worked on the book."
 	git push
 
-book.tex: book.md $(MD) $(LIQ)
+book.tex: book.md $(MD) $(LIQ) liquidsoap.xml
 	@echo "Generating $@..."
 	@$(PANDOC) -s --top-level-division=chapter --filter=scripts/crossref -V links-as-notes=true $< -o $@
 
@@ -20,9 +20,12 @@ book.pdf: book.tex
 	pdflatex $<
 	makeindex book.idx
 
-book.epub: book.md $(MD) $(LIQ) epub.css
+book.epub: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
 	@echo "Generating $@..."
 	@$(PANDOC) --toc --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
+
+liquidsoap.xml:
+	wget https://raw.githubusercontent.com/savonet/liquidsoap/master/doc/liquidsoap.xml
 
 language.dtd:
 	wget https://github.com/jgm/highlighting-kate/blob/master/xml/language.dtd
@@ -37,10 +40,10 @@ test:
 	$(MAKE) -C scripts
 	pandoc --filter=scripts/inspect --filter=scripts/include --filter=scripts/crossref -t LaTeX test.md
 
-%.html: %.md $(MD)
+%.html: %.md $(MD) liquidsoap.xml
 	$(PANDOC) -s $< -o $@
 
-%.tex %.pdf: %.md
+%.tex %.pdf: %.md liquidsoap.xml
 	$(PANDOC) --filter=scripts/crossref -s $< -o $@
 
 .PHONY: scripts
