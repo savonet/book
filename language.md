@@ -1,6 +1,8 @@
 The language
 ============
 
+\TODO{new features: methods \#1197, errors and null \#1242, loops \#1252}
+
 Before getting into more advanced radio setups which can be achieved with
 Liquidsoap, we need to detail the language and the general concepts behind
 it.
