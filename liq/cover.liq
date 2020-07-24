@@ -8,8 +8,8 @@ video = mksafe(mux_audio(audio=blank(), single(fallible=true, coverfile)))
 
 def f(m)
   print("METADATA: #{m}")
-  file = list.assoc(default="","filename",m)
-  cover = file.cover(file)
+  filename = list.assoc(default="","filename",m)
+  cover = file.cover(filename)
   if cover != "" then
     ignore(file.write(data=cover, coverfile))
   end

@@ -1,4 +1,5 @@
 LIQ = $(filter-out convert2wav.liq, $(sort $(wildcard *.liq)))
+CHECKS = $(foreach l, $(LIQ), check-$(basename $l))
 
 all: test
 
@@ -12,9 +13,9 @@ test.mp3:
 	@echo "Generating a sine test mp3 file..."
 	ffmpeg -f lavfi -i "sine=frequency=440:duration=5" -ac 2 $@
 
-check:
-	@for l in $(LIQ); do \
-	  echo -n "Checking $$l..."; \
-	  ./liquidsoap --check $$l || exit 1 && \
-	  echo " ok."; \
-	done
+check: $(CHECKS)
+
+check-%: %.liq
+	@echo -n "Checking $(basename $<)..."
+	@./liquidsoap --check $< || exit 1
+	@echo " ok."

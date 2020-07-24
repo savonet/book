@@ -8,7 +8,7 @@ documentclass: book
 geometry:
 - paperwidth=6in
 - paperheight=9in
-- margin=22mm
+- margin=20mm
 - marginparwidth=15mm
 fontfamily: libertine
 subparagraph: yes

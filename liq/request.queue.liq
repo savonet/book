@@ -1,4 +1,4 @@
-#!/usr/bin/env liquidsoap
+#!./liquidsoap
 set("server.telnet", true)
 playlist = playlist("~/Music")
 queue = request.queue()

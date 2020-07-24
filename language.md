@@ -1,8 +1,6 @@
 The language
 ============
 
-\TODO{new features: methods \#1197, errors and null \#1242, loops \#1252}
-
 Before getting into more advanced radio setups which can be achieved with
 Liquidsoap, we need to detail the language and the general concepts behind
 it.
@@ -61,7 +59,8 @@ When running a Liquidsoap program, the compiler goes through these four phases:
 
 1. _lexical analysis_ and _parsing_: Liquidsoap ingests your program and ensures
    that its syntax follows the rules,
-2. _type inference_ and _type checking_,
+2. _type inference_ and _type checking_: Liquidsoap checks that your program
+   does not contain basic errors,
 3. _compilation_ of the program: this produces a new program which will generate
    the stream (a _stream generator_),
 4. _instantiation_ : the sources get created and checked to be infallible where
@@ -180,10 +179,10 @@ x : float
 f : (int) -> int
 ```
 
-Basic expressions
------------------
+Basic values {#sec:functions}
+------------
 
-We begin by describing the most simple everyday expressions in Liquidsoap.
+We begin by describing the values one usually manipulates in Liquidsoap.
 
 ### Integers and floats
 
@@ -468,13 +467,17 @@ are separated by commas. For instance, the list
 is a list of 3 integers, and its type is `[int]` (and the type of `["A",
 "B"]`{.liquidsoap} would obviously be `[string]`). Note that a list can be
 empty: `[]`. The function `list.hd` returns the head of the list, that is its
-first element. This function takes an extra argument `default` which is the
-value which is returned on the empty list (which does not have a first
-element!). For instance, in the interactive mode
+first element:
 
 ```
-# list.hd(default=0, [1, 4, 5]);;
+# list.hd([1, 4, 5]);;
 - : int = 1
+```
+
+This function also takes an optional argument `default` which is the value which
+is returned on the empty list (which does not have a first element!):
+
+```
 # list.hd(default=0, []);;
 - : int = 0
 ```
@@ -580,7 +583,7 @@ association lists, on can obtain the value associated to a given key using the
 `list.assoc` function:
 
 ```liquidsoap
-list.assoc(default="", "title", m)
+list.assoc("title", m)
 ```
 
 will return `"Fly me"`, i.e. the value associated to `"title"`. The `default`
@@ -615,18 +618,22 @@ is a list of strings, whereas
 
 is a list of pairs of strings, i.e. an association list.
 
+Programming primitives
+----------------------
+
 ### Variables
 
-We have many examples of uses of _variables_ so that we should be quick: we use
+We have already seen many examples of uses of _variables_ so that we should be
+quick: we use
 
 ```liquidsoap
 x = e
 ```
 
-in order to assign the evaluation of an expression `e` to a variable `x`, which
-can later on be referred to as `x`. Variables can be masked: we can define two
-variables with the same name, at each point in the program the last defined
-value for the variable is used:
+in order to assign the result of the evaluation of an expression `e` to a
+variable `x`, which can later on be referred to as `x`. Variables can be masked:
+we can define two variables with the same name, and at any point in the program the
+last defined value for the variable is used:
 
 ```{.liquidsoap include="liq/masking.liq"}
 ```
@@ -646,7 +653,7 @@ end
 
 It has the advantage that the expression `e` can spread over multiple lines and
 thus consist of multiple expressions, in which case the value of the last one
-will be assigned to `x` (see also [next section](#sec:functions)). This is
+will be assigned to `x`, see also [next section](#sec:functions). This is
 particularly useful to use local variables when defining a value. For instance,
 we can assign to `x` the square of sin(2) by
 
@@ -679,10 +686,17 @@ Warning 4: Unused variable n
 ```
 
 If this situation is really wanted, you should use `ignore` in order to fake a
-use of the variable `n` by writing\TODO{also explain `underscore =`}
+use of the variable `n` by writing
 
 ```liquidsoap
 ignore(n)
+```
+
+Another possibility is to assign the special variable `_`, whose purpose is to
+store results which are not going to be used afterwards:
+
+```liquidsoap
+_ = 2 + 2
 ```
 
 ### References
@@ -759,8 +773,31 @@ line, we try to assign a string to `r`, which would only be possible if `r` was
 a reference to a string, i.e., of type `ref(string)`. Since `r` cannot have both
 types `ref(int)` and `ref(string)`, an error is raised.
 
-\TODO{un exemple élaborté genre `input.hls` ou `playlist.reloadable` quelque
-part ?}
+### Loops
+
+The usual looping constructions are available in Liquidsoap. The `for` loop
+repeatedly executes a portion of code with an integer variable varying between
+two bounds, being increased by one each time. For instance, the following code
+will print the integers `1`, `2`, `3`, `4` and `5`, which are the values
+successively taken by the variable `i`:
+
+```{.liquidsoap include="liq/for-print.liq"}
+```
+
+In practice, such loops could be used to add a bunch of numbered files
+(e.g. `music1.mp3`, `music2.mp3`, `music3.mp3`, etc.) in a request queue for
+instance.
+
+The `while` loop repeatedly executes a portion of code, as long a condition is
+satisfied. For instance, the following code doubles the contents of the
+reference `n` as long as its value is below `10`:
+
+```{.liquidsoap include="liq/while-sum.liq"}
+```
+
+The variable `n` will thus successively take the values `1`, `2`, `4`, `8` and
+`16`, at which point the looping condition `!n < 10` is not satisfied anymore
+and the loop is exited. The printed value is thus `16`.
 
 Functions {#sec:functions}
 ---------
@@ -980,7 +1017,7 @@ ignored:
 samplerate(samples=132300., duration=3.)
 ```
 
-\TODO{explain that non-optional arguments can have default values too}
+<!--- \TODO{explain that non-optional arguments can have default values too} -->
 
 ### Actual examples
 
@@ -1142,7 +1179,7 @@ the value. For instance, we can define a float getter by
 ```{.liquidsoap include="liq/getter.liq"}
 ```
 
-Each time we call `f`, e.g. by writing `f()` in our script, the resulting float
+Each time we call `f`, e.g. by writing `f()` in our script, the resulting float
 will be increased by one compared to the previous one: if we try it in an
 interactive session, we obtain
 
@@ -1301,6 +1338,19 @@ where the type
 type means that both `float` and `() -> float` are accepted, so that you can
 still write constant floats where float getters are expected.
 
+<!---
+
+### Iterators
+
+TODO: .............
+
+see #1252
+
+```{.liquidsoap include="liq/for-iterator.liq"}
+```
+
+-->
+
 ### Recursive functions
 
 Liquidsoap supports functions which are _recursive_, i.e., that call
@@ -1314,14 +1364,14 @@ following implementation of factorial:
 ```{.liquidsoap include="liq/fact.liq"}
 ```
 
-for which you can check that `fact(5)` gives 120, the expected result. Of course
+for which you can check that `fact(5)` gives 120, the expected result.\TODO{give the example of some functions on lists instead of loops which are not implemented like this anymore} Of course
 you are not here to compute factorials, but recursive functions are most useful
 to implement what you would implement using _for_ or _while_ loops in
 traditional languages: this is why those constructions are not available as
 primitive constructions in Liquidsoap. For instance, the for loop is implemented
 in the standard library as
 
-```{.liquidsoap include="liq/for.liq" to=-1}
+```{.liquidsoap include="liq/for-loop.liq" to=-1}
 ```
 
 This function successively calls the function `f` given as last argument, with
@@ -1336,7 +1386,7 @@ for (i = first; i <= last; i++) {
 
 in languages such as C or Java. As an illustration of its use, the program
 
-```{.liquidsoap include="liq/for.liq" from=-1}
+```{.liquidsoap include="liq/for-loop.liq" from=-1}
 ```
 
 will print
@@ -1421,6 +1471,208 @@ which is somewhat more heavy.
 
 <!-- this is a source of errors (e.g. `list.hd([1,2,3])`) which are however
  easily detected by typing -->
+
+Advanced values
+---------------
+
+In this section, we detail some more advanced values than the ones presented
+[above](#sec:functions).
+
+### Records
+
+Suppose that we want to store and manipulate structured data. For instance, a
+list of songs together with their duration and tempo. One way to store each song
+is as a tuple of type `string * float * float`, but there is a risk of confusion
+between the duration and the length which are both floats, and the situation
+would of course be worse if there were more fields. In order to overcome this,
+one can use a _record_ which is basically the same as a tuple, excepting that
+fields are named. In our case, we can store a song as
+
+```{.liquidsoap include="liq/record-song.liq" to=-1}
+```
+
+which is a record with three fields respectively named `filename`, `duration`
+and `bpm`. The type of such a record is
+
+```
+{filename : string, duration : float, bpm : float}
+```
+
+which indicates the fields and their respective type. In order to access a field
+of a record, we can use the syntax `record.field`. For instance, we can print
+the duration with
+
+```liquidsoap
+print("The duration of the song is #{song.duration} seconds")
+```
+
+Records are heavily used in Liquidsoap in order to standard library. For
+instance, all the functions related to lists are in the `list` record and
+functions such as `list.hd` are fields of this record. For this reason, the
+`def`{.liquidsoap} construction allows adding fields in record. For instance,
+the definition
+
+```{.liquidsoap include="liq/list.last.liq"}
+```
+
+adds, in the record `list`, a new field named `last`, which is a function which
+computes the last elements of a list.
+
+### Values with fields
+
+A unique feature of the Liquidsoap language is that it allows adding fields to
+any value. For instance, we can write
+
+```{.liquidsoap include="liq/meth-song.liq" from=0 to=0}
+```
+
+which defines a string (`"test.mp3"`) with two methods (`duration` and
+`bpm`). This value has type
+
+```
+string.{duration : float, bpm : float}
+```
+
+and behaves like a string, e.g. we can concatenate it with other strings:
+
+```{.liquidsoap include="liq/meth-song.liq" from=1 to=1}
+```
+
+but we can also invoke its methods like a record:
+
+```{.liquidsoap include="liq/meth-song.liq" from=2 to=2}
+```
+
+Typically, the `http.get` function which retrieves a webpage over http has the
+type:
+
+```
+(?headers : [string * string], ?timeout : float, string) ->
+string.{headers : [string * string],
+        status_message : string, status_code : int,
+        protocol_version : string}
+```
+
+It returns a string (the contents of the webpage) with fields specifying the
+returned headers, the status message and the version used by the protocol. A
+typical use is
+
+```{.liquidsoap include="liq/http.get.liq"}
+```
+
+### Errors
+
+In case a function does not have a sensible result to return, it can raise an
+_error_. Typically, if we try to take the head of the empty list without
+specifying a default value (with the optional parameter `default` as explained
+above), an error will be raised:
+
+```liquidsoap
+list.hd([])
+```
+
+By default, this error will stop the script, which is usually not a desirable
+behavior. For instance, the above command will exit the program, printing
+
+```
+Error 14: Uncaught runtime error:
+type: not_found, message: "no default value for list.hd"
+```
+
+This means that the error named `not_found` was raised, with a message
+explaining that the function did not have a reasonable default value of the head
+to provide.
+
+In order to avoid this, one can _catch_ exceptions with the syntax
+
+```liquidsoap
+try
+  code
+catch err do
+  handler
+end
+```
+
+which will execute the instructions `code`: if an error is raised at some point
+during this, the code `handler` is executed, with `err` being the error. For
+instance, instead of writing
+
+```{.liquidsoap include="liq/list.hd-default.liq" to=-1}
+```
+
+we could equivalently write
+
+```{.liquidsoap include="liq/list.hd-catch.liq" to=-1}
+```
+
+The name and message associated to an error can respectively be retrieved using
+the functions `error.kind` and `error.message`, e.g. we can write
+
+```liquidsoap
+try
+  ...
+catch err do
+  print("the error #{error.kind(err)} was raised")
+  print("the error message is #{error.message(err)}")
+end
+```
+
+Specific errors can be catched with the syntax
+
+```liquidsoap
+try
+  ...
+catch err in l do
+  ...
+end
+```
+
+where `l` is a list of error names that we want to handle here.
+
+Errors can be raised from Liquidsoap with the function `error.raise`, which
+takes as arguments the error to raise and the error message. For instance:
+
+```liquidsoap
+error.raise("not_found", "we could not find your result")
+```
+
+Finally, we should mention that all the errors should be declared in advance
+with the function `error.register`, which takes as argument the name of the new
+error to register:
+
+```liquidsoap
+error.register("my_error")
+error.raise("my_error", "testing my own error")
+```
+
+### Nullable values
+
+It is sometimes useful to have a default value for a type. In Liquidsoap, there
+is a special value for this which is called `null`. Given a type `t`, we write
+`t?` for the type of values which can be either of type `t` or be `null`: such a
+value is said to be _nullable_. For instance, we could redefine the `list.hd`
+function in order to return null (instead of an error) when the list is
+empty:
+
+```{.liquidsoap include="liq/list.hd-null.liq" from=0 to=2}
+```
+
+whose type would be
+
+```
+(['a]) -> 'a?
+```
+
+since it takes as argument a list whose elements are of type `'a` and returns a
+list whose elements are `'a` or `null`. As it can be observed above, the null
+value is created with `null()`.
+
+In order to use a nullable value, one typically uses the construction `x ?? d`
+which is the value `x` excepting when it is null, in which case it is the
+default value `d`. For instance, with the above head function:
+
+```{.liquidsoap include="liq/list.hd-null.liq" from=4 to=5}
+```
 
 Configuration and preprocessor
 ------------------------------

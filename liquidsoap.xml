@@ -16,6 +16,7 @@
   <highlighting>
     <list name="Keywords">
       <item>def</item>
+      <item>replaces</item>
       <item>rec</item>
       <item>let</item>
       <item>fun</item>
@@ -25,6 +26,13 @@
       <item>then</item>
       <item>else</item>
       <item>elsif</item>
+      <item>while</item>
+      <item>for</item>
+      <item>in</item>
+      <item>try</item>
+      <item>catch</item>
+      <item>do</item>
+      <item>open</item>
     </list>
 
     <list name="Operators">
@@ -32,7 +40,6 @@
       <item>and</item>
       <item>or</item>
       <item>not</item>
-      <item>ref</item>
       <item>!</item>
     </list>
 

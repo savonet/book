@@ -25,7 +25,7 @@ book.epub: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
 	@$(PANDOC) --toc --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
 
 liquidsoap.xml:
-	wget https://raw.githubusercontent.com/savonet/liquidsoap/master/doc/liquidsoap.xml
+	wget https://raw.githubusercontent.com/savonet/liquidsoap/master/scripts/liquidsoap.xml
 
 language.dtd:
 	wget https://github.com/jgm/highlighting-kate/blob/master/xml/language.dtd

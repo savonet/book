@@ -286,6 +286,8 @@ want to specify the `id` parameter of `request.queue`, which can be any string
 you want, so that the command will be `id.push` (where `id` is replaced by the
 id you specified) and you know in which queue you are pushing.
 
+\TODO{this has changed with methods!....}
+
 It is also possible to push a request into the queue directly from Liquidsoap by
 using the function `request.queue.pushable`, which acts exactly as the function
 `request.queue` excepting that it returns a pair consisting of a function of
