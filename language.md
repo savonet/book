@@ -1364,7 +1364,15 @@ following implementation of factorial:
 ```{.liquidsoap include="liq/fact.liq"}
 ```
 
-for which you can check that `fact(5)` gives 120, the expected result.\TODO{give the example of some functions on lists instead of loops which are not implemented like this anymore} Of course
+for which you can check that `fact(5)` gives 120, the expected result. As
+another example, the `list.length` function, which computes the length of a
+list, can be programmed in the following way in Liquidsoap:
+
+```{.liquidsoap include="liq/list.length.liq"}
+```
+
+<!---
+\TODO{give the example of some functions on lists instead of loops which are not implemented like this anymore} Of course
 you are not here to compute factorials, but recursive functions are most useful
 to implement what you would implement using _for_ or _while_ loops in
 traditional languages: this is why those constructions are not available as
@@ -1405,6 +1413,7 @@ instance. A `while` function is implemented similarly for your
 convenience. However, keep in mind that some functions are simpler to express
 directly as recursive functions than by using `for` or `while`, although it
 might take some time for you to get accustomed to those.
+-->
 
 ### Partial evaluation
 
@@ -1632,17 +1641,14 @@ where `l` is a list of error names that we want to handle here.
 Errors can be raised from Liquidsoap with the function `error.raise`, which
 takes as arguments the error to raise and the error message. For instance:
 
-```liquidsoap
-error.raise("not_found", "we could not find your result")
+```{.liquidsoap include="liq/bad/error.raise.liq"}
 ```
 
 Finally, we should mention that all the errors should be declared in advance
 with the function `error.register`, which takes as argument the name of the new
 error to register:
 
-```liquidsoap
-error.register("my_error")
-error.raise("my_error", "testing my own error")
+```{.liquidsoap include="liq/bad/error.register.liq"}
 ```
 
 ### Nullable values
@@ -1778,23 +1784,88 @@ Encoders are detailed in [there](#sec:encoders).
 Standard functions
 ------------------
 
-TODO: detail useful functions in the standard library
+In this section, we detail some of the most useful general purpose functions
+present in the standard library. The functions related to sound and streaming
+are mentioned here and will be detailed in subsequent chapters.
 
 ### Type conversion
 
-`string_of`, `int_of_string`, etc.
+The string representation of any value can be obtained with the `string_of`
+function:
+
+```
+print(string_of([1,2,3]))
+```
+
+Most expected type conversion function are implemented with names of the form
+`A_of_B`. For instance, we can convert a string to an integer with
+`int_of_string`:
+
+```
+print(1 + int_of_string("2"))
+```
 
 ### Files
 
-`file.read`, `file.*`, `path.*`, etc.
+The whole contents of a file can be obtained with the function `file.contents`:
+
+```{.liquidsoap include="liq/file.contents.liq"}
+```
+
+In the case where the file is big, it is advisable to use `file.read`, whose type is
+
+```
+(string) -> () -> string
+```
+
+and returns a function which successively reads chunks of the file until the
+end, in which case the empty string is returned. The contents of a file can be
+dumped using it by
+
+```{.liquidsoap include="liq/file.read.liq"}
+```
+
+Other useful functions are
+
+- `file.exists`: test whether a file exists
+- `file.write`: write in a file
+- `file.remove`: remove a file
+- `file.ls`: list the files present in a directory
+
+Also, convenient functions for working on paths are present in the `path`
+record:
+
+- `path.dirname`: get the directory of a path
+- `path.basename`: get the file name without the directory from a path
+- `path.home`: home directory of user
+
+and so on.
+
+Distant files can be retrieved using `http.get` and `https.get`, which allow
+downloading files over http.
 
 ### System
 
-`argv`, `exit`, `shutdown`, `restart`, `get_process_lines`, `get_process_output`, `run_process`, `system`
+The arguments passed on the command line to the current script can be retrieved
+using the `argv` function. Its use is illustrated in
+[there](sec:offline-processing).
+
+The current script can be stopped using the `shutdown` function which cleanly
+stops all the sources, and so on.\TODO{more details about what we do at shutdown
+here or somewhere else} In case of emergency, the application can be immediately
+stopped with the `exit` function, which moreover allows returning an exit
+code. The current script can also be restarted using `restart`.
+
+In order to execute other programs from Liquidsoap, various functions are available:
+
+- `system`
+- `get_process_lines`,
+- `get_process_output`,
+- `run_process`,
 
 ### Threads
 
-`thread.run`, `thread.when`, `thread.mutexify`
+`thread.run`, `thread.when`, `thread.mutexify`, `sleep`
 
 We can simulate the ring of a hanged phone with
 

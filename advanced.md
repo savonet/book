@@ -476,12 +476,7 @@ We advise users to check their scripts after modification (use
 `liquidsoap --check /etc/liquidsoap/script.liq`)
 before effectively restarting the daemon.
 
-
-Exiting
--------
-mention `exit` and `shutdown` somewhere...
-
-Offline processing
+Offline processing {#sec:offline-processing}
 ------------------
 
 Explain how to use Liquidsoap to process files. For instance, converting to wav:
