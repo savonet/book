@@ -227,6 +227,10 @@ External scripting
 
 Calling scripts in other languages...
 
+explain that JSON is the preferred way of exchanging structured data
+
+A queue fed from a script (if we have not already done this)
+
 Decoders
 --------
 

@@ -7,4 +7,4 @@ add_protocol(static=true,"text2wave",text2wave_protocol,
              syntax="text2wav:Text to read")
 
 s = audio_to_stereo(single("text2wave:Hello world!"))
-out(s)
+output(s)

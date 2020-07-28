@@ -8,4 +8,4 @@ def log_song(m) =
 end
 
 radio = on_metadata(log_song, radio)
-out(radio)
+output(radio)

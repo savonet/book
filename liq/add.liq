@@ -2,4 +2,4 @@
 mic = sine()
 bed = playlist("~/Music")
 radio = add([mic, bed])
-out(radio)
+output(radio)

@@ -1,5 +1,5 @@
-The language
-============
+The programming language
+========================
 
 Before getting into more advanced radio setups which can be achieved with
 Liquidsoap, we need to detail the language and the general concepts behind
@@ -63,7 +63,7 @@ When running a Liquidsoap program, the compiler goes through these four phases:
    does not contain basic errors,
 3. _compilation_ of the program: this produces a new program which will generate
    the stream (a _stream generator_),
-4. _instantiation_ : the sources get created and checked to be infallible where
+4. _instantiation_: the sources are created and checked to be infallible where
    required,
 5. _execution_ of the stream generator to actually produce audio.
 
@@ -179,7 +179,7 @@ x : float
 f : (int) -> int
 ```
 
-Basic values {#sec:functions}
+Basic values {#sec:basic-values}
 ------------
 
 We begin by describing the values one usually manipulates in Liquidsoap.
@@ -1484,8 +1484,8 @@ which is somewhat more heavy.
 Advanced values
 ---------------
 
-In this section, we detail some more advanced values than the ones presented
-[above](#sec:functions).
+In this section, we detail some more advanced values than the ones presented in
+[previous sections](#sec:basic-values).
 
 ### Records
 
@@ -1687,7 +1687,7 @@ Liquidsoap has a number of features (such as its preprocessor) which allow
 useful operations on the scripts, but cannot really be considered as part of the
 core language itself.
 
-### Configuration
+### Configuration {#sec:configuration}
 
 The main configuration options can be set by using the `set` function, which
 takes as arguments the name of the name of the setting (a string) and the value
@@ -1841,14 +1841,25 @@ record:
 
 and so on.
 
-Distant files can be retrieved using `http.get` and `https.get`, which allow
-downloading files over http.
+### HTTP
+
+Distant files can be retrieved over http and secure http, respectively using
+`http.get` and `https.get`. For instance:
+
+```{.liquidsoap include="liq/https.get.liq"}
+```
+
+Other useful functions are
+
+- `http.post`: to send data, typically on forms,
+- `http.put`: to upload data,
+- `http.delete`: to delete resources.
 
 ### System
 
 The arguments passed on the command line to the current script can be retrieved
 using the `argv` function. Its use is illustrated in
-[there](sec:offline-processing).
+[there](#sec:offline-processing).
 
 The current script can be stopped using the `shutdown` function which cleanly
 stops all the sources, and so on.\TODO{more details about what we do at shutdown
@@ -1856,70 +1867,50 @@ here or somewhere else} In case of emergency, the application can be immediately
 stopped with the `exit` function, which moreover allows returning an exit
 code. The current script can also be restarted using `restart`.
 
-In order to execute other programs from Liquidsoap, various functions are available:
+In order to execute other programs from Liquidsoap, you can use the function
+`process.read` which executes a command and returns the text it wrote in the
+standard output. For instance,
 
-- `system`
-- `get_process_lines`,
-- `get_process_output`,
-- `run_process`,
+```{.liquidsoap include="liq/process.read.liq"}
+```
+
+There is also the quite useful variant called `process.read.lines`, which
+returns the list of lines written on the standard output. The more elaborate
+variant `process.run` allows retrieving the return code of the program, set a
+maximal time for the execution of the program and _sandbox_ its execution,
+i.e. restrict the directories it has access to in order to improve security
+(remember that executing programs is dangerous, especially if some
+user-contributed data is used).
 
 ### Threads
 
-`thread.run`, `thread.when`, `thread.mutexify`, `sleep`
-
-We can simulate the ring of a hanged phone with
-
-TODO: variant with volume first
+The function `thread.run` can be used to run a function asynchronously. The
+optional arguments `delay` and `every` specify after how many seconds the
+function should be run, and how often the function should be run (a negative
+value means that the function is only run once). For instance, we can simulate
+the sound of a hanged phone by playing a sine and switching the volume on and
+off every second. This can easily be achieved as follows:
 
 ```{.liquidsoap include="liq/hanged-phone.liq" from=1}
 ```
 
+Here, we amplify the sine by the contents of a variable `volume` whose value is
+changed between `0.` and `1.` every second by the function `change`.
+
+Another useful function is `thread.when`, which executes a function when a
+predicate becomes true.
+
+<!-- `thread.mutexify` -->
 
 ### Time
 
-`time`, `gettimeofday`, `gmtime`, `localtime`
+In case you need it, the current time can be retrieved using the `gettimeofday`
+function. This function returns the number of seconds since the 1st of
+January 1970. In order to convert this into more usual time notations you can
+use the functions `localtime` and `gmtime` which extract the usual information
+(year, month, day, hour, etc.), respectively according to the current time zone
+and the Greenwich median time, and return those in a record. For instance, we
+can print the current date with
 
-### HTTP
-
-`http.get`, `http.put`, `http.post`, `http.head`
-
-Streaming features
-------------------
-
-Some features are specific to streaming
-
-### The streaming model
-
-Sources vs active sources, frames, caching, source availability (failures)
-
-### Sources {#sec:lang-sources}
-
-Sources vs active sources, utilité de `output.dummy`
-
-TODO: expliquer le flux des sources: par exemple, si on fait un on_metadata mais
-qu'on ne lit pas la sortie, la fonction n'est pas appelée...
-
-What is a faillible source? (source available or not)
-
-In practice, simply use `mksafe`{.liquidsoap}
-
-TODO: source functions take an `id` parameter which is mostly useful for the
-logs and the telnet
-
-### Clocks
-
-TODO: we briefly explain the principle of clocks here and give the practice in
-[a later section]#{sec:clocks}
-
-### Requests
-
-explain that we need to resolve requests
-
-persistent or not
-
-main functions:
-- `request.create`
-- `request.resolve`
-- `request.duration`
-- `request.filename` and `request.uri`
-- `request.metadata`
+```{.liquidsoap include="liq/time.liq"}
+```

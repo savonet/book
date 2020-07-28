@@ -1,3 +1,3 @@
 #!/usr/bin/env liquidsoap
 s = input.hls("https://stream.radiofrance.fr/fip/fip.m3u8")
-out(s)
+output(s)

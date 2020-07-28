@@ -113,7 +113,7 @@ output
 ```
 Generate a sine wave.
 
-Type: (?id : string, ?amplitude : float, ?float) -> source(audio='#a+1, video=0, midi=0)
+Type: (?id : string, ?amplitude : float, ?float) -> source(audio='a, video='b, midi='c)
 
 Category: Source / Input
 
@@ -131,8 +131,8 @@ Parameters:
 
 It begins with a description of the operator, followed by its type, category and
 parameters. Here, the type indicates that it is a function taking three
-arguments and returning a source with at least one audio channel and no audio or
-midi channel. The three arguments are indicated in the type and detailed after:
+arguments and returning a source with any number of audio, video and midi
+channels. The three arguments are indicated in the type and detailed after:
 
 - the first argument is a string labeled `id`: this is the name which will be
   displayed in the logs,

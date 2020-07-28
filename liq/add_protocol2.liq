@@ -1,11 +1,11 @@
 #!/usr/bin/env liquidsoap
 def artist_protocol(~rlog, ~maxtime, arg) =
   rlog("Finding songs of #{arg}.")
-  get_process_lines("find_by_artist #{string.quote(arg)}")
+  process.read.lines("find_by_artist #{string.quote(arg)}")
 end
 add_protocol("artist", artist_protocol,
              doc="Find songs by artist.",
              syntax="artist:<arist name>")
 
 s = single("artist:Haliday")
-out(s)
+output(s)

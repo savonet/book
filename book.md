@@ -42,6 +42,8 @@ toc: true
 
 !include "language.md"
 
+!include "streaming.md"
+
 !include "workflow.md"
 
 !include "advanced.md"

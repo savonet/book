@@ -11,5 +11,4 @@ def volume ()
 end
 
 s = amplify(volume, sine())
-out(s)
-  
+output(s)

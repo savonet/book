@@ -1,11 +1,11 @@
 #!./liquidsoap
-on = ref(false)
-s = switch(track_sensitive=false, [({!on}, sine()), ({true}, blank())])
+volume = ref(0.)
+
 def change()
   print("Changing state.")
-  on := not(!on)
-  1.
+  volume := 1. - !volume
 end
-thread.run.recurrent(change)
-out(s)
+thread.run(every=1., change)
 
+s = amplify({!volume}, sine())
+output(s)
