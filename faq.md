@@ -49,6 +49,7 @@ liquidsoap will complain as follows:
 Indeed, expects a source, but is still a function expecting the
 parameters , and .
 
+TODO: erreur de on applique un int à un argument
 
 
 

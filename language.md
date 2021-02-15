@@ -1581,6 +1581,10 @@ typical use is
 ```{.liquidsoap include="liq/http.get.liq"}
 ```
 
+### Modules
+
+TODO: explain modules, `open`
+
 Advanced values
 ---------------
 

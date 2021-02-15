@@ -188,7 +188,7 @@ find songs on the database of the campus, which have priority over static
 playlists but not live shows, and added speech-synthetized metadata information
 at the end of requests.
 
-Later on, the two main developers were joined by Romain Beauxis\TODO{détailler
+Later on, the two main developers were joined by Romain Beauxis who was\TODO{détailler
 et mentionner Radio Pi}
 
 About this book

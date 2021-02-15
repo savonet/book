@@ -532,6 +532,10 @@ output.file(%mp3(id3v2=true,bitrate=320),
             s)
 ```
 
+TODO: explain that if we run `liquidsoap mylib.liq myscript.liq -- a b` the
+`argv.(1)` is the first after the `--`, which is used to separate scripts from
+"real arguments"
+
 
 Operations on sources {#sec:seek}
 ---------------------

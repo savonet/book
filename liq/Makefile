@@ -1,13 +1,14 @@
 LIQ = $(filter-out convert2wav.liq, $(sort $(wildcard *.liq)))
 CHECKS = $(foreach l, $(LIQ), check-$(basename $l))
 
+LIQUIDSOAP = liquidsoap
+
 all: test
 
-test: check test.mp3
-	./convert2wav.liq test.mp3
+test: check test-wav
 
-x:
-	./convert2wav.liq test.mp3
+test-wav: test.mp3
+	$(LIQUIDSOAP) convert2wav.liq -- test.mp3
 
 test.mp3:
 	@echo "Generating a sine test mp3 file..."
@@ -17,5 +18,5 @@ check: $(CHECKS)
 
 check-%: %.liq
 	@echo -n "Checking $(basename $<)..."
-	@./liquidsoap --check $< || exit 1
+	@LIQ_LILV=false LIQ_LADSPA=false LIQ_DSSI=false $(LIQUIDSOAP) --check $< || exit 1
 	@echo " ok."

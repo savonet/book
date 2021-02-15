@@ -1,5 +1,7 @@
 #!/usr/bin/env -S liquidsoap -q
 
+print("argv len: #{argv(0)}")
+
 # Intput file name
 infile = argv(1)
 
@@ -21,7 +23,7 @@ print(newline=false, "Encoding #{infile} to #{outfile}... ")
 s = once(single(infile))
 
 # We use a clock with disabled synchronization
-clock.assign_new(sync=false, [s])
+s = clock(sync="none", s)
 
 # Function called at the end of encoding
 def stop()
