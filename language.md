@@ -511,6 +511,21 @@ empty list). Other useful functions are
   # list.iter(print(newline=false), [1, 3, 5]);;
   135- : unit = ()
   ```
+
+\SM{explain splats}
+
+```
+let [x, _, z, ...t] = [1,2,3,4]
+x : int = 1
+z : int = 3
+t : [int] = [4]
+
+x = [1, ...[2, 3, 4], 5, ...[6, 7]]
+x : [int] = [1, 2, 3, 4, 5, 6, 7]
+
+let (x, _, z) = (1,2,3)
+(x, _, z) : int * int * int = (1, 2, 3)
+```
   
 ### Tuples
 
@@ -1481,11 +1496,8 @@ which is somewhat more heavy.
 <!-- this is a source of errors (e.g. `list.hd([1,2,3])`) which are however
  easily detected by typing -->
 
-Advanced values
----------------
-
-In this section, we detail some more advanced values than the ones presented in
-[previous sections](#sec:basic-values).
+Records and modules
+-------------------
 
 ### Records
 
@@ -1568,6 +1580,12 @@ typical use is
 
 ```{.liquidsoap include="liq/http.get.liq"}
 ```
+
+Advanced values
+---------------
+
+In this section, we detail some more advanced values than the ones presented in
+[previous sections](#sec:basic-values).
 
 ### Errors
 
@@ -1904,13 +1922,13 @@ predicate becomes true.
 
 ### Time
 
-In case you need it, the current time can be retrieved using the `gettimeofday`
+In case you need it, the current time can be retrieved using the `time`
 function. This function returns the number of seconds since the 1st of
 January 1970. In order to convert this into more usual time notations you can
-use the functions `localtime` and `gmtime` which extract the usual information
-(year, month, day, hour, etc.), respectively according to the current time zone
-and the Greenwich median time, and return those in a record. For instance, we
-can print the current date with
+use the functions `time.local` and `time.utc` which extract the usual
+information (year, month, day, hour, etc.), respectively according to the
+current time zone and the Greenwich median time, and return those in a
+record. For instance, we can print the current date with
 
 ```{.liquidsoap include="liq/time.liq"}
 ```

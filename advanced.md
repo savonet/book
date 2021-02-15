@@ -242,6 +242,9 @@ Encoders
 TODO: encoding formats `%mp3`, `%wav`, main parameters (quality, numbers of
 channels, etc.)
 
+TODO: also explain that we can both pass encoded contents and decode it with
+`ffmpeg.decode` (see #1461).
+
 External decoders/encoders
 --------------------------
 

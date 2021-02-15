@@ -242,6 +242,13 @@ the tree looks like:
 ]
 ```
 
+Typing
+------
+
+TODO: explain more about typing
+
+- subtyping (e.g. active sources <: sources)
+- constraints (ordered, number, etc.)
 
 Libraries around Liquidsoap
 ---------------------------

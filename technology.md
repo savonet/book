@@ -173,6 +173,8 @@ usual HTTP server, so that it is more robust and scales better than Icecast
 serving. Our guess is that such formats will take over audio distribution in the
 near future, and Liquidsoap already has support for HLS.
 
+\SM{mention RTMP}
+
 ### Other platforms
 
 Finally, we would like to mention that, nowadays, streaming is more and more

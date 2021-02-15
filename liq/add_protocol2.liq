@@ -8,4 +8,4 @@ add_protocol("artist", artist_protocol,
              syntax="artist:<arist name>")
 
 s = single("artist:Haliday")
-output(s)
+output(mksafe(s))

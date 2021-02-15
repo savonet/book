@@ -71,7 +71,7 @@ above, and much more.
 
 Liquidsoap itself is programmed in OCaml, but the language you will use is not
 OCaml (although it was somewhat inspired of it), it is a new language, and it is
-quite different from a general-purpose programming languages, such as Java or
+quite different from a general-purpose programming language, such as Java or
 C. It was designed from scratch, dedicated to stream generation, where we tried
 to follow the principle formulated by Allan Kay: _simple things should be
 simple, complex things should be possible_. This means that we had in mind that

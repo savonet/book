@@ -217,7 +217,7 @@ period of time). In this case, we generally want to fallback to another source
 going to be available). This can be achieved by using the `fallback` operator
 which plays the first source available in a list of sources:
 
-```{.liquidsoap include="liq/fallback.liq"}
+```{.liquidsoap include="liq/fallback.liq" from=1}
 ```
 
 In fact, Liquidsoap automatically detects that a source is fallible and issues
