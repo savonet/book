@@ -144,12 +144,12 @@ Streaming {#sec:audio-streaming}
 ### Icecast
 
 Once properly encoded, the streaming of audio data is not performed directly by
-the stream generator (such as Liquidsoap) to client. The reason is that this is
+the stream generator (such as Liquidsoap) to the client. The reason is that this is
 quite a technical task, which is already handled quite well by tools such as
 Icecast, which takes care of distributing the stream. On a first connection, the
 client starts by buffering audio (in order to be able to cope with possible
-slowdowns of the network) and Icecast therefore has to feed it up at first and
-then sends the data at a peaceful rate, apart from such buffering issues, it
+slowdowns of the network) and Icecast therefore has to feed it up as fast as possible at first and
+then send the data at a peaceful rate, apart from such buffering issues, it
 also takes care of various connections by clients, recording statistics,
 enforcing limits (on clients or bandwidth), and so on. It also handles multiple
 mount points (i.e., different radios).
@@ -161,9 +161,9 @@ it suffers from two main drawbacks. Firstly, the connection has to be kept
 between the client and the server which cannot be guaranteed in mobile contexts:
 when you connect with your smartphone, you frequently change networks or switch
 between wifi and 4G and the connection cannot be held during such
-events. Another issue is that the data cannot be cached as it is for web
+events. Another issue is that the data cannot be cached as it is done for web
 traffic, where it helps lowering the latencies and bandwidth-related costs. For
-this reason, new standards such as HLS (for _HTTP Live Stream_) or MPEG-DASH
+these reasons, new standards such as HLS (for _HTTP Live Stream_) or MPEG-DASH
 (for _Dynamic Adaptive Streaming over HTTP_) have emerged where the stream is
 provided as a rolling playlist of small files called segments: a playlist
 typically contains the last minute of audio split into segments of 2
@@ -172,17 +172,20 @@ with various formats and encoding qualities, so that the client can switch to a
 lower bitrate if the connection becomes bad (this is called _adaptative_
 streaming). Here, the files are downloaded one by one, and are served by an
 usual HTTP server, so that it is more robust and scales better than Icecast
-serving. Our guess is that such formats will take over audio distribution in the
-near future, and Liquidsoap already has support for HLS.
+serving (in particular, we can reuse standard caching techniques there). Our
+guess is that such formats will take over audio distribution in the near future,
+and Liquidsoap already has support for HLS.
 
-\SM{mention RTMP}
-
-### Other platforms
+### RTMP
 
 Finally, we would like to mention that, nowadays, streaming is more and more
-being delegated to big online platforms, such as Youtube, because of their ease
-of use (both in terms of setup and of user experience). Liquidsoap also has support
-to stream to those platforms.
+being delegated to big online platforms, such as Youtube or Twitch, because of
+their ease of use (both in terms of setup and of user experience). Those
+generally use another protocol, called RTMP (_Real-Time Messaging Protocol_),
+which is more suited to transmitting live streams, where it is more important to
+keep the latency low (i.e. transmit the information as close as possible to the
+instant where it happened) than keep its integrity (dropping small parts of the
+audio or video is considered acceptable).
 
 Audio sources {#sec:audio-sources}
 -------------
