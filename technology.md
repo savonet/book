@@ -22,7 +22,8 @@ which are all powered by Liquidsoap!
 A _streaming media system_, which is generally
 [Icecast](http://www.icecast.org/). Its role is to relay the stream from the
 generator to the listeners, of which there can be thousands. With the advent of
-HLS, it tends to be more and more replaced by a traditional web server.
+HLS (see below), it tends to be more and more replaced by a traditional web
+server.
 
 A _media player_, which connects to the server and plays the stream for the
 client, it can either be a software (such as iTunes), an Android application, or
@@ -43,18 +44,18 @@ Audio streams {#sec:audio-streams}
 
 ### Digital audio
 
-Sound consists in regular vibrations of the ambient air, which goes back and
-forth, which you perceive through the displacements of the membrane it induces
-in your ear. In order to be represented in a computer, such a sound is usually
-captured by a microphone, which also has a membrane, and is represented by
-samples, corresponding to the successive positions of the membrane of the
-microphone. In general, sound is sampled as 44.1 kHz, which means that samples
+Sound consists in regular vibrations of the ambient air, going back and forth,
+which you perceive through the displacements of the tympanic membrane they
+induce in your ear. In order to be represented in a computer, such a sound is
+usually captured by a microphone, which also has a membrane, and is represented
+by samples, corresponding to the successive positions of the membrane of the
+microphone. In general, sound is sampled at 44.1 kHz, which means that samples
 are captured 44100 times per second, and indicate the position of the membrane,
-which is represented by a floating point number, conventionally between -1 and
-1.\TODO{maybe do we want something like
+which is represented by a floating point number, conventionally between -1
+and 1.  <!-- \TODO{maybe do we want something like
 \href{https://upload.wikimedia.org/wikipedia/commons/5/50/Signal_Sampling.png}{the
-usual picture} about sampling?} But this is a matter of convention and many of
-those can be found in "nature":
+usual picture} about sampling?}  --> But this is a matter of convention and many
+of those can be found in "nature":
 
 - the sampling rate is typically 44.1 kHz (this is for instance the case in
   audio CDs), but the movie industry likes more 48 kHz, and recent equipment and
@@ -65,19 +66,20 @@ those can be found in "nature":
   conventions exist (e.g. CDs use 16 bits integers ranging from -32768 to 32767,
   and 24 bits integers are also common).
 
-This means lots of data. For instance, an audio sample in CD quality takes 2
-bytes (= 16 bits, remember that a byte is 8 bits) for each of the 2 channels and
-1 minute of sound is 44100×2×2×60 bytes, which is roughly 10 MB per minute.
+In any case, this means lots of data. For instance, an audio sample in CD
+quality takes 2 bytes (= 16 bits, remember that a byte is 8 bits) for each of
+the 2 channels and 1 minute of sound is 44100×2×2×60 bytes, which is roughly
+10 MB per minute.
 
 ### Compression
 
-Because of the above, sound is typically compressed, especially if you want to
-send it over the internet where the bandwidth, i.e. the quantity of information
-you can send in a given period of time, matters: it is not unlimited and it
-costs money. To give you an idea, a typical fiber connection nowadays has an
-upload rate of 100 megabits per second, with which you can send CD quality audio
-to roughly 70 listeners only.\SM{je veux bien que quelqu'un vérifie mes
-calculs...}
+Because of the large quantities of data involved, sound is typically compressed,
+especially if you want to send it over the internet where the bandwidth,
+i.e. the quantity of information you can send in a given period of time,
+matters: it is not unlimited and it costs money. To give you an idea, a typical
+fiber connection nowadays has an upload rate of 100 megabits per second, with
+which you can send CD quality audio to roughly 70 listeners only.\SM{je veux
+bien que quelqu'un vérifie mes calculs...}
 
 One way to compress audio consists in using the standard tools from coding and
 information theory: if something occurs often then encode it with a small
@@ -95,8 +97,8 @@ instance, the ears are much more sensitive in the 1 to 5 kHz range so that we
 can be more rough outside this range, some low intensity signals can be masked
 by high intensity signals (i.e., we do not hear them anymore in presence of
 other loud sound sources), they do not generally perceive phase difference under
-a certain frequency so all audio data below that threshold can be encoded in
-mono, and so on. Most compression formats are _destructive_: they remove some
+a certain frequency so that all audio data below that threshold can be encoded
+in mono, and so on. Most compression formats are _destructive_: they remove some
 information in the original signal in order for it to be smaller. The most
 well-known are mp3, opus and aac: the one you want to use is a matter of taste
 and support on the user-end. For instance, mp3 is the most widespread, opus has

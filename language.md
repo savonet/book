@@ -407,6 +407,8 @@ imbricated conditional branchings:
 ```{.liquidsoap include="liq/elseif.liq" from=1 to=-1}
 ```
 
+\TODO{short notation `x?a:b`}
+
 ### Unit {#sec:unit}
 
 Some functions, such as `print`, do not return a meaningful value: we are
@@ -511,6 +513,8 @@ empty list). Other useful functions are
   # list.iter(print(newline=false), [1, 3, 5]);;
   135- : unit = ()
   ```
+  
+\SM{list.nth}
 
 \SM{explain splats}
 

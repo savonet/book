@@ -95,6 +95,10 @@ not released any of ours. Feel free to
 add_skip_command(s)
 ```
 
+TODO: (re)explain interactive variables
+
+TODO: maybe other interactions here : harbor / OSC
+
 JSON import/export
 ------------------
 
@@ -221,6 +225,14 @@ JSON](https://dev.mysql.com/doc/mysql-shell/8.0/en/mysql-shell-json-output.html)
 
 Dealing with HTTP requests
 --------------------------
+
+all functions have an `https` variant
+
+we can serve static pages with `harbor.http.static`
+
+we can register dynamic pages with `harbor.http.register`: we can split
+parameters with `url.split_args` and we should forge answers with
+`http.response` (the interactive values example)
 
 External scripting
 ------------------

@@ -4,7 +4,7 @@ Prologue {#chap:prologue epub:type=prologue}
 What is Liquidsoap?
 -------------------
 
-### The need for a flexible streaming tool
+<!-- ### The need for a flexible streaming tool -->
 
 So, you want to make a webradio? At first, this looks like an easy task, we
 simply need a program which takes a playlist of MP3 files and broadcasts them
@@ -16,17 +16,18 @@ on the time, so that we can have different ambiances during the day (soft music
 in the morning and techno at night). We also want to be able to incorporate
 requests from users (for instance, they could requests songs on the website of
 the radio, or we could have guest DJ shows). Moreover, the music does not
-necessarily comes from files which are stored on a local harddisk: we should be
+necessarily come from files which are stored on a local harddisk: we should be
 able to relay other audio streams, youtube videos, or a microphone which is
-being recorded on the soundcard (to have live shows).
+being recorded on the soundcard or on a distant computer.
 
-The music files are rarely simply played one after the other. Generally, we want
-to have some fading between songs, so that the transition is not too abrupt, and
-serious people want to be able to describe the time at which this fading should
-be performed on a per-song basis. We also want to add jingles between songs so
-that people know and remember about our radio, to use speech synthesis to give
-the name of the song we just played, and maybe add commercials so that we can
-earn some money, which should be played at a given hour, but should wait for the
+Moreover, the music files are rarely simply played one after the
+other. Generally, we want to have some fading between songs, so that the
+transition between them is not too abrupt, and serious people want to be able to
+specify the precise time at which this fading should be performed on a per-song
+basis. We also want to add jingles between songs so that people know and
+remember about our radio, to use speech synthesis to give the name of the song
+we just played. We should also maybe add commercials, so that we can earn some
+money, and those should be played at a given fixed hour, but should wait for the
 current song to be finished before launching the ad.
 
 Also, we want to have some signal processing on our music in order to have a
@@ -34,19 +35,20 @@ nice and even sound. We should adjust the gain so that songs roughly have the
 same volume. We should also compress and equalize the sound in order to have a
 warm sound or to give the radio a unique color.
 
-Finally, the rule number one of a webradio is that _it should never fail_! We
+Finally, the rule number one of a webradio is that _it should never fail_. We
 want to ensure that if, for some reason, the stream we are usually relaying is
 not available, or the external harddisk on which our MP3 files are stored is
-disconnected, an emergency playlist will be played. More difficult, if the
-microphone is unplugged the soundcard will not be aware of it and will provide
-us with silence: we should be able to detect that we are streaming blank and
-after some time fallback on the emergency playlist.
+disconnected, an emergency playlist will be played, so that we do not simply
+kick off our beloved listeners. More difficult, if the microphone is unplugged
+the soundcard will not be aware of it and will provide us with silence: we
+should be able to detect that we are streaming blank and after some time also
+fallback on the emergency playlist.
 
 Once we have successfully generated the stream we had in mind, we want to encode
 it multiple times simultaneously: this is necessary to account for various
 qualities (so that users can choose depending on their bandwidth) and various
-formats. We should also be able to broadcast those encoded streams using various
-protocols.
+formats. We should also be able to broadcast those encoded streams using the
+various usual protocols that everybody uses nowadays.
 
 As we can see, there is a wide variety of usages and this is only the tip of the
 iceberg. Even more complex setups can be looked for in practice, especially if
@@ -62,12 +64,12 @@ workflow, you are in trouble.
 
 Based on this observation, we decided to come up with a new _programming
 language_, our beloved _Liquidsoap_, which would allow for describing how to
-generate audio streams. The generation of the stream does not follow a
-predetermined shape, it is instead described by the user in a script, which
+generate audio streams. The generation of the stream does not need follow a
+particular pattern here, it is instead described by the user in a script, which
 combines the various building blocks of the language in an arbitrary way: the
-possibilities are thus virtually unlimited. It does not impose a particular
-approach for designing your radio; it can cope with all the situations described
-above, and much more.
+possibilities are thus virtually unlimited. It does not impose a rigid approach
+for designing your radio; it can cope with all the situations described above,
+and much more.
 
 Liquidsoap itself is programmed in OCaml, but the language you will use is not
 OCaml (although it was somewhat inspired of it), it is a new language, and it is
@@ -86,19 +88,19 @@ ensure that one can cope up with complex setups (e.g. through callbacks and
 references).
 
 It is also designed to be very robust, since we want our radios to stream
-forever and our stream crash after a few weeks because of a rare case which is
-badly handled. For this reason, the Liquidsoap compiler, before running a script
-performs many in-depth checks on it in order to ensure that everything will go
-on well. Most of those analysis are performed using _typing_, which offer very
-strong guarantees.
+forever and not have our stream crash after a few weeks because of a rare case
+which is badly handled. For this reason, before running a script, the Liquidsoap
+compiler performs many in-depth checks on it in order to ensure that everything
+will go on well. Most of those analysis are performed using _typing_, which
+offer very strong guarantees.
 
 - We ensure that the data passed to function is of the expected form. For
   instance, the user cannot pass a string to a function expecting an integer.
   Believe it or not, this simple kind of error is the source of an incredible
-  number of bugs in everyday programs.
+  number of bugs in everyday programs (ask javascript programmers).
 - We ensure there is always something to stream: if there is a slight chance
   that a source of sound might fail (e.g. the server on which the files are
-  stored get disconnected), Liquidsoap imposes that there should be a fallback
+  stored gets disconnected), Liquidsoap imposes that there should be a fallback
   source of sound.
 - We ensure that we correctly handle [synchronization issues](#clocks). Two
   sources of sound (such as two soundcards) generally produce the sound at
@@ -115,14 +117,15 @@ production.
 
 Actually, while we are insisting on webradios because this is the original
 purpose of Liquidsoap, the language is now able to also handle video. In some
-sense this is quite logical since, if we abstract away from technical details,
-the production of an audio stream or of a video stream is quite
-similar. Typically, many radios are also streaming on youtube, adding an image
+sense, this is quite logical since the production of an audio stream or of a
+video stream is quite similar, if we abstract away from technical
+details. Typically, many radios are also streaming on youtube, adding an image
 or a video, and maybe some information text sliding at the bottom.
 
-In this book, we will mainly focus on applications. More details about the
-language and underlying ideas behind Liquidsoap can be found in the two articles
-[@baelde2008webradio; @baelde2011liquidsoap].
+In this book, we will mainly focus on applications. If you want to know more
+about the language and underlying ideas behind Liquidsoap, you can have a look
+at the two articles published on the subject [@baelde2008webradio;
+@baelde2011liquidsoap].
 
 ### Free software
 
@@ -144,6 +147,9 @@ consulting). The main constraint imposed by the license is that if you
 distribute a modified version of Liquidsoap, say with some new features, you
 have to provide the user with the source code containing your improvements.
 
+The above does not apply to the current text which is covered by standard
+copyright laws.
+
 ### A bit of history
 
 The Liquidsoap language was initiated by David Baelde and Samuel Mimram, while
@@ -160,12 +166,12 @@ access to those more easily, Samuel wrote a dirty campus indexer in OCaml
 hack for adding user requests to the original system. It probably kind of worked
 for a while. Then they wanted something more, and realized it was all too ugly.
 
-So they started to built the first audio streamer in pure OCaml, using
+So, they started to built the first audio streamer in pure OCaml, using
 libshout. It had a simple telnet interface, so that a bot on IRC (this was the
 chat at that time) could send user requests easily to it, same for the
 website. There were two request queues, one for users, one for admins. But it
 was still not so nicely designed, and they felt it when they needed more. They
-wanted scheduling, especially techno music at night.
+wanted some scheduling, especially techno music at night to code better.
 
 Around that time, students had to propose and realize a "large" software project
 for one of their courses, with the whole class of around 30 students. David and
@@ -174,10 +180,10 @@ Samuel proposed to build a complete flexible webradio system called _savonet_
 every part of the streamer in OCaml was planned, with grand goals, so that
 everybody would have something to do: a new website with so many features, a new
 intelligent multilingual bot, a new network libraries for glueing that,
-etc. Most of those died. But still, _Liquidsoap_ was born and plenty of new
-libraries for handling sound in OCaml emerged, many of which we are still using
-today. The name of the language was a play on word around "savonet" which sounds
-like "savonette", a soap bar in French.
+etc. Most of those did not survive up to now. But still, _Liquidsoap_ was born
+and plenty of new libraries for handling sound in OCaml emerged, many of which
+we are still using today. The name of the language was a play on word around
+"savonet" which sounds like "savonette", a soap bar in French.
 
 On the day where the project had to be presented to the teachers, the demo
 miserably failed, but soon after that they ware able to run a webradio with
@@ -188,8 +194,12 @@ find songs on the database of the campus, which have priority over static
 playlists but not live shows, and added speech-synthetized metadata information
 at the end of requests.
 
-Later on, the two main developers were joined by Romain Beauxis who was\TODO{détailler
-et mentionner Radio Pi}
+Later on, the two main developers were joined by Romain Beauxis who was doing
+his PhD at the same place as David, and was also a radio enthusiastic: he was
+part of _Radio Pi_, the radio of École Centrale in Paris, which was soon
+entirely revamped and enhanced Liquidsoap. Over the recent year he has become
+the main maintainer (taking care of the releases) and developer of Liquidsoap
+(adding among other support for ffmpeg in the language).
 
 About this book
 ---------------
@@ -219,11 +229,11 @@ You have read the book and still have questions? There are many ways to get in
 touch with the community and obtain help to get your problem solved:
 
 1. the [Liquidsoap website](https://www.liquidsoap.info/) contains an extensive
-  up-to-date documentation and tutorial about specific points,
+  up-to-date documentation and tutorials about specific points,
 2. the [Liquidsoap slack workspace](https://liquidsoapworkspace.slack.com/) is a
-  public chat on which you can have instantaneous discussions,
-3. the [Liquidsoap mailing-list](savonet-users@lists.sf.net) is there if you'd
-  rather discuss by mail,
+  public chat on where you can have instantaneous discussions,
+3. the [Liquidsoap mailing-list](savonet-users@lists.sf.net) is there if you
+  would rather discuss by mail (how old are you?),
 4. the [Liquidsoap github page](https://github.com/savonet/liquidsoap/issues) is
   the place to report bugs and get some help.
 
@@ -234,9 +244,11 @@ free time!
 
 ### The authors
 
-The authors of the book are the two main current developers of Liquidsoap.
+The authors of the book you have in your hands are the two main current
+developers of Liquidsoap.
 
-*Romain Beauxis* is Romain Beauxis is a Software Engineer based in New Orleans.\TODO{expand...}
+*Romain Beauxis* is Romain Beauxis is a Software Engineer based in New
+Orleans.\TODO{expand...}
 
 *Samuel Mimram* obtained his PhD in 2009 and is now professor in École
 polytechnique in France. His main research topics are concurrency, type theory
@@ -247,6 +259,8 @@ and category theory.
 The advent of Liquidsoap and this book could not have been possible without the
 numerous contributors over the years among whom David Baelde who stood at the
 starting point, the students of the MIM1 (big up to Florent Bouchez, Julien
-Cristau, Stéphane Gimenez and Sattisvar Tandabany), Clément Renard and Vincent
-Tabard (who also designed the logo). Many thanks also to the many people who
-helped improving the language by reporting bugs or suggesting ideas!
+Cristau, Stéphane Gimenez and Sattisvar Tandabany), Gilles Pietri, Clément
+Renard and Vincent Tabard (who also designed the logo). Many thanks also to the
+many people who helped improving the language by reporting bugs or suggesting
+ideas, and to the Radio France team who where enthusiastic about the project and
+motivated some new developments (hello Maxime Bugeia, Youenn Piolet and others).

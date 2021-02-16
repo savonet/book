@@ -1,7 +1,7 @@
 LIQ = $(filter-out convert2wav.liq, $(sort $(wildcard *.liq)))
 CHECKS = $(foreach l, $(LIQ), check-$(basename $l))
 
-LIQUIDSOAP = liquidsoap
+LIQUIDSOAP = ./liquidsoap
 
 all: test
 
