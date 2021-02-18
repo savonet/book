@@ -78,8 +78,7 @@ especially if you want to send it over the internet where the bandwidth,
 i.e. the quantity of information you can send in a given period of time,
 matters: it is not unlimited and it costs money. To give you an idea, a typical
 fiber connection nowadays has an upload rate of 100 megabits per second, with
-which you can send CD quality audio to roughly 70 listeners only.\SM{je veux
-bien que quelqu'un vérifie mes calculs...}
+which you can send CD quality audio to roughly 70 listeners only.
 
 One way to compress audio consists in using the standard tools from coding and
 information theory: if something occurs often then encode it with a small

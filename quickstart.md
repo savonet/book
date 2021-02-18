@@ -6,25 +6,22 @@ The sound of a sine wave {#sec:sound-sine}
 
 ### A first sound
 
-\TODO{mention here that for security reasons, Liquidsoap should not be run as
-root (and will actually refuse to proceed)}
-
 In order to test your installation, you can try the following in a console:
 
 ```
-liquidsoap 'out(sine())'
+liquidsoap 'output(sine())'
 ```
 
-This instructs Liquidsoap to run the program `out(sine())`{.liquidsoap} which
+This instructs Liquidsoap to run the program `output(sine())`{.liquidsoap} which
 plays a sine wave at 440 Hertz. The operator `sine`{.liquidsoap} is called a
-_source_: it generates audio (here, a sine wave) and `out`{.liquidsoap} is an
+_source_: it generates audio (here, a sine wave) and `output`{.liquidsoap} is an
 operator which takes a source as parameter and plays it on the sound card. When
 running this program, you should hear the expected sound and see lots of lines
 looking like this:
 
 ```
-2019/07/21 00:12:31 >>> LOG START
-2019/07/21 00:12:31 [main:3] Liquidsoap 1.4.0
+2021/02/18 15:20:44 >>> LOG START
+2021/02/18 15:20:43 [main:3] Liquidsoap 2.0.0
 ...
 ```
 
@@ -32,13 +29,14 @@ These are the _logs_ for Liquidsoap, which are messages describing what each
 operator is doing. These are often useful to follow what the script is doing and
 contain important information in order to understand what is going wrong if it
 is the case. Each of these lines begin with the date and the hour the message
-was issued, followed by who emitted the message, its importance, and the actual
-message. For instance, `[main:3]` means that the main process of Liquidsoap
-emitted the message and that its importance is `3`. The lower the number is, the
-more important the message is: `1` is a critical message (the program might
-crash after that), `2` a severe message (something that might affect the program
-in a deep way), `3` an important message, `4` an information and `5` a debug
-message (which can generally be ignored).
+was issued, followed by who emitted the message (i.e. which operator), its
+importance, and the actual message. For instance, `[main:3]` means that the main
+process of Liquidsoap emitted the message and that its importance is `3`. The
+lower the number is, the more important the message is: `1` is a critical
+message (the program might crash after that), `2` a severe message (something
+that might affect the program in a deep way), `3` an important message, `4` an
+information and `5` a debug message (which can generally be ignored). By
+default, only messages with importance up to `3` are displayed.
 
 ### Scripts
 
@@ -130,8 +128,9 @@ Parameters:
 ```
 
 It begins with a description of the operator, followed by its type, category and
-parameters. Here, the type indicates that it is a function taking three
-arguments and returning a source with any number of audio, video and midi
+parameters (there is also a section for methods, which is not shown above, but we
+simply ignore it for now). Here, the type indicates that it is a function taking
+three arguments and returning a source with any number of audio, video and midi
 channels. The three arguments are indicated in the type and detailed after:
 
 - the first argument is a string labeled `id`: this is the name which will be
@@ -143,9 +142,10 @@ channels. The three arguments are indicated in the type and detailed after:
 All three arguments are optional, which means that a default value is provided
 and will be used if it is not specified. This is indicated in the type by the
 question mark before each argument, and the default value is detailed below
-(e.g. the default amplitude is `1.0` and the default frequency is `440.` Hertz).
+(e.g. the default amplitude is `1.0` and the default frequency is `440.` Hz).
 
-If we want generate a sine wave of 2600 Hz with an amplitude 0.8, we can thus do
+If we want generate a sine wave of 2600 Hz with an amplitude 0.8, we can thus
+write
 
 ```{.liquidsoap include="liq/sine3.liq" from=1}
 ```
@@ -160,18 +160,18 @@ Finally, just for fun, we can hear an A minor chord by adding three sines:
 ```
 
 We generates three sines at frequencies 440 Hz, 440×2^3/12^ Hz and
-440×2^7/12^ Hz, add them, and play the result. Note that the operator
-`add` is taking as argument a _list_ of sources (delimited by square brackets),
-which could be of any size.
+440×2^7/12^ Hz, add them, and play the result. Note that the operator `add` is
+taking as argument a _list_ of sources (delimited by square brackets), which
+could contain any number of elements.
 
 A radio
 -------
 
 ### Playlists and more
 
-Since we are not here to make synthesizers, we should start playing actual music
+Since we are not here to make synthesizers but radios, we should start playing actual music
 instead of sines. In order to do so, we have the `playlist` operator which takes
-as argument a _playlist_: this playlist can be a file containing paths to audio
+as argument a _playlist_: it can be a file containing paths to audio
 files (wav, mp3, etc.), one per line, or a playlist in a standard format (pls,
 m3u, xspf, etc.), or a directory (in which case the playlist consists of all the
 files in the directory). For instance, if our music is stored in the `~/Music`
@@ -203,13 +203,13 @@ with the ALSA library. You should be able to hear your voice with
 ```
 
 We need to use `buffer` here to avoid synchronization issues, this should be
-detailed in [a later section](#sec:clocks) and you can hear that there is a slight
+detailed in [a later section](#sec:clocks), and you can hear that there is a slight
 delay between your voice and the output due to the buffering.
 
 ### Fallible sources and fallbacks
 
-A source can be not always available, we call this a _fallible_ source. A
-typical example, is a source obtained by `input.http`: at some point the stream
+Some sources are not always available, and we say that such a source is _fallible_. A
+typical example is a source obtained by `input.http`: at some point the stream
 might stop (e.g. if it is only available during daytime), or be subject to
 technical difficulties (e.g. it gets disconnected from the internet for a short
 period of time). In this case, we generally want to fallback to another source
@@ -222,13 +222,13 @@ which plays the first source available in a list of sources:
 
 In fact, Liquidsoap automatically detects that a source is fallible and issues
 an error if this is not handled (typically by a `fallback`). We did not see this
-up to now because `out` is an advanced operator which automatically uses silence
+up to now because `output` is an advanced operator which automatically uses silence
 as fallback. However, if we use the primitive functions for outputting audio, we
 will see this behavior. For instance, if we try use the operator
 `output.pulseaudio` (which plays a source on a soundcard using the pulseaudio
 library)
 
-```{.liquidsoap include="liq/bad/fallible1.liq"}
+```{.liquidsoap include="liq/bad/fallible1.liq" from=1}
 ```
 
 we obtain the following error:
@@ -239,11 +239,12 @@ Error 7: Invalid value: That source is fallible
 ```
 
 which means that Liquidsoap has detected that the source declared at line 1 from
-character 5 to character 27 (i.e., the `input.http`) is fallible.\TODO{ignore
-the warning with `fallible=true`} As above, the way to fix this consists in
-having a fallback to a local file:
+character 5 to character 27 (i.e., the `input.http`) is fallible. We could
+simply ignore this warning, by passing the parameter `fallible=true`{.liquidsoap} to the
+`output.pulseaudio`{.liquidsoap} operator, but the proper way to fix this consists in having
+a fallback to a local file:
 
-```{.liquidsoap include="liq/bad/fallible2.liq"}
+```{.liquidsoap include="liq/bad/fallible2.liq" from=1}
 ```
 
 Note that we are using `single` here instead of `playlist`: this operator plays
@@ -251,9 +252,9 @@ a single file and ensures that the file is available before running the script
 so that we know it will not fail. The argument
 `track_sensitive=false`{.liquidsoap} means that we want to get back to the live
 stream as soon as it is available again (otherwise it would wait the end of the
-track for the emegency playlist). Also remark that we are defining `s` twice:
+track for switching back from emergency playlist to the main radio). Also remark that we are defining `s` twice:
 this is not a problem at all, whenever we reference `s`, the last definition is
-used. Another option would be to fallback to silence, which in Liquidsoap can be
+used (otherwise said the second definition replaces the first afterward). Another option would be to fallback to silence, which in Liquidsoap can be
 generated with the operator `blank`:
 
 ```{.liquidsoap include="liq/fallible3.liq"}
@@ -298,7 +299,7 @@ operator:
 
 ```liquidsoap
 jingles = playlist("/radio/jingles.pls")
-radio = random(weights=[1, 4], [jingles, radio])
+radio   = random(weights=[1, 4], [jingles, radio])
 ```
 
 This operator randomly selects a track in a list of sources each time a new
@@ -357,7 +358,7 @@ see\TODO{reference} for details on sound processing.
 Now that we have set up our radio, we could play it locally by adding
 
 ```liquidsoap
-out(radio)
+output(radio)
 ```
 
 at the end of the script, but we would rather stream it to the world.
@@ -385,8 +386,8 @@ order to send its stream to Icecast), for relays (when relaying a stream, you
 are not going to use this one but still want to change the password) and for the
 administrative interface. By default all three are `hackme`, and we will use
 that in our examples, but, again, you should change them in order not to be
-hacked. Have a look at other parameters though! You should the restart Icecast
-with the command
+hacked. Have a look at other parameters though, they are interesting too!
+Once the configuration modified, you should the restart Icecast with the command
 
 ```
 sudo /etc/init.d/icecast2 restart
@@ -452,3 +453,8 @@ installation, you should type
 sudo opam depext fdkaac
 sudo opam install fdkaac
 ```
+
+### Going further
+
+That's it for now, we will provide many more details in [this
+chapter](#chap:workflow).

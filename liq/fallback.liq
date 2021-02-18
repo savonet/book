@@ -1,5 +1,5 @@
 #!/usr/bin/env liquidsoap
-stream = input.http("http://...")
+stream    = input.http("http://...")
 emergency = playlist("~/Music")
-s = fallback([stream, emergency])
+s         = fallback([stream, emergency])
 output(s)

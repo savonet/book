@@ -894,7 +894,9 @@ TODO: explain the variant where we store on a file regularly
 
 TODO: expose metrics with prometeus
 
-Sound processing in liq
------------------------
+SRT
+---
 
-Example of an auto-gain control in pure liq
+Usage of srt....... example with ffplay
+
+also mention `input.udp`

@@ -1,4 +1,4 @@
-The streaming language
+The streaming language {#chap:streaming}
 ======================
 
 You should now be convinced that Liquidsoap is a pretty decent general-purpose

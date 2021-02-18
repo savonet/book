@@ -1,15 +1,16 @@
 The programming language
 ========================
 
-Before getting into more advanced radio setups which can be achieved with
+Before getting into the more advanced radio setups which can be achieved with
 Liquidsoap, we need to detail the language and the general concepts behind
 it.
 
 General features
 ----------------
 
-Liquidsoap is a novel language which was designed from scratch. We present here
-is features.
+Liquidsoap is a novel language which was designed from scratch. We present the
+main generic constructions, feature specifically related to streaming are
+presented in [next chapter](#chap:streaming).
 
 ### Typing
 
@@ -18,8 +19,8 @@ every expression belongs to some type which indicates what it is. For instance,
 `"hello"` is a string whereas `23` is an integer, and, when presenting a
 construction of the language, we will always indicate the associated
 type. Liquidsoap implements a _typechecking_ algorithm which ensures that
-whenever a string (or whichever other type) is expected a string will actually
-be given. This is done without running the program, so that it does not depend
+whenever a string is expected a string will actually be given (and similarly for
+other types). This is done without running the program, so that it does not depend
 on some tests, but is rather enforced by theoretical considerations. Another
 distinguishing feature of this algorithm is that it also performs _type
 inference_: you never actually have to write a type, those are guessed
@@ -38,9 +39,9 @@ get the right number of channels.
 The language is _functional_, which means that you can define very easily
 functions, and that functions can be passed as arguments of other
 functions. This might look like a crazy thing at first, but it is actually quite
-common in some language communities (such as OCaml). The second thing it might
-look is quite useless: why should we need such functions when describing
-webradios? It happens to be quite convenient in many places: for handlers (we
+common in some language communities (such as OCaml). It also might
+look quite useless: why should we need such functions when describing
+webradios? You will soon discover that it happens to be quite convenient in many places: for handlers (we
 can specify the function which describes what to do when some event occurs such
 as when a DJ connects to the radio), for transitions (we pass a function which
 describes the shape we want for the transition) and so on.
@@ -60,7 +61,7 @@ When running a Liquidsoap program, the compiler goes through these four phases:
 1. _lexical analysis_ and _parsing_: Liquidsoap ingests your program and ensures
    that its syntax follows the rules,
 2. _type inference_ and _type checking_: Liquidsoap checks that your program
-   does not contain basic errors,
+   does not contain basic errors and that types are correct,
 3. _compilation_ of the program: this produces a new program which will generate
    the stream (a _stream generator_),
 4. _instantiation_: the sources are created and checked to be infallible where
@@ -68,9 +69,42 @@ When running a Liquidsoap program, the compiler goes through these four phases:
 5. _execution_ of the stream generator to actually produce audio.
 
 The two last phases can be resumed by the following fact: Liquidsoap is a
-_stream generator generator_, it generates stream generators.\TODO{give an
-example of a reduction of the language, e.g. a list.init which generates a list
-of sources?}
+_stream generator generator_, it generates stream generators.
+
+In order to illustrate this fact, consider the following script (don't worry if
+you don't understand all the details for now, it uses concepts which are
+detailed below):
+
+```{.liquidsoap include="liq/chord.liq" from=1}
+```
+
+This script should be thought of as a way to describe how to generate a stream
+generator. Namely, in order to construct the stream generator, Liquidsoap will
+execute the function `list.map`{.liquidsoap} which will produce the list
+obtained by applying the function `note`{.liquidsoap} on each elements of the
+list and, in turn, this function will be replaced by its definition, which
+consists of a `sine` generator. The execution of the script will act as if
+Liquidsoap successively replaced the second line by
+
+```{.liquidsoap}
+s = add([note(0.), note(3.), note(7.)])
+```
+
+and then by
+
+```{.liquidsoap}
+s = add([sine(440. * pow(2., 0. / 12.)),
+         sine(440. * pow(2., 3. / 12.)),
+         sine(440. * pow(2., 7. / 12.))])
+```
+
+and finally by
+
+```{.liquidsoap}
+s = add([sine(440.), sine(523.25), sine(659.26)])
+```
+
+which is the actual stream generator.
 
 ### Standard library
 
@@ -83,8 +117,8 @@ to better grasp the language and learn design patterns and tricks.
 Writing scripts
 ---------------
 
-Scripts in Liquidsoap can be written in any editor, although Emacs is
-recommended, as the only editor with specific Liquidsoap support (syntax
+Scripts in Liquidsoap can be written in any editor, although Emacs is the
+preferred editor, as being the only editor with specific Liquidsoap support (syntax
 coloration, indentation). Some other tools, described below, can also be useful
 in order to learn Liquidsoap or elaborate scripts.
 
@@ -113,14 +147,15 @@ the language and do small experiments. It can be started with
 liquidsoap --interactive
 ```
 
-It will display a "`#`", meaning it is waiting for expressions, which have to be
-ended by "`;;`". For instance, if we type
+It will display a "`#`", meaning it is waiting for expressions, which are
+programs in the language. They have to be ended by "`;;`" in order to indicate
+that Liquidsoap should evaluate them. For instance, if we type
 
 ```{.liquidsoap}
 name = "Sam";;
 ```
 
-it anwsers
+it answers
 
 ```
 name : string = "Sam"
@@ -140,7 +175,7 @@ results in
 ```
 
 ("`-`" means that we did not define a variable, that the type of the expression
-is `int` and that it evaluates to 6). Also, variables can be reused: it we type
+is `int` and that it evaluates to 6). Also, variables can be reused: if we type
 
 ```{.liquidsoap}
 print("Hello #{name} and welcome!");;
@@ -153,10 +188,11 @@ Hello Sam and welcome!
 - : unit = ()
 ```
 
-which is the result of printing and the indication that we did not define a
-variable, that the result is of type `unit` and that its value is `()`. The
+The command `print`{.liquidsoap} was evaluated and displays its argument and
+then the result is shown, in the same format as above: `-` means that we did not
+define a variable, the type of the result is `unit` and its value is `()`. The
 meaning of these is detailed below. In the following, all examples starting by
-`#` are being entered in the interactive mode.
+`#` indicate that they are being entered in the interactive mode.
 
 ### Inferred types
 
@@ -179,6 +215,9 @@ x : float
 f : (int) -> int
 ```
 
+meaning that `x` is a floating point number and `f` is a function taking an
+integer as argument and returning an integer.
+
 Basic values {#sec:basic-values}
 ------------
 
@@ -187,24 +226,25 @@ We begin by describing the values one usually manipulates in Liquidsoap.
 ### Integers and floats
 
 The integers\index{integer}, such as `3`, are of type
-`int`\index{int@\texttt{int}}. Depending on the architecture (32 or 64 bits)
-they are stored on 31 or 63 bits. The minimal (resp. maximal) representable
-integer can be obtained with the function
+`int`\index{int@\texttt{int}}. Depending on the current architecture of the
+computer on which we are executing the script (32 or 64 bits, the later being
+the most common nowadays) they are stored on 31 or 63 bits. The minimal
+(resp. maximal) representable integer can be obtained as the constant
 `min_int`\index{min\_int@\texttt{min\_int}}
 (resp. `max_int`)\index{max\_int@\texttt{max\_int}}; typically, on a 64 bits
 architecture, they range from -4611686018427387904 to 4611686018427387903.
 
-The floats\index{float}, such as `2.45`, are of type
-`float`\index{float@\texttt{float}}, and are in double precision (stored on 64
-bits). They always have a decimal point in them, so that `3` and `3.` are not
-the same thing: the former is an integer and the later is a float. This is a
+The floating point numbers\index{float}, such as `2.45`, are of type
+`float`\index{float@\texttt{float}}, and are in double precision (always stored
+on 64 bits). They always have a decimal point in them, so that `3` and `3.` are
+not the same thing: the former is an integer and the later is a float. This is a
 source of errors for beginners, but is necessary for typing to work well. For
-instance, running a program containing
+instance, if we try to execute a program containing the instruction
 
 ```{.liquidsoap include="liq/bad/sine.liq" from=0 to=0}
 ```
 
-will raise the error
+it will raise the error
 
 ```
 At line 1, char 9:
@@ -215,11 +255,11 @@ which means that the sine function expects a float as argument, but an integer
 is provided. The fix here obviously consists in replacing "`500`" by "`500.`"
 (beware of the dot).
 
-The usual arithmetic operations are available (`+`, `-`, `*`, `/`) are
-available, and work for both integers and floats. For floats, additional
-functions are available such as `sqrt` (square root), `exp` (exponential), `sin`
-(sine), `cos` (cosine) and so on. Random integers (resp. floats) can be
-generated with the `random.int` (resp. `random.float`) function.
+The usual arithmetic operations are available (`+`, `-`, `*`, `/`), and work for
+both integers and floats. For floats, traditional arithmetic functions are
+available such as `sqrt` (square root), `exp` (exponential), `sin` (sine), `cos`
+(cosine) and so on. Random integers and floats can be generated with the
+`random.int` and `random.float` functions.
 
 ### Strings
 
@@ -240,7 +280,7 @@ that
 print(3+2)
 ```
 
-will output `5` as expected. In practice, one rarely does use this functions,
+will display `5`, as expected. In practice, one rarely does use this functions,
 which displays on the standard output, but rather the logging functions
 `log.critical`, `log.severe`, `log.important`, `log.info` and `log.debug` which
 write strings of various importance in the logs, so that it is easier to keep
@@ -256,15 +296,15 @@ coloration of strings}
 ```
 
 will actually display "`My name is "Sam"!`". Other commonly used escaped
-characters are "`\\`" for backslash and "`\n`" for new line.\SM{other commonly
-escaped chars?} Alternatively, one can use the single quote notation, so that
-previous example can also be written as
+characters are "`\\`" for backslash and "`\n`" for new line. Alternatively, one
+can use the single quote notation, so that previous example can also be written
+as
 
 ```{.liquidsoap include="liq/string2.liq"}
 ```
 
 This is most often used when testing JSON data which contain many quotes or for
-command line arguments when calling external scripts. The character '\' can also
+command line arguments when calling external scripts. The character "`\`" can also
 be used at the end of the string to break long strings in scripts without
 actually inserting newlines in the strings. For instance, the script
 
@@ -280,7 +320,7 @@ His name is Romain.
 Note that there is no line change between "is" and "Romain", and the indentation
 before "Romain" is not shown either.
 
-The concatenation of two strings is achieved by `^`, as in
+The concatenation of two strings is achieved by the infix operator "`^`", as in
 
 ```liquidsoap
 user = "dj"
@@ -289,20 +329,24 @@ print("Current user is " ^ user)
 
 Instead of using concatenation, it is often rather convenient to use _string
 interpolation_: in a string, `#{e}` is replaced by the string representation of
-the result of the evaluation of the expression `e`:\SM{there is another kind of
-string interpolation but I don't think that anybody ever used that in practice}
+the result of the evaluation of the expression `e`:
+<!--
+\SM{there is another kind of string interpolation but I don't think that anybody ever used that in practice}
+-->
 
 ```liquidsoap
 user = "admin"
 print("The user #{user} has just logged.")
 ```
 
-or
+will print `The user admin has just logged.` or
 
 ```liquidsoap
-print("The number #{random.float(min=-1., max=1.)} is random.")
+print("The number #{random.float()} is random.")
 ```
 
+will print `The number 0.663455738438 is random.` (at least it did last time I
+tried).
 
 The string representation of any value in Liquidsoap can be obtained using the
 function `string_of`, e.g. `string_of(5)`{.liquidsoap} is `"5"`. Some other
@@ -324,9 +368,9 @@ useful string-related function are
   - : [string] = ["a", "42", "hello"]
   ```
 - `string.match`: test whether a string matches a regular expression,\TODO{give
-  an example and explain basics of regexps}
+  an example and explain basics of regexps, or maybe simply a reference to the corresponding section}
 - `string.replace`: replace substrings matching a regular
-  expression.\TODO{`string.quote`}
+  expression,
 - `string.quote`: escape shell special characters (you should always use this
   when passing strings to external programs).
 
@@ -337,7 +381,7 @@ The booleans\index{boolean} are either `true`{.liquidsoap}\index{true} or
 using the usual boolean operations
 
 - `and`: conjunction,
-- `or`: disjunction, and
+- `or`: disjunction,
 - `not`: negation.
 
 Booleans typically orgininate from comparison operators, which take two values
@@ -354,7 +398,7 @@ and so on (`<`, `>=`, `>`). For instance, the following is a boolean expression:
 ```
 
 The time predicates such as `10h-15h` are also booleans, which are true or false
-depending on the current time, see [there]{#sec:time-predicates}.
+depending on the current time, see [there](#sec:time-predicates).
 
 _Conditional branchings_ execute code depending on whether a condition is true
 or not. For instance, the code
@@ -407,12 +451,23 @@ imbricated conditional branchings:
 ```{.liquidsoap include="liq/elseif.liq" from=1 to=-1}
 ```
 
-\TODO{short notation `x?a:b`}
+Finally, we should mention that the notation `c?a:b` is also available as a
+shorthand for `if c then a else b end`{.liquidsoap}, so that the expression
+
+```{.liquidsoap include="liq/cond2.liq" from=1 to=1}
+```
+
+can be shortened to
+
+```{.liquidsoap include="liq/cond3.liq" from=1 to=1}
+```
+
+(and people will think that you are a cool guy).
 
 ### Unit {#sec:unit}
 
 Some functions, such as `print`, do not return a meaningful value: we are
-interested in what they are doing (here printing on the standard output) and not
+interested in what they are doing (e.g. printing on the standard output) and not
 in their result. However, since typing requires that everything returns
 something of some type, there is a particular type for the return of such
 functions: `unit`. Just as there are only two values in the booleans (`true` and
@@ -427,7 +482,7 @@ type unit. For instance, the following function is fine:
 
 This is a function printing "hello" and then returning 5, see
 [below](#sec:functions) for details about functions. Sequences of instructions
-are delimited by new lines, but can also be separated by `;` in order to have
+are delimited by newlines, but can also be separated by `;` in order to have
 them fit on one line, i.e., the above can equivalently be written
 
 ```{.liquidsoap include="liq/fun2.liq"}
@@ -458,18 +513,18 @@ ignore the result:
 ### Lists
 
 Some more elaborate values can be constructed by combining the previous ones. A
-first one is _lists_ which are finite sequences of values, which are all of the
-same type. They are constructing by square backeting the sequence whose elements
+first kind is _lists_ which are finite sequences of values, being all of the
+same type. They are constructed by square bracketing the sequence whose elements
 are separated by commas. For instance, the list
 
 ```liquidsoap
 [1, 4, 5]
 ```
 
-is a list of 3 integers, and its type is `[int]` (and the type of `["A",
-"B"]`{.liquidsoap} would obviously be `[string]`). Note that a list can be
-empty: `[]`. The function `list.hd` returns the head of the list, that is its
-first element:
+is a list of three integers (1, 4 and 5), and its type is `[int]` (and the type
+of `["A", "B"]`{.liquidsoap} would obviously be `[string]`). Note that a list
+can be empty: `[]`. The function `list.hd` returns the head of the list, that is
+its first element:
 
 ```
 # list.hd([1, 4, 5]);;
@@ -513,9 +568,14 @@ empty list). Other useful functions are
   # list.iter(fun(n) -> print(newline=false, n), [1, 3, 5]);;
   135- : unit = ()
   ```
-  
-\SM{list.nth}
+- `list.nth`: return the n-th element of a list
+  ```
+  # list.nth([5, 1, 3], 2);;
+  - : int = 3
+  ```
+  (note that the first element is the one at index n=0).
 
+<!--
 \SM{explain splats}
 
 ```
@@ -526,10 +586,8 @@ t : [int] = [4]
 
 x = [1, ...[2, 3, 4], 5, ...[6, 7]]
 x : [int] = [1, 2, 3, 4, 5, 6, 7]
-
-let (x, _, z) = (1,2,3)
-(x, _, z) : int * int * int = (1, 2, 3)
 ```
+-->
   
 ### Tuples
 
@@ -547,8 +605,10 @@ is a triple (a tuple with three elements) of type
 int * float * string
 ```
 
-In particular, a _pair_ is a tuple of length two. For those, the first and
-second element can be retrieved with `fst` and `snd`:
+which indicate that the first element is an integer, the second a float and the
+third a string. In particular, a _pair_ is a tuple with two elements. For those,
+the first and second element can be retrieved with the functions `fst` and
+`snd`:
 
 ```
 # p = (3, "a");;
@@ -559,7 +619,7 @@ p : int * string = (3, "a")
 - : string = "a"
 ```
 
-For tuples with more elements, there is a special syntax in order to access
+For general tuples, there is a special syntax in order to access
 their elements. For instance, if `t` is the above tuple `(3, 4.2,
 "hello")`{.liquidsoap}, we can write
 
@@ -586,7 +646,7 @@ t : int * float * string = (3, 4.2, "hello")
 ### Association lists
 
 A quite useful combination of the two previous data structures is _association
-lists_, which are lists of pairs. Those can be thought of a some kind of
+lists_, which are lists of pairs. Those can be thought of as some kind of
 dictionary: each pair is an entry whose first component is its key and second
 component is its value. These are the way metadata are represented for instance:
 they are lists of pairs of strings, the first string being the name of the
@@ -605,10 +665,9 @@ association lists, on can obtain the value associated to a given key using the
 list.assoc("title", m)
 ```
 
-will return `"Fly me"`, i.e. the value associated to `"title"`. The `default`
-argument is the value (here the empty string) which will be returned in the case
-where the key is not found. Since this is so useful, we have a special notation
-for the above function, and it is equivalent to write
+will return `"Fly me"`, i.e. the value associated to `"title"`. Since this is so
+useful, we have a special notation for the above function, and it is equivalent
+to write
 
 ```liquidsoap
 m["title"]
@@ -642,14 +701,14 @@ Programming primitives
 
 ### Variables
 
-We have already seen many examples of uses of _variables_ so that we should be
+We have already seen many examples of uses of _variables_, so that we should be
 quick: we use
 
 ```liquidsoap
 x = e
 ```
 
-in order to assign the result of the evaluation of an expression `e` to a
+in order to assign the result of evaluating an expression `e` to a
 variable `x`, which can later on be referred to as `x`. Variables can be masked:
 we can define two variables with the same name, and at any point in the program the
 last defined value for the variable is used:
@@ -740,13 +799,14 @@ meaning that its a memory cell containing integers. On such a reference, two
 operations are available:
 
 - one can obtain the value of the reference by using the `!` keyword before the
-  reference, e.g.
+  reference, so that `!r` denotes the value contained in the reference `r`, for
+  instance
 
   ```liquidsoap
   x = !r + 4
   ```
   
-  declare the variable `x` as being 9 (which is 5+4),
+  declares the variable `x` as being 9 (which is 5+4),
   
 - one can change the value of the reference by using the `:=` keyword, e.g.
 
@@ -780,17 +840,16 @@ the script
 will raise the error
 
 ```
-Error 5: this value has type
-  ref(int)
-but it should be a subtype of
-  ref(string)
+Error 5: this value has type ref(int)
+but it should be a subtype of ref(string)
 ```
 
 which can be explained as follows. On the first line, the declaration `r =
-ref(5)`{.liquidsoap} implies that `r` is of type `ref(int)`. However, on second
-line, we try to assign a string to `r`, which would only be possible if `r` was
-a reference to a string, i.e., of type `ref(string)`. Since `r` cannot have both
-types `ref(int)` and `ref(string)`, an error is raised.
+ref(5)`{.liquidsoap} implies that `r` is of type `ref(int)` since it initially
+contains an integer. However, on the second line, we try to assign a string to `r`,
+which would only be possible if `r` was a reference to a string, i.e., of type
+`ref(string)`. Since `r` cannot have both types `ref(int)` and `ref(string)`, an
+error is raised.
 
 ### Loops
 
@@ -825,9 +884,9 @@ Liquidsoap is built around the notion of function: most operations are performed
 by those. Many functions are builtin and interface code written in OCaml
 (e.g. `output.icecast`), in which case we like to call them _operators_, but
 users can also define their own functions within the language. In fact,
-Liquidsoap also include a standard library which consists of functions defined
+Liquidsoap also includes a standard library which consists of functions defined
 in the Liquidsoap language, including fairly complex ones such as
-`playlist.reloadable` which plays a playlist or `crossfade` which takes care of
+`playlist` which plays a playlist or `crossfade` which takes care of
 fading between songs.
 
 ### Basics
@@ -853,7 +912,7 @@ The type of this function is
 
 The arrow `->` means that it is a function, on the left are the types of the
 arguments (here, two arguments of type `int`) and on the right is the type of
-the return value of the function (here, `int`). In order to use this function,
+the returned value of the function (here, `int`). In order to use this function,
 we have to apply it to arguments, as in
 
 ```
@@ -862,15 +921,16 @@ f (3, 4)
 
 This will trigger the evaluation of the function, where the argument `x`
 (resp. `y`) is replaced by `3` (resp. `4`), i.e., it will print `3` and return
-the evaluation of `2*3+4`, which is `10`. Of course, not all the arguments and
-the result should have the same type:
+the evaluation of `2*3+4`, which is `10`. Of course, generally, there is no
+reason why all arguments and the result should have the same type as in the
+above example, for instance:
 
 ```
 # def f(s, x) = string.length(s) + int_of_float(x) end;;
 f : (string, float) -> int = <fun>
 ```
 
-As explained above, declarations of variables made inside the definition of a
+As explained earlier, declarations of variables made inside the definition of a
 function are _local_: they are only valid within this definition (i.e., until
 the next `end`). For instance, in the definition
 
@@ -1677,6 +1737,8 @@ error to register:
 ```{.liquidsoap include="liq/bad/error.register.liq"}
 ```
 
+\TODO{example of errors during reading / writing in files}
+
 ### Nullable values
 
 It is sometimes useful to have a default value for a type. In Liquidsoap, there
@@ -1933,7 +1995,7 @@ TODO: a more useful variant of this is the following AGC
 ```{.liquidsoap include="liq/agc.liq" from=1}
 ```
 
-TODO: explain that we have operators to properly do this + we use the
+TODO: explain that we have operators to properly do this (`normalize`) + we use the
 momentaneous otherwise the window is too big and we get overshoot effects (but
 in this way this is perhaps "too reactive")
 

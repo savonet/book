@@ -15,9 +15,10 @@ The recommended method to install Liquidsoap is by using the [package manager
 opam](http://opam.ocaml.org/). This program, which is available on all major
 distributions and architectures, makes it easy to build programs written in
 OCaml by installing the required dependencies (the libraries the program needs
-to be compiled) and managing consistency between various versions. The opam
-packages for Liquidsoap and associated libraries are actively maintained in
-opam.\TODO{expliquer que tout est installé dans le rép `~/.opam/...`}
+to be compiled) and managing consistency between various versions: all of this
+can be installed by any user, and is generally stored in the `.opam`
+subdirectory of his home directory. The opam packages for Liquidsoap and
+associated libraries are actively maintained in opam.
 
 ### Installing opam
 
@@ -40,18 +41,19 @@ have at least the version 2.0.0 of opam (the version number can be obtained by
 running `opam --version`).
 
 If you are installing opam for the first time, you should initialize the list of
-opam packages\TODO{dire comment répondre aux questions posées par opam}
+opam packages
 
 ```
 opam init
 ```
 
-(if it complains about the absence of `bwrap`, either install it or add the flag
-`--disable-sandboxing` to the above command line) and install a recent version
-of the ocaml compiler
+You can answer yes to all the questions it asks (if it complains about the
+absence of `bwrap`, either install it or add the flag `--disable-sandboxing` to
+the above command line). Next you should install a recent version of the OCaml
+compiler
 
 ```
-opam switch create 4.08.0
+opam switch create 4.11.1
 ```
 
 It does take some minutes, because it compiles OCaml, so get prepared to have a
@@ -77,7 +79,7 @@ install the libraries and programs. Again, compilation takes some time (around a
 minute on a recent computer).
 
 Most of Liquidsoap's dependencies are only optionally installed by opam. For
-instance, if you want to enable ogg encoding and decoding after you've already
+instance, if you want to enable ogg/vorbis encoding and decoding after you've already
 installed Liquidsoap, you should install the `vorbis` library by executing:
 
 ```
@@ -90,23 +92,37 @@ recompile it. The list of all optional dependencies that you may enable in
 Liquidsoap can be obtained by typing `opam info liquidsoap`, and is detailed
 below.
 
-\SM{il y a un paquet opam `liquidsoap-daemon`, ça sert à quoi ?}
-
 ### Installing the cutting-edge version
 
-\TODO{retravailler ce paragraphe}
+The version of Liquidsoap which is packaged in opam is the latest release of the
+software. However, you can also install the cutting-edge version of Liquidsoap,
+for instance to test upcoming features. Beware that it might not be as stable as
+a release, although this is generally the case: our policy enforces that the
+developments in progress are performed apart, and integrated into the main
+repository only once they have been tested and reviewed.
 
-You can also install liquidsoap or any of its dependencies from source using
-opam. For instance:
+In order to try install this version, you should first download the repository
+containing all the code, which is managed using the git version control system:
 
 ```
 git clone https://github.com/savonet/liquidsoap.git
-cd liquidsoap
+```
+
+This will create a `liquidsoap` directory with the sources, and you can then
+instruct opam to install Liquidsoap from this directory with the following
+commands:
+
+```
 opam pin add liquidsoap .
 ```
 
-Most dependencies should be compatible with opam pinning.
+From time to time you can update your version by downloading the latest code and
+then asking opam to rebuild Liquidsoap:
 
+```
+git pull
+opam upgrade liquidsoap
+```
 
 Using binaries
 --------------
@@ -121,7 +137,7 @@ There are packages for Liquidsoap in most Linux distributions. For instance, in
 Ubuntu or Debian, the installation can be performed by running
 
 ```
-sudo apt-get install liquidsoap
+sudo apt install liquidsoap
 ```
 
 which will install the `liquidsoap` package, containing the main binaries. It
@@ -133,8 +149,8 @@ might be a good idea if you are not sure about which you are going to need).
 
 On Ubuntu and Debian, you can also have access to the packages which are
 automatically built for the latest version. This allows for quick testing of the
-latest features, but we do not recommend them yet for production purposes. In
-order to have access to those, first install the repository signing key:
+latest features, but we do not recommend them for production purposes. In order
+to have access to those, first install the repository signing key:
 
 ```
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 20D63CCDDD0F62C2
@@ -152,7 +168,7 @@ or Debian/stretch, replace `ubuntu` by `debian` and `bionic` by `testing` or `st
 Finally, update your packages list:
 
 ```
-sudo apt-get update
+sudo apt update
 ```
 
 You can now see the list of available packages:
@@ -163,15 +179,15 @@ apt-cache show liquidsoap
 Package names are of the form: `liquidsoap-<commit>` or
 `liquidsoap-<branch>`. _commit_ is an identifier for the last modification
 and _branch_ are used to develop features (the default branch being named 
-`master`). For instance, to install the latest `master` on, you can do:
+`master`). For instance, to install the latest `master`, you can do:
 
 ```
-sudo apt-get install liquidsoap-master
+sudo apt install liquidsoap-master
 ```
 
 ### MacOS
 
-No binaries are provided for MacOS, you should build from source (see below).
+No binaries are provided for MacOS, the preferred method is opam (see above).
 
 ### Windows
 
@@ -188,10 +204,18 @@ an up-to-date version of the OCaml compiler, as well as a bunch of OCaml modules
 and, for most of them, corresponding C library dependencies (which is
 automatically taken care of if you use opam for instance).
 
+### Installing external dependencies
+
+In order to build Liquidsoap, you first need to install the following OCaml
+libraries: `ocamlfind`, `sedlex`, `menhir`, `pcre` and `camomile` (which can be
+installed using your package manager or `opam install` as explained above).
+
 ### Getting the sources of Liquidsoap
 
 The sources of Liquidsoap, along with the required additional OCaml libraries we
-maintain can be obtained using git:
+maintain can be obtained by downloading the main git repository, and then run
+scripts which will download the submodules corresponding to the various
+libraries:
 
 ```
 git clone https://github.com/savonet/liquidsoap-full.git
@@ -200,25 +224,17 @@ make init
 make update
 ```
 
+<!--
 Alternatively, they bundled in the [`liquidsoap-<version>-full.tar.bz2` archive
 on the release page](https://github.com/savonet/liquidsoap/releases).
-
-### Installing external dependencies
-
-In order to build Liquidsoap, you also need the following OCaml libraries:
-`ocamlfind`, `sedlex`, `menhir`, `pcre` and `camomile` (which can be installed
-using `opam install` or your package manager).
+-->
 
 ### Installing
 
-\TODO{You should now choose which features you want to enable when building
-liquidsoap.  Each shipped feature can be enabled/disabled by editing the
-`PACKAGE` file.  Depending on your version you might have to first copy
-`PACKAGES.default` to `PACKAGES`.}
-
-
-In order to build Liquidsoap, go to the `liquidsoap-full` directory, generate
-the `configure` scripts:
+Next, you should copy the file `PACKAGES.default` to `PACKAGES` and possibly
+edit it: this file specifies which features and libraries are going to be
+compiled, you can add/remove those by uncommenting/commenting the corresponding
+lines. Then, you can generate the `configure` scripts:
 
 ```
 ./bootstrap
@@ -230,18 +246,23 @@ and then run them:
 ./configure
 ```
 
-This script optionally takes parameters such as `--prefix` which can be used to
-specify in which directory the installation should be performed. Build everything
+This script will check that whether the required external libraries are
+available, and detect the associated parameters. It optionally takes parameters
+such as `--prefix` which can be used to specify in which directory the
+installation should be performed. You can now build everything
 
 ```
 make
 ```
 
-Then proceed to the installation, you may need to be root for that:
+and then proceed to the installation
 
 ```
 make install
 ```
+
+You may need to be root to run the above command in order to have the right to
+install in the usual directories for libraries and binaries.
 
 Libraries used by Liquidsoap
 ----------------------------
@@ -290,11 +311,12 @@ Those libraries add support for using soundcard for output and input:
 Among those, ALSA is very low level and is probably the one you want to use in
 order to minimize latencies. Other are support a wider variety of soundcards.
 
-Other outputs:\TODO{mention `ocaml-srt`}
+Other outputs:
 
 - `ocaml-cry`: output to icecast servers,
-- `ocaml-bjack`: Jack support
-- `ocaml-lastfm`: Lastfm scrobbling.
+- `ocaml-bjack`: Jack support,
+- `ocaml-lastfm`: Lastfm scrobbling,
+- `ocaml-srt`: transport over network using SRT protocol.
 
 ### Sound processing
 
@@ -309,7 +331,7 @@ Those add support for manipulate sound:
 ### Audio file formats
 
 - `ocaml-faad`: AAC decoding,
-- `ocaml-fdkaac`: AAC+ encoding,\RB{FAAD is for decoding}
+- `ocaml-fdkaac`: AAC+ encoding,
 - `ocaml-ffmepg`: encoding and decoding of various formats,
 - `ocaml-flac`: Flac encoding and decoding,
 - `ocaml-gstreamer`: encoding and decoding of various formats,

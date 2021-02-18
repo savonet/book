@@ -1,4 +1,4 @@
-Full workflow of a radio station
+Full workflow of a radio station {#chap:workflow}
 ================================
 
 This chapter essentially follows [the introductory chapter](#chap:quickstart),
