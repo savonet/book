@@ -11,7 +11,7 @@ def f(m)
   filename = list.assoc(default="", "filename", m)
   cover = file.cover(filename)
   if cover != "" then
-    ignore(file.write(data=cover, coverfile))
+    file.write(data=cover, coverfile)
   end
   source.skip(video)
 end

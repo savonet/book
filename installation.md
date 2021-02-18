@@ -6,9 +6,7 @@ your environment, or compile it by yourself. The latest is slightly more
 involved (although it is now a mostly automated process), but allows you to
 easily obtain a cutting-edge version and take part of the development
 process. These instructions are for the latest released version at the time of
-the writing, you are encouraged to consult the online documentation.\TODO{dire
-qu'on ne doit *pas* installer en root (ça ne marche pas)}
-
+the writing, you are encouraged to consult the online documentation.
 
 Automated building using opam {#sec:opam}
 -----------------------------
@@ -37,9 +35,9 @@ sudo apt-get install opam
 ```
 
 or by downloading the binaries from [the opam
-website](https://opam.ocaml.org/doc/Install.html). In any case, ensure that you
-have at least the version 2.0.0 of opam (this version can be obtained by `opam
---version`).
+website](http://opam.ocaml.org/doc/Install.html). In any case, ensure that you
+have at least the version 2.0.0 of opam (the version number can be obtained by
+running `opam --version`).
 
 If you are installing opam for the first time, you should initialize the list of
 opam packages\TODO{dire comment répondre aux questions posées par opam}
@@ -48,7 +46,9 @@ opam packages\TODO{dire comment répondre aux questions posées par opam}
 opam init
 ```
 
-and install a recent version of the ocaml compiler
+(if it complains about the absence of `bwrap`, either install it or add the flag
+`--disable-sandboxing` to the above command line) and install a recent version
+of the ocaml compiler
 
 ```
 opam switch create 4.08.0

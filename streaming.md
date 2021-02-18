@@ -29,7 +29,7 @@ multiple times in the same format, e.g. when sending the same encoded stream to
 multiple icecast instances.
 
 The contents of each channel is indicated in the type of the values. For
-instance, we have seen that xthe type of `sine` is
+instance, we have seen that the type of `sine` is
 
 ```
 (?amplitude : {float}, ?duration : float, ?{float}) ->

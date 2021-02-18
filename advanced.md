@@ -876,3 +876,25 @@ Profiling
 ---------
 
 `profiler.enable`, `profiler.stats.string`
+
+Observing the signal
+--------------------
+
+Compute RMS and LUFS, conversion with `dB_of_lin` and conversely, `vumeter`, etc.
+
+TODO: expose metrics with JSON on harbor
+
+```{.liquidsoap include="liq/metrics-harbor.liq" from=1}
+```
+
+TODO: explain the variant where we store on a file regularly
+
+```{.liquidsoap include="liq/metrics-file.liq" from=1}
+```
+
+TODO: expose metrics with prometeus
+
+Sound processing in liq
+-----------------------
+
+Example of an auto-gain control in pure liq

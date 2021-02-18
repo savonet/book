@@ -510,7 +510,7 @@ empty list). Other useful functions are
   ```
 - `list.iter`: execute a function on all the elements of a list
   ```
-  # list.iter(print(newline=false), [1, 3, 5]);;
+  # list.iter(fun(n) -> print(newline=false, n), [1, 3, 5]);;
   135- : unit = ()
   ```
   
@@ -1881,6 +1881,11 @@ Other useful functions are
 - `http.put`: to upload data,
 - `http.delete`: to delete resources.
 
+Liquidsoap also features an internal web server call _harbor_, which allows to
+serve web pages directly from Liquidsoap, which can be handy to present some
+data related to your script or implement some form of advanced interaction. This
+is described on details in [this section](#sec:...).\TODO{fill me in}
+
 ### System
 
 The arguments passed on the command line to the current script can be retrieved
@@ -1923,8 +1928,19 @@ off every second. This can easily be achieved as follows:
 Here, we amplify the sine by the contents of a variable `volume` whose value is
 changed between `0.` and `1.` every second by the function `change`.
 
+TODO: a more useful variant of this is the following AGC
+
+```{.liquidsoap include="liq/agc.liq" from=1}
+```
+
+TODO: explain that we have operators to properly do this + we use the
+momentaneous otherwise the window is too big and we get overshoot effects (but
+in this way this is perhaps "too reactive")
+
 Another useful function is `thread.when`, which executes a function when a
 predicate becomes true.
+
+\TODO{speak about mutexes}
 
 <!-- `thread.mutexify` -->
 

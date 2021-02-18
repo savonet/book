@@ -792,7 +792,7 @@ s = mksafe(playlist("~/Music"))
 def f(m)
   print("got metadata!")
   data = json_of(m)^"\n"
-  ignore(file.write(data=data, append=false, perms=420, "/tmp/metatest"))
+  file.write(data=data, append=false, perms=420, "/tmp/metatest")
 end
 
 s = on_metadata(f, s)

@@ -214,6 +214,13 @@ we can do from a sender's perspective. In this case, we expect the listener's pl
 software to be able to mitigate, for instance by using an adaptative resampler. One such
 example is The VLC player.
 
+Channels
+--------
+
+TODO: explain that channels are re-computed at wake up time, therefore we should
+not for the evaluation of `self#ctype` before that (e.g. by initializing an
+array with the number of channels)
+
 Requests
 --------
 
