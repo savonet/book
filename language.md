@@ -967,7 +967,7 @@ our radio (a source named `radio`) with
 
 The handler is here the function `handle_metadata`, which prints the field
 associated to `"title"` in the association list given in the argument `m` (the
-notation `radio.on_metadata` will be explained in [next section](#sec:modules)).
+notation `radio.on_metadata` will be explained in [next section](#sec:records)).
 
 Other useful operators allow the registration of handlers for the following
 situations:
@@ -1412,8 +1412,12 @@ given source (the third argument). Its code is
 ```{.liquidsoap include="liq/metadata-getter.liq"}
 ```
 
-Given a `radio` source which contains metadata labeled "liq_amplify", we can
-actually change the volume of the source according to the metadata with
+You can see that it create a reference `x`, which contains the current value,
+and registers a handler for metadata, which updates the value when the metadata
+is present, i.e. `m[metadata]` is different from the empty string `""`, which is
+the default value. Given a `radio` source which contains metadata labeled
+"liq_amplify", we can actually change the volume of the source according to the
+metadata with
 
 ```{.liquidsoap include="liq/metadata-getter-ex.liq" from=1 to=-1}
 ```
@@ -1432,14 +1436,8 @@ amplify is actually
 ({float}, source('a)) -> source('a)
 ```
 
-where the type
-
-```
-{float}
-```
-
-type means that both `float` and `() -> float` are accepted, so that you can
-still write constant floats where float getters are expected.
+where the type `{float}` means that both `float` and `() -> float` are accepted,
+so that you can still write constant floats where float getters are expected.
 
 <!---
 
@@ -1461,8 +1459,9 @@ themselves. For instance, in mathematics, the factorial function on natural
 numbers is defined as fact(n)=1×2×3×...×n, but it can also be defined
 recursively as the function such that fact(0)=1 and fact(n)=n×fact(n-1) when
 n>0: you can easily check by hand that the two functions agree on small values
-of n. This last formulation has the advantage of immediately translating to the
-following implementation of factorial:
+of n (and prove that they agree on all values of n). This last formulation has
+the advantage of immediately translating to the following implementation of
+factorial:
 
 ```{.liquidsoap include="liq/fact.liq"}
 ```
@@ -1473,6 +1472,9 @@ list, can be programmed in the following way in Liquidsoap:
 
 ```{.liquidsoap include="liq/list.length.liq"}
 ```
+
+We do not detail much further this trait since it is unlikely to be used for
+radios, but you can see a few occurrences of it in the standard library.
 
 <!---
 \TODO{give the example of some functions on lists instead of loops which are not implemented like this anymore} Of course
@@ -1520,8 +1522,8 @@ might take some time for you to get accustomed to those.
 
 ### Partial evaluation
 
-The final thing to know is that Liquidsoap supports _partial evaluation_ of
-functions. This means that if you call a function, but do not give all the
+The final thing to know about functions in Liquidsoap is that it supports _partial evaluation_ of
+functions. This means that if you call a function, but do not provide all the
 arguments, it will return a new function expecting only the remaining
 arguments. For instance, consider the multiplication function
 
@@ -1584,7 +1586,7 @@ which is somewhat more heavy.
 <!-- this is a source of errors (e.g. `list.hd([1,2,3])`) which are however
  easily detected by typing -->
 
-Records and modules {#sec:modules}
+Records and modules {#sec:records}
 -------------------
 
 ### Records
@@ -1615,17 +1617,24 @@ the duration with
 print("The duration of the song is #{song.duration} seconds")
 ```
 
-Records are heavily used in Liquidsoap in order to standard library. For
-instance, all the functions related to lists are in the `list` record and
-functions such as `list.hd` are fields of this record. For this reason, the
-`def`{.liquidsoap} construction allows adding fields in record. For instance,
-the definition
+### Modules
+
+Records are heavily used in Liquidsoap in order to structure the functions of
+the standard library. We tend to call _module_ a record with only functions, but
+this is really the same as a record. For instance, all the functions related to
+lists are in the `list` module and functions such as `list.hd` are fields of
+this record. For this reason, the `def`{.liquidsoap} construction allows adding
+fields in record. For instance, the definition
 
 ```{.liquidsoap include="liq/list.last.liq"}
 ```
 
-adds, in the record `list`, a new field named `last`, which is a function which
+adds, in the module `list`, a new field named `last`, which is a function which
 computes the last elements of a list.
+
+
+\TODO{explain the `open` construction}
+
 
 ### Values with fields
 
@@ -1668,10 +1677,6 @@ typical use is
 
 ```{.liquidsoap include="liq/http.get.liq"}
 ```
-
-### Modules
-
-TODO: explain modules, `open`
 
 Advanced values
 ---------------
