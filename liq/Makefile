@@ -8,7 +8,7 @@ all: test
 test: check test-wav
 
 test-wav: test.mp3
-	$(LIQUIDSOAP) convert2wav.liq -- test.mp3
+	$(LIQUIDSOAP) -q convert2wav.liq -- test.mp3
 
 test.mp3:
 	@echo "Generating a sine test mp3 file..."

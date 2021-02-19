@@ -966,7 +966,8 @@ our radio (a source named `radio`) with
 ```
 
 The handler is here the function `handle_metadata`, which prints the field
-associated to `"title"` in the association list given in the argument `m`.
+associated to `"title"` in the association list given in the argument `m` (the
+notation `radio.on_metadata` will be explained in [next section](#sec:modules)).
 
 Other useful operators allow the registration of handlers for the following
 situations:
@@ -983,7 +984,7 @@ Liquidsoap instance and send streams has `on_connect` and `on_disconnect`
 arguments which allow the registration of handlers for the connection and
 disconnection of users.
 
-\TODO{also mention the `crossfade` operator}
+<!-- \TODO{also mention the `crossfade` operator} -->
 
 ### Anonymous functions
 
@@ -998,7 +999,7 @@ This is called an _anonymous function_, and it is typically used in order to
 specify short handlers in arguments. For instance, the above example for
 printing the title in metadatas could equivalently be rewritten as
 
-```{.liquidsoap include="liq/on_meta2.liq" from=1}
+```{.liquidsoap include="liq/on_meta2.liq" from=1 to=-1}
 ```
 
 where we define the function directly in the argument.
@@ -1018,12 +1019,19 @@ f = fun (x) -> ...
 ```
 
 Also, of course, the `fun`{.liquidsoap} syntax also supports labeled arguments
-and default values as expected.\TODO{we should introduce the `begin
-... end`{.liquidsoap} syntax at some point}
+and default values as expected.
+
+When using this syntax, on the right hand of `->` Liquidsoap expects exactly one
+expression. If you intend to use multiple ones (for instance, in order to
+perform a sequence of actions), you can use the `begin ... end`{.liquidsoap}
+syntax, which allows grouping multiple expressions as one. For instance,
+
+```{.liquidsoap include="liq/on_meta3.liq" from=1 to=-1}
+```
 
 ### Labeled arguments
 
-A function can have an arbitrary number of arguments, and when there are many it
+A function can have an arbitrary number of arguments, and when there are many of them it
 becomes difficult to keep track of their order and their order matter! For
 instance, the following function computes the sample rate given a number of
 samples in a given period of time:
@@ -1062,7 +1070,7 @@ to give the name of the argument when calling the function:
 samplerate(samples=110250., duration=2.5)
 ```
 
-The nice effect is that the order of the arguments does not matter anymore, the
+The nice byproduct is that the order of the arguments does not matter anymore, the
 following will give the same result:
 
 ```liquidsoap
@@ -1096,11 +1104,18 @@ ignored:
 samplerate(samples=132300., duration=3.)
 ```
 
+The presence of an optional argument is indicated in the type by prefixing the
+corresponding label with "`?`", so that the type of the above function is
+
+```
+(samples : float, ?duration : float) -> float
+```
+
 <!--- \TODO{explain that non-optional arguments can have default values too} -->
 
 ### Actual examples
 
-As a more concrete example of what we have introduced above, we can see that the
+As a more concrete example of labeled arguments, we can see that the
 type of the operator `output.youtube.live`, which outputs a video stream to
 Youtube, is
 
@@ -1110,7 +1125,7 @@ Youtube, is
 
 (we have only slightly simplified the type `source`, which will only be detailed
 in [a next section](#sec:lang-sources)). Even if we have not read the
-documentation of this function, we can guess what it is doing:
+documentation of this function, we can still guess what it is doing:
 
 - there are 5 optional arguments that we should be able to ignore because they
   have reasonable default values (although we can guess the use of most of them
@@ -1132,13 +1147,14 @@ If you want a more full-fledged example, have a look at the type of
 ```
 
 Although the function has 31 arguments, it is still usable because most of them
-are optional so that they are not usually specified. Also notice that the
-headers are coded as an association list, and there is a number of handlers
-(`on_connect`, `on_disconnect`, etc.).
+are optional so that they are not usually specified. In passing, we recognize
+some of the concepts introduced earlier: the headers (`header` parameter) are
+coded as an association list, and there are quite few handlers (`on_connect`,
+`on_disconnect`, etc.).
 
 ### Polymorphism
 
-Some functions can operate of value of many types. For instance, the function
+Some functions can operate on value of many possible types. For instance, the function
 `list.tl`, which returns the tail of the list (i.e., the list without its first
 element), works on lists of integers so that it can have the type
 
@@ -1153,18 +1169,18 @@ but it also works on lists of strings so that it can also have the type
 ```
 
 and so on. In fact, this would work for any type, which is why in Liquidsoap the
-function `list.tl` is given the type
+function `list.tl` is actually given the type
 
 ```
 (['a]) -> ['a]
 ```
 
-which means: "for whichever type I replace `'a` with, the resulting type is a
+which means: "for whichever type you replace `'a` with, the resulting type is a
 valid type for the function". Such a function is called _polymorphic_, in the
 sense that it can be given multiple types: here, `'a` is not a type but rather a
 "meta-type" (the proper terminology is a _type variable_) which can be replaced
 by any regular type. Similarly, the empty list `[]` is of type `['a]`: it is a
-valid list of whatever. More interestingly, the function `fst` which returns the
+valid list of whatever type. More interestingly, the function `fst` which returns the
 first element of a pair has the type
 
 ```
@@ -1183,7 +1199,7 @@ variables which are labeled `'a`, `'b`, `'c` and so on.
 
 In Liquidsoap, some type variables can also be constrained so that they cannot
 be replaced by any type, but only specific types. A typical example is the
-multiplication function `*` operates on integers or on floats, and can therefore
+multiplication function `*`, which operates on both integers and floats, and can therefore
 be given both the types
 
 ```
@@ -1194,6 +1210,12 @@ and
 
 ```
 (float, float) -> float
+```
+
+but not the type
+
+```
+(string, string) -> string
 ```
 
 If you have a look at the type of `*` in Liquidsoap, it is
@@ -1211,7 +1233,7 @@ comparison function `<=` has type
 ```
 
 which means that it has the type `('a, 'a) -> bool` for any type `'a` on which
-there is a canonical order (which is the case of all usual types, but not for
+there is a canonical order (which is the case of all usual types, excepting for
 function types and source types).
 
 ### Getters
@@ -1225,18 +1247,19 @@ its type to be
 (float, source('a)) -> source('a)
 ```
 
-and we can use to have a radio consisting of a microphone input amplified by a
-factor 1.2 by
+sot that we can use to have a radio consisting of a microphone input amplified
+by a factor 1.2 by
 
 ```liquidsoap
-mic = input.alsa()
+mic   = input.alsa()
 radio = amplify(1.2, mic)
 ```
 
 In the above example, the volume 1.2 was supposedly chosen because the sound
-delivered by the mic is not loud enough, but this can vary and we would like to
-be able to dynamically update it. The problem with the current operator is that
-the volume is of type `float` and a float cannot change over time, it is a fixed
+delivered by the microphone is not loud enough, but this loudness can vary from
+time to time (depending on the speaker for instance) and we would like to be
+able to dynamically update it. The problem with the current operator is that the
+volume is of type `float` and a float cannot change over time, it has a fixed
 value.
 
 In order for the volume to have the possibility to vary over time, instead of
@@ -1248,7 +1271,7 @@ argument of type
 ```
 
 This is a function which takes no argument and returns a float (remember that a
-function can take an arbitrary number of arguments, which includes zero). It is
+function can take an arbitrary number of arguments, which includes zero arguments). It is
 very close to a float excepting that each time it is called the returned value
 can change: we now have the possibility of having something like a float which
 varies over time. We like to call such a function a _float getter_, since it can
@@ -1258,7 +1281,7 @@ the value. For instance, we can define a float getter by
 ```{.liquidsoap include="liq/getter.liq"}
 ```
 
-Each time we call `f`, e.g. by writing `f()` in our script, the resulting float
+Each time we call `f`, by writing `f()` in our script, the resulting float
 will be increased by one compared to the previous one: if we try it in an
 interactive session, we obtain
 
@@ -1293,7 +1316,7 @@ The type of `amplify` is thus actually
 
 and the operator will regularly call the volume function in order to have the
 current value for the volume before applying it. To be precise, it is actually
-called before each frame, which means roughly every 0.04 second. Let's see how
+called before each frame, which means roughly every 0.04 second by default. Let's see how
 we can use this in scripts. We can, of course, still apply a constant factor
 with
 
@@ -1325,22 +1348,24 @@ when the value of the reference gets changed, the amplification will get changed
 too.
 
 In practice, float getters are often created using `interactive.float` which
-creates a float value which can be modified on the telnet server, or `osc.float`
-which reads a float value from an external controller using the OSC library,
-this is detailed in [a later section](#sec:telnet). For instance, with the
-script
+creates a float value which can be modified on the telnet server (this is an
+internal server provided by Liquidsoap on which other applications can connect
+to interact with it), or `osc.float` which reads a float value from an external
+controller using the OSC library, as detailed in [a later
+section](#sec:telnet). For instance, with the script
 
 ```{.liquidsoap include="liq/interactive-float1.liq" from=1 to=-1}
 ```
 
-the volume can then be modified by issuing the telnet command
+the volume can be modified by issuing the telnet command
 
 ```
 var.set volume = 0.5
 ```
 
-You should remember that getters are regular functions. For instance, if we want
-the volume on telnet to be expressed in decibels, we can convert it as follows:
+You should remember that getters are regular functions. For instance, if we
+expect that the volume on telnet to be expressed in decibels, we can convert it
+to an actual amplification coefficient as follows:
 
 ```{.liquidsoap include="liq/interactive-float2.liq" from=1 to=-1}
 ```
@@ -1369,21 +1394,20 @@ thus hear a sine which is getting louder and louder during the 5 first seconds:
 ```
 
 Of course, this is for educational purposes only, and the actual way one would
-perform a fade in Liquidsoap is detailed in [an ulterior
+usually perform a fade in Liquidsoap is detailed in [an ulterior
 section](#sec:transitions).
 
 Let us give another advanced example, which uses many of the above
-constructions. The function `metadata.float_getter` in the standard library,
+constructions. The standard library defines a function `metadata.float_getter`,
 whose type is
 
 ```
 (float, string, source('a)) -> source('a) * (() -> float)
 ```
 
-creates a float getter with given initial value (the first argument), which can
-be updated by reading a given metadata (second argument) on a given source
-(third argument): it returns a pair consisting of the source with the metadata
-being watched for and the float getter. Its code is
+which creates a float getter with given initial value (the first argument),
+which can be updated by reading a given metadata (the second argument) on a
+given source (the third argument). Its code is
 
 ```{.liquidsoap include="liq/metadata-getter.liq"}
 ```
@@ -1560,7 +1584,7 @@ which is somewhat more heavy.
 <!-- this is a source of errors (e.g. `list.hd([1,2,3])`) which are however
  easily detected by typing -->
 
-Records and modules
+Records and modules {#sec:modules}
 -------------------
 
 ### Records

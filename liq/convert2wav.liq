@@ -1,7 +1,5 @@
 #!/usr/bin/env -S liquidsoap -q
 
-print("argv len: #{argv(0)}")
-
 # Intput file name
 infile = argv(1)
 

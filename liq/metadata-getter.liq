@@ -7,5 +7,5 @@ def metadata.float_getter(init, metadata, s)
     end
   end
   s = on_metadata(f, s)
-  (s, {!x})
+  {!x}
 end

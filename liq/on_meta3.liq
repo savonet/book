@@ -1,5 +1,6 @@
 radio = blank()
-def handle_metadata(m) =
+handle_metadata = fun (m) -> begin
+  print(m["artist"])
   print(m["title"])
 end
 radio.on_metadata(handle_metadata)

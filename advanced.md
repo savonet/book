@@ -3,8 +3,10 @@ Advanced topics
 
 TODO: ce chapitre est un gros bordel mais ça va se décanter...
 
-Interaction with the server (telnet) {#sec:telnet}
+Interaction with the server (telnet)
 ------------------------------------
+
+TODO: le telnet est déjà couvert [ici](sec:telnet): merger
 
 TODO: this should be the main section where everything is explained about telnet
 
