@@ -1,14 +1,12 @@
 #!./liquidsoap
-pre = playlist("~/Music")
-pre = lufs(pre)
+pre    = lufs(playlist("~/Music"))
 volume = ref(1.)
-post = amplify({!volume}, pre)
-post = lufs(post)
+post   = lufs(amplify({!volume}, pre))
 def adjust()
-  v = lin_of_dB((-14. - post.lufs_momentary())/10.)
-  volume := !volume * v
-  volume := max(0., min(10., !volume))
-  print(newline=false, "LUFS: #{pre.lufs()} -> #{post.lufs()} (volume: #{!volume})\r")
+  volume := !volume * lin_of_dB((-14. - post.lufs_momentary()) / 20.)
+  volume := max(0.01, min(10., !volume))
+  print(newline=false,
+    "LUFS: #{pre.lufs()} -> #{post.lufs()} (volume: #{!volume})\r")
 end
-thread.run(adjust, delay=1., every=0.1)
+thread.run(adjust, every=0.1)
 output(post)

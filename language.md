@@ -39,12 +39,12 @@ get the right number of channels.
 The language is _functional_, which means that you can define very easily
 functions, and that functions can be passed as arguments of other
 functions. This might look like a crazy thing at first, but it is actually quite
-common in some language communities (such as OCaml). It also might
-look quite useless: why should we need such functions when describing
-webradios? You will soon discover that it happens to be quite convenient in many places: for handlers (we
-can specify the function which describes what to do when some event occurs such
-as when a DJ connects to the radio), for transitions (we pass a function which
-describes the shape we want for the transition) and so on.
+common in some language communities (such as OCaml). It also might look quite
+useless: why should we need such functions when describing webradios? You will
+soon discover that it happens to be quite convenient in many places: for
+handlers (we can specify the function which describes what to do when some event
+occurs such as when a DJ connects to the radio), for transitions (we pass a
+function which describes the shape we want for the transition) and so on.
 
 ### Streams
 
@@ -104,7 +104,8 @@ and finally by
 s = add([sine(440.), sine(523.25), sine(659.26)])
 ```
 
-which is the actual stream generator.
+which is the actual stream generator: running the script has generated the three
+`sine` stream generators!
 
 ### Standard library
 
@@ -1439,19 +1440,6 @@ amplify is actually
 where the type `{float}` means that both `float` and `() -> float` are accepted,
 so that you can still write constant floats where float getters are expected.
 
-<!---
-
-### Iterators
-
-TODO: .............
-
-see #1252
-
-```{.liquidsoap include="liq/for-iterator.liq"}
-```
-
--->
-
 ### Recursive functions
 
 Liquidsoap supports functions which are _recursive_, i.e., that call
@@ -1630,16 +1618,28 @@ fields in record. For instance, the definition
 ```
 
 adds, in the module `list`, a new field named `last`, which is a function which
-computes the last elements of a list.
+computes the last elements of a list. Another shorter syntax to perform shorter
+definitions consists in using the `let` keyword which allows assigning a value
+to a field, so that the previous example can be rewritten
 
+```{.liquidsoap include="liq/list.last2.liq"}
+```
 
-\TODO{explain the `open` construction}
+If you often use the functions of a specific module, the `open` keyword allows
+using its fields without having to prefix them by the module name. For instance,
+in the following example
 
+```{.liquidsoap include="liq/list.last3.liq" from=1 to=-1}
+```
+
+the `open list` directive allows directly using the functions in this module: we
+can simply write `nth` and `length` instead of `list.nth` and `list.length`.
 
 ### Values with fields
 
 A unique feature of the Liquidsoap language is that it allows adding fields to
-any value. For instance, we can write
+any value. We also call them _methods_ by analogy with object-oriented
+programming. For instance, we can write
 
 ```{.liquidsoap include="liq/meth-song.liq" from=0 to=0}
 ```
@@ -1656,7 +1656,7 @@ and behaves like a string, e.g. we can concatenate it with other strings:
 ```{.liquidsoap include="liq/meth-song.liq" from=1 to=1}
 ```
 
-but we can also invoke its methods like a record:
+but we can also invoke its methods like a record or a module:
 
 ```{.liquidsoap include="liq/meth-song.liq" from=2 to=2}
 ```
@@ -1675,35 +1675,45 @@ It returns a string (the contents of the webpage) with fields specifying the
 returned headers, the status message and the version used by the protocol. A
 typical use is
 
-```{.liquidsoap include="liq/http.get.liq"}
+```{.liquidsoap include="liq/http.get.liq" from=1}
 ```
+
+When the return type of a function has methods, the help of Liquidsoap displays
+them in a dedicated section. For instance, every function returning a source,
+also returns methods associated to this source, such as the `skip` function
+which allows skipping the current track (those methods are detailed in [a later
+section](#sec:source-methods)).
+
+TODO: explain the help for sources which also list methods....................\TODO{fill me in!}
+
+TODO: display the rms............
 
 Advanced values
 ---------------
 
 In this section, we detail some more advanced values than the ones presented in
-[previous sections](#sec:basic-values).
+[previous sections](#sec:basic-values). You are not expected to be understanding
+those in details for basic uses of Liquidsoap.
 
 ### Errors
 
-In case a function does not have a sensible result to return, it can raise an
+In the case where a function does not have a sensible result to return, it can raise an
 _error_. Typically, if we try to take the head of the empty list without
-specifying a default value (with the optional parameter `default` as explained
-above), an error will be raised:
+specifying a default value (with the optional parameter `default`), an error will be raised.
+By default, this error will stop the script, which is usually not a desirable
+behavior. For instance, if you try to run a script containing
 
-```liquidsoap
-list.hd([])
+```{.liquidsoap include="liq/list.hd-empty.liq" from=1}
 ```
 
-By default, this error will stop the script, which is usually not a desirable
-behavior. For instance, the above command will exit the program, printing
+the program will exit printing
 
 ```
 Error 14: Uncaught runtime error:
 type: not_found, message: "no default value for list.hd"
 ```
 
-This means that the error named `not_found` was raised, with a message
+This means that the error named "`not_found`" was raised, with a message
 explaining that the function did not have a reasonable default value of the head
 to provide.
 
@@ -1717,7 +1727,7 @@ catch err do
 end
 ```
 
-which will execute the instructions `code`: if an error is raised at some point
+This will execute the instructions `code`: if an error is raised at some point
 during this, the code `handler` is executed, with `err` being the error. For
 instance, instead of writing
 
@@ -1739,6 +1749,14 @@ catch err do
   print("the error #{error.kind(err)} was raised")
   print("the error message is #{error.message(err)}")
 end
+```
+
+Typically, when reading from or writing to a file, errors will be raised when a
+problem occurs (such as reading from a non-existent file or writing a file in a
+non-existent directory) and one should always check for those and log the
+corresponding message:
+
+```{.liquidsoap include="liq/file.write-bad.liq" from=2}
 ```
 
 Specific errors can be catched with the syntax
@@ -1766,15 +1784,13 @@ error to register:
 ```{.liquidsoap include="liq/bad/error.register.liq"}
 ```
 
-\TODO{example of errors during reading / writing in files}
-
 ### Nullable values
 
 It is sometimes useful to have a default value for a type. In Liquidsoap, there
-is a special value for this which is called `null`. Given a type `t`, we write
+is a special value for this which is called `null`. Given a type `t`, we write
 `t?` for the type of values which can be either of type `t` or be `null`: such a
 value is said to be _nullable_. For instance, we could redefine the `list.hd`
-function in order to return null (instead of an error) when the list is
+function in order to return null (instead of raising an error) when the list is
 empty:
 
 ```{.liquidsoap include="liq/list.hd-null.liq" from=0 to=2}
@@ -1795,6 +1811,21 @@ which is the value `x` excepting when it is null, in which case it is the
 default value `d`. For instance, with the above head function:
 
 ```{.liquidsoap include="liq/list.hd-null.liq" from=4 to=5}
+```
+
+Some other useful functions include
+
+- `null.defined`: test whether a value is null or not,
+- `null.case`: execute a function or another, depending on whether a value is
+  null or not.
+
+### Iterators
+
+TODO......
+
+see #1252
+
+```{.liquidsoap include="liq/for-iterator.liq"}
 ```
 
 Configuration and preprocessor
@@ -1821,8 +1852,9 @@ or we can increase the verbosity of the log messages with
 ```{.liquidsoap include="liq/set2.liq" from=1}
 ```
 
-The log levels being 1 for critical messages, 2 for severe issues, 3 for
-important messages, 4 for information and 5 for debug messages.
+which sets the maximum level of shown log messages, the default being 3 (we
+recall that the log levels are 1 for critical messages, 2 for severe issues, 3
+for important messages, 4 for information and 5 for debug messages).
 
 Dually, we can obtain the value of an argument with the `get` function, e.g.
 
@@ -1855,7 +1887,7 @@ a script by writing
 which will be evaluated as if you had pasted the contents of the file in place
 of the command.
 
-This is for instance useful in order to store passwords out of the main file, in
+For instance, this is useful in order to store passwords out of the main file, in
 order to avoid risking leaking those when handing the scripts to some other
 people. Typically, one would have a file `passwords.liq` defining the passwords
 in variables, e.g.
@@ -1944,17 +1976,17 @@ dumped using it by
 
 Other useful functions are
 
-- `file.exists`: test whether a file exists
-- `file.write`: write in a file
-- `file.remove`: remove a file
-- `file.ls`: list the files present in a directory
+- `file.exists`: test whether a file exists,
+- `file.write`: write in a file,
+- `file.remove`: remove a file,
+- `file.ls`: list the files present in a directory.
 
 Also, convenient functions for working on paths are present in the `path`
 record:
 
-- `path.dirname`: get the directory of a path
-- `path.basename`: get the file name without the directory from a path
-- `path.home`: home directory of user
+- `path.dirname`: get the directory of a path,
+- `path.basename`: get the file name without the directory from a path,
+- `path.home`: home directory of user,
 
 and so on.
 
@@ -1972,7 +2004,7 @@ Other useful functions are
 - `http.put`: to upload data,
 - `http.delete`: to delete resources.
 
-Liquidsoap also features an internal web server call _harbor_, which allows to
+Liquidsoap also features an internal web server called _harbor_, which allows to
 serve web pages directly from Liquidsoap, which can be handy to present some
 data related to your script or implement some form of advanced interaction. This
 is described on details in [this section](#sec:...).\TODO{fill me in}
@@ -1984,8 +2016,7 @@ using the `argv` function. Its use is illustrated in
 [there](#sec:offline-processing).
 
 The current script can be stopped using the `shutdown` function which cleanly
-stops all the sources, and so on.\TODO{more details about what we do at shutdown
-here or somewhere else} In case of emergency, the application can be immediately
+stops all the sources, and so on. In case of emergency, the application can be immediately
 stopped with the `exit` function, which moreover allows returning an exit
 code. The current script can also be restarted using `restart`.
 
@@ -1993,11 +2024,19 @@ In order to execute other programs from Liquidsoap, you can use the function
 `process.read` which executes a command and returns the text it wrote in the
 standard output. For instance,
 
-```{.liquidsoap include="liq/process.read.liq"}
+```{.liquidsoap include="liq/process.read.liq" from=1}
 ```
 
 There is also the quite useful variant called `process.read.lines`, which
-returns the list of lines written on the standard output. The more elaborate
+returns the list of lines written on the standard output. Typically, suppose
+that we have a script `generate-playlist` which outputs a list of files to play,
+one per line. We can play it by feeding it to `playlist.list` which plays a list
+of files:
+
+```{.liquidsoap include="liq/process.read.lines.liq" from=1}
+```
+
+The more elaborate
 variant `process.run` allows retrieving the return code of the program, set a
 maximal time for the execution of the program and _sandbox_ its execution,
 i.e. restrict the directories it has access to in order to improve security
@@ -2017,19 +2056,28 @@ off every second. This can easily be achieved as follows:
 ```
 
 Here, we amplify the sine by the contents of a variable `volume` whose value is
-changed between `0.` and `1.` every second by the function `change`.
-
-TODO: a more useful variant of this is the following AGC
+changed between `0.` and `1.` every second by the function `change`. A perhaps
+more useful variant of this is _auto-gain control_: we want to adjust the volume
+so that the output volume is always roughly -14 LUFS (a standard sound loudness
+measure), one way to do this is to regularly check its value and increase or
+lower the volume depending whether we are below or above the threshold:
 
 ```{.liquidsoap include="liq/agc.liq" from=1}
 ```
 
-TODO: explain that we have operators to properly do this (`normalize`) + we use the
-momentaneous otherwise the window is too big and we get overshoot effects (but
-in this way this is perhaps "too reactive")
+Here, we have a source `pre` which we amplify by the value `volume` to get a
+source `post`, on both of which the `lufs` function instructs that we should
+measure the LUFS. Regularly (10 times per second), we run the function `adjust`
+which multiplies the volume by the coefficient needed to reach -14 LUFS (to be
+precise, we actually divide the distance to -14 by 20 in order not to change the
+volume too abruptly, and we constrain the volume in the interval [0.01,10] in
+order to keep sane values). In practice, you do not need to implement this by
+hand (the operator `normalize` does this for you, and more efficiently than the
+above), but it is nice to see that you could if you needed (to experiment with
+new strategies for managing the gain for instance).
 
 Another useful function is `thread.when`, which executes a function when a
-predicate becomes true.
+predicate becomes true.\TODO{give an example...}
 
 \TODO{speak about mutexes}
 
@@ -2038,11 +2086,12 @@ predicate becomes true.
 ### Time
 
 In case you need it, the current time can be retrieved using the `time`
-function. This function returns the number of seconds since the 1st of
-January 1970. In order to convert this into more usual time notations you can
-use the functions `time.local` and `time.utc` which extract the usual
-information (year, month, day, hour, etc.), respectively according to the
-current time zone and the Greenwich median time, and return those in a
+function. This function returns the number of seconds since the 1st of January
+1970, which is mostly useful to measure duration by considering the difference
+between two points in time. In order to convert this into more usual time
+notations you can use the functions `time.local` and `time.utc` which extract
+the usual information (year, month, day, hour, etc.), respectively according to
+the current time zone and the Greenwich median time, and return those in a
 record. For instance, we can print the current date with
 
 ```{.liquidsoap include="liq/time.liq"}

@@ -8,6 +8,8 @@ Interaction with the server (telnet)
 
 TODO: le telnet est déjà couvert [ici](sec:telnet): merger
 
+TODO: `server.harbor`
+
 TODO: this should be the main section where everything is explained about telnet
 
 TODO: use `nc` instead of `telnet`

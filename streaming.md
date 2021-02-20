@@ -94,6 +94,25 @@ source, it stream will not
 TODO: expliquer le flux des sources: par exemple, si on fait un on_metadata mais
 qu'on ne lit pas la sortie, la fonction n'est pas appelée...
 
+### Methods for sources {#sec:source-methods}
+
+TODO: detail the methods present for every source....
+
+- `fallible`: Indicate if a source may fail, i.e. may not be ready to stream.
+- `id`: Identifier of the source.
+- `is_ready`: Indicate if a source is ready to stream, or currently streaming.
+- `is_up`: Check whether a source is up.
+- `on_metadata`: Call a given handler on metadata packets.
+- `on_shutdown`: Register a function to be called when source shuts down.
+- `on_track`: Call a given handler on new tracks.
+- `remaining`: Estimation of remaining time in the current track.
+- `seek`: Seek forward, in seconds (returns the amount of time effectively
+     seeked).
+- `shutdown`: Deactivate a source.
+- `skip`: Skip to the next track.
+- `time`: Get a source's time, based on its assigned clock.
+
+
 The streaming model
 -------------------
 
@@ -199,6 +218,9 @@ What is a faillible source? (source available or not)
 
 In practice, simply use `mksafe`{.liquidsoap}
 
+### Startup and shutdown
+
+Explain what is going up at startup an shutdown of sources (ready / etc.)
 
 Requests
 --------
