@@ -1847,7 +1847,10 @@ Some other useful functions include
 - `null.case`: execute a function or another, depending on whether a value is
   null or not.
 
+<!--
 ### Iterators
+
+TODO: not including this for now, this is too experimental I feel
 
 An _iterator_ on a type `t` is an element of the type `() -> t?`, i.e., a getter
 of nullable `t`: it consists of a function taking no argument which, each time
@@ -1872,6 +1875,7 @@ see #1252
 
 ```{.liquidsoap include="liq/file.iterator.liq" from=1}
 ```
+-->
 
 <!--
 ```{.liquidsoap include="liq/for-iterator.liq"}
@@ -2127,7 +2131,21 @@ above), but it is nice to see that you could if you needed (to experiment with
 new strategies for managing the gain for instance).
 
 Another useful function is `thread.when`, which executes a function when a
-predicate becomes true.\TODO{give an example...}
+predicate becomes true (by default, the value of the predicate is checked every
+second, this can be changed with the `every` parameter). For instance, suppose
+that we have a file named "`song`" containing the path to a song, and we want
+that each time we change the contents of this file, the new song is played. This
+can be achieved as follows:
+
+```{.liquidsoap include="liq/thread.when.liq" from=1}
+```
+
+We begin by creating `q` which is a request queue, i.e. some source on which we
+can push new songs (those are detailed in [there](#sec:request.queue)) and
+`song` which is a getter which returns the contents of the file. We then use
+`thread.when` on the predicate `getter.changes(song)` (which is true when the
+contents of `song` changes) in order to detect changes in `song` and, when this
+is the case, actually push the song on the request queue.
 
 \TODO{speak about mutexes}
 
