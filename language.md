@@ -1678,15 +1678,43 @@ typical use is
 ```{.liquidsoap include="liq/http.get.liq" from=1}
 ```
 
+Another typical example is the `rms` operator, which takes a source as argument,
+and returns the same source together with an added method named `rms` which
+allows retrieving the current value for the RMS (which is a measure of sound
+intensity). The RMS of a source can thus be logged every second in a file as
+follows (functions concerning files and threads are explained in
+[there](#sec:stdlib)):
+
+```{.liquidsoap include="liq/metrics-file2.liq" from=1}
+```
+
 When the return type of a function has methods, the help of Liquidsoap displays
 them in a dedicated section. For instance, every function returning a source,
 also returns methods associated to this source, such as the `skip` function
 which allows skipping the current track (those methods are detailed in [a later
-section](#sec:source-methods)).
+section](#sec:source-methods)). If was ask for help about the `playlist`
+operator by typing
 
-TODO: explain the help for sources which also list methods....................\TODO{fill me in!}
+```
+$ liquidsoap -h playlist
+```
 
-TODO: display the rms............
+we can observe this, since the help displays, among other,
+
+```
+Methods:
+
+ * reload : (?uri : string) -> unit
+     Reload the playlist.
+
+ * skip : () -> unit
+     Skip to the next track.
+```
+
+This indicates that the returned source has a `reload` method, which allows
+reloading the playlist, possibly specifying a new file, as well as the `skip`
+method described above. If you try at home, you will see that they are actually
+many more methods.
 
 Advanced values
 ---------------
@@ -1821,12 +1849,34 @@ Some other useful functions include
 
 ### Iterators
 
+An _iterator_ on a type `t` is an element of the type `() -> t?`, i.e., a getter
+of nullable `t`: it consists of a function taking no argument which, each time
+it is called returns either an element of type `t` or `null`. We can think of
+this as encoding a possibly finite enumeration of elements of type `t`: the
+function will successively return all the elements, and then `null` when there
+are no more elements. Given an iterator `iter`, we can use `for` notation in
+order to .............................;
+
+```{.liquidsoap}
+for i = iter do
+  e
+end
+```
+
+For instance, the function `file.lines.iterator` constructs an iterator over the
+lines of the file
+
 TODO......
 
 see #1252
 
+```{.liquidsoap include="liq/file.iterator.liq" from=1}
+```
+
+<!--
 ```{.liquidsoap include="liq/for-iterator.liq"}
 ```
+-->
 
 Configuration and preprocessor
 ------------------------------
@@ -1930,7 +1980,7 @@ wave. This can be achieved with
 
 Encoders are detailed in [there](#sec:encoders).
 
-Standard functions
+Standard functions {#sec:stdlib}
 ------------------
 
 In this section, we detail some of the most useful general purpose functions
