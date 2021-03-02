@@ -611,8 +611,17 @@ Testing scripts
 
 - log as much as possible and use priorities meaningfully
 - mention `chopper`, which is useful to simulate track boundaries
+- `sine` etc are of course useful to generate sound, also `metronome`
+- tracks can be generated with the `synth:` protocol
+  (`"synth:shape=sine,frequency=880,duration=1`", default values (shape is sine,
+  freq is 440, duration is 1))
 - `sleeper`
 - what else?
+
+Full example:
+
+```{.liquidsoap include="liq/ad-metadata.liq"}
+```
 
 Internal HTTP server
 --------------------
@@ -904,3 +913,8 @@ SRT
 Usage of srt....... example with ffplay
 
 also mention `input.udp`
+
+Protocols
+---------
+
+- the `synth` protocol (already presented in "testing scripts" section)

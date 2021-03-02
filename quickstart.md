@@ -111,7 +111,7 @@ output
 ```
 Generate a sine wave.
 
-Type: (?id : string, ?amplitude : float, ?float) -> source(audio='a, video='b, midi='c)
+Type: (?id : string, ?amplitude : float, ?float) -> source(audio=pcm('a), video='b, midi='c)
 
 Category: Source / Input
 
@@ -128,8 +128,9 @@ Parameters:
 ```
 
 It begins with a description of the operator, followed by its type, category and
-parameters (there is also a section for methods, which is not shown above, but we
-simply ignore it for now). Here, the type indicates that it is a function taking
+parameters (there is also a section for methods, which is not shown above, but
+we simply ignore it for now, it will be detailed in [a subsequent
+section](#sec:records)). Here, the type indicates that it is a function taking
 three arguments and returning a source with any number of audio, video and midi
 channels. The three arguments are indicated in the type and detailed after:
 
@@ -141,7 +142,7 @@ channels. The three arguments are indicated in the type and detailed after:
 
 All three arguments are optional, which means that a default value is provided
 and will be used if it is not specified. This is indicated in the type by the
-question mark before each argument, and the default value is detailed below
+question mark "`?`" before each argument, and the default value is detailed below
 (e.g. the default amplitude is `1.0` and the default frequency is `440.` Hz).
 
 If we want generate a sine wave of 2600 Hz with an amplitude 0.8, we can thus

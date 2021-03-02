@@ -1,54 +1,114 @@
-The streaming language {#chap:streaming}
-======================
+A streaming language {#chap:streaming}
+====================
 
-You should now be convinced that Liquidsoap is a pretty decent general-purpose
-scripting language. But of course, it also has features dedicated to
-streaming. In this section, we present the general concepts behind those. The
-operators useful to construct streams in practice will be presented in details
-in subsequent chapters.
+The previous chapter should have convinced you that Liquidsoap is a pretty
+decent general-purpose scripting language. But what makes it unique is the
+features dedicated to streaming. In this chapter, we present the general
+concepts behind those, they will be put in use in subsequent chapters.
 
 Sources {#sec:lang-sources}
 -------
 
-What makes Liquidsoap unique is that it has dedicated functions in order to
-produce and manipulate streams, which are called _sources_ in Liquidsoap.
+The main purpose of Liquidsoap is to manipulate functions which will generate
+streams and are called _sources_ in Liquidsoap. Typically, the `playlist`
+operator is a source, which generates streams by sequentially reading files. The
+way sources generate audio or video data is handled abstractly: you almost never
+get down to the point where you need to understand how or in what format this
+data is actually generated, you usually simply combine sources in order to get
+elaborate ones. It is however useful to have a general idea of how Liquidsoap
+works internally.
 
 ### Typing
 
-Each source has a number of channels of audio, video and midi data, and each of
-which can either contain
+Each source has a number of channels of
 
-- _raw data_: this data is decoded in an internal format, suitable for
-  manipulation by operators within Liquidsoap, or
-- _encoded data_: which Liquidsoap is not able to modify, e.g. audio data in mp3
-  format.
+- _audio_ data: containing sound,
+- _video_ data: containing animated videos,
+- _midi_ data: containing notes to be played.
 
-In practice, you will manipulate sources handling raw data most of the
-time. Encoded data is mostly useful for avoiding to have to encode a stream
-multiple times in the same format, e.g. when sending the same encoded stream to
-multiple icecast instances.
+Moreover, each of those channels can either contain
 
-The contents of each channel is indicated in the type of the values. For
-instance, we have seen that the type of `sine` is
+- _raw_ data: this data is in an internal format (usually obtained by decoding
+  compressed files), suitable for manipulation by operators within Liquidsoap,
+  or
+- _encoded_ data: which Liquidsoap is not able to modify, such as audio data in
+  mp3 format.
+
+In practice, users manipulate sources handling raw data most of the time since
+most operations are not available on encoded data, even very basic ones such as
+changing the volume or performing transitions between tracks. Encoded data was
+introduced starting from version 2.0 of Liquidsoap and is however useful for
+avoiding to have to encode a stream multiple times in the same format, e.g. when
+sending the same encoded stream to multiple icecast instances, or both to
+icecast and in HLS, etc.
+
+The type of sources is of the form
 
 ```
-(?amplitude : {float}, ?duration : float, ?{float}) ->
-    source(audio='a, video='b, midi='c)
+source(audio=..., video=..., midi=...)
+```
+
+where the "`...`" indicate the _contents_ that the source can generate, i.e. the
+number of channels, and their nature, for audio, video and midi data, that the
+source can generate. For instance, the type of `sine` is
+
+```
+(?amplitude : {float}, ?duration : float, ?{float}) -> source(audio=internal('a), video=internal('b), midi=internal('c))
 ```
 
 We see see that it takes 3 optional arguments (the amplitude, the duration and
 the frequency) and returns a source as indicated by the type of the returned
-value: `source(...)`. The parameters of `source` indicate the number of
+value: `source(...)`. The parameters of `source` indicate the nature and number
+of channels: here we see that audio is generated in some internal format (call
+it `'a`), video is generated in some internal data format (call it `'b`) and
+similarly for midi. The contents `internal` does not specify any number of
+channels, which means that any number of channels can be generated. Of course,
+only the audio channels are going to be meaningful:
+
+- if multiple audio channels are requested, they will all contain the same audio
+  consisting of a sine waveform, with specified frequency and amplitude,
+- if video channels are requested they are all going to be blank,
+- if midi channels are requested, the are not going to contain any note.
+
+As another example, consider the type of the operator `drop_audio` which removes
+audio from a source:
+
+```
+(source(audio='a, video='b, midi='c)) -> source(audio=none, video='b, midi='c)
+```
+
+We see that it takes a source as argument and returns another source. We also
+see that that is accepts any audio, video and midi contents for the input
+source, be they in internal format or not, calling them respectively `'a`, `'b`
+and `'c`. The output source has `none` as audio contents, meaning that it will
+have no audio at all, and that the video content is the same as the content for
+the input (`'b`), and similarly for midi content (`'c`).
+
+Contents of the form `internal('a)` only impose that the format is one supported
+internally
+
+
+The parameters of `source` indicate the number of
 channels: here, as for polymorphic functions, `'a`, `'b` and `'c` mean "any
 number of channels": depending on what is required, this source can generate as
 many channels as we want: it will generate the same sine on all audio channels
-and the video and midi channels are always going to be empty. Another example of
-an operator is the operator `mean` which takes an audio stream as input and
-changes audio to mono, by taking the mean of all the audio channels. Its type is
+and the video and midi channels are always going to be empty. Similarly, the
+type of the `amplify` operator, which modifies the ..................
+\TODO{why don't we enforce the type of audio to be pcm???}
 
 ```
-(source(audio=pcm('a), video='b, midi='c)) ->
-    source(audio=pcm(mono), video='b, midi='c)
+({float}, source(audio='a, video='b, midi='c)) -> source(audio='a, video='b, midi='c)
+```
+
+.............
+
+
+Another example of an operator is the operator `mean` which takes an audio
+stream as input and changes audio to mono, by taking the mean of all the audio
+channels. Its type is
+
+```
+(source(audio=pcm('a), video='b, midi='c)) -> source(audio=pcm(mono), video='b, midi='c)
 ```
 
 We see that the type of the input source is `pcm('a)` which means any number of
@@ -59,13 +119,50 @@ same in the input and the output.
 
 Currently, the raw types are
 
-|raw audio | raw video | raw midi |
-|:--------:|:---------:|:--------:|
-| `pcm`    | `yuv420p` | `midi`   |
+|raw audio | raw video  | raw midi |
+|:--------:|:----------:|:--------:|
+| `pcm`    | `yuva420p` | `midi`   |
 
 as well as the type `none` which indicates that no data is available in the
 channel. The supported numbers of channels for audio are `mono`, `stereo` and
 `dolby 5.1`.
+
+TODO: we can have constraints, for instance the type of `mksafe`
+
+```
+(?id : string, source(audio='a, video='b, midi=none)) -> source(audio='a, video='b, midi=none)
+where
+  'a, 'b is an internal media type (none, pcm, yuva420p or midi)
+```
+
+The type of `drop_audio` is
+
+```
+?id : string, source(audio='a, video='b, midi='c)) -> source(audio=none, video='b, midi='c)
+```
+
+TODO: sum up possible contents
+
+- `'a`
+- `internal('a)`
+- `pcm('a)`
+
+### Why we are not very strict
+
+TODO: expliquer qu'on a besoin de générer des pistes "vides" pour satisfaire les
+exigeances du typage de `add`: tous doivent avoir le même nombre de canaux audio
+et vidéo
+
+```{.liquidsoap include="liq/encoded-amplify.liq"}
+```
+
+### Internal formats
+
+Detail the internal formats PCM / yuv420
+
+Explain that blank video is transparent
+
+Conf settings for the samplerate, size of video, etc.
 
 ### Passive and active sources
 
@@ -94,6 +191,24 @@ source, it stream will not
 TODO: expliquer le flux des sources: par exemple, si on fait un on_metadata mais
 qu'on ne lit pas la sortie, la fonction n'est pas appelée...
 
+### Type inference
+
+The contents of a source (raw or encoded, and the number of channels) is
+determined at startup and is fixed during the whole execution of the script.
+
+Explain how the type of data is determined by inference, give examples.
+
+TODO: on ne devrait pas pouvoir amplifier du mp3:
+
+```{.liquidsoap include="liq/blue-sine.liq"}
+```
+
+TODO: example of an encoded source which is shared with a non-encoded one
+
+TODO: say that we default to two audio channels when there is no constraint
+(actually, this is determined by a configuration setting)
+
+
 ### Methods for sources {#sec:source-methods}
 
 TODO: detail the methods present for every source....
@@ -112,6 +227,13 @@ TODO: detail the methods present for every source....
 - `skip`: Skip to the next track.
 - `time`: Get a source's time, based on its assigned clock.
 
+Formats
+-------
+
+Concatenating mp3 without reencoding:
+
+```{.liquidsoap include="liq/encoded-concat.liq"}
+```
 
 The streaming model
 -------------------
@@ -142,6 +264,13 @@ can be modified with the configuration option `frame.duration` (see
 [above](#sec:configuration)), which indicates the duration of a frame in
 seconds. The default value is 0.04, meaning that frames are filled 25 times each
 second, each frame containing 41100×0.04=1764 samples.
+
+### Tracks
+
+TODO: .....
+
+
+### Metadata
 
 ### Catching up
 
@@ -202,7 +331,8 @@ in a frame, Liquidsoap will temporarily store the result -- we that that it
 the frame, the stored one will be reused, thus avoiding to compute twice the
 same frame.
 
-
+TODO: explain that there are boundary conditions: a source can be fetched twice
+with different track boundaries
 
 TODO: source functions take an `id` parameter which is mostly useful for the
 logs and the telnet
@@ -218,6 +348,8 @@ What is a faillible source? (source available or not)
 
 In practice, simply use `mksafe`{.liquidsoap}
 
+explain `fail` and give the example of `once` which is implemented with `sequence`
+
 ### Startup and shutdown
 
 Explain what is going up at startup an shutdown of sources (ready / etc.)
@@ -225,7 +357,7 @@ Explain what is going up at startup an shutdown of sources (ready / etc.)
 Requests
 --------
 
-explain that we need to resolve requests
+explain that we need to resolve requests, which is why queues take request in account, we want to be able to play them immediately
 
 persistent or not
 
@@ -236,3 +368,12 @@ main functions:
 - `request.duration`
 - `request.filename` and `request.uri`
 - `request.metadata`
+
+TODO: what are _indicators_ (used as parameters for create for instance)?
+
+Decoders
+--------
+
+Example of a log of decoder
+
+MIME is used to guess

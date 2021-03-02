@@ -14,6 +14,9 @@ test.mp3:
 	@echo "Generating a sine test mp3 file..."
 	ffmpeg -f lavfi -i "sine=frequency=440:duration=5" -ac 2 $@
 
+ad.mp3:
+	ffmpeg -f lavfi -i "sine=frequency=880:duration=1" -ac 2 $@
+
 check: $(CHECKS)
 
 check-%: %.liq

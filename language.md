@@ -1,5 +1,5 @@
-The programming language
-========================
+A programming language
+======================
 
 Before getting into the more advanced radio setups which can be achieved with
 Liquidsoap, we need to detail the language and the general concepts behind
@@ -1635,6 +1635,8 @@ in the following example
 the `open list` directive allows directly using the functions in this module: we
 can simply write `nth` and `length` instead of `list.nth` and `list.length`.
 
+\TODO{def replaces....}
+
 ### Values with fields
 
 A unique feature of the Liquidsoap language is that it allows adding fields to
@@ -1731,7 +1733,7 @@ specifying a default value (with the optional parameter `default`), an error wil
 By default, this error will stop the script, which is usually not a desirable
 behavior. For instance, if you try to run a script containing
 
-```{.liquidsoap include="liq/list.hd-empty.liq" from=1}
+```{.liquidsoap include="liq/bad/list.hd-empty.liq" from=1}
 ```
 
 the program will exit printing
@@ -2131,11 +2133,11 @@ above), but it is nice to see that you could if you needed (to experiment with
 new strategies for managing the gain for instance).
 
 Another useful function is `thread.when`, which executes a function when a
-predicate becomes true (by default, the value of the predicate is checked every
-second, this can be changed with the `every` parameter). For instance, suppose
-that we have a file named "`song`" containing the path to a song, and we want
-that each time we change the contents of this file, the new song is played. This
-can be achieved as follows:
+predicate (a boolean getter, of type `{bool}`) becomes true. By default, the
+value of the predicate is checked every second, this can be changed with the
+`every` parameter. For instance, suppose that we have a file named "`song`"
+containing the path to a song, and we want that each time we change the contents
+of this file, the new song is played. This can be achieved as follows:
 
 ```{.liquidsoap include="liq/thread.when.liq" from=1}
 ```
