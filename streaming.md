@@ -6,9 +6,6 @@ decent general-purpose scripting language. But what makes it unique is the
 features dedicated to streaming. In this chapter, we present the general
 concepts behind those, they will be put in use in subsequent chapters.
 
-Sources {#sec:lang-sources}
--------
-
 The main purpose of Liquidsoap is to manipulate functions which will generate
 streams and are called _sources_ in Liquidsoap. Typically, the `playlist`
 operator is a source, which generates streams by sequentially reading files. The
@@ -18,21 +15,24 @@ data is actually generated, you usually simply combine sources in order to get
 elaborate ones. It is however useful to have a general idea of how Liquidsoap
 works internally.
 
-### Typing
+
+Typing of sources {#sec:lang-sources}
+-----------------
 
 Each source has a number of channels of
 
 - _audio_ data: containing sound,
 - _video_ data: containing animated videos,
-- _midi_ data: containing notes to be played.
+- _midi_ data: containing notes to be played (typically, by a synthesizer).
 
-Moreover, each of those channels can either contain
+The last kind of data is much less used in practice in Liquidsoap, so that we
+will insist less on it. Moreover, each of those channels can either contain
 
 - _raw_ data: this data is in an internal format (usually obtained by decoding
   compressed files), suitable for manipulation by operators within Liquidsoap,
   or
-- _encoded_ data: which Liquidsoap is not able to modify, such as audio data in
-  mp3 format.
+- _encoded_ data: this is compressed data which Liquidsoap is not able to
+  modify, such as audio data in mp3 format.
 
 In practice, users manipulate sources handling raw data most of the time since
 most operations are not available on encoded data, even very basic ones such as
@@ -82,87 +82,58 @@ see that that is accepts any audio, video and midi contents for the input
 source, be they in internal format or not, calling them respectively `'a`, `'b`
 and `'c`. The output source has `none` as audio contents, meaning that it will
 have no audio at all, and that the video content is the same as the content for
-the input (`'b`), and similarly for midi content (`'c`).
+the input (`'b`), and similarly for midi content (`'c`). In next section, we
+explain how internal contents can be further constrained (e.g. by specifying the
+number of audio channels), non-internal ones are detailed in
+[here](#sec:...)\TODO{fill me in}.
+
+### Internal contents
 
 Contents of the form `internal('a)` only impose that the format is one supported
-internally
+internally. If we want to be more specific, we can specify the actual
+contents. For instance, the internal contents are:
 
+- for raw audio: `pcm`
+- for raw video: `yuva420p`
+- for midi: `midi`
 
-The parameters of `source` indicate the number of
-channels: here, as for polymorphic functions, `'a`, `'b` and `'c` mean "any
-number of channels": depending on what is required, this source can generate as
-many channels as we want: it will generate the same sine on all audio channels
-and the video and midi channels are always going to be empty. Similarly, the
-type of the `amplify` operator, which modifies the ..................
-\TODO{why don't we enforce the type of audio to be pcm???}
-
-```
-({float}, source(audio='a, video='b, midi='c)) -> source(audio='a, video='b, midi='c)
-```
-
-.............
-
-
-Another example of an operator is the operator `mean` which takes an audio
-stream as input and changes audio to mono, by taking the mean of all the audio
-channels. Its type is
+The arguments of `pcm` is the number of channels which can either be `none` (0
+audio channel), `mono` (1 audio channel), `stereo` (2 audio channels) or `5.1`
+(6 channels for surround sound: front left, front right, front center,
+subwoofer, surround left and surround right, in this order). For instance, the
+operator `mean` takes an audio stream and returns a mono stream, obtained by
+taking the mean over all the channels. Its type is
 
 ```
 (source(audio=pcm('a), video='b, midi='c)) -> source(audio=pcm(mono), video='b, midi='c)
 ```
 
-We see that the type of the input source is `pcm('a)` which means any number of
-channels of raw audio, and the corresponding type for audio in the output is
-`pcm(mono)`, which means mono raw audio, as expected. We can also see that the
-video and midi channels are preserved since their names (`'b` and `'c`) are the
-same in the input and the output.
+We see that the audio contents of the input source is `pcm('a)` which means any
+number of channels of raw audio, and the corresponding type for audio in the
+output is `pcm(mono)`, which means mono raw audio, as expected. We can also see
+that the video and midi channels are preserved since their names (`'b` and `'c`)
+are the same in the input and the output.
 
-Currently, the raw types are
+Note that the contents `none` and `pcm(none)` are not exactly the same: for the
+first we know that there is no audio whereas for the second we now that there is
+no audio and that this is encoded in `pcm` format (if you have troubles grasping
+the subtlety don't worry, this is never useful in practice). For this reason
+`internal('a)` and `pcm('a)` express almost the same content but not
+exactly. Every content valid for the second, such as `pcm(stereo)`, is also
+valid for the first, but the content `none` is only accepted by the first
+(again, this subtle difference can be ignored in practice).
 
-|raw audio | raw video  | raw midi |
-|:--------:|:----------:|:--------:|
-| `pcm`    | `yuva420p` | `midi`   |
-
-as well as the type `none` which indicates that no data is available in the
-channel. The supported numbers of channels for audio are `mono`, `stereo` and
-`dolby 5.1`.
-
-TODO: we can have constraints, for instance the type of `mksafe`
-
-```
-(?id : string, source(audio='a, video='b, midi=none)) -> source(audio='a, video='b, midi=none)
-where
-  'a, 'b is an internal media type (none, pcm, yuva420p or midi)
-```
-
-The type of `drop_audio` is
+For now, `yuva420p` does not take any argument. The only argument of `midi` is
+of the form `channels=n` where `n` is the number of MIDI channels of the
+stream. For instance, the operator `synth.all.sine` which generates sound for
+all MIDI channels using sine waves has type
 
 ```
-?id : string, source(audio='a, video='b, midi='c)) -> source(audio=none, video='b, midi='c)
+(source(audio=pcm(mono), video='a, midi=midi(channels=16))) -> source(audio=pcm(mono), video='a, midi=midi(channels=16))
 ```
 
-TODO: sum up possible contents
-
-- `'a`
-- `internal('a)`
-- `pcm('a)`
-
-### Why we are not very strict
-
-TODO: expliquer qu'on a besoin de générer des pistes "vides" pour satisfaire les
-exigeances du typage de `add`: tous doivent avoir le même nombre de canaux audio
-et vidéo
-
-```{.liquidsoap include="liq/encoded-amplify.liq"}
-```
-
-### Internal formats
-
-Detail the internal formats PCM / yuv420
-
-Explain that blank video is transparent
-
-Conf settings for the samplerate, size of video, etc.
+We see that it takes a stream with mono audio and 16 MIDI channels as argument
+and returns a stream of the same type.
 
 ### Passive and active sources
 
@@ -200,7 +171,7 @@ Explain how the type of data is determined by inference, give examples.
 
 TODO: on ne devrait pas pouvoir amplifier du mp3:
 
-```{.liquidsoap include="liq/blue-sine.liq"}
+```{.liquidsoap include="liq/encoded-amplify.liq"}
 ```
 
 TODO: example of an encoded source which is shared with a non-encoded one
@@ -208,24 +179,14 @@ TODO: example of an encoded source which is shared with a non-encoded one
 TODO: say that we default to two audio channels when there is no constraint
 (actually, this is determined by a configuration setting)
 
+TODO: explain that we can enforce the type
 
-### Methods for sources {#sec:source-methods}
+TODO: expliquer qu'on a besoin de générer des pistes "vides" pour satisfaire les
+exigeances du typage de `add`: tous doivent avoir le même nombre de canaux audio
+et vidéo
 
-TODO: detail the methods present for every source....
-
-- `fallible`: Indicate if a source may fail, i.e. may not be ready to stream.
-- `id`: Identifier of the source.
-- `is_ready`: Indicate if a source is ready to stream, or currently streaming.
-- `is_up`: Check whether a source is up.
-- `on_metadata`: Call a given handler on metadata packets.
-- `on_shutdown`: Register a function to be called when source shuts down.
-- `on_track`: Call a given handler on new tracks.
-- `remaining`: Estimation of remaining time in the current track.
-- `seek`: Seek forward, in seconds (returns the amount of time effectively
-     seeked).
-- `shutdown`: Deactivate a source.
-- `skip`: Skip to the next track.
-- `time`: Get a source's time, based on its assigned clock.
+```{.liquidsoap include="liq/blue-sine.liq"}
+```
 
 Formats
 -------
@@ -264,6 +225,67 @@ can be modified with the configuration option `frame.duration` (see
 [above](#sec:configuration)), which indicates the duration of a frame in
 seconds. The default value is 0.04, meaning that frames are filled 25 times each
 second, each frame containing 41100×0.04=1764 samples.
+
+### Storage of internal data
+
+For those whose are interested, let us provide some details about the internal
+contents currently in use in Liquidsoap (don't hesitate to skip this section if
+your head is starting to hurt). The raw audio contents is called `pcm` for
+_pulse-code modulation_. The signal is represented by a sequence of _samples_,
+one for each channel, which represent the amplitude of the signal at a given
+instant. Each sample is represented by float number, between -1 and 1, stored in
+double precision (using 64 bits, or 8 bytes). The samples are given regularly
+for each channel of the signal, by default 44100 times per seconds: this value
+is called the _sample rate_ of the signal and is stored globally in the
+`frame.audio.samplerate` setting. This means that we can retrieve the value of
+the samplerate with
+
+```{.liquidsoap include="liq/samplerate-get.liq" from=1 to=1}
+```
+
+and set it to another value such as 48000 with
+
+```{.liquidsoap include="liq/samplerate-set.liq" from=1 to=1}
+```
+
+although default samplerate of 44100 Hz is largely the most commonly in use.
+
+A video consists of a sequence images given regularly. By default, these images
+are presented at the _frame rate_ of 25 images by seconds, but this can be
+changed using the setting `frame.video.framerate` similarly as above. Each image
+consists of a rectangle of pixels: its default width and height are 1280 and 720
+respectively (this corresponds to the resolution called 720p or _HD ready_,
+which features an aspect ratio of 16:9 as commonly found on television or
+computer screens), and those values can be changed through the settings
+`frame.video.width` and `frame.video.height`. For instance, _full HD_ or _1080p_
+format would be achieved with
+
+```{.liquidsoap include="liq/fullhd.liq" from=1}
+```
+
+Each pixel has a color and a transparency: this last parameter controls how
+opaque the pixels is and is used when superimposing two images (the less opaque
+a pixel of the above image is, the more you will see the pixels below
+it). Traditionally, the color would be coded in RGB, consisting of the values
+for the intensity of the red, green and blue for each pixel. However, if we did
+things in this way, a pixel would take 4 bytes (1 byte for each color and 1 for
+transparency), which means 4×1280×720×25 bytes (= 87 Mb) of video per seconds,
+which is too much to handle in realtime for a standard computer. For this
+reason, instead using the RGB representation, we use the YUV representation (Y,
+U and V respectively being the _luma_, _blue chroma_ and _red chroma
+components_): human eye is not very sensitive to chroma variations, we can take
+the same U and V values for 4 neighboring pixels. This means that each pixel is
+now encoded by 2.5 bytes (1 for Y, ¼ for U, ¼ for V and 1 for alpha) and 1
+second of typical video is down to a more reasonable 54 Mb per second.
+
+MIDI stands for _Musical Instrument Digital Interface_ and is a (or, rather,
+the) standard for communicating between various digital instruments and
+devices. Liquidsoap mostly follows it and encodes data as lists of _events_
+together with the time they occur, each event being "such note is starting to
+play at such velocity", "such note is stopping to play", "the value of such
+controller changed", etc.
+
+### Ticks
 
 ### Tracks
 
@@ -353,6 +375,24 @@ explain `fail` and give the example of `once` which is implemented with `sequenc
 ### Startup and shutdown
 
 Explain what is going up at startup an shutdown of sources (ready / etc.)
+
+### Methods for sources {#sec:source-methods}
+
+TODO: detail the methods present for every source....
+
+- `fallible`: Indicate if a source may fail, i.e. may not be ready to stream.
+- `id`: Identifier of the source.
+- `is_ready`: Indicate if a source is ready to stream, or currently streaming.
+- `is_up`: Check whether a source is up.
+- `on_metadata`: Call a given handler on metadata packets.
+- `on_shutdown`: Register a function to be called when source shuts down.
+- `on_track`: Call a given handler on new tracks.
+- `remaining`: Estimation of remaining time in the current track.
+- `seek`: Seek forward, in seconds (returns the amount of time effectively
+     seeked).
+- `shutdown`: Deactivate a source.
+- `skip`: Skip to the next track.
+- `time`: Get a source's time, based on its assigned clock.
 
 Requests
 --------

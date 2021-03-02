@@ -444,11 +444,11 @@ technological issues related to video.
 
 The first thing to notice is that if processing and transmitting audio requires
 handling large amounts of data, video requires processing *huge* amounts of
-data. A video in a decent resolution has 24 images per second at a resolution of
+data. A video in a decent resolution has 25 images per second at a resolution of
 720p, which means 1280×720 pixels, each pixels consisting of three channels
 (generally, red, green and blue, or _RGB_ for short) each of which is usually
 coded on one byte. This means that one second of uncompressed video data weights
-63 MB (which is worth more than 6 minutes of CD audio)! And these are only the
+65 MB (which is worth more than 6 minutes of CD audio)! And these are only the
 minimal requirements for a video to be called HD (_High Definition_), which is
 the kind of video which is being watched everyday on the internet: in practice,
 even low-end devices can produce much higher resolutions than this.

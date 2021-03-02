@@ -1,3 +1,4 @@
-test.mp3
-test.wav
+*.mid
+*.mp3
+*.wav
 metrics.json
