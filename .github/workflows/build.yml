@@ -17,8 +17,8 @@ jobs:
         path: book.pdf
     - name: Test scripts
       run: |
-        sudo echo deb http://deb.liquidsoap.info/ubuntu bionic main >> /etc/apt/sources.list
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 20D63CCDDD0F62C2
+        echo deb http://deb.liquidsoap.info/ubuntu bionic main | sudo tee -a /etc/apt/sources.list
         sudo apt-get update
         sudo install liquidsoap
         make -C liq test
