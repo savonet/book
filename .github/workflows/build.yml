@@ -11,3 +11,7 @@ jobs:
       run: sudo apt-get install pandoc pandoc-citeproc texlive texlive-fonts-extra ocaml-nox ocaml-findlib libyojson-ocaml-dev
     - name: Build
       run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: book
+        path: book.pdf
