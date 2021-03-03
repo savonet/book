@@ -159,7 +159,7 @@ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 20D63CCDDD0F62C2
 and then add the following source for Ubuntu:
 
 ```
-sudo echo deb http://deb.liquidsoap.info/ubuntu bionic main >> /etc/apt/sources.list
+echo deb http://deb.liquidsoap.info/ubuntu bionic main | sudo tee -a /etc/apt/sources.list
 ```
 
 The above line is for the Bionic version of Ubuntu, if you are on Debian/testing

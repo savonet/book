@@ -944,11 +944,12 @@ the variable `y` is not available after the definition.
 
 A typical use of functions in Liquidsoap is for _handlers_, which are functions
 to be called when a particular event occurs, specifying the actions to be taken
-when it occurs. For instance, the `on_metadata` operator allows registering a
-handler when metadata occurs in a stream. Its type is
+when it occurs. For instance, the `on_metadata`\TODO{this operator is now
+depreacted, give on blank as example} operator allows registering a handler when
+metadata occurs in a stream. Its type is
 
 ```
-((([string * string]) -> unit), source('a)) -> source('a)
+((([string * string]) -> unit), source(audio='a, video='b, midi='c) -> source(audio='a, video='b, midi='c)
 ```
 
 and it thus takes two arguments:
@@ -956,8 +957,8 @@ and it thus takes two arguments:
 - the handler, which is a function which takes as argument an association list
   (of type `[string * string]`) encoding the metadata and returns nothing
   meaningful (`unit`),
-- the source (of type `source('a)`, see [below](#sec:lang-sources)) whose
-  metadata are to be watched.
+- the source (of type `source(audio='a, video='b, midi='c)`, see
+  [below](#sec:source-type)) whose metadata are to be watched.
 
 When some metadata occur in the source, the handler is called with the metadata
 as argument. For instance, we can print the title of every song being played on
@@ -1125,7 +1126,7 @@ Youtube, is
 ```
 
 (we have only slightly simplified the type `source`, which will only be detailed
-in [a next section](#sec:lang-sources)). Even if we have not read the
+in [a next section](#sec:source-type)). Even if we have not read the
 documentation of this function, we can still guess what it is doing:
 
 - there are 5 optional arguments that we should be able to ignore because they

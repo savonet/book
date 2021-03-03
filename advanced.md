@@ -918,3 +918,6 @@ Protocols
 ---------
 
 - the `synth` protocol (already presented in "testing scripts" section)
+
+FFmpeg filters
+--------------

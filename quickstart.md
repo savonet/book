@@ -111,7 +111,7 @@ output
 ```
 Generate a sine wave.
 
-Type: (?id : string, ?amplitude : float, ?float) -> source(audio=pcm('a), video='b, midi='c)
+Type: (?id : string, ?amplitude : float, ?float) -> source(audio=internal('a), video=internal('b), midi=internal('c))
 
 Category: Source / Input
 
@@ -132,7 +132,9 @@ parameters (there is also a section for methods, which is not shown above, but
 we simply ignore it for now, it will be detailed in [a subsequent
 section](#sec:records)). Here, the type indicates that it is a function taking
 three arguments and returning a source with any number of audio, video and midi
-channels. The three arguments are indicated in the type and detailed after:
+channels (the precise meaning of `source` and its argument is detailed in [this
+chapter](#chap:streaming)). The three arguments are indicated in the type and
+detailed after:
 
 - the first argument is a string labeled `id`: this is the name which will be
   displayed in the logs,

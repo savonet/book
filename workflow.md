@@ -997,6 +997,14 @@ mention `output.harbor`
 
 TODO: multiple qualities, we can convert to mono with `mean`
 
+### Youtube
+
+TODO: example of Youtube output, we should work out native ffmpeg youtube output
+
+### Encode once, output multiple times
+
+TODO: explain how to encode in mp3 and output both in a file and to Icecast without re-encoding
+
 Monitoring the stream
 ---------------------
 
