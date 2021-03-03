@@ -2,11 +2,9 @@ name: CI
 on: [push]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
-    - name: Update to eoan
-      run: sudo sed -i s/bionic/eoan/ /etc/apt/sources.list && sudo apt-get update
     - name: Install packages
       run: sudo apt-get install pandoc pandoc-citeproc texlive texlive-fonts-extra ocaml-nox ocaml-findlib libyojson-ocaml-dev
     - name: Build
