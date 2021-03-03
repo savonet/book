@@ -10,8 +10,17 @@ jobs:
     - name: Install packages
       run: sudo apt-get install pandoc pandoc-citeproc texlive texlive-fonts-extra ocaml-nox ocaml-findlib libyojson-ocaml-dev
     - name: Build
-      run: make
+      run: |
+        make
+        pdflatex book.tex
     - uses: actions/upload-artifact@v2
       with:
         name: book
         path: book.pdf
+    - name: Test scripts
+      run: |
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 20D63CCDDD0F62C2
+        sudo echo deb http://deb.liquidsoap.info/ubuntu bionic main >> /etc/apt/sources.list
+        sudo apt-get update
+        sudo install liquidsoap
+        make -C liq test
