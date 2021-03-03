@@ -15,10 +15,12 @@ jobs:
       with:
         name: book
         path: book.pdf
-    - name: Test scripts
+    - name: Install Liquidsoap
       run: |
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 20D63CCDDD0F62C2
         echo deb http://deb.liquidsoap.info/ubuntu focal main | sudo tee -a /etc/apt/sources.list
         sudo apt-get update
-        sudo apt-get install liquidsoap
-        make -C liq test
+        sudo apt-get install liquidsoap-main
+        liquidsoap --version
+    - name: Test scripts
+      run: make -C liq test
