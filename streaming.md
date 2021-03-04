@@ -345,41 +345,161 @@ source(audio=internal('a), video=none, midi=none)
 ```
 
 i.e. why allow the `sine` operator to generate video and midi data, whereas
-those are always useless (they are blank). The reason is that 
+those are always quite useless (they are blank). The reason is mainly because of
+the following pattern. Suppose that you want to generate a blue screen with a
+sine wave as sound. You would immediately write something like this
 
-we state that the `sine` operator can generate video (and midi) data,
-
-TODO: expliquer qu'on a besoin de générer des pistes "vides" pour satisfaire les
-exigeances du typage de `add`: tous doivent avoir le même nombre de canaux audio
-et vidéo
-
-```{.liquidsoap include="liq/blue-sine.liq"}
+```{.liquidsoap include="liq/blue-sine.liq" from=1}
 ```
 
-expliquer qu'on peut enlever l'audio et la video avec drop et rajouter avec mux
+We create the source `a` which is the sine wave, the source `b` which is the
+blue screen (obtained by taking the output of `blank`, which is black and mute,
+and filling it in blue), we add them and finally play the resulting source
+`s`. The thing is that we can only add sources of the same type: `add` being of type
+
+```
+([source(audio=internal('a), video=internal('b), midi=internal('c))]) -> source(audio=internal('a),video=internal('b),midi=internal('c))
+```
+
+it takes a list of sources to add, and lists cannot contain heterogeneous
+elements. Therefore, in order to produce a source with both audio and video, the
+elements of the list given as argument to `add` must all be sources with audio
+and video.
+
+If you insist of adding a video channel to a source which does not have one, you
+should use the dedicated function `mux_video`, whose type is
+
+```
+(video : source(audio=none, video='a, midi=none), source(audio='b, video=none, midi='c)) -> source(audio='b, video='a, midi='c)
+
+```
+
+(and the function `mux_audio` can similarly be used to add audio to a source
+which does not have that). However, since this function is much less well-known
+than `add`, we like leaving the possibility to the user of using both most of
+the time, as explained above. Note that the following variant of the above
+script
+
+```{.liquidsoap include="liq/blue-sine2.liq" from=1}
+```
+
+is slightly more efficient since the source `a` does not need to generate video
+and the source `b` does not need generate audio.
+
+Dually, in order to remove the audio of a source, the operator `drop_audio` of
+type
+
+```
+(source(audio='a, video='b, midi='c)) -> source(audio=none, video='b, midi='c)
+```
+
+can be used, and similarly the operator `drop_video` can remove the video.
 
 ### Type annotations
 
+If you want to constraint the contents of a source, the Liquidsoap language
+offers the construction `(e : t)` which allows constraining an expression `e` to
+have type `t` (technically, this is called a type _cast_). It works for
+arbitrary expressions and types, but is mostly useful for sources. For instance,
+in the following example, we play the source `s` in mono, even though the
+default number of channels is two:
 
-If necessary we can constraint the type of a source
-
-
-Example of outputing in mono
-
-TODO: explain that we can enforce the type, eg to force mono output
-
-```{.liquidsoap include="liq/mono-output.liq" from=1}
+```{.liquidsoap include="liq/mono-output.liq" from=2}
 ```
 
-Formats
--------
+Namely, in the second line, we constrain the type of `s` to be
+`source(audio=pcm(mono))`, i.e. a source with mono audio.
 
-Concatenating mp3 without reencoding:
+### Encoding formats {#sec:encoders-intro}
 
-```{.liquidsoap include="liq/encoded-concat.liq"}
+In order to specify the format in which a stream is encoded, Liquidsoap uses
+particular annotations called _encoders_. For instance, consider the
+`output.file` operator which stores a stream into a file: this operator needs to
+know what kind of file we want to produce. The (simplified) type of this
+operator is
+
+```
+(format('a), string, source('a)) -> active_source('a)
+```
+
+We see that the second argument is the name of the file and the third argument
+is the source we want to dump. The first argument is the encoding format, of
+type `format('a)`. Observe that it takes a type variable `'a` as argument, which
+is the same variable as the parameters of the source taken as third argument
+(and the returned source): the format required by the source will depend on the
+chosen format.
+
+The encoding formats are given by encoders, whose name always begin with the
+"`%`" character and can take parameters: their exhaustive list is given in
+[there](#sec:encoders). For instance, if we want to encode a source `s` in mp3
+format, we are going to use the encoder `%mp3` and thus write something like
+
+```{.liquidsoap include="liq/format-mp3.liq" from=2}
+```
+
+If we have a look at the type of the encoder `%mp3`, we see that its type is
+
+```
+format(audio=pcm(stereo), video=none, midi=none)
+```
+
+which means that, in the above example, the source `s` will have to contain
+stereo pcm audio, no video and no midi. The encoders take various
+parameters. For instance, if we want to encode mp3 in mono, at a bitrate of
+192 kbps, we can pass the parameters `mono` and `bitrate=192` as follows:
+
+```{.liquidsoap include="liq/format-mp3-mono.liq" from=2}
+```
+
+Note that this will have an influence on the type of the stream: if we pass
+`mono` as parameter, the type of the encoder becomes
+
+```
+format(audio=pcm(mono), video=none, midi=none)
+```
+
+and thus imposes that `s` should have mono audio.
+
+Because they have such an influence on types, an encoder is not a value as any
+other in Liquidsoap, and specific restrictions have to be imposed. In
+particular, you cannot use variables or complex expressions in the parameters
+for the encoders. For instance, the following will not be accepted
+
+
+```{.liquidsoap include="liq/bad/format-mp3-mono.liq" from=2}
+```
+
+because we are trying to use a variable as value for the bitrate. This might
+change in the future though.
+
+As another example, suppose that we want to encode our whole music library as a
+long mp3. We would proceed in this way:
+
+
+```{.liquidsoap include="liq/encoded-concat.liq" from=1}
+```
+
+The first line creates a `playlist` source which will read all our music files
+once, the second line ensures that we try to encode the files as fast as
+possible instead of performing this in real time (the use of clocks is detailed
+in [there](...)\TODO{reference}) and the third line requires the encoding in mp3
+of the resulting source, calling the `shutdown` function once the source is
+over, which will terminate the script. If you try this at home, you will see
+that it takes quite some time, because the `playlist` operator has to decode all
+the files of the library into internal raw contents, and the `output.file`
+operator has to encode the stream in mp3, which is quite CPU-hungry. If our
+music library already consists in mp3 files, it is much more efficient to avoid
+decoding and then reencoding the files.
+
+
+Concatenating mp3 without reencoding: replace the last line by
+
+```{.liquidsoap include="liq/encoded-concat2.liq" from=3}
 ```
 
 They are used by file encoding, streaming functions, and FFmpeg functions
+
+TODO: most encoding operator work in the same way
 
 The streaming model
 -------------------
@@ -477,6 +597,8 @@ wake up
 
 content kind / content type setting
 
+source which are available or not (failability)
+
 The ones that ask for the production of data are called _active
 sources_. For instance, the function `output.pulseaudio` plays the contents of a
 source on the soundcard (using the pulseaudio library). Its type is
@@ -499,6 +621,8 @@ source, it stream will not
 
 TODO: expliquer le flux des sources: par exemple, si on fait un on_metadata mais
 qu'on ne lit pas la sortie, la fonction n'est pas appelée...
+
+TODO: explain that switch does not advance the non-selected sources
 
 ### Decoding compressed data
 
@@ -627,8 +751,7 @@ TODO: detail the methods present for every source....
 - `skip`: Skip to the next track.
 - `time`: Get a source's time, based on its assigned clock.
 
-Requests
---------
+### Requests
 
 explain that we need to resolve requests, which is why queues take request in account, we want to be able to play them immediately
 
