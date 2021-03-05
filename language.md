@@ -2188,6 +2188,9 @@ where the "`...`" indicate the _contents_ that the source can generate, i.e. the
 number of channels, and their nature, for audio, video and midi data, that the
 source can generate.
 
+TODO: source functions take an `id` parameter which is mostly useful for the
+logs and the telnet
+
 ### Encoders
 
 ### Requests

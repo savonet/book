@@ -719,8 +719,10 @@ Handling tracks
 
 ### Metadata
 
+- add the year of songs in the title (`map_metadata`)
+- insert metadata (in scripts, with telnet)
 - log all the music files which have gone on air
-```{.liquidsoap include="liq/log_songs.liq" from=1 to=-1}
+```{.liquidsoap include="liq/log-songs.liq" from=1 to=-1}
 ```
 - log the current file in JSON format (see #954)
 ```liquidsoap

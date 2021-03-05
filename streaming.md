@@ -47,9 +47,11 @@ The type of sources is of the form
 source(audio=..., video=..., midi=...)
 ```
 
-where the "`...`" indicate the _contents_ that the source can generate, i.e. the
-number of channels, and their nature, for audio, video and midi data, that the
-source can generate. For instance, the type of `sine` is
+where the "`...`" indicate the _contents_\index{contents} that the source can
+generate, i.e. the number of channels, and their nature, for audio, video and
+midi data, that the source can generate: the contents for each of these three is
+sometimes called the _kind_\index{kind} of the source. For instance, the type of
+`sine` is
 
 ```
 (?amplitude : {float}, ?duration : float, ?{float}) -> source(audio=internal('a), video=internal('b), midi=internal('c))
@@ -571,6 +573,25 @@ pass it to the `sine` source, which will fill it with a sine, then the `amplify`
 source will modify its volume, and then the `output.pulseaudio` source will send
 it to the soundcard.
 
+The frame duration is always supposed to be "small" so that values are constant
+over a frame. For this reason and in order to gain performance, expressions are
+evaluated only once at the beginning of each frame. For instance, the following
+script plays music at a random volume:
+
+```{.liquidsoap include="liq/random-volume.liq" from=2}
+```
+
+In fact, the random number for the volume is only generated once for the whole
+frame. This can be heard if you try to run the above script by setting the frame
+duration to a "large" number such as 1 second:
+
+```{.liquidsoap include="liq/random-volume.liq" from=1 to=1}
+```
+
+You should be able to clearly hear that volume changes only once every
+second. In practice, with the default duration of a frame, this cannot be
+noticed.
+
 ### Frame raw contents {#sec:liquidsoap-raw}
 
 Let us provide some more details about the way data is usually stored in those
@@ -667,15 +688,129 @@ Frames last 0.08s = 3675 audio samples = 2 video samples = 7350 ticks.
 which means that a frame lasts 0.8 seconds and contains 8675 audio samples and 2
 video samples, which corresponds to 7350 ticks.
 
+### Tracks and metadata
+
+Each frame contains two additional arrays of data which are timed (in ticks
+relative to the beginning of the frame): breaks and metadata.
+
+It might happen that a source cannot entirely fill the current frame. For
+instance in the case of a source playing one file once (e.g. using the operator
+`once`), where there are only 0.02 seconds of audio left whereas the frame lasts
+0.04 seconds. We could have simply ignored this and filled the last 0.02 seconds
+with silence, but we are not like this at Liquidsoap, especially since even such
+a short period of a silence can clearly be heard. Don't believe me? You can try
+the following script which sets up the frame size to 0.02 seconds and then
+silences the audio for one frame every second:
+
+```{.liquidsoap include="liq/glitch.liq" from=1}
+```
+
+You should clearly be able to hear a tick every second if the played music files
+are loud enough. For this reason, if a source cannot fill the frame entirely, it
+indicates it by adding a _break_, which marks the position until where the frame
+has been filled. If the frame is not complete, it will try to fill the rest on
+the next iteration of filling frames.
+
+Each filling operation is required to add exactly one break. In a typical
+execution, the break will be at the end of the frame. If this is not the case,
+this means that the source could not entirely fill the frame, and this is thus
+considered as a _track_ boundary. In Liquidsoap, tracks are encoded as breaks in
+frames which are not at the end: this mechanism is typically used to mark the
+limit between two successive songs in a stream. In scripts, you can detect when
+a track occurs using the `on_track` method that all sources have, and you can
+insert track by using the method provided by the `insert_metadata` function.
+
+A frame can also contain _metadata_ which are pairs of strings (e.g. `"artist"`,
+`"Alizée"` or `"title"`, `"Moi... Lolita"`, etc.) together with the position in
+the frame where they should be attached. Typically, those information are
+present in files (e.g. mp3 files contain metadata encoded in ID3 format) and are
+passed on into Liquidsoap streams (e.g. when using the `playlist`
+operator). They are also used by output operators such as `output.icecast` to
+provide information about the currently playing song to the listener. In
+scripts, you can trigger a function when metadata is present with `on_metadata`,
+transform the metadata with `map_metadata` and add new metadata with
+`insert_metadata`. For instance, you can print the metadata contained in tracks:
+
+```{.liquidsoap include="liq/print-metadata.liq" from=1}
+```
+
+If you have a look at a typical stream, you will recognize the usual information
+you would expect (artist, title, album, year, etc.). But you should also notice
+that Liquidsoap adds internal information such as
+
+- `filename`: the name of the file being played,
+- `temporary`: whether the file is temporary, i.e. has been downloaded from the
+  internet and should be deleted after having been played,
+- `source`: the name of the source which has produced the stream,
+- `kind`: the kind (i.e. the contents of audio, video and midi) of the stream,
+- `on_air`: the time at which it has been put on air, i.e. first played.
+
+These are added when resolving requests, which are detailed below. In order to
+prevent internal information leaks (we don't want our listeners to know about
+our filenames), the metadata are filtered before being sent to outputs: this is
+controlled by the `"encoder.encoder.export"` setting, which contain the list of
+metadata which will be exported, and whose default value is
+
+```
+["artist", "title", "album", "genre", "date", "tracknumber",
+ "comment", "track", "year", "dj", "next"]
+```
+
 ### The stream generation workflow {#sec:stream-generation}
 
-wake up
+In order to illustrate
+
+- clock computation
+- kind computation
+- get ready
+
+when getting ready, the source activates the sources it will need, activation
+can either be static or dynamic
+
+> A source may be accessed by several sources, and must switch to caching mode
+> when it may be accessed by more than one source, in order to ensure
+> consistency of the delivered stream chunk.
+    
+> Before that a source P accesses another source S it must activate it. The
+> activation can be static, or dynamic. A static activation means that P may
+> pull data from S at any time. A dynamic activation means that P won't use S
+> directly but may at some point build a source which will access S. This
+> dynamic creation may occur in the middle of an output round, which is why S
+> needs to know in advance, since in some cases it might have to enter caching
+> mode from the beginning of the round in case the dynamic activation occurs.
+    
+> An activation is identified by the path to the source which required it. It is
+> possible that two identical activations are done, and they should not be
+> treated as a single one.
+    
+> In short, a source can avoid caching when: it has only one static activation
+> and all its dynamic activations are sub-paths of the static one. When there is
+> no static activation, there cannot be any access.
+
+- wake up if it was not already
+- content type is fixed from the kind
+
+- streaming loop: ensure that the source is ready, and get a frame
+
+- leave a source when it is not needed anymore (this is the opposite of get ready)
+
+morning / afternoon / night
+
+observe activations `"Activations changed: static=[%s], dynamic=[%s]."`
+
+```{.liquidsoap include="liq/switch-often.liq" from=1}
+```
 
 content kind / content type setting
 
 TODO: explain that channels are re-computed at wake up time, therefore we should
 not for the evaluation of `self#ctype` before that (e.g. by initializing an
 array with the number of channels)
+
+TODO: explain that there are boundary conditions: a source can be fetched twice
+with different track boundaries
+
+TODO: explain that switch does not advance the non-selected sources
 
 source which are available or not (failability)
 
@@ -716,35 +851,6 @@ in a frame, Liquidsoap will temporarily store the result -- we that that it
 "caches" it -- so that when the second active sources asks `amplify` to fill in
 the frame, the stored one will be reused, thus avoiding to compute twice the
 same frame.
-
-### Additional data in frames
-
-Sampling units are used to for position markers within the frame. Each
-frame has two arrays of markers: an array of **breaks** and
-an array of **metadata**.
-
-Breaks are added each time the frame is filled. A break represent the last
-position after a filling operation. Each filling operation is required to
-add exactly one break.
-
-In a typically execution, a filling operation with no track mark has only one
-break, located right at the end of the frame. Otherwise, breaks located before the
-frame's end represent markers for end of tracks.
-
-Metadata are attached with their position within the frame and a list of pairs of
-`(label, value)` metadata. Labels can be any string. However, metadata labels are filtered
-before being exported, in order to prevent internal information leak. This is 
-controlled by the `"encoder.encoder.export"` setting. 
-
-TODO: explain that there are boundary conditions: a source can be fetched twice
-with different track boundaries
-
-TODO: source functions take an `id` parameter which is mostly useful for the
-logs and the telnet
-
-TODO: explain that switch does not advance the non-selected sources
-
-TODO: tracks, metadata
 
 ### Fallible sources
 
@@ -826,9 +932,9 @@ Sometimes it will fail, for instance if test.mp3 is stereo, the following script
 
 because we cannot implicitly convert a stereo file into 5.1
 
-### Startup and shutdown
+### Presentation time
 
-Explain what is going up at startup an shutdown of sources (ready / etc.)
+TODO: explain why we need to have pts (_presentation timestamp_) in frames\SM{Romain, I need your help on this!}
 
 ### Methods for sources {#sec:source-methods}
 
@@ -857,7 +963,13 @@ TODO: detail the methods present for every source....
 
 
 
-### Requests
+### Requests {#sec:requests}
+
+TODO: explain the _status_ of requests: idle / resolving / ready / playing / destroyed
+
+TODO: explain that there is voluntarily a small number of available rids and
+that we can have a message if we use too many of those, explain how to change
+this number
 
 explain that we need to resolve requests, which is why queues take request in account, we want to be able to play them immediately
 
@@ -897,6 +1009,16 @@ the tree looks like:
   [ "mydb://myrequest" ] (* And this is the initial URI *)
 ]
 ```
+
+### Where to find the source code
+
+- frames are defined in `stream/frame.ml`
+- requests are defined in `request.ml`
+- the main class for sources is `source.ml`
+- clocks are in `clock.ml`
+- various file for the language: `lang/lang_types.ml` (typing),
+  `lang/lang_values.ml` (expressions of the language), `lang/lang.ml`
+  (high-level operations on the languages)
 
 Romain's writings
 --------
