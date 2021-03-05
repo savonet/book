@@ -42,19 +42,15 @@ toc: true
 
 !include "language.md"
 
-!include "streaming.md"
-
 !include "workflow.md"
 
 !include "advanced.md"
 
 !include "video.md"
 
-!include "plugins.md"
+!include "streaming.md"
 
 !include "faq.md"
-
-!include "internals.md"
 
 !include "reference.md"
 

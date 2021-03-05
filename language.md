@@ -3,7 +3,9 @@ A programming language
 
 Before getting into the more advanced radio setups which can be achieved with
 Liquidsoap, we need to detail the language and the general concepts behind
-it.
+it. If you are eager to start your radio, it might be a good idea to skim though
+it quickly at a first reading, and come back later to it when a deeper knowledge
+about a specific point is required.
 
 General features
 ----------------
@@ -2167,3 +2169,25 @@ record. For instance, we can print the current date with
 
 ```{.liquidsoap include="liq/time.liq"}
 ```
+
+Streams in Liquidsoap
+---------------------
+
+TODO: sources are detailed in [a later chapter](#chap:streaming), give the main
+ideas here
+
+### Sources
+
+The type of sources is of the form
+
+```
+source(audio=..., video=..., midi=...)
+```
+
+where the "`...`" indicate the _contents_ that the source can generate, i.e. the
+number of channels, and their nature, for audio, video and midi data, that the
+source can generate.
+
+### Encoders
+
+### Requests

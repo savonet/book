@@ -339,4 +339,12 @@ The name of the temporary directory: Under Unix, the value of the `TMPDIR`
 environment variable, or `"/tmp"` if the variable is not set. Under Windows, the
 value of the `TEMP` environment variable, or `"."` if the variable is not set.
 
+What to do in case of a bug
+---------------------------
 
+### Getting stacktraces
+
+```
+% gdb -p <process PID>
+> thread apply all bt
+```
