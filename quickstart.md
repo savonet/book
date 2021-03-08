@@ -133,7 +133,7 @@ we simply ignore it for now, it will be detailed in [a subsequent
 section](#sec:records)). Here, the type indicates that it is a function taking
 three arguments and returning a source with any number of audio, video and midi
 channels (the precise meaning of `source` and its argument is detailed in [this
-chapter](#chap:streaming)). The three arguments are indicated in the type and
+section](#sec:source-type)). The three arguments are indicated in the type and
 detailed after:
 
 - the first argument is a string labeled `id`: this is the name which will be
@@ -206,8 +206,8 @@ with the ALSA library. You should be able to hear your voice with
 ```
 
 We need to use `buffer` here to avoid synchronization issues, this should be
-detailed in [a later section](#sec:clocks), and you can hear that there is a slight
-delay between your voice and the output due to the buffering.
+detailed in [a later section](#sec:clocks-ex), and you can hear that there is a
+slight delay between your voice and the output due to the buffering.
 
 ### Fallible sources and fallbacks
 

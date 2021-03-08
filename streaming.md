@@ -214,21 +214,35 @@ with the description of the raw contents used in Liquidsoap, described in
 Most of the sources are _passive_ which means that they are simply waiting to be
 asked for some data, they are not responsible for when the data is going to be
 produced. For instance, a playlist is a passive source: we can decode the files
-of the playlist at the rate we want. However, some sources are _active_ which
-means that we do not have control over the rate at which the data is
-produced. This is typically the case with a soundcard which regularly produces
-data, at a rate which is controlled by the hardware, and this is indicated in
-the type. For instance, the type of the `input.alsa` function (which inputs from
-a soundcard) is
+of the playlist at the rate we want. Similarly, an amplification operator
+`amplify(a, s)` is passive: it waits to be asked for data, then in turn asks the
+source `s` for data, and finally it returns the given data amplified by a
+coefficient `a`. However, some sources are _active_ which means that they are
+responsible for asking data. This is typically the case for outputs such as to a
+soundcard (e.g. `output.alsa`) or to a file (e.g. `output.file`). For instance,
+the (simplified) type of `output.alsa` is
+
+```
+(source(audio=pcm('a), video='b, midi='c)) -> active_source(audio=pcm('a), video='b, midi='c)
+```
+
+We see that it takes a source as input (the one to be played) and returns an
+active source: the returned source is the same as the input source, but the type
+indicates that it is active, as witnessed by the `active_source` instead of the
+usual `source`.
+
+Perhaps surprisingly, some inputs are also tagged as active, because they are
+proactive. For instance, in the source `input.alsa`, we do not have control over
+the rate at which the data is produced, the soundcard sends us regularly audio
+data, and is responsible for the synchronization, and its type is
 
 ```
 (...) -> active_source(audio=pcm('a), video='b, midi='c)
 ```
 
-We see that the returned type is `active_source` instead of `souce`, which
-indicates that it is active. Any active source is a particular case of a source,
-so that we can feed the result of `input.alsa` to an operator requiring a
-source, such as `amplify` whose type is
+Any active source is a particular case of a source, so that we can feed the
+result of `input.alsa` to an operator requiring a source, such as `amplify`
+whose type is
 
 ```
 ({float}, source(audio=pcm('a), video='b, midi='c)) -> source(audio=pcm('a), video='b, midi='c)
@@ -240,10 +254,9 @@ as in the script
 ```
 
 (namely, `mic` is of type `active_source` and `amplify` requires an argument of
-type `source`, which does not cause any problem). Outputs to soundcard (such as
-`output.alsa` or `output.pulseaudio`) are also active because the rate of the
-output is controlled by the soundcard. The reason for distinguishing active
-sources is further explained in [there](#sec:stream-generation).
+type `source`, which does not cause any problem). To be precise, it is not the
+exactly the active source itself which is responsible for initiating computation
+of data, but the associated clock, as explained in [there](#sec:clocks).
 
 ### Type inference
 
@@ -574,7 +587,7 @@ source will modify its volume, and then the `output.pulseaudio` source will send
 it to the soundcard.
 
 The frame duration is always supposed to be "small" so that values are constant
-over a frame. For this reason and in order to gain performance, expressions are
+over a frame. For this reason, and in order to gain performance, expressions are
 evaluated only once at the beginning of each frame. For instance, the following
 script plays music at a random volume:
 
@@ -590,7 +603,9 @@ duration to a "large" number such as 1 second:
 
 You should be able to clearly hear that volume changes only once every
 second. In practice, with the default duration of a frame, this cannot be
-noticed.
+noticed. It can be sometimes useful to increase it a bit (but not as much as 1
+second) in order to improve the performance of scripts, at the cost of
+decreasing the precision of computed values.
 
 ### Frame raw contents {#sec:liquidsoap-raw}
 
@@ -694,11 +709,11 @@ Each frame contains two additional arrays of data which are timed (in ticks
 relative to the beginning of the frame): breaks and metadata.
 
 It might happen that a source cannot entirely fill the current frame. For
-instance in the case of a source playing one file once (e.g. using the operator
+instance, in the case of a source playing one file once (e.g. using the operator
 `once`), where there are only 0.02 seconds of audio left whereas the frame lasts
 0.04 seconds. We could have simply ignored this and filled the last 0.02 seconds
 with silence, but we are not like this at Liquidsoap, especially since even such
-a short period of a silence can clearly be heard. Don't believe me? You can try
+a short period of a silence can clearly be heard. Don't believe us? You can try
 the following script which sets up the frame size to 0.02 seconds and then
 silences the audio for one frame every second:
 
@@ -860,7 +875,7 @@ In practice, simply use `mksafe`{.liquidsoap}
 
 explain `fail` and give the example of `once` which is implemented with `sequence`
 
-### Clocks
+### Clocks {#sec:clocks}
 
 Ticks represent the internal sampling unit. They are defined as the smaller
 sampling unit across all data types. For instance, wth `audio`

@@ -21,7 +21,7 @@ hear your voice with
 ```
 
 Here, we have to use `buffer` in order to deal with synchronization issues
-between the input and the output, which is detailed in [there](#sec:clocks).
+between the input and the output, which is detailed in [there](#sec:clocks-ex).
 
 If you want to use a particular device, you should use the parameter `device`
 which takes as argument a string of the form `hw:X,Y` where `X` is the card
@@ -1069,7 +1069,7 @@ source = on_blank(handler,source)
 ### Metrics
 
 
-Clocks {#sec:clocks}
+Clocks {#sec:clocks-ex}
 ------
 
 Explain the problem with multiple icecast outputs.
