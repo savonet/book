@@ -254,9 +254,27 @@ as in the script
 ```
 
 (namely, `mic` is of type `active_source` and `amplify` requires an argument of
-type `source`, which does not cause any problem). To be precise, it is not the
-exactly the active source itself which is responsible for initiating computation
-of data, but the associated clock, as explained in [there](#sec:clocks).
+type `source`, which does not cause any problem).
+
+This way of functioning means that if a source is not connected to an active
+source, its stream will not be produced. For instance, consider the following
+script:
+
+```{.liquidsoap include="liq/passive.liq" from=1}
+```
+
+Here, the only active source is `output` which is playing the `blank`
+source. The source `s` is not connected to an active source, and its contents
+will never be computed. This can be observed because we are printing a message
+for each new track: here, no stream is produced, thus no new track is produced,
+thus we will never see the message. Some operators also do not ask for frames
+from all their input sources: typically, the `switch` operator will only ask a
+frame from the currently active source.
+
+The above story is not precise on one point. We will see in [a section
+below](#sec:clocks) that it is not the exactly the active sources themselves
+which are responsible for initiating computation of data, but rather the
+associated clocks.
 
 ### Type inference
 
@@ -773,114 +791,188 @@ metadata which will be exported, and whose default value is
 
 ### The stream generation workflow {#sec:stream-generation}
 
-In order to illustrate
+When starting the script, Liquidsoap begins with a _creation phase_ which
+instantiates each source and computes its parameters by propagating information
+from the sources it uses. The two main characteristics determined for each
+source are
 
-- clock computation
-- kind computation
-- get ready
+- _fallibility_: we determine whether the source is fallible, i.e. might be
+  unable to produce its stream at some point (this is detailed below),
+- _clocks_: we determine whether the source is synchronized by using the cpu or
+  has its own way of keeping synced, e.g. using the internal clock of a
+  soundcard (this is also detailed below).
 
-when getting ready, the source activates the sources it will need, activation
-can either be static or dynamic
+Then the standard life cycle of a source is the following one:
 
-> A source may be accessed by several sources, and must switch to caching mode
-> when it may be accessed by more than one source, in order to ensure
-> consistency of the delivered stream chunk.
-    
-> Before that a source P accesses another source S it must activate it. The
-> activation can be static, or dynamic. A static activation means that P may
-> pull data from S at any time. A dynamic activation means that P won't use S
-> directly but may at some point build a source which will access S. This
-> dynamic creation may occur in the middle of an output round, which is why S
-> needs to know in advance, since in some cases it might have to enter caching
-> mode from the beginning of the round in case the dynamic activation occurs.
-    
-> An activation is identified by the path to the source which required it. It is
-> possible that two identical activations are done, and they should not be
-> treated as a single one.
-    
-> In short, a source can avoid caching when: it has only one static activation
-> and all its dynamic activations are sub-paths of the static one. When there is
-> no static activation, there cannot be any access.
+- we first inform the source that we are going to use it (we also say that we
+  _activate_ it) by asking it to _get ready_, which triggers its initialization,
+- then we repeatedly ask it for _frames_,
+- and finally, when the script shuts down, we _leave_ the source, indicating
+  that we are not going to need it anymore.
 
-- wake up if it was not already
-- content type is fixed from the kind
+The information always flows from outputs. For instance, in a simple script such
+as
 
-- streaming loop: ensure that the source is ready, and get a frame
-
-- leave a source when it is not needed anymore (this is the opposite of get ready)
-
-morning / afternoon / night
-
-observe activations `"Activations changed: static=[%s], dynamic=[%s]."`
-
-```{.liquidsoap include="liq/switch-often.liq" from=1}
+```{.liquidsoap include="liq/amplify-playlist.liq" from=1}
 ```
 
-content kind / content type setting
+at beginning Liquidsoap will ask the output to get ready, in turn the output
+will ask the amplification operator to get ready, which will in turn ask the
+playlist to get ready (and leaving is performed similarly, as well as the
+computation of frames as explained above). Note that a given source might be
+asked multiple times to get ready, for instance if it is used by two outputs
+(typically, an icecast output and an HLS output). The first time it is asked to
+get ready, the source _wakes up_ at which point it sets up what it needs (and
+dually, the last time it is asked to leave, the source goes to _sleep_ where it
+cleans up everything). Typically, an `input.http` source, will start polling the
+distant stream at wake up time, and stop at sleep time.
 
-TODO: explain that channels are re-computed at wake up time, therefore we should
-not for the evaluation of `self#ctype` before that (e.g. by initializing an
-array with the number of channels)
-
-TODO: explain that there are boundary conditions: a source can be fetched twice
-with different track boundaries
-
-TODO: explain that switch does not advance the non-selected sources
-
-source which are available or not (failability)
-
-The ones that ask for the production of data are called _active
-sources_. For instance, the function `output.pulseaudio` plays the contents of a
-source on the soundcard (using the pulseaudio library). Its type is
+You can observe this in the logs (you need to set your log level to least 5):
+when a source wakes up it emits a message of the form
 
 ```
-(..., source(audio=pcm('a), video='b, midi='c)) ->
-   active_source(audio=pcm('a), video='b, midi='c)
+Source xxx gets up ...
 ```
 
-which means that it takes any source producing raw audio as input and returns an
-active source: the returned type `active_source(...)` means that this operator
-is active and will be responsible for asking audio to the input source. As
-expected, every active source is in particular a source.
+and when it goes to sleep it emits
 
-This way of functioning means that if a source is not connected to an active
-source, it stream will not
-
-```{.liquidsoap include="liq/passive.liq"}
+```
+Source xxx gets down.
 ```
 
-TODO: expliquer le flux des sources: par exemple, si on fait un on_metadata mais
-qu'on ne lit pas la sortie, la fonction n'est pas appelée...
+where `xxx` is the identifier of the source (which can be changed by passing an
+argument labeled `id` when creating the source). You can also determine whether
+a source has been waken up, by using the method `is_up` which is present for any
+source `s`: calling `s.is_up()` will return a boolean indicating whether the
+source `s` is up or not. For instance,
 
-An important optimization of Liquidsoap is _caching_, which allows sharing the
-frame computed by a source between two sources. For instance, consider the
-following script:
+```{.liquidsoap include="liq/is_up.liq" from=1 to=-1}
+```
+
+will print, after 1 second, whether the playlist source is up or not (in this
+example it will always be the case).
+
+When waking up, the source also determines its _kind_, that is the number and
+nature of `audio`, `video` and `midi` channels as presented above. This might
+seem surprising because this information is already present in the type of
+sources, as explained above. However, for efficiency reasons, we drop types
+during execution, which means that we do not have access to this and have to
+compute it again (this is only done at startup and is quite inexpensive anyway):
+some sources need this information in order to know in which format they should
+generate the stream or decode data. The computation of the kind is performed in
+two phases: we first determine the _content kind_ which are the necessary
+constraints (e.g. we need at least one channel of pcm audio), and then we
+determine the _content type_ where all the contents are fixed (e.g. we need two
+channels of pcm audio). When a source gets up it displays in the logs the
+requested content kind for the output, e.g.
+
+```
+Source xxx gets up with content kind: {audio=pcm,video=internal,midi=internal}.
+```
+
+which states that the source will produce pcm audio (but without specifying the
+number of channels), and video and midi in internal format. Later on, you can
+see lines such as
+
+```
+Content kind: {audio=pcm,video=internal,midi=internal},
+content type: {audio=pcm(stereo),video=none,midi=none}
+```
+
+which mean that the content kind is the one described above and that the content
+type has been fixed to two channels of pcm audio, no video nor midi.
+
+When a source is shared by two outputs, at each round it will be asked twice to
+fill a frame (once by each source). For instance, consider the following script:
 
 ```{.liquidsoap include="liq/streaming2.liq"}
 ```
 
 Here, the source `s` is used twice: once by the pulseaudio output and once by
-the icecast output. Liquidsoap is smart enough to detect this kind of situation:
+the icecast output. Liquidsoap detects such cases and goes into _caching mode_:
 when the first active source (say, `output.pulseaudio`) asks `amplify` to fill
-in a frame, Liquidsoap will temporarily store the result -- we that that it
-"caches" it -- so that when the second active sources asks `amplify` to fill in
-the frame, the stored one will be reused, thus avoiding to compute twice the
-same frame.
+in a frame, Liquidsoap will temporarily store the result (we say that it
+"caches" it, in what we call a _memo_) so that when the second active source
+asks `amplify` to fill in the frame, the stored one will be reused, thus
+avoiding to compute twice a frame which would be disastrous (each output would
+have one frame every two computed frames).
 
-### Fallible sources
+<!--
+TODO: explain that there are boundary conditions: a source can be fetched twice
+with different track boundaries
+-->
 
-What is a faillible source? (source available or not)
+\TODO{we should speak about dynamic sources at some point: source.dynamic}
 
-In practice, simply use `mksafe`{.liquidsoap}
+### Fallibility
 
-explain `fail` and give the example of `once` which is implemented with `sequence`
+Some sources can _fail_, which means that they do not have a sensible stream to
+produce at some point. This typically happens after ending a track when there is
+no more track to play. For instance, the following source `s` will play the file
+`test.mp3` once:
+
+```{.liquidsoap include="liq/once-single.liq" from=1 to=1}
+```
+
+After the file has been played, there is nothing to play and the source
+fails. Internally, each source has a method to indicate whether it _is ready_,
+i.e. whether it has something to play. Typically, this information is used by
+the `fallback` operator in order to play the first source which is ready. For
+instance, the following source will try to play the source `s`, or a sine if `s`
+is not ready:
+
+```{.liquidsoap include="liq/once-single.liq" from=2 to=2}
+```
+
+In Liquidsoap scripts, every source has a method `is_ready` which can be used to
+determined whether it has something to play.
+
+On startup, Liquidsoap ensures that the sources used in outputs never fail
+(unless the parameter `fallible=true` is passed to the output). This is done by
+propagating fallibility from sources to sources. For instance, we know that a
+`blank` source or a `single` source will never fail (for the latter, this is
+because we download the requested file at startup), `input.http` is always
+fallible because the network might go down, a source `amplify(s)` has the same
+fallibility as `s`, and so on. Typically, if you try to execute the script
+
+```{.liquidsoap include="liq/bad/fallible1.liq" from=1}
+```
+
+Liquidsoap will issue the error
+
+```
+Error 7: Invalid value: That source is fallible
+```
+
+indicating that it has determined that we are trying to play the source `s`,
+which might fail. The way to fix this is to use the `fallback` operator in order
+to play a file which is always going to be available in case `s` falls down:
+
+```{.liquidsoap include="liq/bad/fallible2.liq" from=1}
+```
+
+Or to use `mksafe` which is defined by
+
+```{.liquidsoap include="liq/mksafe.liq" from=1}
+```
+
+and will play blank in case the input source is down.
+
+The "worse" source is given by the operator `fail`, which creates a source which
+is never ready. This is sometimes useful in order to code elaborate
+operators. For instance, the operator `once` is defined from the `sequence`
+operator (which plays one track from each source in a list) by
+
+```{.liquidsoap include="liq/once.liq"}
+```
+
+Another operator which is related to fallibility is `max_duration` which makes a
+source unavailable after some fixed amount of time.
 
 ### Clocks {#sec:clocks}
 
-Ticks represent the internal sampling unit. They are defined as the smaller
-sampling unit across all data types. For instance, wth `audio`
-and `video` data, the sampling unit will be the audio sample rate,
-since it is usually lower than the video sample rate.
+
+
 
 TODO: the CPU clock
 

@@ -1402,7 +1402,7 @@ usually perform a fade in Liquidsoap is detailed in [an ulterior
 section](#sec:transitions).
 
 Let us give another advanced example, which uses many of the above
-constructions. The standard library defines a function `metadata.float_getter`,
+constructions. The standard library defines a function `metadata.getter.float`,
 whose type is
 
 ```
@@ -1423,7 +1423,7 @@ the default value. Given a `radio` source which contains metadata labeled
 "liq_amplify", we can actually change the volume of the source according to the
 metadata with
 
-```{.liquidsoap include="liq/metadata-getter-ex.liq" from=1 to=-1}
+```{.liquidsoap include="liq/metadata-getter-ex.liq" from=2 to=-1}
 ```
 
 <!--

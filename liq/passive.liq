@@ -1,2 +1,4 @@
-s = input.http("http://...")
-on_metadata(fun(m) -> print("New song: " ^ m["title"] ^ "\n"), s)
+#!./liquidsoap
+s = playlist("~/Music")
+s.on_track(fun(_) -> print("New track in the source!"))
+output(blank())

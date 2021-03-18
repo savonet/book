@@ -1,4 +1,4 @@
-def metadata.float_getter(init, metadata, s)
+def metadata.getter.float(init, metadata, s)
   x = ref(init)
   def f(m)
     s = m[metadata]

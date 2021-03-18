@@ -397,8 +397,8 @@ server.register(namespace="dynamic_playlist",
 If you execute this code (add a `output.dummy(blank())` if you have
 no other output..), you have two new telnet commands:
 
-* `dynamic_playlist.start <uri>`
-* `dynamic_playlist.stop <uri>`
+- `dynamic_playlist.start <uri>`
+- `dynamic_playlist.stop <uri>`
 
 which you can use to create/destroy dynamically your sources.
 
@@ -410,6 +410,16 @@ want to use an `input.harbor` in the main output and change the
 `output.icecast` in the dynamic source creation to send everything to
 this `input.harbor`. You can use the `%wav` format in this case to avoid
 compressing/decompressing the data.
+
+TODO: another example
+
+```{.liquidsoap include="liq/source.dynamic.liq"}
+```
+
+and
+
+```{.liquidsoap include="liq/source.dynamic-track.liq"}
+```
 
 #### Manually dump a stream
 You may want to dump the content of 

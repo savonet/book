@@ -16,6 +16,9 @@ Images
 TODO: explain the implementation of `video.add_image` (in particular,
 explain the parameters for the request)
 
+```{.liquidsoap include="liq/logo.liq"}
+```
+
 We can extract cover art, e.g.
 
 ```{.liquidsoap include="liq/cover.liq"}
@@ -36,6 +39,10 @@ Streaming to youtube
 Got to the url <https://www.youtube.com/live_dashboard>
 
 RTMP: <https://github.com/savonet/liquidsoap/issues/1008>
+
+explain the implementation with `output.url`
+
+parameters can be found here: <https://gist.github.com/olasd/9841772>
 
 Parameters
 ----------

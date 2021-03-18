@@ -98,10 +98,6 @@ precision is expected than with the above method. We do not detail it here,
 because it involves some configuration (in particular, a dedicated Jack server
 should be running) which is not specific to Liquidsoap.
 
-### FFmpeg input
-
-TODO..........
-
 ### GStreamer input
 
 Another very general possibility for input is to use the `input.gstreamer.audio`
@@ -236,6 +232,13 @@ therefore handled by a different operator, `input.hls`:
 In this protocol the stream is segmented in small files and Liquidsoap will
 regularly look for new segments (how often can be controlled by the `reload`
 parameter).
+
+\TODO{polish this: we can use input.ffmpeg}
+
+TODO: the format is optional and usually well detected, the list of supported formats can be obtained with `ffmpeg -formats`
+
+```{.liquidsoap include="liq/input.ffmpeg-hls.liq"}
+```
 
 ### Interactive playlists {#sec:request.dynamic}
 
