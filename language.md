@@ -2194,3 +2194,5 @@ logs and the telnet
 ### Encoders
 
 ### Requests
+
+`request.create`, `request.uri`, `request.metadata`

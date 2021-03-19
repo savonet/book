@@ -183,7 +183,7 @@ streams from other servers, which is useful in order to distribute listening
 clients across multiple physical machines, when many of them are expected to
 connect simultaneously.
 
-### HLS
+### HLS {#sec:HLS}
 
 Until recently, the streaming model as offered by Icecast was predominant, but
 it suffers from two main drawbacks. Firstly, the connection has to be kept

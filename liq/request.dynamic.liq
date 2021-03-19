@@ -1,7 +1,6 @@
 #!/usr/bin/env liquidsoap
 def next()
-  uri = process.read.lines("./next-song")
-  uri = list.hd(uri)
+  uri = list.hd(process.read.lines("./next-song"))
   request.create(uri)
 end
 s = request.dynamic(next)

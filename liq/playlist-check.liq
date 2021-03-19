@@ -4,4 +4,4 @@ def check(r)
   string.contains(suffix=".mp3", fname)
 end
 s = playlist(check_next=check, "~/Music")
-out(s)
+output(s)

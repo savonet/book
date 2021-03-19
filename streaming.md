@@ -549,8 +549,8 @@ The format of most encoded output operators (`output.icecast`,
 `output.file.hls`, `output.srt`, etc.) is determined by an encoder argument in
 the same way.
 
-The streaming model
--------------------
+Frames
+------
 
 At this point, we think that it is important to explain a bit how streams are
 handled "under the hood", even though you should never have to explicitly deal
@@ -631,6 +631,8 @@ Let us provide some more details about the way data is usually stored in those
 frames, when using raw internal contents. Each frame has room for audio, video
 and midi data.
 
+#### Audio
+
 The raw audio contents is called `pcm` for _pulse-code modulation_. The signal
 is represented by a sequence of _samples_, one for each channel, which represent
 the amplitude of the signal at a given instant. Each sample is represented by
@@ -649,6 +651,8 @@ and set it to another value such as 48000 with
 ```
 
 although default samplerate of 44100 Hz is largely the most commonly in use.
+
+#### Video
 
 A video consists of a sequence images given regularly. By default, these images
 are presented at the _frame rate_ of 25 images per second, but this can be
@@ -678,6 +682,8 @@ variations, we can take the same U and V values for 4 neighboring pixels. This
 means that each pixel is now encoded by 2.5 bytes (1 for Y, ¼ for U, ¼ for V and
 1 for alpha) and 1 second of typical video is down to a more reasonable 54 Mb
 per second.
+
+#### MIDI
 
 MIDI stands for _Musical Instrument Digital Interface_ and is a (or, rather,
 the) standard for communicating between various digital instruments and
@@ -726,6 +732,8 @@ video samples, which corresponds to 7350 ticks.
 Each frame contains two additional arrays of data which are timed (in ticks
 relative to the beginning of the frame): breaks and metadata.
 
+#### Tracks
+
 It might happen that a source cannot entirely fill the current frame. For
 instance, in the case of a source playing one file once (e.g. using the operator
 `once`), where there are only 0.02 seconds of audio left whereas the frame lasts
@@ -752,6 +760,9 @@ frames which are not at the end: this mechanism is typically used to mark the
 limit between two successive songs in a stream. In scripts, you can detect when
 a track occurs using the `on_track` method that all sources have, and you can
 insert track by using the method provided by the `insert_metadata` function.
+
+
+#### Metadata
 
 A frame can also contain _metadata_ which are pairs of strings (e.g. `"artist"`,
 `"Alizée"` or `"title"`, `"Moi... Lolita"`, etc.) together with the position in
@@ -788,6 +799,14 @@ metadata which will be exported, and whose default value is
 ["artist", "title", "album", "genre", "date", "tracknumber",
  "comment", "track", "year", "dj", "next"]
 ```
+
+### Presentation time
+
+TODO: explain why we need to have pts (_presentation timestamp_) in
+frames\SM{Romain, I need your help on this!}
+
+The streaming model
+-------------------
 
 ### The stream generation workflow {#sec:stream-generation}
 
@@ -852,6 +871,8 @@ source `s` is up or not. For instance,
 will print, after 1 second, whether the playlist source is up or not (in this
 example it will always be the case).
 
+#### Computing the kind, again
+
 When waking up, the source also determines its _kind_, that is the number and
 nature of `audio`, `video` and `midi` channels as presented above. This might
 seem surprising because this information is already present in the type of
@@ -882,8 +903,25 @@ content type: {audio=pcm(stereo),video=none,midi=none}
 which mean that the content kind is the one described above and that the content
 type has been fixed to two channels of pcm audio, no video nor midi.
 
-When a source is shared by two outputs, at each round it will be asked twice to
-fill a frame (once by each source). For instance, consider the following script:
+#### The streaming loop
+
+As explained above, once the initialization phase is over, the outputs regularly
+ask their the source they should play to fill in frames: this is called the
+_streaming loop_. Typically, in a script of the form
+
+```{.liquidsoap include="liq/streaming3.liq" from=3}
+```
+
+the Icecast output will ask the amplification operator to fill in a frame, which
+will trigger the switch to fill in a frame, which will require either the
+`morning` or `default` source to produce a frame depending on the time. For
+performance reasons we want to avoid copies of data, and the computations are
+performed in place, which means that each operator directly modifies the frame
+produces by its source, e.g. the amplification operator directly changes the
+volume in the frame produced by the switch. Since computation of frames is
+triggered by outputs, when a source is shared by two outputs, at each round it
+will be asked twice to fill a frame (once by each source). For instance,
+consider the following script:
 
 ```{.liquidsoap include="liq/streaming2.liq"}
 ```
@@ -971,15 +1009,256 @@ source unavailable after some fixed amount of time.
 
 ### Clocks {#sec:clocks}
 
+To every source is attached a _clock_ which is responsible for determining when
+the next frame should be computed. Namely, we have said that a frame lasts for
+0.04 seconds by default, which means that a new frame should be computed every
+0.04 seconds, or 25 times per second. The clock is responsible for measuring the
+time so that this happens at the right rate. In a script, a clock is assigned to
+each source, in such a way that an operator has the same clock as the sources it
+uses.
 
+Some operators impose the use of a particular clock, because they have their own
+way of synchronizing: for instance, for most soundcard-related inputs and
+outputs the synchronization is taken care of directly by the soundcard (which
+has its own physical clock and buffers, and is able to signal us when a data
+refill is needed). When such an operator is present its clock will be used,
+otherwise the "default" clock based on CPU time is used. It is perfectly
+possible that two distinct parts of the script use different clocks, although
+each operator should have one unambiguously assigned clock.
 
+For instance, consider the following script:
 
-TODO: the CPU clock
+```{.liquidsoap include="liq/clock-alsa-file.liq" from=2}
+```
 
-TODO: the `clock` operator
+Here, the only operator to enforce the use of a particular clock is `input.alsa`
+and therefore its clock will be used for all the operators. Namely, we can
+observe in the logs that `input.alsa` uses the `alsa` clock
 
-TODO: we briefly explain the principle of clocks here and give the practice in
-[a later section](#sec:clocks)
+```
+[input.alsa_64610:5] Clock is alsa[].
+```
+
+and that the `amplify` operator is also using this clock
+
+```
+[amplify_64641:5] Clock is alsa[].
+```
+
+Once all the operators created and initialized, the clock will start its
+_streaming loop_ (i.e. produce a frame, wait for some time, produce another
+frame, wait for some time, and so on):
+
+```
+[clock.alsa:3] Streaming loop starts in auto-sync mode
+```
+
+Here, we can see that Alsa is taking care of the synchronization, this is
+indicated by the message:
+
+```
+[clock.alsa:3] Delegating synchronisation to active sources
+```
+
+If we now consider a script where there is no source which enforces
+synchronization such as
+
+```{.liquidsoap include="liq/clock-alsa-file.liq" from=2}
+```
+
+we can see in the logs that the CPU clock, which is called `main`, is used
+
+```
+[sine_64611:5] Clock is main[].
+```
+
+and that synchronization is taken care of by the CPU
+
+```
+[clock.main:3] Delegating synchronisation to CPU clock
+```
+
+#### Ensuring clock consistency
+
+At the initialization phase, Liquidsoap assigns a clock to each operator by
+taking the one enforced by some source if any (such as `alsa`, as explained
+above), or defaulting the CPU clock `main`. If two distinct clocks are to be
+used, Liquidsoap issues an error and refuses to start. For instance, if we try
+to run
+
+```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=1}
+```
+
+we have a clock inconsistency because `output.pulseaudio` enforces the use of
+the `pulseaudio` clock and `input.alsa` enforces the use of the `alsa`
+clock. Liquidsoap detects this and displays the error
+
+```
+Error 10: A source cannot belong to two clocks (alsa[], pulseaudio[]).
+```
+
+which indicates it. Some network protocols such as SRT also have their own
+notion of logical time, so that the script
+
+```{.liquidsoap include="liq/bad/clock-srt-pulseaudio.liq" from=1}
+```
+
+will also fail for exactly the same reasons.
+
+Why is it the case? After all, it seems that the time measured by any library
+based on the soundcard or the CPU should be the same. Well, in practice, no: two
+computer's internal clocks (e.g. from the CPU and from the soundcard) are very
+likely to tick at slightly different rates, which means that the relative time
+measured by those will drift apart over time. For applications such as radios,
+which are supposed to run for a very long time, this is a problem. A discrepancy
+of 1 millisecond every second will accumulate to a difference of 43 minutes
+after a month: this means that at some point in the month we will have to insert
+43 minutes of silence or cut 43 minutes of music in order to synchronize back
+the two clocks! This is clearly that we do not want to be silently handled, so
+that, when it detects that it might be the case Liquidsoap simply refuses to
+start.
+
+<!--
+
+As mentioned earlier, clocks control the latency associated with each streaming
+cycle. The default clock tries to run this streaming loop in real-time, speeding
+up when filling the frame takes more time than the frame's duration.  When this
+happens, you will see the infamous `catchup` log messages:
+
+```
+[clock.wallclock_main:2] We must catchup 2.82 seconds!
+```
+
+However, in some cases such as a `input.alsa`, the sound card already has its
+own clock. In this case, it is assumed that the source (or output) controls the
+latency, blocking each filling call until it has enough data to return. For
+these situation, the clock assigned by liquidsoap does _not_ try to control the
+latency and, instead, runs the streaming loop as fast as possible, delegating
+latency control to the underlying sources. In these situation, you will not see
+any `catchup` log messages.
+
+There also are situations where the clock may switch from controlling the
+latency to delegating it to the underlying sources or vice-versa. Consider for
+instance the following script:
+
+```liquidsoap
+s = fallback(track_sensitive=false,[
+  input.harbor("foo"), input.alsa()
+])
+```
+When `input.harbor` is available, the latency is controlled by liquidsoap however,
+as soon as the `fallback` switches to `input.alsa`, latency is delegated to this source.
+This can be seen in the logs as follows:
+
+```
+2019/12/14 15:20:39 [clock.main:3] Streaming loop starts in auto-sync mode
+2019/12/14 15:20:39 [clock.main:3] Delegating synchronisation to CPU clock
+...
+2019/12/14 15:21:30 [clock.main:3] Delegating synchronisation to active sources
+``` 
+
+Clock cycles and frame duration define the I/O delay that you can expect when
+working with liquidsoap. If you aim for a shorter delay, specially when working
+with only audio, try to lower the video rate.\RB{Man we need to detect that and
+not use video when computing the frame size!}. This also means that streaming
+happens by increment of a frame's length. Thus, `source.time` for instance is
+precise down to the frame's duration. The same goes for scripted fade operators.
+
+### Clocks & Time Discrepancies
+
+Clocks in liquidsoap can be confusing. They are, however, central to the
+functioning of the internals while streaming data. Let's try to explain why they
+had to be introducted and how they are aasigned and used. For more details, the
+reader is invited to checkout our initial research paper, entitled [Liquidsoap:
+a High-Level Programming Language for Multimedia
+Streaming](https://www.liquidsoap.info/assets/docs/bbm10.pdf)
+
+#### What's the big deal?
+
+To understand the need for clocks, we should first remember that all data in a
+digital system is _sampled_. The sampling operation relies on a clock to tick at
+the frequency that is used for sampling. For instance, for `44.1kHz` audio, the
+sampling operation relies on a clock ticking every `1/44.100` seconds.
+
+But, what happens if this clock, in fact, ticks at a slightly different rate,
+for instance `1/44.100+0.001` seconds? Even worst, and not to be pedantic here
+but, relativity theory actually tells us that two clocks following different
+motions do not agree on time. A famous example being the fact that the atomic
+clocks over the globe have to be mindful of their respective elevation, in order
+to keep track of time discrepancies due to the earth's rotation..
+
+But, anyways, let's go down to earth and consider a much more practical case:
+two computer's internal clocks are _very_ likely to tick at slightly different
+rates. It can be that these two rates cancel out statistically over time or, in
+the worst case, it can be that these two rates drift appart over time.
+
+Consider now what happens when a listener receives a stream encoded by another
+computer. Locally, the listener takes the sequence of data samples and
+re-assembles them to created an analog signal for human's consumption.  However,
+if the listener's and the encoder's clock do not agree, the might be some issues
+down the road.
+
+When playing a recorded file, clock discrepancies between the encoder and
+decoder usually do not matter.  Eventually, for instance, a movie's playback
+time on the viewer's computer ends up being a slighly different which does not
+really impact the viewer's experience. However, with a continuous, real-time
+stream, things can be slightly more annoying. For instance, if the drift is
+constant over time, the listener's buffers might run out of data or be overrun
+with data, leading to loss of data while playing the stream.
+
+#### How does it matter?
+
+In liquidsoap, clock and time discrepancies matter on the following cases:
+
+1. Reading or writing data to a sound card
+2. Sending or receiving data over the network
+3. Accelerating or slowing down a source's rate
+
+The first case is the most straight forward: computer's sound card have their
+own local clock, used for sampling and rendering audio data. This clock is
+different than the computer's clock and, hopefully, more accurate. When
+accessing the sound card, either to read (record) or write (play) data, the
+sound card's driver will block until enough data has been read or writen based
+on the sound card's clock. In such a case, liquidsoap needs to be aware of the
+situation and delegate time synchronizatin to the sound card.
+
+The second case is usually transient. Network operations can have slow down and
+blocking if, for instance, the network is down. This can happen with
+`output.icecast`. Also, some network operators such as `input.srt` have their
+own notion of time, similar to the sound card's local clock, and will block to
+control the latency over which network data is being delivered.
+
+The third case is specific to our needs. Consider a source with track
+crossfades. Originally, the source contains two track adjacent to each other:
+`<track1>, <track2>`. After applying a crossdade, a portion of the ending and
+starting tracks overlap: `<track1 ...>, <end of track 1 + beginning of track 2>,
+<... track2>`\RB{Add figure} After this operation, the stream's playback time is
+shortened by the amount of time used to mix the two tracks.
+
+In order to achieve this in a real-time stream, liquidsoap needs to briefly
+accelerate the source in order to bufferize the beginning of `<track2>` and
+compute the crossfade transition.  This, in turn, requires that the source can
+actually be accelerated, which is possible if the source, for instance, is a
+playlist of files, but won't work if it is a live source from the sound card.
+
+Lastly, there is still, of course, the chance that a listener's clock drifts
+away from the clock used to synchronize liquidsoap. However, there isn't much
+that we can do from a sender's perspective. In this case, we expect the
+listener's playback software to be able to mitigate, for instance by using an
+adaptative resampler. One such example is The VLC player.
+-->
+
+#### Mediating between clocks: buffers
+
+TODO: this is more for [there](#sec:clock-ex)
+
+In order to use two operators in different clocks, one has to 
+
+`buffer`
+
+`buffer.adaptative`
+
+#### Catching up
 
 We have indicated that, by default, a frame is computed every 0.04 second. In
 some situations, the generation of the frame could take more than this: for
@@ -1021,27 +1300,12 @@ s = buffer(s)
 which make the source store 1 second of audio (this duration can be configured
 with the `buffer` parameter) and thus bear with delays of less than 1 second.
 
-### Decoding compressed data
+#### The `clock` operator
 
-Example of a log of decoder
+TODO: the `clock` operator
 
-MIME is used to guess
-
-We also have metadata resolvers
-
-Explain samplerate conversion, channel layout conversion, pixel format
-conversion (gavl), etc.
-
-Sometimes it will fail, for instance if test.mp3 is stereo, the following script will output an error
-
-```{.liquidsoap include="liq/surround.liq"}
-```
-
-because we cannot implicitly convert a stereo file into 5.1
-
-### Presentation time
-
-TODO: explain why we need to have pts (_presentation timestamp_) in frames\SM{Romain, I need your help on this!}
+TODO: we briefly explain the principle of clocks here and give the practice in
+[a later section](#sec:clocks)
 
 ### Methods for sources {#sec:source-methods}
 
@@ -1067,8 +1331,8 @@ TODO: detail the methods present for every source....
 - `skip`: Skip to the next track.
 - `time`: Get a source's time, based on its assigned clock.
 
-
-
+Requests
+--------
 
 ### Requests {#sec:requests}
 
@@ -1117,7 +1381,26 @@ the tree looks like:
 ]
 ```
 
-### Where to find the source code
+### Decoding compressed data
+
+Example of a log of decoder
+
+MIME is used to guess
+
+We also have metadata resolvers
+
+Explain samplerate conversion, channel layout conversion, pixel format
+conversion (gavl), etc.
+
+Sometimes it will fail, for instance if test.mp3 is stereo, the following script will output an error
+
+```{.liquidsoap include="liq/surround.liq"}
+```
+
+because we cannot implicitly convert a stereo file into 5.1
+
+Reading the source code
+-----------------------
 
 - frames are defined in `stream/frame.ml`
 - requests are defined in `request.ml`
@@ -1126,166 +1409,3 @@ the tree looks like:
 - various file for the language: `lang/lang_types.ml` (typing),
   `lang/lang_values.ml` (expressions of the language), `lang/lang.ml`
   (high-level operations on the languages)
-
-Romain's writings
---------
-
-TODO: integrate this in the above
-
-The elements that are filled during a clock cycle are called **frames**. They contain
-the amount of data (audio, video) to be filled and sent to the outputs during each cycle. The 
-frame size is calculated when starting liquidsoap and should be the smallest
-size that can fit an interval of samples of each data type. Typically, a frame
-for an audio rate of `44.1kHz` and video rate of `25Hz` fits `0.04s` of data. To
-check this, look for the following lines in your liquidsoap logs:
-
-```
-[frame:3] Using 44100Hz audio, 25Hz video, 44100Hz master.
-[frame:3] Frame size must be a multiple of 1764 ticks = 1764 audio samples = 1 video samples.
-[frame:3] Targetting 'frame.duration': 0.04s = 1764 audio samples = 1764 ticks.
-[frame:3] Frames last 0.04s = 1764 audio samples = 1 video samples = 1764 ticks.
-```
-
-The streaming algorithm works as follows: during one clock cycle, each output is 
-given a frame to fill. In turn, the outputs pass their frame down to their connected
-sources. For instance, if an output is connected to a `switch` operator, the
-operator selects which source is  ready and, in turn, passes the frame to be filled
-down to that source. All the data is filled in-place, to avoid data copy.
-
-If a source is connected to multiple operators, it keeps a memoized
-frame in order to generate its audio data only once during a single clock cycle,
-sharing the result with all the operators it is connected to.
-
-This operation goes on until the call returns. At this point, the frame is filled with
-data and metadata. Most calls will fill up the entire frame at once. If the
-frame is only partially filled after one call, we consider that the current
-track has ended. This defines a track mark, used in many operators such as
-`on_track`.
-
-After one such filling loop, if the frame is partially filled and 
-the source connected to the output is still available, another call
-to to fill up the frame is issued, still within the same clock cycle.
-When a source is considered `infallible`, we assume that this source will 
-_always_ be able to fill up the current frame.
-
-Once a frame is fully filled, the outputs proceed with the output procedure
-they are designed to perform. For instance, a `output.icecast` encodes the data
-and sends it to the connected icecast server.
-
-### Clocks
-
-As mentioned earlier, clocks control the latency associated with each streaming
-cycle. The default clock tries to run this streaming loop in real-time,
-speeding up when filling the frame takes more time than the frame's duration.
-When this happens, you will see the infamous `catchup` log messages:
-
-```
-[clock.wallclock_main:2] We must catchup 2.82 seconds!
-```
-
-However, in some cases such as a `input.alsa`, the sound card already has its own
-clock. In this case, it is assumed that the source (or output) controls the latency,
-blocking each filling call until it has enough data to return. For these situation,
-the clock assigned by liquidsoap does _not_ try to control the latency and, instead,
-runs the streaming loop as fast as possible, delegating latency control to the underlying
-sources. In these situation, you will not see any `catchup` log messages.
-
-There also are situations where the clock may switch from controlling the latency to delegating
-it to the underlying sources or vice-versa. Consider for instance the following script:
-```liquidsoap
-s = fallback(track_sensitive=false,[
-  input.harbor("foo"), input.alsa()
-])
-```
-When `input.harbor` is available, the latency is controlled by liquidsoap however,
-as soon as the `fallback` switches to `input.alsa`, latency is delegated to this source.
-This can be seen in the logs as follows:
-```
-2019/12/14 15:20:39 [clock.main:3] Streaming loop starts in auto-sync mode
-2019/12/14 15:20:39 [clock.main:3] Delegating synchronisation to CPU clock
-...
-2019/12/14 15:21:30 [clock.main:3] Delegating synchronisation to active sources
-``` 
-
-Clock cycles and frame duration define the I/O delay that you can expect when working
-with liquidsoap. If you aim for a shorter delay, specially when working with only
-audio, try to lower the video rate.\RB{Man we need to detect that and not use
-video when computing the frame size!}. This also means that streaming happens by
-increment of a frame's length. Thus, `source.time` for instance is precise down to
-the frame's duration. The same goes for scripted fade operators. 
-
-### Clocks & Time Discrepancies
-
-
-Clocks in liquidsoap can be confusing. They are, however, central to the functioning of
-the internals while streaming data. Let's try to explain why they had to be introducted
-and how they are aasigned and used. For more details, the reader
-is invited to checkout our initial research paper, entitled
-[Liquidsoap: a High-Level Programming Language for Multimedia Streaming](https://www.liquidsoap.info/assets/docs/bbm10.pdf)
-
-#### What's the big deal?
-
-To understand the need for clocks, we should first remember that all data in a digital
-system is _sampled_. The sampling operation relies on a clock to tick at the frequency
-that is used for sampling. For instance, for `44.1kHz` audio, the sampling operation relies
-on a clock ticking every `1/44.100` seconds.
-
-But, what happens if this clock, in fact, ticks at a slightly different rate, for instance 
-`1/44.100+0.001` seconds? Even worst, and not to be pedantic here but, relativity theory actually tells us
-that two clocks following different motions do not agree on time. A famous example being the fact
-that the atomic clocks over the globe have to be mindful of their respective elevation, in order
-to keep track of time discrepancies due to the earth's rotation..
-
-But, anyways, let's go down to earth and consider a much more practical case: two computer's internal
-clocks are _very_ likely to tick at slightly different rates. It can be that these two rates cancel out
-statistically over time or, in the worst case, it can be that these two rates drift appart over time.
-
-Consider now what happens when a listener receives a stream encoded by another computer. Locally, the listener
-takes the sequence of data samples and re-assembles them to created an analog signal for human's consumption.
-However, if the listener's and the encoder's clock do not agree, the might be some issues down the road.
-
-When playing a recorded file, clock discrepancies between the encoder and decoder usually do not matter.
-Eventually, for instance, a movie's playback time on the viewer's computer ends up being a slighly different
-which does not really impact the viewer's experience. However, with a continuous, real-time stream, things
-can be slightly more annoying. For instance, if the drift is constant over time, the listener's buffers might run out
-of data or be overrun with data, leading to loss of data while playing the stream.
-
-#### How does it matter?
-
-In liquidsoap, clock and time discrepancies matter on the following cases:
-
-1. Reading or writing data to a sound card
-2. Sending or receiving data over the network
-3. Accelerating or slowing down a source's rate
-
-The first case is the most straight forward: computer's sound card have their own
-local clock, used for sampling and rendering audio data. This clock is different than
-the computer's clock and, hopefully, more accurate. When accessing the sound card, either
-to read (record) or write (play) data, the sound card's driver will block until enough 
-data has been read or writen based on the sound card's clock. In such a case, liquidsoap
-needs to be aware of the situation and delegate time synchronizatin to the sound card.
-
-The second case is usually transient. Network operations can have slow down and blocking
-if, for instance, the network is down. This can happen with `output.icecast`. Also, some
-network operators such as `input.srt` have their own notion of time, similar to the sound
-card's local clock, and will block to control the latency over which network data is being
-delivered.
-
-The third case is specific to our needs. Consider a source with track crossfades. Originally,
-the source contains two track adjacent to each other: `<track1>, <track2>`. After applying a
-crossdade, a portion of the ending and starting tracks overlap: 
-`<track1 ...>, <end of track 1 + beginning of track 2>, <... track2>`\RB{Add figure}
-After this operation, the stream's playback time is shortened by the amount of time used to
-mix the two tracks.
-
-In order to achieve this in a real-time stream, liquidsoap needs to briefly accelerate
-the source in order to bufferize the beginning of `<track2>` and compute the crossfade transition.
-This, in turn, requires that the source can actually be accelerated, which is possible if 
-the source, for instance, is a playlist of files, but won't work if it is a live source from
-the sound card. 
-
-Lastly, there is still, of course, the chance that a listener's clock drifts
-away from the clock used to synchronize liquidsoap. However, there isn't much that
-we can do from a sender's perspective. In this case, we expect the listener's playback
-software to be able to mitigate, for instance by using an adaptative resampler. One such
-example is The VLC player.
