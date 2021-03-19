@@ -197,11 +197,10 @@ follows:
 ```{.liquidsoap include="liq/playlist-check2.liq" from=1 to=-1}
 ```
 
-Here, we use the function `file.metadata` to request the metadata of the file
-corresponding to the request, and declare that we should play a file only if its
-genre is "Rock". Note that, at this point, the metadata of the file are not read
-by default so that we cannot use `request.metadata` (which returns only basic
-information such as the filename).
+Here, we use the function `request.read_metadata` to force the reading of the
+metadata for the request (this is not done by default at this point), obtain the
+metadata with `request.metadata`, and declare that we should play a file only if
+its genre is "Rock".
 
 If you only need to play one file, you can avoid creating a playlist with this
 file only, by using the operator `single` which loops on one file (it is also
