@@ -32,7 +32,7 @@ type inline =
   | UnhandledInline of Yojson.Basic.t
 
 and block =
-  (* | BulletList of block list list *)
+  | BulletList of block list list
   | CodeBlock of attr * string
   (* | Header of int * attr * inline list *)
   (* | OrderedList of list_attributes * block list list *)
@@ -131,10 +131,10 @@ module JSON = struct
       
   and to_block e =
     match element_type e with
-    (* | "BulletList" -> *)
-       (* let l = Util.to_list (element_contents e) in *)
-       (* let l = List.map (fun l -> List.map to_block (Util.to_list l)) l in *)
-       (* `BulletList l *)
+    | "BulletList" ->
+       let l = Util.to_list (element_contents e) in
+       let l = List.map (fun l -> List.map to_block (Util.to_list l)) l in
+       BulletList l
     | "CodeBlock" ->
        let attr, code = to_pair (element_contents e) in
        CodeBlock (to_attr attr, Util.to_string code)
@@ -171,6 +171,7 @@ module JSON = struct
     `List [`String url; `String title]
 
   let rec of_block = function
+    | BulletList l -> element "BulletList" (`List (List.map (fun l -> `List (List.map of_block l)) l))
     | CodeBlock (a, s) -> element "CodeBlock" (`List [of_attr a; `String s])
     | Para l -> element "Para" (`List (List.map of_inline l))
     | RawBlock (f, c) -> element "RawBlock" (`List [`String f; `String c])
@@ -247,18 +248,19 @@ let map ?(block=(fun b -> None)) ?(inline=(fun i -> None)) p =
     match block b with
     | Some bb -> bb
     | None ->
-       match b with
-       | Para ii -> [Para (map_inlines ii)]
-       | b -> [b]
+      match b with
+      | BulletList l -> [BulletList (List.map (fun l -> map_blocks l) l)]
+      | Para ii -> [Para (map_inlines ii)]
+      | b -> [b]
   and map_inline i =
     match inline i with
     | Some ii -> ii
     | None ->
-       match i with
-       | Image (a, i, t) -> [Image (a, map_inlines i, t)]
-       | Link (a, i, t) -> [Link (a, map_inlines i, t)]
-       | Quoted (q, i) -> [Quoted (q, map_inlines i)]
-       | i -> [i]
+      match i with
+      | Image (a, i, t) -> [Image (a, map_inlines i, t)]
+      | Link (a, i, t) -> [Link (a, map_inlines i, t)]
+      | Quoted (q, i) -> [Quoted (q, map_inlines i)]
+      | i -> [i]
   and map_blocks bb = List.flatten (List.map map_block bb)
   and map_inlines ii = List.flatten (List.map map_inline ii) in
   replace_blocks map_blocks p
@@ -270,7 +272,8 @@ let map_inlines f p =
   in
   replace_blocks (List.map block) p
 
+let map_blocks f p = map ~block:f p
+
 (** Map a function to every top-level block. *)
 let map_top_blocks f p =
   replace_blocks (fun blocks -> List.flatten (List.map f blocks)) p
-
