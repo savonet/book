@@ -198,6 +198,8 @@ be used instead:
 ```{.liquidsoap include="liq/input.http.liq" from=1}
 ```
 
+\TODO{also mention files "say:bla bla bla", see liq/say.liq}
+
 Finally, there are other types of inputs. For instance, the operator
 `input.alsa` can be used to capture the sound of a microphone on a soundcard,
 with the ALSA library. You should be able to hear your voice with

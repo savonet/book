@@ -370,8 +370,11 @@ useful string-related function are
   # string.split(separator=":", "a:42:hello");;
   - : [string] = ["a", "42", "hello"]
   ```
+- `string.contains`: test whether a string contains (or begins or ends with) a
+  particular substring,
 - `string.match`: test whether a string matches a regular expression,\TODO{give
-  an example and explain basics of regexps, or maybe simply a reference to the corresponding section}
+  an example and explain basics of regexps, or maybe simply a reference to the
+  corresponding section}
 - `string.replace`: replace substrings matching a regular
   expression,
 - `string.quote`: escape shell special characters (you should always use this
@@ -646,7 +649,7 @@ t : int * float * string = (3, 4.2, "hello")
 - : string = "hello"
 ```
 
-### Association lists
+### Association lists {#sec:association-list}
 
 A quite useful combination of the two previous data structures is _association
 lists_, which are lists of pairs. Those can be thought of as some kind of
@@ -2196,3 +2199,14 @@ logs and the telnet
 ### Requests
 
 `request.create`, `request.uri`, `request.metadata`
+
+explain protocols (`say:...`)
+
+### Main functions
+
+- `playlist`
+- `fallback`
+- `switch`
+- `rotate`
+- `request.queue`
+- `crossfade`

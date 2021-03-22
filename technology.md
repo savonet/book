@@ -235,15 +235,16 @@ A typical radio starts with one or more _playlists_, which are lists of audio
 files. These can be stored in various places: they can either be on a local hard
 drive, or on some distant server, in which case they have to be downloaded
 beforehand, in order to make sure that we will not suffer from disturbances in
-the network. There is a slight difference between the two: in the case of local
-files, we have pretty good confidence that they will always be available (or at
-least we can check that this is the case), whereas for distant files the server
-might be unavailable, or just very slow, so that we have to take care of
-downloading the file in advance enough and be prepared to have fallback option
-in case the file is not ready in time. Finally, audio files can be in various
-formats (as described in [the above section](#sec:audio-streams)) and have to be
-decoded, which is why Liquidsoap depends on many libraries, in order to support
-as many formats as possible.
+the network.\SM{say what an uri "Uniform Resource Identifier" is} There is a
+slight difference between the two: in the case of local files, we have pretty
+good confidence that they will always be available (or at least we can check
+that this is the case), whereas for distant files the server might be
+unavailable, or just very slow, so that we have to take care of downloading the
+file in advance enough and be prepared to have fallback option in case the file
+is not ready in time. Finally, audio files can be in various formats (as
+described in [the above section](#sec:audio-streams)) and have to be decoded,
+which is why Liquidsoap depends on many libraries, in order to support as many
+formats as possible.
 
 Even in the case of local files, the playlist might be _dynamic_: instead of
 knowing in advance the list of all the files, the playlist can consist of a
@@ -321,6 +322,8 @@ efficient way of proceeding consists in computing this in advance and store it
 as a metadata; the stream generator can then adjust the volume on a per-song
 basis. The standard for this is _ReplayGain_ and there are a few efficient tools
 to achieve this task.
+
+\TODO{dire que même si on ne veut pas changer le volume global, on veut absolument éviter le "clipping" qui distord le son}
 
 ### Fading
 
@@ -414,13 +417,13 @@ be quickly notified in case of a problem).
 ### Interacting with other services
 
 The above way of interacting works in _pull mode_: the stream generators asks an
-external program for information, such as the next song to be played. Another desirable
-workflow is in _push mode_, where the program adds information whenever it feels
-like. This is typically the case for _request queues_ which are, again, a
-variant of playlists, where an external programs can add songs whenever it feels
-like: those will be played one, in the order where they where inserted. This is
-typically used for interactive websites: whenever a user asks for a song, it
-gets added to the request queue.
+external program for information, such as the next song to be played. Another
+desirable workflow is in _push mode_, where the program adds information
+whenever it feels like. This is typically the case for _request queues_ which
+are, again, a variant of playlists, where an external programs can add songs
+whenever it feels like: those will be played one, in the order where they where
+inserted. This is typically used for interactive websites: whenever a user asks
+for a song, it gets added to the request queue.
 
 Push mode interaction is also commonly used for controllers, which are physical
 or virtual devices consisting of push buttons and sliders, that one can use in

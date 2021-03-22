@@ -1,3 +1,3 @@
-#!/usr/bin/env liquidsoap
+#!./liquidsoap
 s = single("say:Hello world!")
-out(s)
+output(s)

@@ -1,5 +1,5 @@
 #!/usr/bin/env liquidsoap
-mic = input.harbor("mic")
+mic   = sine()
 bed   = playlist("~/Music")
-radio = add([mic, bed])
+radio = add([amplify(2., mic), amplify(1., bed)])
 output(radio)

@@ -38,7 +38,7 @@ check:
 
 test:
 	$(MAKE) -C scripts
-	pandoc --filter=scripts/inspect --filter=scripts/include --filter=scripts/crossref -t LaTeX test.md
+	pandoc --filter=scripts/inspect --filter=scripts/include -t LaTeX test.md
 
 %.html: %.md $(MD) liquidsoap.xml
 	$(PANDOC) -s $< -o $@

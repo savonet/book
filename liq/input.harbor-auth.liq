@@ -10,4 +10,4 @@ def auth(username, password)
   end
 end
 s = input.harbor("live", port=8000, auth=auth)
-output.pulseaudio(fallible=true, s)
+output(s)
