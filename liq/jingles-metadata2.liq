@@ -1,22 +1,12 @@
 #!./liquidsoap
 set("log.level", 4)
-s = single("test.mp3")
-jingle_now = ref(false)
-def metadata()
-  jingle_now := not !jingle_now
-  if !jingle_now then [("jingle","true")] else [] end
-end
-s = chop(duration=3., metadata=metadata, s)
+s = playlist("~/Music")
+thread.run(every=10., {s.skip()})
 
-jingles = playlist("jingles")
-p = predicate.signal()
-def insert_jingle(m)
-  log.info("Got metadata")
-  if m["jingle"] == "true" then
-    log.info("Inserting jingle")
-    p.signal()
-  end
+q = request.queue()
+def insert_title(m)
+  q.push.uri("say:Last song was #{m['title']} by #{m['artist']}")
 end
-s.on_track(insert_jingle)
-s = switch([(p,jingles), ({true},s)])
+s.on_track(insert_title)
+s = fallback([q, s])
 output(s)

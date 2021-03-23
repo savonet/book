@@ -1043,6 +1043,20 @@ syntax, which allows grouping multiple expressions as one. For instance,
 ```{.liquidsoap include="liq/on_meta3.liq" from=1 to=-1}
 ```
 
+You will see that it is quite common to use anonymous functions with no
+arguments. For this reason, we have introduced a special convenient syntax for
+those and allow writing
+
+```liquidsoap
+{...}
+```
+
+instead of
+
+```liquidsoap
+fun () -> ...
+```
+
 ### Labeled arguments
 
 A function can have an arbitrary number of arguments, and when there are many of them it

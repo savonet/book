@@ -1024,10 +1024,13 @@ server. This means that if you connect to the telnet server and type
 quite useful if you are designing some sort of a graphical interface for your
 radio.
 
-Tracks, metadata and transitions {#sec:transitions}
---------------------------------
+#### Inserting jingles on metadata
 
-### Tracks and metadata
+We will also see in [next section](#sec:tracks) that the insertion of jingles
+can also conveniently be triggered by metadata in sources.
+
+Tracks and metadata {#sec:tracks}
+-------------------
 
 Liquidsoap has a notion of _track_ in stream, which is generally used to mark
 the boundary between two successive songs. We have seen that many functions to
@@ -1077,6 +1080,15 @@ protocol described above. For instance,
 annotate:artist=The artist,comment=Played on my radio:test.mp3
 ```
 
+Incidentally, the `prefix` parameter of the `playlist` operator can be used to
+add a prefix to every file in the playlist. It can in particular be used to
+annotate every file in order to add some metadata. For instance, if we want to
+set the metadata `jingle` to `true` for every track in our playlist, we can
+write something like
+
+```{.liquidsoap include="liq/playlist-prefix.liq" from=1 to=-1}
+```
+
 ### Handling tracks
 
 Each source has a method `on_track` and a method `on_metadata` to execute a
@@ -1117,48 +1129,141 @@ It consists in creating a queue `q` and executing a function `insert_jingle`
 when a track is present: this function will look whether the value of the
 `jingle` metadata is `true`, and if this is the case it will insert a jingle
 (the file `jingle.mp3`) into the queue, which will then be played by a usual
-fallback mechanism.
+fallback mechanism. As an easy variant of the above script, we can read out the
+last song which was played on air, by inserting in a queue a request to read it
+using the `say` protocol:
 
-Another approach could consist in using the `predicate.signal` function detailed
-above to trigger playing one track of a `jingles` playlist when the metadata is
-present:
-
-```{.liquidsoap include="liq/jingles-metadata2.liq" from=10}
+```{.liquidsoap include="liq/jingles-metadata2.liq" from=5}
 ```
 
-(in this case, because of the execution order, the jingle will be played after
-the track where metadata is present).
+Another approach to insert jingles when the particular metadata is present could
+consist in using the `predicate.signal` function detailed above to trigger
+playing one track of a `jingles` playlist when the metadata is present:
+
+```{.liquidsoap include="liq/jingles-metadata3.liq" from=10}
+```
+
+#### Prepending and appending tracks
+
+The logic of the programs can be somewhat simplified by the use of the `prepend`
+operator: this operator takes as argument a function which is called on every
+track, with its metadata as source, and returns a source to be played before the
+current track. For instance, we can insert a jingle when the metadata `jingle`
+is set to `true` by:
+
+```{.liquidsoap include="liq/jingles-prepend.liq" from=11}
+```
+
+The function `insert_jingle` looks at the metadata, and if present returns the
+`jingles` source, containing all the jingles, of which one track will be
+played. If the metadata is not present, we return `fail()` which is a source
+which is never available: in this case, prepend will simply not insert any track
+because none is ready. The function is then registered with the `prepend`
+operator.
+
+Of course, there is a dual operator `append` which allows appending a track for
+every track: contrarily to `prepend`, it inserts the track after the currently
+playing track. For instance, we can read the song which we have just played with
+
+```{.liquidsoap include="liq/jingles-prepend2.liq" from=5}
+```
 
 ### Rewriting metadata
 
-If you want to modify all metadata
+If you want to systematically modify the metadata, you can use the
+`map_metadata` function which will modify the metadata of a source: it takes as
+argument a function and a source, and uses the function to systematically change
+the metadata. The type of the function is
 
-### Metadata
-
-- add the year of songs in the title (`map_metadata`)
-- insert metadata (in scripts, with telnet)
-- log all the music files which have gone on air
-```{.liquidsoap include="liq/log-songs.liq" from=1 to=-1}
 ```
-- log the current file in JSON format (see #954)
-```liquidsoap
-s = mksafe(playlist("~/Music"))
-
-def f(m)
-  print("got metadata!")
-  data = json_of(m)^"\n"
-  file.write(data=data, append=false, perms=420, "/tmp/metatest")
-end
-
-s = on_metadata(f, s)
-out(s)
+([string * string]) -> [string * string]
 ```
-- count the number of played music files (a reference!)
-- say the last song we had on air
-- the annotate protocol
+
+it takes the current metadata and returns the new metadata to be inserted. For
+instance, we can add the year in the title and a comment into the metadata of
+our source `s` with
+
+```{.liquidsoap include="liq/map_metadata.liq" from=2 to=-1}
+```
+
+Whenever a metadata passes on the source `s`, the function `f` is executed with
+it and returns the metadata to insert. Here, it states that we should set the
+title to `"<title> (<year>)"` (where `<title>` is the title and `<year>` is the
+year present in the original metadata) and that we should advertise about
+Liquidsoap in the field `comment`.
+
+
+### Removing tracks and metadata
+
+In order to remove the tracks of a source, the `merge_track` operator can be
+used: it takes a source `s` as argument and returns the same source with the
+track boundaries removed.
+
+Similarly, `drop_metadata` removes all metadata from a source. This can be
+useful if you want to "clean up" all the metadata before inserting your own, as
+indicated below.
+
+### Inserting tracks and metadata
+
+If you want to insert tracks or metadata at any point in a source, you can use
+the `insert_metadata`: this operator takes a source as argument and returns the
+same source with a new method `insert_metadata` whose type is
+
+```
+(?new_track : bool, [string * string]) -> unit
+```
+
+It takes an argument labeled `new_track` to indicate if some track should be
+inserted along with the metadata (by default, not) and the metadata, and inserts
+the metadata in the stream. For instance, suppose that we have a source `s` and
+we want to set the title and artist metadata to "Liquidsoap" every minute. This
+can be achieved by
+
+```{.liquidsoap include="liq/insert_metadata.liq" from=2 to=-1}
+```
+
+Here, we add the ability to insert metadata in the source `s` with the operator
+`insert_metadata`, and we then use `thread.run` to regularly call a function
+which will insert metadata by calling `s.insert_metadata`.
+
+Similarly, we can add a telnet command to change the title metadata by
+
+```{.liquidsoap include="liq/insert_metadata-title.liq" from=3 to=-1}
+```
+
+Again, we suppose given a source `s`. We begin by defining a function `cmd`
+which takes the title as argument, inserts it into the stream of `s`, and
+returns a message saying that the title was inserted. We then register this
+command as `set_metadata` on the telnet server (see [there](#sec:telnet) for
+details): when we enter the command
+
+```
+set_title New title
+```
+
+on the telnet, the title will be set to "New title". In fact, the standard
+library offers a generic function in order to do this and not have to program
+this by yourself: the function `server.insert_metadata` takes an identifier `id`
+and a source as argument and registers a command `id.insert` on the telnet which
+can be used to insert any metadata. A typical script will contain
+
+```{.liquidsoap include="liq/server.insert_metadata.liq" from=3 to=-1}
+```
+
+and we can then set the title and the artist by running the telnet command
+
+```
+src.insert title="New title",artist="Liquidsoap"
+```
+
+(the argument of the command is of the form `key1=val1,key2=val2,key3=val3,...`
+and allows specifying the key / value pairs for the metadata).
+
+<!--
+### ICY metadata
 
 *ICY metadata* is the name for the mechanism used to update metadata in
-icecast's source streams.  The techniques is primarily intended for data formats
+icecast's source streams. The techniques is primarily intended for data formats
 that do not support in-stream metadata, such as mp3 or AAC. However, it appears
 that icecast also supports ICY metadata update for ogg/vorbis streams.
 
@@ -1186,7 +1291,7 @@ described above, provided icecast supports ICY metadata for the intended stream.
 For instance the following script registers a telnet command name
 `metadata.update` that can be used to manually update metadata:
 
-```
+```liquidsoap
 def icy_update(v) =
   # Parse the argument
   l = string.split(separator=",",v)
@@ -1214,36 +1319,10 @@ server.register("update",namespace="metadata",
 
 As usual, `liquidsoap -h icy.update_metadata` lists all the arguments
 of the function.
+-->
 
-TODO: `merge_tracks`
-
-TODO: `insert_metadata`, `server.insert_metadata`
-
-### Transforming metadata
-
-TODO: `map_metadata`
-
-### Annotate
-
-TODO: annotate protocol, mention the `prefix` parameter of `playlist`
-
-#### Triggering jingles on metadata
-
-Another general technique for launching jingles or ads, is to trigger them by
-metadata. For instance, suppose that we have a source `s` playing music tracks
-and we want that, when the metadata "`jingle`" of a track is set to "`true`", a
-jingle is inserted before the track.
-
-
-
-TODO:
-- add ads at a given time
-- on a metadata (with `prepend`)
-
-TODO: recall annotate
-
-
-### Transitions
+Transitions {#sec:transitions}
+-----------
 
 There are two kinds of transitions. Transitions between two different children
 of a switch are not problematic. Transitions between different tracks of the
@@ -1301,7 +1380,7 @@ Transitions have limited duration, defined by the `transition_length` parameter.
 
 Here are some possible transition functions:
 
-```
+```liquidsoap
 # A simple (long) cross-fade
 # Use metadata override to make sure transition is long enough.
 def crossfade(a,b)
@@ -1550,6 +1629,12 @@ Full example (already presented, we only want to show the first part here)...:
 
 ```{.liquidsoap include="liq/jingles-metadata.liq"}
 ```
+
+It can also be useful to skip with `thread.run`
+
+```{.liquidsoap include="liq/jingles-metadata2.liq"}
+```
+
 
 - the `synth` protocol (already presented in "testing scripts" section)
 
