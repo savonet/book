@@ -1,0 +1,20 @@
+\documentclass[varwidth=40cm]{standalone}
+\usepackage{tikz}
+\usepackage{style}
+
+\begin{document}
+\begin{tikzpicture}[yscale=0.8]
+  \draw[->] (0,0) -- (0,2.5);
+  \draw (-0.1,2) -- (0.1,2);
+  \draw (0,2) node[left]{1};
+  \draw (0,0) node[left]{0};
+  \draw[->] (0,0) -- (7.5,0);
+  \foreach \x in {1,2,3,4,5,6,7} \draw (\x,-0.1) -- (\x,0.1);
+  \draw (0,2.5) node[above]{volume};
+  \draw (7.5,0) node[right]{time};
+  \draw[thick] (0,2) -- (2,2) -- (5,0);
+  \draw[thick] (2,0) -- (4,2) -- (7.5,2);
+  \draw (1,2) node[above]{track $n$};
+  \draw (6,2) node[above]{track $n{+}1$};
+\end{tikzpicture}
+\end{document}

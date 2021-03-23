@@ -1324,6 +1324,16 @@ of the function.
 Transitions {#sec:transitions}
 -----------
 
+So far, we have seen that we can easily play several music files sequentially
+(for instance with the `playlist` operator) or switch between two sources (using
+the `fallback` or `switch` operators). However, the resulting transitions
+between two tracks are quite abrupt: one track ends and the other starts. We
+often want crossfading between tracks, which means that the volume of the first
+track should be progressively lowered and the one of the second progressively
+increased in such a way that we hear the two during the transition:
+
+![Transition](fig/transition){.center}\
+
 There are two kinds of transitions. Transitions between two different children
 of a switch are not problematic. Transitions between different tracks of the
 same source are more tricky, since they involve a fast forward computation of
