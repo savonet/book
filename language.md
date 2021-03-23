@@ -580,6 +580,13 @@ empty list). Other useful functions are
   - : int = 3
   ```
   (note that the first element is the one at index n=0).
+  
+- `list.append`: construct a list by taking the elements of the first list and
+  then those of the second list
+  ```
+  # list.append([1, 3], [2, 4, 5]);;
+  - : [int] = [1, 3, 2, 4, 5]
+  ```
 
 <!--
 \SM{explain splats}
@@ -1445,6 +1452,8 @@ amplify is actually
 
 where the type `{float}` means that both `float` and `() -> float` are accepted,
 so that you can still write constant floats where float getters are expected.
+
+\TODO{give the functions: getter / getter.get / getter.function}
 
 ### Recursive functions
 

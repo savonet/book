@@ -4,4 +4,4 @@ def next()
   request.create(uri)
 end
 s = request.dynamic(next)
-out(s)
+output(s)

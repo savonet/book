@@ -1,11 +1,10 @@
 #!/usr/bin/env liquidsoap
-radio = playlist("~/Music")
-
-def log_song(m) =
+def log_song(m)
   artist = m["artist"]
-  title = m["title"]
+  title  = m["title"]
   file.write(append=true, data="#{artist} - #{title}\n", "/tmp/songs")
 end
 
-radio = on_metadata(log_song, radio)
+radio = playlist("~/Music")
+radio.on_track(log_song)
 output(radio)

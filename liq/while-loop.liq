@@ -1,7 +1,6 @@
 #!./liquidsoap
 def rec whileloop(cond, f)
-  c = to_bool_getter(cond)
-  if c() then
+  if getter.get(cond) then
     f()
     whileloop(cond, f)
   end

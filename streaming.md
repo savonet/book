@@ -761,7 +761,6 @@ limit between two successive songs in a stream. In scripts, you can detect when
 a track occurs using the `on_track` method that all sources have, and you can
 insert track by using the method provided by the `insert_metadata` function.
 
-
 #### Metadata
 
 A frame can also contain _metadata_ which are pairs of strings (e.g. `"artist"`,
@@ -799,6 +798,8 @@ metadata which will be exported, and whose default value is
 ["artist", "title", "album", "genre", "date", "tracknumber",
  "comment", "track", "year", "dj", "next"]
 ```
+
+\TODO{explain the tag.encodings setting and that tags are recoded}
 
 ### Presentation time
 

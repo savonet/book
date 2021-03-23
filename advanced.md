@@ -6,8 +6,6 @@ TODO: ce chapitre est un gros bordel mais ça va se décanter...
 Interaction with the server (telnet) {#sec:telnet}
 ------------------------------------
 
-TODO: le telnet est déjà couvert [ici](sec:telnet): merger
-
 TODO: couvrir les sockets \TODO{we should also mention sockets, there is an
 example in liq/request.queue.liq but it does not seem to be working right now,
 see bug 1542, it does if we use `socat`}
@@ -267,12 +265,6 @@ channels, etc.)
 
 TODO: also explain that we can both pass encoded contents and decode it with
 `ffmpeg.decode` (see #1461).
-
-External decoders/encoders
---------------------------
-
-TODO: many people want to use [stereotool](https://www.stereotool.com/), cf
-https://github.com/savonet/liquidsoap/issues/885
 
 Requests
 --------
@@ -625,23 +617,6 @@ server.register(namespace=source.id(s),
                 "seek",seek)
 ```
 
-Testing scripts
----------------
-
-- log as much as possible and use priorities meaningfully
-- mention `chopper`, which is useful to simulate track boundaries
-- `sine` etc are of course useful to generate sound, also `metronome`
-- tracks can be generated with the `synth:` protocol
-  (`"synth:shape=sine,frequency=880,duration=1`", default values (shape is sine,
-  freq is 440, duration is 1))
-- `sleeper`
-- what else?
-
-Full example:
-
-```{.liquidsoap include="liq/ad-metadata.liq"}
-```
-
 Internal HTTP server
 --------------------
 
@@ -909,34 +884,12 @@ Profiling
 
 `profiler.enable`, `profiler.stats.string`
 
-Observing the signal
---------------------
-
-Compute RMS and LUFS, conversion with `dB_of_lin` and conversely, `vumeter`, etc.
-
-TODO: expose metrics with JSON on harbor
-
-```{.liquidsoap include="liq/metrics-harbor.liq" from=1}
-```
-
-TODO: explain the variant where we store on a file regularly
-
-```{.liquidsoap include="liq/metrics-file.liq" from=1}
-```
-
-TODO: expose metrics with prometeus
-
 SRT
 ---
 
 Usage of srt....... example with ffplay
 
 also mention `input.udp`
-
-Protocols
----------
-
-- the `synth` protocol (already presented in "testing scripts" section)
 
 FFmpeg filters
 --------------

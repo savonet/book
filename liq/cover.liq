@@ -13,17 +13,16 @@ def f(m)
   if cover != "" then
     file.write(data=cover, coverfile)
   end
-  source.skip(video)
+  video.skip()
 end
 
-s = on_metadata(f,s)
+s.on_metadata(f)
 
 output.pulseaudio(s)
 output.sdl(video)
 
 def skip () =
   print("Skipping!")
-  source.skip(s)
-  2.
+  s.skip()
 end
-add_timeout(2., skip)
+thread.run(every=2., skip)

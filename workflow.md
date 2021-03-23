@@ -6,8 +6,8 @@ a webradio. It essentially follows [the introductory chapter](#chap:quickstart),
 but gives much more details about techniques and parameters one can use to
 achieve his goals.
 
-Sound inputs
-------------
+Inputs
+------
 
 ### Playlists
 
@@ -556,7 +556,10 @@ passed as the `auth` argument of `input.harbor` and is of type `(string, string)
 -> bool`: it takes as argument the username and the password of a client trying
 to log in and returns whether it should be allowed or not. Typically, you would
 like to call an external script, say `harbor-auth`, which will take the username
-and password as argument and print "`allowed`" if the user is allowed.
+and password as argument and print "`allowed`" if the user is allowed (such a
+command would usually look into a database to see whether the credentials match,
+and perhaps do additional checks such as ensuring that the user has the right to
+connect at the given time).
 
 ```{.liquidsoap include="liq/input.harbor-auth.liq" from=1}
 ```
@@ -564,7 +567,7 @@ and password as argument and print "`allowed`" if the user is allowed.
 Here, our function `auth` begins by executing the script `harbor-auth` with the
 username and password as argument. Note that we use `string.quote` to escape
 shell special characters, so that the user cannot introduce shell commands in
-his username for instance... The `get_process_lines` function returns the list
+his username for instance... The `process.read.lines` function returns the list
 of lines returned by our script and our function returns `true` or `false`
 depending on whether this first line is "`allowed`" or not. In this way you
 could easily query an external database of allowed users.
@@ -671,18 +674,35 @@ in which case the song from the queue will be immediately played:
 radio = fallback(track_sensitive=false, [queue, playlist])
 ```
 
+Typically, you would use this to switch to a live show when available
 
-
-
-Incidentally, the `mksafe` operator, which takes a fallible source and makes it
-infallible, is implemented precisely using this operator:
-
-```{.liquidsoap include="liq/mksafe.liq" from=1}
+```{.liquidsoap include="liq/input.harbor.liq" from=1 to=-1}
 ```
 
-This operator makes the source fallback on a source streaming blank audio, which
-we know will always be available, so that we stream blank when the source `s`
-fails instead of failing to produce a stream.
+or to feature live interventions when someone is speaking on the microphone
+
+```{.liquidsoap include="liq/blank.strip.liq" from=1 to=-1}
+```
+
+In this last example, we are using the operator `blank.strip` to make the source
+`mic` unavailable when there are at least 2 seconds of silence (the duration is
+controlled by the `max_blank` argument, and the `threshold` argument indicates
+that we consider anything below -20 dB as silence): in this case, the `fallback`
+operator will default to the `music` playlist until someone is speaking again.
+
+In order to make a source `s` always available, it is quite common to stream
+blank when the source is not available, i.e. re-define the source
+
+```{.liquidsoap include="liq/fallible3.liq" from=1 to=-1}
+```
+
+with a fallback on blank. Since this is quite common in scripts, the function
+`mksafe` is defined in the standard library as a shorthand, and the above is
+equivalent to writing
+
+```liquidsoap
+s = mksafe(s)
+```
 
 ### Switching and time predicates
 
@@ -962,51 +982,156 @@ jingle, a commercial and an announcement for a show, we could have defined
 ```{.liquidsoap include="liq/jingles-rotate2.liq" from=1 to=-1}
 ```
 
-#### Triggering on metadata
-
-A last general technique for launching jingles or ads, is to trigger them by
-metadata. For instance, we want that, when the metadata "`jingle`" of a track is
-set to "`true`", a jingle is inserted before the track.
-
-TODO:
-- add ads at a given time
-- on a metadata (with `prepend`)
-
-```{.liquidsoap include="liq/jingles-metadata.liq"}
-```
-
-TODO: recall annotate
-
 #### Signaling
 
-TODO: `predicate.signal`
-
-### Live shows
-
-Switch to a live show as soon as one is available. Make the show unavailable
-when it is silent, and skip tracks from the normal source if they contain too
-much silence.
+As a more advanced use of predicate, we would like to introduce the
+`predicate.signal` function which creates a particular predicate which is false
+most of the time, unless some other part of the program sends a "signal", in
+which case the predicate becomes true once and then false again (until the next
+signal). Concretely, we can use this function to create a predicate `p` by
 
 ```liquidsoap
-stripped_stream = 
-  strip_blank(input.http("http://myicecast:8080/live.ogg"))
-fallback(track_sensitive=false,
-         [stripped_stream,skip_blank(normal)])
+p = predicate.signal()
 ```
 
-Without the `track_sensitive=false` the fallback would wait the end of a track
-to switch to the live. When using the blank detection operators, make sure to
-fine-tune their threshold and length (float) parameters.
+The predicate `p` is false by default, in order to make it true we can send a
+signal by calling its method `signal`, i.e. writing `p.signal()`. For instance,
+in the script
 
-There are two kinds of transitions. Transitions between two different children
-of a switch are not problematic. Transitions between different tracks of the
-same source are more tricky, since they involve a fast forward computation of
-the end of a track before feeding it to the transition function: such a thing is
-only possible when only one operator is using the source, otherwise it'll get
-out of sync.
+```{.liquidsoap include="liq/jingles-signal.liq" from=3 to=-1}
+```
 
-Handling tracks
----------------
+we use `predicate.signal` to create a predicate `p` which controls playing
+jingles (if there is no jingle to play we default to the `music` source). We
+then use `thread.run` to execute `p.signal()` every 20 minutes (or 1200
+seconds). This means that every 20 minutes (or a bit more because we are waiting
+for the current track of `music` to end), we will hear a jingle.
+
+Of course, this is not the way one would typically regularly insert jingles, but
+this can easily be modified to insert jingles by interacting with the
+environment. For instance, we can register a command on the telnet server as
+follows:
+
+```{.liquidsoap include="liq/jingles-signal2.liq" from=6 to=-1}
+```
+
+The function `cmd`, when called with some argument, will run `p.signal()` and
+return a string indicating that the jingle has been inserted. We then use the
+`server.register` function to instruct Liquidsoap that the function `cmd` should
+be called when a user runs the command `insert_jingle` on the telnet
+server. This means that if you connect to the telnet server and type
+`insert_jingle`, a jingle will be inserted after next track, which could be
+quite useful if you are designing some sort of a graphical interface for your
+radio.
+
+Tracks, metadata and transitions {#sec:transitions}
+--------------------------------
+
+### Tracks and metadata
+
+Liquidsoap has a notion of _track_ in stream, which is generally used to mark
+the boundary between two successive songs. We have seen that many functions to
+control the stream (`fallback`, `switch`, etc.) have the ability to detect
+tracks and only change stream when a track is over in order not to abruptly
+interrupt a playing song (this behavior can be altered by setting the
+`track_sensitive` parameter to `false`).
+
+To every track is associated metadata, which are information concerning the song
+which is going to be played. In Liquidsoap, metadata can actually be present at
+any time, and don't have to correspond to a track boundary (we can have metadata
+in the middle of a song) although this is generally the case. We have seen that
+metadata is generally coded as an association list, as detailed in
+[there](#sec:association-list): this is a list consisting of pairs of strings,
+whose type is thus `[string * string]`. Typically, the metadata `m` for a track
+will look like
+
+```{.liquidsoap include="liq/metadata.liq" from=0 to=0}
+```
+
+which indicates that the artist is "Sinatra" and the title is "Fly me". Typical
+metadata fields are: artist, title, album, genre, year and comment.
+
+In order to retrieve the title in such a list, one should use the notation
+
+```liquidsoap
+m["title"]
+```
+
+which will return the value associated to the field `title` in the metadata `m`,
+the empty string `""` being returned in the case where the metadata is not
+present. Changing the value of some metadata is simply obtained by putting the
+new metadata at the top, by using the function `list.append`. For instance, we
+can define a metadata `m'` where the artist has been changed and the year has
+been added by
+
+```{.liquidsoap include="liq/metadata.liq" from=1 to=1}
+```
+
+Metadata are usually stored within files (for instance, mp3 files generally
+contain metadata encoded in the ID3v2 format). Typical operators reading files,
+such as `playlist`, automatically read those when opening a file. We recall that
+it is also possible to add metadata to files in playlists using the annotate
+protocol described above. For instance,
+
+```
+annotate:artist=The artist,comment=Played on my radio:test.mp3
+```
+
+### Handling tracks
+
+Each source has a method `on_track` and a method `on_metadata` to execute a
+function when a track boundary or metadata occur in the stream. In both cases,
+it takes as argument a function of type `([string * string]) -> unit`: this
+function itself will be called with the metadata as argument.
+
+#### Logging tracks
+
+We can use this to log every song which has gone on air:
+
+```{.liquidsoap include="liq/log-songs.liq" from=1 to=-1}
+```
+
+We first define a function `log_song` which takes the metadata `m` as argument,
+extracts the artist and the title, and appends those to the file
+`/tmp/songs`. We then run the method `on_track` of our `music` source to
+register this function to be called when there is a new track and that's it! By
+the way, if you want a quick and effective logging of the metadata, we would
+advise the use the `json_of` function, which will convert all the metadata at
+once into a standardized textual representation called
+[JSON](https://www.json.org/):
+
+```{.liquidsoap include="liq/log-songs2.liq" from=1 to=3}
+```
+
+#### Adding jingles on metadata
+
+The above functions can also be used in order to insert jingles (or ads) when
+some metadata is present. For instance, we suppose that we have a music source
+`s`, perhaps generated by a playlist: when a track has the metadata `jingle` set
+to `true`, we want to play a jingle beforehand. One way to perform this is
+
+```{.liquidsoap include="liq/jingles-metadata.liq" from=10}
+```
+
+It consists in creating a queue `q` and executing a function `insert_jingle`
+when a track is present: this function will look whether the value of the
+`jingle` metadata is `true`, and if this is the case it will insert a jingle
+(the file `jingle.mp3`) into the queue, which will then be played by a usual
+fallback mechanism.
+
+Another approach could consist in using the `predicate.signal` function detailed
+above to trigger playing one track of a `jingles` playlist when the metadata is
+present:
+
+```{.liquidsoap include="liq/jingles-metadata2.liq" from=10}
+```
+
+(in this case, because of the execution order, the jingle will be played after
+the track where metadata is present).
+
+### Rewriting metadata
+
+If you want to modify all metadata
 
 ### Metadata
 
@@ -1032,35 +1157,34 @@ out(s)
 - say the last song we had on air
 - the annotate protocol
 
-*ICY metadata* is the name for the mechanism used to update
-metadata in icecast's source streams.
-The techniques is primarily intended for data formats that do not support in-stream
-metadata, such as mp3 or AAC. However, it appears that icecast also supports
-ICY metadata update for ogg/vorbis streams.
+*ICY metadata* is the name for the mechanism used to update metadata in
+icecast's source streams.  The techniques is primarily intended for data formats
+that do not support in-stream metadata, such as mp3 or AAC. However, it appears
+that icecast also supports ICY metadata update for ogg/vorbis streams.
 
-When using the ICY metadata update mechanism, new metadata are submitted separately from
-the stream's data, via a http GET request. The format of the request depends on the
-protocol you are using (ICY for shoutcast and icecast 1 or HTTP for icecast 2).
+When using the ICY metadata update mechanism, new metadata are submitted
+separately from the stream's data, via a http GET request. The format of the
+request depends on the protocol you are using (ICY for shoutcast and icecast 1
+or HTTP for icecast 2).
 
-Starting with 1.0, you can do several interesting things with icy metadata updates
-in liquidsoap. We list some of those here.
+Starting with 1.0, you can do several interesting things with icy metadata
+updates in liquidsoap. We list some of those here.
 
-You can enable or disable icy metadata update in `output.icecast`
-by setting the `icy_metadata` parameter to either `"true"`
-or `"false"`. The default value is `"guess"` and does the following:
+You can enable or disable icy metadata update in `output.icecast` by setting the
+`icy_metadata` parameter to either `"true"` or `"false"`. The default value is
+`"guess"` and does the following:
 
-* Set `"true"` for: mp3, aac, aac+, wav
-* Set `"false"` for any format using the ogg container
+- set `"true"` for: mp3, aac, aac+, wav
+- set `"false"` for any format using the ogg container
 
-You may, for instance, enable icy metadata update for ogg/vorbis
-streams.
+You may, for instance, enable icy metadata update for ogg/vorbis streams.
 
-The function `icy.update_metadata` implements a manual metadata update
-using the ICY mechanism. It can be used independently from the `icy_metadata`
-parameter described above, provided icecast supports ICY metadata for the intended stream.
+The function `icy.update_metadata` implements a manual metadata update using the
+ICY mechanism. It can be used independently from the `icy_metadata` parameter
+described above, provided icecast supports ICY metadata for the intended stream.
 
-For instance the following script registers a telnet command name `metadata.update`
-that can be used to manually update metadata:
+For instance the following script registers a telnet command name
+`metadata.update` that can be used to manually update metadata:
 
 ```
 def icy_update(v) =
@@ -1091,12 +1215,43 @@ server.register("update",namespace="metadata",
 As usual, `liquidsoap -h icy.update_metadata` lists all the arguments
 of the function.
 
+TODO: `merge_tracks`
+
+TODO: `insert_metadata`, `server.insert_metadata`
+
+### Transforming metadata
+
+TODO: `map_metadata`
+
 ### Annotate
 
 TODO: annotate protocol, mention the `prefix` parameter of `playlist`
 
-Transitions {#sec:transitions}
------------
+#### Triggering jingles on metadata
+
+Another general technique for launching jingles or ads, is to trigger them by
+metadata. For instance, suppose that we have a source `s` playing music tracks
+and we want that, when the metadata "`jingle`" of a track is set to "`true`", a
+jingle is inserted before the track.
+
+
+
+TODO:
+- add ads at a given time
+- on a metadata (with `prepend`)
+
+TODO: recall annotate
+
+
+### Transitions
+
+There are two kinds of transitions. Transitions between two different children
+of a switch are not problematic. Transitions between different tracks of the
+same source are more tricky, since they involve a fast forward computation of
+the end of a track before feeding it to the transition function: such a thing is
+only possible when only one operator is using the source, otherwise it'll get
+out of sync.
+
 
 ### Crossfade
 
@@ -1237,6 +1392,10 @@ see also: <https://github.com/savonet/liquidsoap/issues/1541>
 Signal processing
 -----------------
 
+### Amplification
+
+TODO: `amplify` / amplify with metadata / replaygain
+
 ### Normalization
 
 normalization, replaygain (the protocol)
@@ -1301,8 +1460,8 @@ TODO: example of Youtube output, we should work out native ffmpeg youtube output
 
 TODO: explain how to encode in mp3 and output both in a file and to Icecast without re-encoding
 
-Monitoring the stream
----------------------
+Testing and monitoring
+----------------------
 
 See above for logging tracks
 
@@ -1361,3 +1520,58 @@ source = on_blank(handler,source)
 ```
 
 ### Metrics
+
+Compute RMS and LUFS, conversion with `dB_of_lin` and conversely, `vumeter`, etc.
+
+TODO: expose metrics with JSON on harbor
+
+```{.liquidsoap include="liq/metrics-harbor.liq" from=1}
+```
+
+TODO: explain the variant where we store on a file regularly
+
+```{.liquidsoap include="liq/metrics-file.liq" from=1}
+```
+
+TODO: expose metrics with prometeus
+
+### Testing scripts
+
+- log as much as possible and use priorities meaningfully
+- mention `chopper`, which is useful to simulate track boundaries
+- `sine` etc are of course useful to generate sound, also `metronome`
+- tracks can be generated with the `synth:` protocol
+  (`"synth:shape=sine,frequency=880,duration=1`", default values (shape is sine,
+  freq is 440, duration is 1))
+- `sleeper`
+- what else?
+
+Full example (already presented, we only want to show the first part here)...:
+
+```{.liquidsoap include="liq/jingles-metadata.liq"}
+```
+
+- the `synth` protocol (already presented in "testing scripts" section)
+
+Interacting with other programs
+-------------------------------
+
+### Running external programs
+
+`process.run`
+
+### Telnet
+
+- add a skip command
+- switch between sources
+
+### Harbor
+
+### OSC
+
+We should put the telnet and http here?
+
+###  External decoders/encoders
+
+TODO: many people want to use [stereotool](https://www.stereotool.com/), cf
+https://github.com/savonet/liquidsoap/issues/885

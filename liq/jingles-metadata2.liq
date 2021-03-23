@@ -8,14 +8,15 @@ def metadata()
 end
 s = chop(duration=3., metadata=metadata, s)
 
-q = request.queue()
+jingles = playlist("jingles")
+p = predicate.signal()
 def insert_jingle(m)
   log.info("Got metadata")
   if m["jingle"] == "true" then
     log.info("Inserting jingle")
-    q.push.uri("jingle.mp3")
+    p.signal()
   end
 end
 s.on_track(insert_jingle)
-s = fallback(track_sensitive=false, [q, s])
+s = switch([(p,jingles), ({true},s)])
 output(s)
