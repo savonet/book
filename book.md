@@ -10,23 +10,14 @@ geometry:
 - paperheight=9in
 - margin=20mm
 - marginparwidth=15mm
+default-image-extension: ".pdf"
 fontfamily: libertine
+implicit_figures: no
 subparagraph: yes
 header-includes: |
-  \usepackage[varqu,scaled=.9]{inconsolata}
-  \usepackage[Bjornstrup]{fncychap}
-  \usepackage{fvextra}
-  \RecustomVerbatimEnvironment{verbatim}{Verbatim}{breaklines}
+  \usepackage{style}
   \usepackage{cleveref}
   \usepackage{makeidx}\makeindex
-  \usepackage{titlesec}
-  `\titleformat{\subsection}[runin]{\normalfont\normalsize\bfseries}{\thesubsection}{1ex}{}[.]`{=latex}
-  `\titleformat{\subsubsection}[runin]{\normalfont\normalsize\em}{\thesubsubsection}{1ex}{}[.]`{=latex}
-  \titlespacing*{\subsection}{0pt}{3.25ex plus 1ex minus .2ex}{1ex}
-  \titlespacing*{\subsubsection}{0pt}{3.25ex plus 1ex minus .2ex}{1ex}
-  \newcommand{\TODO}[1]{\marginpar{\tiny #1}}
-  \newcommand{\SM}[1]{\TODO{SM: #1}}
-  \newcommand{\RB}[1]{\TODO{RB: #1}}
 numbersections: true
 secnumdepth: 1
 toc-depth: 1

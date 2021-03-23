@@ -1,5 +1,5 @@
 #!./liquidsoap
 jingles = playlist("jingles")
 music = playlist("~/Music")
-radio = rotate(weights=[1, 4], [jingles, music])
+radio = add([delay(1800., jingles), music])
 output(radio)

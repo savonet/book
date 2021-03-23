@@ -1,10 +1,10 @@
 #!./liquidsoap
 set("log.level", 4)
 s = single("test.mp3")
-ad_now = ref(false)
+jingle_now = ref(false)
 def metadata()
-  ad_now := not !ad_now
-  if !ad_now then [("ad","true")] else [] end
+  jingle_now := not !jingle_now
+  if !jingle_now then [("ad","true")] else [] end
 end
 s = chop(duration=3., metadata=metadata, s)
 
@@ -13,7 +13,7 @@ def insert_ads(m)
   log.info("Got metadata")
   if m["ad"] == "true" then
     log.info("Inserting ad")
-    q.push.uri("ad.mp3")
+    q.push.uri("jingle.mp3")
   end
 end
 s.on_metadata(insert_ads)

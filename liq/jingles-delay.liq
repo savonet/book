@@ -1,5 +1,5 @@
 #!./liquidsoap
 jingles = playlist("jingles")
 music = playlist("~/Music")
-radio = switch([delay(1200., jingles), music])
+radio = fallback([delay(1800., jingles), music])
 output(radio)

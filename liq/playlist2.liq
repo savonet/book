@@ -1,3 +1,3 @@
 #!/usr/bin/env liquidsoap
-s = playlist("playlist")
+s = playlist("my_playlist")
 output(s)
