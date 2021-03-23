@@ -6,4 +6,4 @@ if [ $USER = "smimram" ]; then
     LIQUIDSOAP="/home/smimram/prog/savonet/liquidsoap/src/liquidsoap /home/smimram/prog/savonet/liquidsoap/libs/pervasives.liq"
 fi
 
-$LIQUIDSOAP $*
+$LIQUIDSOAP --no-deprecated $*
