@@ -70,6 +70,8 @@ parameters `reload` and `reload_mode`, for instance:
   ```liquidsoap
   s = playlist(reload_mode="watch", "playlist")
   ```
+  
+\TODO{also present the reload method}
 
 Another useful option is `check_next`, to specify a function which will
 determine whether a file should be played or not in the playlist: this function
@@ -839,6 +841,10 @@ means that if `mic` is taken from an harbor input such as
 and the client did not connect or was disconnected, we will hear only the bed,
 as expected.
 
+### Sequencing
+
+TODO: mention the `sequence` operator..............
+
 ### Jingles and ads
 
 Jingles are short announcements, generally indicating the name of the radio or
@@ -1028,6 +1034,12 @@ radio.
 
 We will also see in [next section](#sec:tracks) that the insertion of jingles
 can also conveniently be triggered by metadata in sources.
+
+#### Inserting jingles in transitions
+
+Yet another method for inserting transition consists in adding them in
+transitions between tracks, this is detailed in [a later
+section](#sec:transitions).
 
 Tracks and metadata {#sec:tracks}
 -------------------
@@ -1321,6 +1333,45 @@ As usual, `liquidsoap -h icy.update_metadata` lists all the arguments
 of the function.
 -->
 
+### Skipping tracks
+
+Every source has a method `skip` which allows skipping the current track and go
+to the next one. For instance, if our main source is `s`, we can hear the first
+5 seconds of each track of `s` with
+
+```{.liquidsoap include="liq/source.skip.liq" from=2}
+```
+
+We could also easily use this to register a telnet command but this done by
+default with the `playlist` operator: you can always use the `skip` telnet
+command (or `id.skip` if an identifier `id` was specified for the source) to
+skip the current song. For instance, with the script
+
+```{.liquidsoap include="liq/source.skip2.liq" from=1}
+```
+
+running the telnet command `music.skip` will end the current track and go to the
+next one. As another example, let us register skip as an http service: the script
+
+```{.liquidsoap include="liq/source.skip3.liq" from=2}
+```
+
+makes it so that whenever we connect to the url `http://localhost:8080/skip` the
+current song on the source `s` is abruptly ended: this is part of the
+interaction you would typically have when designing a web interface for your
+radio. Interaction through telnet and harbor http is handled in
+[there](#sec:interaction), so that we do not further detail this example here.
+
+\TODO{seeking}
+
+### End of tracks
+
+TODO: `source.on_end`
+
+example, say the current song 10 seconds before the end
+
+say that this is used to implement fade outs
+
 Transitions {#sec:transitions}
 -----------
 
@@ -1328,65 +1379,153 @@ So far, we have seen that we can easily play several music files sequentially
 (for instance with the `playlist` operator) or switch between two sources (using
 the `fallback` or `switch` operators). However, the resulting transitions
 between two tracks are quite abrupt: one track ends and the other starts. We
-often want crossfading between tracks, which means that the volume of the first
-track should be progressively lowered and the one of the second progressively
-increased in such a way that we hear the two during the transition:
+often want crossfading transitions between tracks, which means that the volume
+of the first track should be progressively lowered and the one of the second
+progressively increased in such a way that we hear the two during the
+transition:
 
-![Transition](fig/transition){.center}\
+![Transition](fig/transition)\
 
-There are two kinds of transitions. Transitions between two different children
-of a switch are not problematic. Transitions between different tracks of the
-same source are more tricky, since they involve a fast forward computation of
-the end of a track before feeding it to the transition function: such a thing is
-only possible when only one operator is using the source, otherwise it'll get
-out of sync.
+Note that, as figured in the graph above, we don't necessarily want the duration
+of the transition to be the same for all tracks: for instance, the transition
+should be shorter (or there should even be no transition) for tracks starting or
+ending abruptly.
+
+Liquidsoap supports both
+
+- transitions between two distinct sources (for instance, when changing the
+  source selected by a `switch`), and
+- transitions between consecutive tracks of the same source.
+
+The latter are more tricky to handle, since they involve a fast forward
+computation of the end of a track before feeding it to the transition function:
+such a thing is only possible when only one operator is using the source,
+otherwise we will run into synchronization issues.
+
+### Cue points
+
+Before performing transitions, we should first ensure that our tracks begin and
+end at the right time: some songs features long introductions or long endings,
+that we would like not to play on a radio (think of a Pink Floyd song). In order
+to do so, we would rather avoid directly editing the music files, and simply add
+metadata indicating the time at which we should begin and end playing the files:
+these are commonly referred to as the _cue in_ and the _cue out_ points.
+
+The `cue_cut` operator takes a source and cuts each track according to the cue
+points which are stored in the metadata: by default, the metadata `liq_cue_in`
+and `liq_cue_out` are used for cue in and cue out points (the name of the
+metadata can be changed with the `cue_in_metadata` and `cue_out_metadata`
+parameters of `cue_cut`), and are supposed to be specified in seconds relative
+to the beginning of the track.
+
+For instance, in the following example, we use the `prefix` argument of
+`playlist` to set `liq_cue_in` to `30` and `liq_cue_out` to `40.5` for every
+track of the playlist:
 
 
-### Crossfade
+```{.liquidsoap include="liq/cue_cut.liq" from=2}
+```
 
-crossfade
-annotate, cue_in cue_out
+We will thus play every song of the playlist for 10.5 seconds, starting at
+second 30. In practice, the metadata for cue points would either be hardcoded in
+the files or added for each file with `annotate` in the playlist. In a more
+elaborate setup, a `request.dynamic` setup would typically also use `annotate`
+in order to indicate the cue points, which would be fetched by your own
+scheduling back-end (for instance, the cue points could be stored in a database
+containing all the songs).
 
-Sources that support seeking can also be used to implement cue points.
-The basic operator for this is `cue_cut`. Its has type:
+### Fading
+
+In order to have smoother transitions, a first way to proceed is to
+progressively increase the volume from 0 (the minimum) to 1 (the maximum) at the
+beginning of tracks and progressively decrease the volume from 1 to 0 at the end
+of tracks: these operations are respectively called _fading in_ and _fading out_
+and their effect on the volume can be pictured as follows:
+
+![Fading in and out](fig/fade-in-out)\
+
+The operators `fade.in` and `fade.out` fade respectively in and out every track
+of the source given as argument. The `duration` parameter controls the duration
+in seconds of the fade: this corresponds to the length of the ramp on the above
+figures, by default it takes 3 seconds to entirely change the volume. The
+duration can also be changed by using setting the metadata `liq_fade_in` (the
+name can be changed by with the `override_duration` parameter of the
+functions). Finally, the parameter `type` controls the shape of the fade: it can
+respectively be `"lin"`, `"sin"`, `"log"` and `"exp"` which will respectively
+change the shape of the fade as follows:
+
+![Fading shapes](fig/fade-shapes)\
+
+The default shape is linear (it is the simplest), but the sine fade tends to be
+the smoother for the ear. For instance, the script
+
+```{.liquidsoap include="liq/fade.liq" from=2 to=-1}
+```
+
+will add a sinusoidal fade in of 4 seconds and a linear fade out of 3 seconds to
+every track of the source `s`.
+
+### Transitions between different sources
+
+The operators which allow switching between different sources (`switch`,
+`fallback`, `rotate` and `random`) allow specifying the transitions to be
+applied when switching from one source to the other. A _transition_ is described
+by a function taking two sources as arguments and returning a new source: the
+first argument is the source which is about to be left, the second argument is
+the newly selected source, and the returned source is the result of their
+combination. The default transition is the function
 
 ```
-(?id:string,?cue_in_metadata:string,
- ?cue_out_metadata:string,
- source(audio='#a,video='#b,midi='#c))->
-    source(audio='#a,video='#b,midi='#c)
+fun (a, b) -> b
 ```
 
-Its parameters are:
+which simply discards the stream from the old source and returns the one of the
+new one. In practice, the first argument is often irrelevant because Liquidsoap
+cannot predict accurately when the next switch will occur.
 
-* `cue_in_metadata`: Metadata for cue in points, default: `"liq_cue_in"`.
-* `cue_out_metadata`: Metadata for cue out points, default: `"liq_cue_out"`.
-* The source to apply cue points to.
+The switching operators all take an argument `transition_length` which controls
+the length of the transition in seconds, i.e. how long the two sources `a` and
+`b` will overlap, the result of the overlap being computed by the transition
+function. They also take a list `transitions`: the nth element of this list is
+the transition function that will be used when switching to the nth source.
 
-The values of cue-in and cue-out points are given in absolute
-position through the source's metadata. For instance, the following
-source will cue-in at 10 seconds and cue-out at 45 seconds on all its tracks:
+In order to illustrate this, suppose that we have two sources: `live` which is a
+live source available from time to time (for instance, a DJ connecting to an
+`input.harbor` source) and `music` which is a local music source (for instance,
+a playlist). In such a situation, we would define with a fallback which plays
+the live source if available and defaults to the music source otherwise:
 
+```liquidsoap
+radio = fallback(track_sensitive=false, [live, music])
 ```
-s = playlist(prefix="annotate:liq_cue_in=\"10.\",liq_cue_out=\"45\":",
-             "/path/to/music")
 
-s = cue_cut(s)
+We want to enhance our setup and have transitions such that
+
+- when we switch to the live source, we want to hear "And now the live show!"
+  while the sound of the live source progressively fades in,
+- when we switch back to the music source, we want to hear a jingle and then the
+  music source.
+
+
+```{.liquidsoap include="liq/fallback-transition.liq" from=4 to=-1}
 ```
 
-As in the above example, you may use the `annotate` protocol to pass custom cue
-points along with the files passed to Liquidsoap. This is particularly useful 
-in combination with `request.dymanic` as an external script can build-up
-the appropriate URI, including cue-points, based on information from your
-own scheduling back-end.
+TODO: say that we want `normalize=false` for add!
 
-Alternatively, you may use `map_metadata` to add those metadata. The operator
-`map_metadata` supports seeking and passes it to its underlying source.
+TODO: say that the duration of the transition should always be strictly greater than the fade duration
 
-##### Switch-based transitions
-The switch-based operators (`switch`, `fallback` and `random`) support transitions. For every child, you can specify a transition function computing the output stream when moving from one child to another. This function is given two `source` parameters: the child which is about to be left, and the new selected child. The default transition is `fun (a,b) -> b`, it simply relays the new selected child source.
 
-Transitions have limited duration, defined by the `transition_length` parameter. Transition duration can be overriden by passing a metadata. Default field for it is `"liq_transition_length"` but it can also be set to a different value via the `override` parameter. 
+The switch-based operators (`switch`, `fallback`, `rotate` and `random`) support
+transitions. For every child, you can specify a transition function computing
+the output stream when moving from one child to another. This function is given
+two `source` parameters: the child which is about to be left, and the new
+selected child. The default transition is `fun (a,b) -> b`, it simply relays the
+new selected child source.
+
+Transitions have limited duration, defined by the `transition_length`
+parameter. Transition duration can be overriden by passing a metadata. Default
+field for it is `"liq_transition_length"` but it can also be set to a different
+value via the `override` parameter.
 
 Here are some possible transition functions:
 
@@ -1440,19 +1579,28 @@ def transition(j,a,b)
 end
 ```
 
-Finally, we build a source which plays a playlist, and switches to the live show as soon as it starts, using the `transition` function as a transition. At the end of the live, the playlist comes back with a cross-fading.
+Finally, we build a source which plays a playlist, and switches to the live show
+as soon as it starts, using the `transition` function as a transition. At the
+end of the live, the playlist comes back with a cross-fading.
 
-```
+```liquidsoap
 fallback(track_sensitive=false,
 	     transitions=[ crossfade, transition(jingle) ],
 	     [ input.http("http://localhost:8000/live.ogg"),
 	       playlist("playlist.pls") ])
 ```
 
-##### Cross-based transitions
-The `cross()` operator allows arbitrary transitions between tracks of a same source. Here is how to use it in order to get a cross-fade:
+mention the `transitions` parameter of `fallback`, e.g. for nice switching to
+live
 
-```
+see also: <https://github.com/savonet/liquidsoap/issues/1541>
+
+### Cross-based transitions
+
+The `cross` operator allows arbitrary transitions between tracks of a same
+source. Here is how to use it in order to get a cross-fade:
+
+```liquidsoap
 def crossfade(~start_next,~fade_in,~fade_out,s)
   fade.in = fade.in(duration=fade_in)
   fade.out = fade.out(duration=fade_out)
@@ -1463,19 +1611,24 @@ my_source =
   crossfade(start_next=1.,fade_out=1.,fade_in=1.,my_source)
 ```
 
-The `crossfade()` function is already in liquidsoap. Unless you need a custom one, you should never have to copy the above example. It is implemented in the scripting language, much like this example. You can find its code in `utils.liq`.
+The `crossfade()` function is already in liquidsoap. Unless you need a custom
+one, you should never have to copy the above example. It is implemented in the
+scripting language, much like this example. You can find its code in
+`utils.liq`.
 
-The fade-in and fade-out parameters indicate the duraction of the fading effects. The start-next parameters tells how much overlap there will be between the two tracks. If you want a long cross-fading with a smaller overlap, you should use a sequence to stick some blank section before the beginning of `b` in `fader`.
-The three parameters given here are only default values, and will be overriden by values coming from the metadata tags `liq_fade_in`, `liq_fade_out` and `liq_start_next`.
+The fade-in and fade-out parameters indicate the duraction of the fading
+effects. The start-next parameters tells how much overlap there will be between
+the two tracks. If you want a long cross-fading with a smaller overlap, you
+should use a sequence to stick some blank section before the beginning of `b` in
+`fader`.  The three parameters given here are only default values, and will be
+overriden by values coming from the metadata tags `liq_fade_in`, `liq_fade_out`
+and `liq_start_next`.
 
-For an advanced crossfading function, you can see the [crossfade documentation](crossfade.html)
+For an advanced crossfading function, you can see the [crossfade
+documentation](crossfade.html)
 
-### Other operators
-
-mention the `transitions` parameter of `fallback`, e.g. for nice switching to
-live
-
-see also: <https://github.com/savonet/liquidsoap/issues/1541>
+```{.liquidsoap include="liq/crossfade.liq" from=1}
+```
 
 
 Signal processing
@@ -1493,7 +1646,12 @@ LADSPA plugins
 
 Good examples:
 
-- https://savonet-users.narkive.com/MiNy36h8/have-a-sort-of-fm-sound-with-liquidsoap
+- <https://savonet-users.narkive.com/MiNy36h8/have-a-sort-of-fm-sound-with-liquidsoap>
+- <https://www.mkpascal.net/2015/10/25/broadcast-audio-liquidsoap.html> and
+  <https://github.com/mkpascal/mk_liquidsoap_processing>
+- <https://github.com/JamesHarrison/conduit>
+- <https://pzwiki.wdka.nl/mediadesign/Liquidsoap>
+- <https://gist.github.com/130db/6001343>
 
 ### Blank
 
@@ -1507,6 +1665,10 @@ persistency + harbor server) / OSC
 ### Stereotool
 
 TODO.......
+
+### Jack
+
+mention jack again
 
 Outputs
 -------
@@ -1645,20 +1807,27 @@ It can also be useful to skip with `thread.run`
 ```{.liquidsoap include="liq/jingles-metadata2.liq"}
 ```
 
+we can simulate a live source as in
+
+```{.liquidsoap include="liq/fallback-transition.liq"}
+```
+
 
 - the `synth` protocol (already presented in "testing scripts" section)
 
-Interacting with other programs
+Interacting with other programs {#sec:interaction}
 -------------------------------
 
 ### Running external programs
 
 `process.run`
 
-### Telnet
+### Telnet {#sec:telnet}
 
 - add a skip command
 - switch between sources
+
+give an example of a python script (e.g. to skip)
 
 ### Harbor
 
@@ -1670,3 +1839,5 @@ We should put the telnet and http here?
 
 TODO: many people want to use [stereotool](https://www.stereotool.com/), cf
 https://github.com/savonet/liquidsoap/issues/885
+
+### Webcast

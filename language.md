@@ -2217,7 +2217,7 @@ source can generate.
 TODO: source functions take an `id` parameter which is mostly useful for the
 logs and the telnet
 
-availability (`available`)
+availability (`source.available`)
 
 ```{.liquidsoap include="liq/available.liq"}
 ```

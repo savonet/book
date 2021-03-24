@@ -1386,6 +1386,30 @@ the tree looks like:
 
 Example of a log of decoder
 
+explain configuration options
+
+```
+set("decoder.decoders",["WAV","AIFF","PCM/BASIC","MIDI","IMAGE","RAW AUDIO","FFMPEG","FLAC","AAC","MP4","OGG","MAD","GSTREAMER"])
+```
+
+```
+set("decoder.external.ffmpeg.path","ffmpeg")
+```
+
+```
+set("decoder.file_extensions.ffmpeg",["mp1","mp2","mp3","m4a","m4b","m4p","m4v","m4r","mov","3gp","mp4","wav","flac","ogv","oga","ogx","ogg","opus","wma","webm","wmv","avi","mkv","aac","osb"])
+```
+
+```
+set("decoder.mime_types.ffmpeg",["audio/vnd.wave","audio/wav","audio/wave","audio/x-wav","audio/aac","audio/aacp","audio/x-hx-aac-adts","audio/flac","audio/x-flac","audio/mpeg","audio/MPA","video/x-ms-asf","
+video/x-msvideo","audio/mp4","audio/webm","application/mp4","video/mp4","video/3gpp","video/webm","video/x-matroska","video/mp2t","video/MP2T","application/ogg","application/x-ogg","audio/x-ogg","audio/ogg","vid
+eo/ogg","video/webm","application/ffmpeg"])
+```
+
+```
+set("decoder.priorities.ffmpeg",10)
+```
+
 MIME is used to guess
 
 We also have metadata resolvers
