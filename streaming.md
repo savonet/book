@@ -625,6 +625,8 @@ noticed. It can be sometimes useful to increase it a bit (but not as much as 1
 second) in order to improve the performance of scripts, at the cost of
 decreasing the precision of computed values.
 
+\TODO{mention source.on\_frame}
+
 ### Frame raw contents {#sec:liquidsoap-raw}
 
 Let us provide some more details about the way data is usually stored in those
