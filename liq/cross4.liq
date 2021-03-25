@@ -8,5 +8,5 @@ def f(_, _, _, _, a, b)
     sequence([blank(duration=2.), fade.in(b)]),
   ])
 end
-s = cross(duration=7., f, s)
+s = cross(duration=6., f, s)
 output(s)

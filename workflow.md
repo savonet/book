@@ -1590,11 +1590,11 @@ instance, the usual fading can be achieved with
 ```{.liquidsoap include="liq/cross.liq" from=3 to=-1}
 ```
 
-The transition function `f` here simply adds the old source with a fade out
-together with the new source with a fade in. We set here the `normalize`
-argument of the `add` to `false`: otherwise the overall volume will be divided
-by two (because there are two sources) and we will hear a volume jump once the
-transition is over.
+The transition function `f` simply adds the old source with a fade out together
+with the new source with a fade in. It is important that We set here the
+`normalize` argument of the `add` to `false`: otherwise the overall volume will
+be divided by two (because there are two sources) and we will hear a volume jump
+once the transition is over.
 
 Let us give some other examples of transition functions. If we want to have no
 transition, we can use the `sequence` operator to play the end of the old source
@@ -1627,10 +1627,10 @@ source faded out, the jingle and the new source faded in:
 ```
 
 The operators `sequence` are used here to add some blank at the beginning of the
-source in order to delay the moment where they are started. The real duration of
-the fade is 6 seconds (see the figure above), but we set the `duration`
-parameter to 7 for safety. In order to illustrate the use of the metadata,
-suppose that we want to have no transition, but want to insert a jingle when the
+source in order to delay the moment where they are started. The "real" duration
+of the fade is 5 seconds, but we set the `duration` parameter to 6 to have 1
+extra second for safety. In order to illustrate the use of the metadata, suppose
+that we want to have no transition, but want to insert a jingle when the
 metadata `jingle` of the new track is set to `true`. This can be achieved with:
 
 ```{.liquidsoap include="liq/cross5.liq" from=3 to=-2}
@@ -1639,18 +1639,24 @@ metadata `jingle` of the new track is set to `true`. This can be achieved with:
 Namely, we recall that the arguments `ma` and `mb` respectively contain the
 metadata of the old track and of the new track.
 
-
-
+Finally, in the case where the current track end unexpectedly, we might not have
+enough time to perform the transition (basically, when we skip the current track
+of a source, we immediately go to the next track). The `minimum` parameter of
+`cross` controls how much time in advance we should have to perform the
+transition: if the remaining time of the current track is below this value, we
+simply don't apply any transition.
 
 ### Transitions between different sources
 
 The operators which allow switching between different sources (`switch`,
-`fallback`, `rotate` and `random`) allow specifying the transitions to be
+`fallback`, `rotate` and `random`) also allow specifying the transitions to be
 applied when switching from one source to the other. A _transition_ is described
 by a function taking two sources as arguments and returning a new source: the
 first argument is the source which is about to be left, the second argument is
 the newly selected source, and the returned source is the result of their
-combination. The default transition is the function
+combination. This is similar to the transitions for `cross`, excepting that we
+don't have the power and metadata in this case. The default transition is the
+function
 
 ```
 fun (a, b) -> b
@@ -1658,7 +1664,7 @@ fun (a, b) -> b
 
 which simply discards the stream from the old source and returns the one of the
 new one. In practice, the first argument is often irrelevant because Liquidsoap
-cannot predict accurately when the next switch will occur. 
+cannot predict accurately when the next switch will occur.
 
 The switching operators all take an argument `transition_length` which controls
 the length of the transition in seconds, i.e. how long the two sources `a` and
@@ -1691,101 +1697,77 @@ This will be achieved by implementing two dedicated transition functions:
 - the first one, `to_live(a, b)`, will add a request to say the text once with
   the source `b` (which contains the beginning of the live show),
 - the second one, `to_music(a, b)`, uses the operator `sequence` to play a
-  jingle and then the source `b`
+  jingle and then the source `b`.
   
-whose code is given below:
+Their code is given below:
 
 ```{.liquidsoap include="liq/fallback-transition.liq" from=4 to=-1}
 ```
 
 We finally use the `fallback` operator to play the live source if available and
-the music source otherwise. We set the `transition_length` parameter to state
-that the transition should last for 5 seconds, and set the list `transitions` of
-transitions to `to_live` and `to_music`, which are respectively used when
-switching to the `live` and `music` sources. The duration of the transition (5
-seconds) is strictly greater than the fade duration (4 seconds) in the `to_live`
-transition: this should always be the case, otherwise we will not be able to
-complete the fade, which will be unpleasant to hear.
+the music source otherwise. We set the list `transitions` of transitions to
+`to_live` and `to_music`, which are respectively used when switching to the
+`live` and `music` sources.
 
+<!--
 Transitions have limited duration, defined by the `transition_length`
 parameter. Transition duration can be overriden by passing a metadata. Default
 field for it is `"liq_transition_length"` but it can also be set to a different
 value via the `override` parameter.
 
-Here are some possible transition functions:
-
-```liquidsoap
-# A simple (long) cross-fade
-# Use metadata override to make sure transition is long enough.
-def crossfade(a,b)
-  def add_transition_length(_) =
-    [("liq_transition_length","15.")]
-  end
-
-  transition =
-    add(normalize=false,
-          [ sequence([ blank(duration=5.),
-                       fade.in(duration=10.,b) ]),
-            fade.out(duration=10.,a) ])
-
-  # Transition can have multiple tracks so only pass the metadata
-  # once.
-  map_first_track(map_metadata(add_transition_length),transition)
-end
-
-# Partially apply next to give it a jingle source.
-# It will fade out the old source, then play the jingle.
-# At the same time it fades in the new source.
-# Use metadata override to make sure transition is long enough.
-def next(j,a,b)
-  # This assumes that the jingle is 6 seconds long
-  def add_transition_length(_) =
-    [("liq_transition_length","15.")]
-  end
-
-  transition =
-    add(normalize=false,
-	  [ sequence(merge=true,
-	             [ blank(duration=3.),
-	               fade.in(duration=6.,b) ]),
-	    sequence([fade.out(duration=9.,a),
-	              j,blank()]) ])
-
-  map_first_track(map_metadata(add_transition_length),transition)
-end
-
-# A transition, which does a cross-fading from A to B
-# No need to override duration as default value (5 seconds)
-# is over crossade duration (3 seconds)
-def transition(j,a,b)
-  add(normalize=false,
-	  [ fade.in(duration=3.,b),
-	    fade.out(duration=3.,a) ])
-end
-```
-
-Finally, we build a source which plays a playlist, and switches to the live show
-as soon as it starts, using the `transition` function as a transition. At the
-end of the live, the playlist comes back with a cross-fading.
-
-```liquidsoap
-fallback(track_sensitive=false,
-	     transitions=[ crossfade, transition(jingle) ],
-	     [ input.http("http://localhost:8000/live.ogg"),
-	       playlist("playlist.pls") ])
-```
-
-mention the `transitions` parameter of `fallback`, e.g. for nice switching to
-live
-
 see also: <https://github.com/savonet/liquidsoap/issues/1541>
+-->
 
 Signal processing
 -----------------
 
+Now that we have seen the ways of generating sound, we should see ways to shape
+the sound.
+
 ### Amplification
 
+The first basic sound effect is _amplification_, i.e. raising or lowering the
+volume of a source. This is basically achieved with the `amplify` operator which
+takes a float coefficient and a source, and amplifies the sources by the
+coefficient. For instance, we can halve the loudness of a source `s` by
+
+```{.liquidsoap include="liq/amplify.liq" from=2 to=-1}
+```
+
+As for most parameters of audio effects, `amplify` also accepts getters as
+coefficients, which allow modifying the value dynamically. For instance, we
+could use an interactive variable for the amplification parameter:
+
+```{.liquidsoap include="liq/amplify-interactive.liq" from=2 to=-1}
+```
+
+this would allow changing the value of the amplification on the telnet using the
+command
+
+```
+set main_volume 1.2
+```
+
+We could also fetch the value of the volume from the contents of the `volume`
+file as follows:
+
+```{.liquidsoap include="liq/amplify-file.getter.liq" from=2 to=-1}
+```
+
+The `file.getter.float` regularly looks at the contents of the file `volume` and
+returns an updated value. Such mechanisms could be handy to provide the user
+with a way to adjust his volume for a live show using a graphical interface.
+
+The `amplify` parameter also support setting the amplification coefficient using
+metadata: if the metadata `liq_amplify` is specified then its value will be
+taken as coefficient for current track (the name of the metadata itself can be
+changed with the `override` parameter `amplify`).
+
+
 TODO: `amplify` / amplify with metadata / replaygain
+
+```{.liquidsoap include="liq/replay_gain.liq"}
+```
 
 ### Normalization
 
@@ -1810,6 +1792,9 @@ The various functions to remove blank
 
 We can obtain parameters through telnet (explain how to save the values with
 persistency + harbor server) / OSC
+
+`getter.file`
+
 
 ### Stereotool
 
@@ -1944,6 +1929,7 @@ TODO: expose metrics with prometeus
   (`"synth:shape=sine,frequency=880,duration=1`", default values (shape is sine,
   freq is 440, duration is 1))
 - `sleeper`
+- `skipper`
 - what else?
 
 Full example (already presented, we only want to show the first part here)...:
@@ -1966,7 +1952,6 @@ or
 ```{.liquidsoap include="liq/fallback.skip.liq"}
 ```
 
-
 - the `synth` protocol (already presented in "testing scripts" section)
 
 Interacting with other programs {#sec:interaction}
@@ -1985,9 +1970,12 @@ give an example of a python script (e.g. to skip)
 
 ### Harbor
 
-### OSC
-
 We should put the telnet and http here?
+
+### Watching files
+
+```{.liquidsoap include="liq/file.watch.liq"}
+```
 
 ###  External decoders/encoders
 
