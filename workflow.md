@@ -930,7 +930,7 @@ time `p` is continuously true. In case it helps, we have illustrated in the
 following figure an example of a predicate `p` over time (below) and the
 resulting predicate `predicate.once(p)` over time (above):
 
-![predicate.once](fig/predicate.once)\
+![predicate.once](fig/predicate-once)\
 
 This means that `predicate.once({12h00-12h15})` is a predicate which is true
 once between 12h00 and 12h15. This is exactly what we were looking for, and the
