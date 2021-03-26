@@ -983,6 +983,9 @@ jingle on top of the currently playing music with
 ```{.liquidsoap include="liq/jingles-delay2.liq" from=3 to=-1}
 ```
 
+\TODO{this is useful for non-track-sensitive switches to play one track, but
+ensuring that is won't last longer, see https://github.com/savonet/liquidsoap/issues/1544}
+
 #### Rotating tracks
 
 How often we should play jingles, instead of being based on time, can be based
@@ -1761,19 +1764,148 @@ with a way to adjust his volume for a live show using a graphical interface.
 The `amplify` parameter also support setting the amplification coefficient using
 metadata: if the metadata `liq_amplify` is specified then its value will be
 taken as coefficient for current track (the name of the metadata itself can be
-changed with the `override` parameter `amplify`).
+changed with the `override` parameter `amplify`). This value can either be
+specified as a float coefficient (such as `0.7`) or in decibels (such as `-7.02
+dB`).
 
+#### ReplayGain
 
-TODO: `amplify` / amplify with metadata / replaygain
+In particular, `amplify` is quite useful if you want to have all your audio
+files playing at the same loudness, without having to re-encode them: we can
+simply amplify each track differently based on a metadata in order to have more
+homogeneous loudness. There is a standard way of computing the required
+amplification factor, called _ReplayGain_, which takes in account the human
+perception of the sound in order to suggest a volume correction, thus ensuring a
+comfortable, consistent listening experience. Many tools are available to
+precompute this value and store it as a metadata in the file, for instance
 
-```{.liquidsoap include="liq/replay_gain.liq"}
+```
+loudgain -s i file.mp3 
 ```
 
-### Normalization
+will add the `replaygain_track_gain` metadata to `file.mp3` and set it to a
+value such as `-1.69 dB` indicating that we should lower the volume by 1.69
+decibels (which amounts to performing an amplification by 0.82) in order to
+reach a standard volume. If we assume that our files are tagged in this
+(standard) way, we can use the `amplify` operator to apply the gain correction
+as follows:
 
-normalization, replaygain (the protocol)
+```{.liquidsoap include="liq/replaygain.liq" from=1 to=-1}
+```
 
-LADSPA plugins
+For convenience, the amplification by this metadata is defined in the standard
+library as the `replaygain` operator, so that we can even simply write
+
+```{.liquidsoap include="liq/replaygain2.liq" from=1 to=-1}
+```
+
+If not all your files are tagged with ReplayGain metadata you can use the
+command
+
+```{.liquidsoap include="liq/replaygain3.liq" from=1 to=1}
+```
+
+to instruct Liquidsoap to compute it for every played file: for each file, it
+will run a script (called `extract-replaygain`) which will try to look if the
+replaygain metadata is present, and if not will compute it (using `ffmpeg`). If
+you want instead to perform it on a per-file basis, you can use the protocol
+`replaygain:` which instructs to compute the ReplayGain of a file, with the same
+method. For instance,
+
+```{.liquidsoap include="liq/replaygain4.liq" from=1 to=-1}
+```
+
+will play the file `test.mp3`, computing its ReplayGain beforehand, and
+correcting its volume. Incidentally, we recall that the `prefix` parameter of
+playlists can be used add this protocol to all the files in the playlist:
+
+```{.liquidsoap include="liq/replaygain5.liq" from=1 to=-1}
+```
+
+#### Normalization
+
+The above ReplayGain allows performing _volume normalization_ when playing music
+files: we want the loudness to be more or less constant during the stream. For
+files this is "easy" because we can compute this information in advance, however
+for live streams we have to proceed differently since we do not have access to
+the whole stream beforehand. For such situations, the `normalize` operator can
+be used: it continuously computes the loudness of a stream and adjusts the
+volume in order to reach a target loudness: this operation is sometimes called
+_auto-gain control_. Basically, the sound of a source `s` can be normalized with
+
+```{.liquidsoap include="liq/normalize.liq" from=2 to=-1}
+```
+
+Of course the `normalize` operator takes quite a number of optional parameters
+in order to control the way the normalization is performed:
+
+- `target` is the loudness we are trying to achieve for the stream (-13 dB by
+  default).
+- `k_up` and `k_down` respectively control how fast we increase the volume when
+  the stream is not loud enough and how fast we decrease the volume when it is
+  too loud (the higher, the faster). Default values are respectively 0.005 and
+  0.1: we want to quickly lower the volume because a sound too loud is
+  irritating (or worse, can damage the user's ear), but we increase it more
+  slowly in order not to be too sensitive to local variations of the loudness.
+- `gain_min` and `gain_max` is the minimum and maximum gain we can apply
+  (respectively -6 dB and 6 dB by default, which correspond to an amplification
+  by 0.5 and 2): the second is particularly useful so that we do not amplify
+  like crazy when the stream is almost silent.
+- `threshold` controls the level below which we consider that we have silence
+  and do not try to increase the volume anymore.
+- `window` is the duration of the past stream we take in account as the current
+  volume: default value is 0.1 seconds. Increasing this will make the operator
+  less sensitive to local variations of the sound, but also less reactive.
+
+The operator also export the current gain (the amplification coefficient, which
+can be converted to dB with the `dB_of_lin` function) with the method
+`gain`. For instance, in the script
+
+```{.liquidsoap include="liq/normalize2.liq" from=2 to=-1}
+```
+
+we use normalize with some custom parameters, and observe the resulting gain
+every second (which can be quite useful, in addition to using your ears, in
+order to fine-tune the parameters).
+
+### Blank
+
+Another basic signal-processing feature that everyone wants to have is _blank
+detection_. We want at all cost to avoid silence being streamed on our radio,
+because listeners generally don't like it and will go away.
+
+For instance, it might happen that some music file is badly encoded and features
+a long period of blank at the end. In this case we want to skip the end of the
+song, and this is precisely the role of the `blank.skip` function:
+
+```{.liquidsoap include="liq/blank.skip.liq" from=3 to=-1}
+```
+
+The parameter `max_blank` specifies how long we want to take before skipping
+blank, 2 seconds in our example. Other interesting parameters are `threshold`,
+the loudness in dB below which we consider sound as silence, and `min_noise`,
+the minimum duration of non-silence required to consider the sound as non-silent
+(increasing this value allows considering as blank, silence with some
+intermittent short noises).
+
+It might also happen that the DJ has turned his microphone off but forgotten to
+disconnect, in which case we want to get back to the default radio stream. In
+this case, we cannot use `blank.skip` because we cannot skip a live stream, and
+have to use `blank.strip` which makes a source unavailable when it is steaming
+blank, and is typically used in conjunction with fallback:
+
+```{.liquidsoap include="liq/blank.strip.liq" from=1 to=-1}
+```
+
+Note that we are using the `min_noise` parameter here, so that we sill consider
+as silent a microphone where there is no sound most of the time, excepting short
+noises from time to time (such as a person walking around).
+
+### More advanced effects
+
+![Compressor](fig/compressor)\
+
+![Compressor knee](fig/compressor-knee)\
 
 Good examples:
 
@@ -1784,9 +1916,6 @@ Good examples:
 - <https://pzwiki.wdka.nl/mediadesign/Liquidsoap>
 - <https://gist.github.com/130db/6001343>
 
-### Blank
-
-The various functions to remove blank
 
 ### Parameters
 
@@ -1803,6 +1932,10 @@ TODO.......
 ### Jack
 
 mention jack again
+
+### LADSPA plugins
+
+
 
 Outputs
 -------
@@ -1950,6 +2083,11 @@ we can simulate a live source as in
 or
 
 ```{.liquidsoap include="liq/fallback.skip.liq"}
+```
+
+testing blank
+
+```{.liquidsoap include="liq/blank.skip.liq"}
 ```
 
 - the `synth` protocol (already presented in "testing scripts" section)

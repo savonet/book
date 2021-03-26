@@ -2228,6 +2228,9 @@ availability (`source.available` / `delay` / `max_duration`)
 
 `request.create`, `request.uri`, `request.metadata`
 
+```{.liquidsoap include="liq/request.metadata.liq"}
+```
+
 explain protocols (`say:...`)
 
 ### Main functions

@@ -311,6 +311,8 @@ to have roughly the same audio loudness between tracks. If they come from
 different sources (such as two different albums by two different artists) this
 is generally not the case.
 
+\TODO{power is measured with rms, can be converted in dB, give the formulas, say that 6 dB = ×2, 12 dB = ×4, etc.}
+
 A strategy to fix that is to use _automatic gain control_: the program can
 regularly measure the current audio loudness based, say, on the previous second
 of sound, and increase or decrease the volume depending on how it is with
@@ -326,6 +328,8 @@ efficient way of proceeding consists in computing this in advance and store it
 as a metadata; the stream generator can then adjust the volume on a per-song
 basis. The standard for this is _ReplayGain_ and there are a few efficient tools
 to achieve this task.
+
+\TODO{say that ReplayGain provides a notion of volume closer to perception}
 
 \TODO{dire que même si on ne veut pas changer le volume global, on veut absolument éviter le "clipping" qui distord le son}
 

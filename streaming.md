@@ -1310,6 +1310,11 @@ TODO: the `clock` operator
 TODO: we briefly explain the principle of clocks here and give the practice in
 [a later section](#sec:clocks)
 
+#### Local time for sources
+
+explain `source.time`, say that this is often used in conjunction with
+`source.on_frame` (for instance, `source.run`)
+
 ### Methods for sources {#sec:source-methods}
 
 TODO: detail the methods present for every source....
@@ -1425,6 +1430,14 @@ Sometimes it will fail, for instance if test.mp3 is stereo, the following script
 ```
 
 because we cannot implicitly convert a stereo file into 5.1
+
+### Custom decoders
+
+`add_decoder`, `add_oblivious_decoder`
+
+### Metadata decoders
+
+`add_metadata_decoder`
 
 Reading the source code
 -----------------------
