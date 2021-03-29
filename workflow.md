@@ -1831,7 +1831,8 @@ for live streams we have to proceed differently since we do not have access to
 the whole stream beforehand. For such situations, the `normalize` operator can
 be used: it continuously computes the loudness of a stream and adjusts the
 volume in order to reach a target loudness: this operation is sometimes called
-_auto-gain control_. Basically, the sound of a source `s` can be normalized with
+_automatic gain control_. Basically, the sound of a source `s` can be normalized
+with
 
 ```{.liquidsoap include="liq/normalize.liq" from=2 to=-1}
 ```
@@ -1841,21 +1842,24 @@ in order to control the way the normalization is performed:
 
 - `target` is the loudness we are trying to achieve for the stream (-13 dB by
   default).
-- `k_up` and `k_down` respectively control how fast we increase the volume when
-  the stream is not loud enough and how fast we decrease the volume when it is
-  too loud (the higher, the faster). Default values are respectively 0.005 and
-  0.1: we want to quickly lower the volume because a sound too loud is
-  irritating (or worse, can damage the user's ear), but we increase it more
-  slowly in order not to be too sensitive to local variations of the loudness.
+- `up` and `down` respectively control the time it takes to increase the volume
+  when the stream is not loud enough and the time it takes to decrease the
+  volume when it is too loud (the higher, the more times it takes). Default
+  values are respectively 10. and 0.1: we want to quickly lower the volume
+  because a sound too loud is irritating (or worse, can damage the user's ear),
+  but we increase it more slowly in order not to be too sensitive to local
+  variations of the loudness.
 - `gain_min` and `gain_max` is the minimum and maximum gain we can apply
-  (respectively -6 dB and 6 dB by default, which correspond to an amplification
-  by 0.5 and 2): the second is particularly useful so that we do not amplify
+  (respectively -12 dB and 12 dB by default, which correspond to an amplification
+  by 0.25 and 4): the second is particularly useful so that we do not amplify
   like crazy when the stream is almost silent.
 - `threshold` controls the level below which we consider that we have silence
   and do not try to increase the volume anymore.
 - `window` is the duration of the past stream we take in account as the current
-  volume: default value is 0.1 seconds. Increasing this will make the operator
+  volume: default value is 0.5 seconds. Increasing this will make the operator
   less sensitive to local variations of the sound, but also less reactive.
+
+\TODO{explain lookahead + debug (also mention exported methods)}
 
 The operator also export the current gain (the amplification coefficient, which
 can be converted to dB with the `dB_of_lin` function) with the method
@@ -1907,6 +1911,21 @@ noises from time to time (such as a person walking around).
 
 ![Compressor knee](fig/compressor-knee)\
 
+limiter (`limit`)
+
+multiband compression
+
+```{.liquidsoap include="liq/compress2.multiband.liq" from=1}
+```
+
+```{.liquidsoap include="liq/compress.multiband.liq" from=1}
+```
+
+```{.liquidsoap include="liq/compress.multiband2.liq" from=1}
+```
+
+gate (`gate`)
+
 Good examples:
 
 - <https://savonet-users.narkive.com/MiNy36h8/have-a-sort-of-fm-sound-with-liquidsoap>
@@ -1916,6 +1935,9 @@ Good examples:
 - <https://pzwiki.wdka.nl/mediadesign/Liquidsoap>
 - <https://gist.github.com/130db/6001343>
 
+### Filters
+
+`mic_filter`
 
 ### Parameters
 

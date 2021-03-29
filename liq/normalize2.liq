@@ -1,5 +1,5 @@
 #!./liquidsoap
+log.level.set(5)
 s = playlist("~/Music")
-s = native.normalize(k_up=0.1, k_down=1., window=1., s)
-thread.run(every=1., {log.important("Current gain: #{s.gain()}.")})
+s = normalize(window=4., lookahead=2., down=.5, debug=.5, s)
 output(s)

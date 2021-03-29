@@ -3,4 +3,5 @@
 *.mp4
 *.png
 *.wav
+*.params
 metrics.json
