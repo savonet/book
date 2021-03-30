@@ -1,0 +1,15 @@
+\documentclass[varwidth=40cm]{standalone}
+\usepackage{tikz}
+\usepackage{style}
+
+\def\tmax{10}
+
+\begin{document}
+\begin{tikzpicture}[xscale=1,yscale=.6]
+  \draw[->] (0,0) -- (\tmax,0) node[right] {time};
+  \draw[->] (0,-1.5) -- (0,1.5) node[above] {amplitude};
+  \draw[dotted] (0,-1) -- (\tmax,-1);
+  \draw[dotted] (0,1) -- (\tmax,1);
+  \draw[thick,domain=0:\tmax,samples=200] plot ({\x},{sin(\x*360*2.45/\tmax)*(1+.5*\x/\tmax)});
+\end{tikzpicture}
+\end{document}

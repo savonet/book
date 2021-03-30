@@ -1,4 +1,4 @@
 #!./liquidsoap
-s = playlist("~/Music")
-s = gate(s)
-output(s)
+mic = buffer(input.pulseaudio())
+mic = gate(threshold=-30., range=-80., mic)
+output(mic)

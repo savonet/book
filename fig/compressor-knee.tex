@@ -12,10 +12,11 @@
 \def\ratio{5}
 \def\knee{2}
 \def\threshold{5}
-\begin{tikzpicture}[scale=0.5]
+\begin{tikzpicture}[scale=0.3]
   \coordinate (a) at (\threshold-\knee/2,\threshold-\knee/2);
   \coordinate (b) at (\threshold+\knee/2,{\threshold+\knee/(2*\ratio)});
-  \draw (5,0) -- (5,10) node[above] {threshold};
+  \draw (5,0) -- (5,10);
+  \draw (5,10) node[below right] {threshold};
   \draw[dashed] (\threshold-\knee/2,0) -- (\threshold-\knee/2,10);
   \draw[dashed] (\threshold+\knee/2,0) -- (\threshold+\knee/2,10);
   \draw[->] (0,0) -- (10,0) node[right] {input level};

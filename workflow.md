@@ -1765,7 +1765,7 @@ The `amplify` parameter also support setting the amplification coefficient using
 metadata: if the metadata `liq_amplify` is specified then its value will be
 taken as coefficient for current track (the name of the metadata itself can be
 changed with the `override` parameter `amplify`). This value can either be
-specified as a float coefficient (such as `0.7`) or in decibels (such as `-7.02
+specified as a float coefficient (such as `0.7`) or in decibels (such as `-3.10
 dB`).
 
 #### ReplayGain
@@ -1837,7 +1837,7 @@ with
 ```{.liquidsoap include="liq/normalize.liq" from=2 to=-1}
 ```
 
-Of course the `normalize` operator takes quite a number of optional parameters
+Of course, the `normalize` operator takes quite a number of optional parameters
 in order to control the way the normalization is performed:
 
 - `target` is the loudness we are trying to achieve for the stream (-13 dB by
@@ -1858,25 +1858,55 @@ in order to control the way the normalization is performed:
 - `window` is the duration of the past stream we take in account as the current
   volume: default value is 0.5 seconds. Increasing this will make the operator
   less sensitive to local variations of the sound, but also less reactive.
+- `lookahead` specifies how many seconds of sound we look at in advance (beware
+  that this will introduce that amount of delay in the output stream).
 
-\TODO{explain lookahead + debug (also mention exported methods)}
-
-The operator also export the current gain (the amplification coefficient, which
-can be converted to dB with the `dB_of_lin` function) with the method
-`gain`. For instance, in the script
+For instance, in the script
 
 ```{.liquidsoap include="liq/normalize2.liq" from=2 to=-1}
 ```
 
-we use normalize with some custom parameters, and observe the resulting gain
-every second (which can be quite useful, in addition to using your ears, in
-order to fine-tune the parameters).
+we use `normalize` with a window of 4 seconds, which is quite long in order not
+to be too sensitive to local variations of sound, and a time of 0.5 seconds to
+lower the volume. This results in quite a smooth volume variation, but which
+tends to be late: because of the window, we only realize that the sound has gone
+up quite some time after it has actually gone up. In order to compensate this,
+we use a lookahead of 2 seconds, which makes the normalization base its
+decisions on audio 2 seconds in the future. In this way, when the loudness
+suddenly goes up, the `normalize` operator will "guess" it in advance and begin
+lowering the volume before the peak occurs.
+
+Tweaking the parameters can take quite some time. In order, to ease this, the
+`debug` parameter, when set, will print internal parameters of the normalization
+(the current loudness, the target loudness, the current gain, and the gain
+required to reach target loudness) at the specified interval in the logs. The
+messages are printed as debug message, so that you should ensure that you set
+the log level high enough to see them:
+
+```{.liquidsoap include="liq/normalize3.liq" from=2 to=-1}
+```
+
+If you need more custom logging the source exports methods to retrieve the
+current loudness (`rms`), volume (`gain`) and volume required to reach the
+target loudness (`target_gain`); those are given in linear scale and can be
+converted to decibels with `dB_of_lin`. For instance, the script
+
+```{.liquidsoap include="liq/normalize4.liq" from=2 to=-1}
+```
+
+prints the loudness and volume every second.
+
+Finally, if you need more customization over the operator, you can have a look
+at its code and modify it. It is written in Liquidsoap, in the `sound.liq` file
+of the standard library.
 
 ### Blank
 
 Another basic signal-processing feature that everyone wants to have is _blank
 detection_. We want at all cost to avoid silence being streamed on our radio,
 because listeners generally don't like it and will go away.
+
+#### Skipping blank
 
 For instance, it might happen that some music file is badly encoded and features
 a long period of blank at the end. In this case we want to skip the end of the
@@ -1892,6 +1922,8 @@ the minimum duration of non-silence required to consider the sound as non-silent
 (increasing this value allows considering as blank, silence with some
 intermittent short noises).
 
+#### Stripping blank
+
 It might also happen that the DJ has turned his microphone off but forgotten to
 disconnect, in which case we want to get back to the default radio stream. In
 this case, we cannot use `blank.skip` because we cannot skip a live stream, and
@@ -1905,27 +1937,250 @@ Note that we are using the `min_noise` parameter here, so that we sill consider
 as silent a microphone where there is no sound most of the time, excepting short
 noises from time to time (such as a person walking around).
 
-### More advanced effects
+#### Gating
+
+Sometimes we do want to stream silence, and when we do so, we want to stream
+real silence. When you have an input such as a microphone, it generally induces
+a small noise, which is almost unnoticeable when someone is talking, but quite
+annoying when we hear only that. In order to address this, the `gate` operator
+can be used to lower the volume when a source is almost silent. For instance,
+
+```{.liquidsoap include="liq/gate.liq" from=1 to=-1}
+```
+
+The useful parameters of gate are
+
+- `threshold`: the level (in dB) from which we consider that sound is not
+  silence anymore,
+- `range`: by how much (in dB) we should lower the volume on "silence",
+- `attack` and `release`: the time (in ms) it takes to increase or decrease the
+  volume,
+- `hold`: how much time (in ms) to wait before starting to lower the volume when
+  we did not hear loud sounds.
+  
+The following pictures both the amplitude of the sound (the squiggling curve)
+and the answer of the gate (the thick curve):
+
+![Gating](fig/gate)\
+
+The internal state of the operator can be observed by the exported method `gate`
+which provides a value between 0 and 1 indicating whether the gate is "closed"
+or "open", i.e. if the volume is currently lowered or not.
+
+### Sound shaping
+
+Now that we have presented the basic effects, which mainly operate on the volume
+of the sound, we will now be presenting some more advanced audio effects, which
+can be used to make the listening experience more homogeneous and give a "unique
+color" to your radio. We however need to begin by explaining one of the main
+issues we have to face when operating on sound: clipping.
+
+#### Clipping
+
+We have indicated that all the audio samples should have a value between -1 and
+1 in Liquidsoap. However, if we increase too much the volume of a source be it
+manually with `amplify` or in an automated way with `normalize`, it might happen
+that we obtain samples above 1 or below -1:
+
+![Clipping](fig/clipping1)\
+
+This is not a problem per se: Liquidsoap is perfectly able to handle such values
+for the samples. However, when we send such a signal to an output, it will be
+_clipped_: all the values above 1 will be changed to 1 and all the values below
+-1 will be changed to -1, in order to conform to the standard range for
+samples. Our signal will then look like this
+
+![Clipping](fig/clipping2)\
+
+As you can see, this operation is not particularly subtle and, as a matter of
+fact it has quite a bad effect on sound. If you want to test it you can try the script
+
+```{.liquidsoap include="liq/clipping-sine.liq" from=1}
+```
+
+It plays a sine, whose amplitude is given by the internal time of the source
+(`s.time()` is the number of seconds we have played of source `s`). On the first
+second, the amplitude will raise from 0 to 1 so that we will hear no
+distortion. After second 1, the amplification coefficient will be greater than
+1, so that clipping will occur, and it occurs more and more as time goes by. You
+should hear that our sine quickly does not sound like a sine anymore: we can
+hear high harmonics and the sound gets closer to the one of a square wave (try
+the `square` operator if you have never heard one). We will see next section
+operators which are useful to mitigate those effects.
+
+In passing, if you insist of performing clipping in Liquidsoap (i.e. restricting
+samples between -1 and 1 as described above) you can use the `clip` operator.
+
+#### Compressing and limiting
+
+In order be able to increase the loudness of the signal without the sound
+artifacts due to clipping, people typically use _compressors_ which are audio
+effects, which leave the signal untouched when it is not very loud, and
+progressively lowers when it gets loud. Graphically, the output level given the
+input level is represented in the following figure:
 
 ![Compressor](fig/compressor)\
 
-![Compressor knee](fig/compressor-knee)\
+We can observe that below the _threshold_ the output is the same as the input
+(the curve on the bottom left is a diagonal), and that above the threshold, the
+output increases more slowly than the input, following a _ratio_ which can be
+configured (we have pictured ratios 2:1 and 5:1 to illustrate this). This
+operator is implemented in Liquidsoap as the `compress` operator. For instance,
+the compression of a source `s` above -10 dB at a ratio of 5:1 can be achieved
+with
 
-limiter (`limit`)
-
-multiband compression
-
-```{.liquidsoap include="liq/compress2.multiband.liq" from=1}
+```{.liquidsoap include="liq/compress.liq" from=2 to=-1}
 ```
 
-```{.liquidsoap include="liq/compress.multiband.liq" from=1}
+This operator has a number of useful parameters:
+
+- the `threshold` (in dB) above which we should start compressing,
+- the `ratio` of compression (in input dB per output dB, as illustrated above),
+- the amplification by `pre_gain` and `gain` of the signal, respectively before
+  and after compressing,
+- the `attack` and `realease` time (in ms), which are the time it takes to
+  respectively lower and increase the volume (those operations are generally not
+  performed instantly in order to smoothen the variations and make them more
+  natural),
+- the `knee` (in dB) controls the width of the smoothing around the threshold:
+
+  ![Compressor knee](fig/compressor-knee)\
+
+- the `window` (in ms) used to smoothen the computation of the input level,
+- the `lookahead` (in ms), i.e. how much time we look at the signal in the
+  future (this is similar to what we already saw for `normalize`).
+  
+Finally, the `wet` parameter gives the original signal when set to 0 and the
+compressed signal when set to 1, and can be useful when configuring compressors,
+in order to evaluate the effect of a compressor on a signal.
+
+A typical compressor, will have a ratio from 2 to 5: it will smoothly attenuate
+high loudness signals, which will allow boosting its loudness while avoiding the
+clipping effect. Compressors with higher ratios such as 20 are called
+_limiters_: they are here to ensure that the signal will not get out of
+bounds. The standard library defines `limit`, which is basically a compressor
+with a ratio of 20, and can be thought of as a better version of `clip` with
+much less sound distortion induced on the sound. For instance, if we get back to
+the example we used to illustrate the effects of clipping, you can hear that the
+stream sound much more like a sine if we limit it, even when the amplification
+is higher than 1:
+
+```{.liquidsoap include="liq/limiting-sine.liq" from=1}
 ```
 
-```{.liquidsoap include="liq/compress.multiband2.liq" from=1}
+Since the `normalize` function is not perfect, it might happen that it produces
+a too loud sound for a short period of time. In order to avoid the clipping it
+would induce, it is advisable to always pipe the output of `normalize` to a
+limiter:
+
+```{.liquidsoap include="liq/normalize5.liq" from=2 to=-1}
 ```
 
-gate (`gate`)
+#### Filters
 
+The last basic effect we are going to introduce are _filters_, which only keep
+some frequencies of the input signal. There are three main types:
+
+- low-pass filters only keep low frequencies (below a given _cutoff_ frequency),
+- high-pass filters only keep high frequencies (above a given _cutoff_
+  frequency),
+- band-pass filters only keep frequencies between two boundaries.
+
+Ideal filters would be have as indicated in the following figures:
+
+![Filters](fig/filter)\
+
+For instance, a low-pass filter would keep all the frequencies below the cutoff
+exactly as they were in the original signal and keep none above. In practice,
+the transition between kept and removed frequencies is smother and the actual
+filter response of a low-pass filter is rather like this:
+
+![First-order low pass filter](fig/filter-lp-fo)\
+
+(to be precise, this is the response of a first-order low pass filter, as
+implemented in the `filter.rc` operator). Designing filters is an art rather
+than a science, and this is not the place to explain it. We will simply mention
+here that, in practice, using biquadratic filters is generally a good idea,
+because they offer good balance between efficiency and precision. Those are
+implemented as `filter.iir.eq.*` operators such as
+
+- `filter.iir.eq.low`: a biquadratic low-pass filter,
+- `filter.iir.eq.high`: a biquadratic high-pass filter,
+- `filter.iir.eq.low_high`: a band-pass filter obtained by chaining a low- and a
+  high-pass biquadratic filter.
+  
+The functions `filter.rc` and `filter` are computationally cheaper (in
+particular the former) but are of lower quality (in particular the former): the
+change of amplitude around the cutoff frequency is less abrupt for `filter.rc`
+than for biquadratic filters and `filter` does not handle well high cutoff
+frequencies (higher than the quarter of the sampling rate, which often means
+around 10 kHz). The `filter.iir.butterworth.*` filter are of good quality (and
+their quality can be arbitrarily increased by increasing their order parameter),
+but require more computations.
+
+A typical use of filters is (obviously) to remove unwanted frequencies. For
+instance, cheap microphones, often produce noise at low frequencies, which can
+be removed using a high-pass filter. This is why the standard library defines
+the function
+
+```{.liquidsoap include="liq/mic_filter.liq"}
+```
+
+which can be used to perform such a cleaning of the sound by removing
+frequencies below 200 Hz.
+
+Another typical use of filters is to increase the frequencies we like. For
+instance, increasing bass frequencies makes the sound warmer and thus more
+pleasant to listen for background music. If we want to do so, we can extract the
+low frequencies (say, below 200 Hz) from a source `s` using a low-pass filter,
+amplify them (say, by 6 dB) and add them back to the original sound:
+
+```{.liquidsoap include="liq/bass-boost.liq" from=2 to=-1}
+```
+
+However, if we do things in this way, the risk is high that we are going to clip
+and thus hear saturation from the basses. As explained above, a much more
+pleasant solution consists in using a limiter after increasing the volume. In
+this way, we can handle a 8 dB increase of the frequencies below 200 Hz without
+any problem:
+
+```{.liquidsoap include="liq/bass-boost2.liq" from=2 to=-1}
+```
+
+This is implemented in the standard library as the `bass_boost` operator, so
+that the above can be more concisely written
+
+```{.liquidsoap include="liq/bass-boost3.liq" from=2 to=-1}
+```
+
+#### Multiband compression
+
+We are now ready to introduce the effect that you were all waiting for, which is
+in fact a combination of previous effects: _multiband_ compression aka the _big
+fat FM radio sound_. This is what is used in most commercial music radios so
+that, when you listen to songs in your car without thinking too much, you are
+not disturbed by changes in the dynamics of songs. Whether you like it or not,
+this can easily be achieve in Liquidsoap. This is basically achieved by
+splitting the signal in various bands of frequencies (using band-pass filters
+such as `filter.iir.eq.low_high`), independently compress each of those (using
+`compress`), and add them back together (using `add`). In other words, we apply
+the same principle as the above "bass booster" to all the spectrum.
+
+For convenience, the function `compress.multiband` of the standard library
+already implements this. In the script,
+
+```{.liquidsoap include="liq/compress.multiband2.liq" from=2 to=-1}
+```
+
+we are splitting the sound in 5 bands: below 200 Hz, 200 to 800 Hz, 800 to
+1500 Hz, 1500 to 8000 Hz and above 8000 Hz. For each of those bands we specify
+the threshold, ratio, attack and release time of the corresponding
+compressor. Of course getting the parameters right requires quite some trial and
+error, and listening to the results. Below, we describe
+`compress.multiband.interactive` which helps much by providing a simple
+graphical interface in which we can have access to those parameters.
+
+<!--
 Good examples:
 
 - <https://savonet-users.narkive.com/MiNy36h8/have-a-sort-of-fm-sound-with-liquidsoap>
@@ -1934,29 +2189,54 @@ Good examples:
 - <https://github.com/JamesHarrison/conduit>
 - <https://pzwiki.wdka.nl/mediadesign/Liquidsoap>
 - <https://gist.github.com/130db/6001343>
+-->
 
-### Filters
+### Other plugins
 
-`mic_filter`
+#### Other effects
 
-### Parameters
+- `pan`, `stereo.width`
+- `echo`, `flanger`
+- `stretch`, `helium`
+
+```{.liquidsoap include="liq/stereo.width.liq" from=1}
+```
+
+
+#### LADSPA plugins
+
+#### Jack
+
+mention jack again
+
+#### Stereotool
+
+TODO.......
+
+### Playing with parameters
+
+#### Decibels
+
+TODO: `lin_of_dB` and `dB_of_lin`
+
+```{.liquidsoap include="liq/amplify-db.liq" from=1}
+```
+
+#### Interactive parameters
 
 We can obtain parameters through telnet (explain how to save the values with
 persistency + harbor server) / OSC
 
 `getter.file`
 
+```{.liquidsoap include="liq/bass-boost2.liq" from=1}
+```
 
-### Stereotool
+explain
 
-TODO.......
 
-### Jack
-
-mention jack again
-
-### LADSPA plugins
-
+```{.liquidsoap include="liq/compress.multiband3.liq" from=1}
+```
 
 
 Outputs
@@ -2085,6 +2365,7 @@ TODO: expose metrics with prometeus
   freq is 440, duration is 1))
 - `sleeper`
 - `skipper`
+- `accelerate`
 - what else?
 
 Full example (already presented, we only want to show the first part here)...:

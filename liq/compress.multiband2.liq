@@ -1,11 +1,10 @@
 #!./liquidsoap
-# log.level.set(5)
-s = playlist("~/Music")
-s = normalize(s)
-g = s.gain
-interactive.harbor()
-s = compress.multiband.interactive([200.,800.,1500.,4000.,40000.], s)
-interactive.persistent("compress.params")
-s = source.run(s, every=1., {print("gain: #{g()}")})
-output(s)
-# output.file(%wav, "/tmp/out.wav", s)
+s = normalize(playlist("~/Music")) wet = interactive.float("wet", min=0., max=1., 1.) let compress.multiband = compress.multiband(wet=wet)
+s = compress.multiband(s, [
+{frequency=200., attack=100., release=200., threshold=-10., ratio=4., gain=10.},
+{frequency=800.,  attack=100., release=200., threshold=-10., ratio=4., gain=6.},
+{frequency=1500.,  attack=100., release=200., threshold=-8., ratio=4., gain=6.},
+{frequency=8000.,  attack=100., release=200., threshold=-6., ratio=4., gain=6.},
+{frequency=40000., attack=100., release=200., threshold=-4., ratio=4., gain=6.}
+])
+interactive.harbor() interactive.persistent("compress.params") output(s)

@@ -311,8 +311,6 @@ to have roughly the same audio loudness between tracks. If they come from
 different sources (such as two different albums by two different artists) this
 is generally not the case.
 
-\TODO{power is measured with rms, can be converted in dB, give the formulas, say that 6 dB = ×2, 12 dB = ×4, etc.}
-
 A strategy to fix that is to use _automatic gain control_: the program can
 regularly measure the current audio loudness based, say, on the previous second
 of sound, and increase or decrease the volume depending on how it is with
@@ -327,11 +325,27 @@ file. It can be performed each time a song is about to be played, but the most
 efficient way of proceeding consists in computing this in advance and store it
 as a metadata; the stream generator can then adjust the volume on a per-song
 basis. The standard for this is _ReplayGain_ and there are a few efficient tools
-to achieve this task.
+to achieve this task. It is also more natural than basic gain control, because
+it takes in account the way our ears perceive sound in order to compute
+loudness.
 
-\TODO{say that ReplayGain provides a notion of volume closer to perception}
+At this point, we should also indicate that there is a subtlety in the way we
+measure amplification. They are either measured _linearly_, i.e. we indicate the
+amplification coefficient by which we should multiply the sound, or in
+_decibels_. The relationship between linear _l_ and decibel _d_ measurements is
+not easy, the formulas relating the two are _d_=20 log~10~(_l_) and
+_l_=10^_d_/20^. If your math classes are too far away, you should only remember
+that 0 dB means no amplification (we multiply by the amplification coefficient
+1), adding 6 dB corresponds to multiplying by 2, and removing 6dB corresponds to
+dividing by 2:
 
-\TODO{dire que même si on ne veut pas changer le volume global, on veut absolument éviter le "clipping" qui distord le son}
+------------- ---- --- -- -- -- --
+decibels      -12  -6  0  6  12 18
+amplification 0.25 0.5 1  2  4  8
+------------- ---- --- -- -- -- --
+
+This means that an amplification of -12 dB corresponds to multiplying all the
+samples of the sound by 0.25, which amounts to dividing them by 4.
 
 ### Fading
 
@@ -361,7 +375,8 @@ such as a
   different frequency ranges (typically, simplifying a bit, you want to insist
   on bass if you play mostly lounge music in order to have a warm sound, or on
   treble if you have voices in order for them to be easy to understand),
-- _limiter_: lowers the sound when there are high-intensity peaks,
+- _limiter_: lowers the sound when there are high-intensity peaks (we want to
+  avoid clipping),
 - _gate_: reduce very low level sound in order for silence to be really silence
   and not low noise (in particular if you capture a microphone).
 
