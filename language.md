@@ -7,6 +7,8 @@ it. If you are eager to start your radio, it might be a good idea to skim though
 it quickly at a first reading, and come back later to it when a deeper knowledge
 about a specific point is required.
 
+\TODO{give an example of a type error (and explain the localization)}
+
 General features
 ----------------
 
@@ -1949,7 +1951,7 @@ Dually, we can obtain the value of an argument with the `get` function, e.g.
 As you can see, in addition to the name of the setting, this function takes a
 parameter labeled `default` which is the value which is to be returned if the
 setting does not exist. You can obtain the list of all available settings, as
-well as their default value with the command
+well as their default value with the command\TODO{also mention conf-descr-key}
 
 ```bash
 liquidsoap --conf-descr

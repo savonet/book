@@ -1389,9 +1389,15 @@ the tree looks like:
 ]
 ```
 
+TODO: explain that requests must be deleted, see https://github.com/savonet/liquidsoap/issues/309
+
+TODO: explain how to trace requests
+
 ### Decoding compressed data
 
 Example of a log of decoder
+
+TODO: `Unable to decode ``file'' as {audio=2;video=0;midi=0}!`
 
 explain configuration options
 

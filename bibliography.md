@@ -1,2 +1,5 @@
-Bibliography
+Bibliography {.unnumbered}
 ============
+
+::: {#refs}
+:::

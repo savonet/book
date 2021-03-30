@@ -41,12 +41,12 @@ toc: true
 
 !include "streaming.md"
 
-!include "faq.md"
+<!-- !include "faq.md" -->
 
-!include "reference.md"
+<!-- !include "reference.md" -->
 
 !include "conclusion.md"
 
-!include "index.md"
-
 !include "bibliography.md"
+
+!include "index.md"
