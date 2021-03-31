@@ -2557,15 +2557,36 @@ In this way you easily get access to a convenient interface for setting your
 parameters, and its values can be stored on the long run by using
 `interactive.persistent`.
 
+In order to provide another illustration, suppose that we want to setup a bass
+booster for our radio source `s`. The way we are going to design it is by
+setting up two interactive variables `f` and `g` for the frequency and the gain
 
-```{.liquidsoap include="liq/bass-boost2.liq" from=1}
+```{.liquidsoap include="liq/bass-boost3.liq" from=2}
 ```
 
-explain
+and tweaking them using the interactive variables webpage which looks like
 
+![Interactive variables webpage](img/interactive3.png)\
 
-```{.liquidsoap include="liq/compress.multiband3.liq" from=1}
+Once the right values found, they are stored in the `bb.params` files, but we
+can hardcode them for more resiliency.
+
+As a last example, suppose that we want to set up a multiband compressor. Well,
+we could do the same as above for the parameters of `compress.multiband`, but it
+becomes quite tedious to create interactive variables for all the parameters of
+the function, for each band. Fortunately, the `compress.multiband.interactive`
+operator can do this for us: we provide it with the number of bands we want to
+have and it creates the `compress.multiband` instance as well as all the
+interactive variables for us. For instance, given a source `s`, the script
+
+```{.liquidsoap include="liq/compress.multiband3.liq" from=2}
 ```
+
+will give rise tot he following interface
+
+![Interactive variables webpage](img/interactive4.png)\
+
+which allows to easily set up the multiband compressor using our ears.
 
 #### OSC
 
