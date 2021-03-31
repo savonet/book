@@ -13,7 +13,9 @@ ci:
 
 book.tex: book.md $(MD) $(LIQ) liquidsoap.xml
 	@echo "Generating $@..."
-	@$(PANDOC) --template=template.latex -s --top-level-division=chapter --filter=scripts/crossref -V links-as-notes=true $< -o $@
+	@$(PANDOC) --template=template.latex -s --top-level-division=chapter --filter=scripts/crossref -V links-as-notes=true $< -o tmp.$@
+	@cat tmp.$@ | sed 's/\\includegraphics\([^{]*\){\(.*\)}\\\\/\\begin{center}\\includegraphics\1{\2}\\end{center}/' > $@
+	@rm -f tmp.$@
 
 book.pdf: book.tex
 	@echo "Generating $@..."

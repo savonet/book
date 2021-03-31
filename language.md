@@ -1266,7 +1266,7 @@ which means that it has the type `('a, 'a) -> bool` for any type `'a` on which
 there is a canonical order (which is the case of all usual types, excepting for
 function types and source types).
 
-### Getters
+### Getters {#sec:getters}
 
 We often want to be able to dynamically modify some parameters in a script. For
 instance, consider the operator `amplify`, which takes a float and an audio

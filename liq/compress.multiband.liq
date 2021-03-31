@@ -1,13 +1,12 @@
-# #!./liquidsoap
-# s = normalize(playlist("~/Music")) wet = interactive.float("wet", min=0., max=1., 1.) let compress.multiband = compress.multiband(wet=wet)
-# s = add(normalize=false, [
-  # compress(filter.iir.eq.low(frequency=100., threshold=-10., ratio=4., 
-# ])
-# s = compress.multiband(s, [
-# {frequency=200., attack=100., release=200., threshold=-10., ratio=4., gain=10.},
-# {frequency=800.,  attack=100., release=200., threshold=-10., ratio=4., gain=6.},
-# {frequency=1500.,  attack=100., release=200., threshold=-8., ratio=4., gain=6.},
-# {frequency=8000.,  attack=100., release=200., threshold=-6., ratio=4., gain=6.},
-# {frequency=40000., attack=100., release=200., threshold=-4., ratio=4., gain=6.}
-# ])
-# interactive.harbor() interactive.persistent("compress.params") output(s)
+#!./liquidsoap
+s = normalize(playlist("~/Music")) wet = interactive.float("wet", min=0., max=1., 1.) interactive.harbor() s0 = s
+compress = compress(attack=100., release=200., threshold=-20.,
+                    ratio=6., gain=7.)
+s = add(normalize=false, [
+  compress(filter.iir.eq.low     (frequency=200.,        s)),
+  compress(filter.iir.eq.low_high(low=200., high=800.,   s)),
+  compress(filter.iir.eq.low_high(low=800., high=1500.,  s)),
+  compress(filter.iir.eq.low_high(low=1500., high=8000., s)),
+  compress(filter.iir.eq.high    (frequency=8000.,       s))
+])
+s = dry_wet(power=true, wet, s0, s) output(s)

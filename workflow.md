@@ -835,7 +835,7 @@ sources, you should set the `normalize` parameter to `false`:
 ```
 
 but beware that this might result into some clipping if the two sources are
-loud, which is never nice to hear. The operator also offers the possibility of
+loud, which is never nice to hear\TODO{some more explanations about this in section... below}. The operator also offers the possibility of
 weighting the sources: if we want to hear the microphone twice as loud as the
 bed, we should give the microphone twice the weight of the bed. The weight of
 each source can be specified in a list passed in the `weights` arguments. For
@@ -1485,7 +1485,7 @@ duration can also be changed by using setting the metadata `liq_fade_in` (the
 name can be changed by with the `override_duration` parameter of the
 functions). Finally, the parameter `type` controls the shape of the fade: it can
 respectively be `"lin"`, `"sin"`, `"log"` and `"exp"` which will respectively
-change the shape of the fade as follows:
+change the shape of the fade as follows:\TODO{mention track-sensitive parameter}
 
 ![Fading shapes](fig/fade-shapes)\
 
@@ -1714,6 +1714,8 @@ the music source otherwise. We set the list `transitions` of transitions to
 `to_live` and `to_music`, which are respectively used when switching to the
 `live` and `music` sources.
 
+\TODO{test and implement track-sensitive=false transitions}
+
 <!--
 Transitions have limited duration, defined by the `transition_length`
 parameter. Transition duration can be overriden by passing a metadata. Default
@@ -1728,6 +1730,12 @@ Signal processing
 
 Now that we have seen the ways of generating sound, we should see ways to shape
 the sound.
+
+<!--
+The authors of the book have to admit that they are not specialists
+of signal processing and what we describe below are the common uses\TODO{feel
+free to comment}
+-->
 
 ### Amplification
 
@@ -1902,7 +1910,7 @@ Finally, if you need more customization over the operator, you can have a look
 at its code and modify it. It is written in Liquidsoap, in the `sound.liq` file
 of the standard library.
 
-### Blank
+### Handling silence
 
 Another basic signal-processing feature that everyone wants to have is _blank
 detection_. We want at all cost to avoid silence being streamed on our radio,
@@ -2088,7 +2096,8 @@ some frequencies of the input signal. There are three main types:
   frequency),
 - band-pass filters only keep frequencies between two boundaries.
 
-Ideal filters would be have as indicated in the following figures:
+Ideal filters would have a frequency response as indicated in the following
+figures:
 
 ![Filters](fig/filter)\
 
@@ -2100,25 +2109,33 @@ filter response of a low-pass filter is rather like this:
 ![First-order low pass filter](fig/filter-lp-fo)\
 
 (to be precise, this is the response of a first-order low pass filter, as
-implemented in the `filter.rc` operator). Designing filters is an art rather
-than a science, and this is not the place to explain it. We will simply mention
-here that, in practice, using biquadratic filters is generally a good idea,
-because they offer good balance between efficiency and precision. Those are
-implemented as `filter.iir.eq.*` operators such as
+implemented in the `filter.rc` operator, with a cutoff frequency of
+1000 Hz). Designing filters is an art rather than a science, and this is not the
+place to explain it. We will simply mention here that, in practice, using
+biquadratic filters is generally a good idea, because they offer good balance
+between efficiency and precision. Those are implemented as `filter.iir.eq.*`
+operators such as
 
 - `filter.iir.eq.low`: a biquadratic low-pass filter,
 - `filter.iir.eq.high`: a biquadratic high-pass filter,
 - `filter.iir.eq.low_high`: a band-pass filter obtained by chaining a low- and a
   high-pass biquadratic filter.
   
-The functions `filter.rc` and `filter` are computationally cheaper (in
-particular the former) but are of lower quality (in particular the former): the
-change of amplitude around the cutoff frequency is less abrupt for `filter.rc`
-than for biquadratic filters and `filter` does not handle well high cutoff
-frequencies (higher than the quarter of the sampling rate, which often means
-around 10 kHz). The `filter.iir.butterworth.*` filter are of good quality (and
-their quality can be arbitrarily increased by increasing their order parameter),
-but require more computations.
+For comparison, the frequency response of `filter.iir.eq.low` with a cutoff
+frequency of 1000 Hz is
+  
+![First-order low pass filter](fig/filter-lp-biquad)\
+
+You can observe that it is much sharper than the first-order one, and thus
+closer to the ideal filter. The functions `filter.rc` and `filter` are
+computationally cheaper (in particular the former) but are of lower quality (in
+particular the former): the change of amplitude around the cutoff frequency is
+less abrupt for `filter.rc` than for biquadratic filters and `filter` does not
+handle well high cutoff frequencies (higher than the quarter of the sampling
+rate, which often means around 10 kHz). The `filter.iir.butterworth.*` filter
+are of good quality (and their quality can be arbitrarily increased by
+increasing their `order` parameter which -- of course -- also makes them more
+cpu-hungry), but require more computations.
 
 A typical use of filters is (obviously) to remove unwanted frequencies. For
 instance, cheap microphones, often produce noise at low frequencies, which can
@@ -2168,17 +2185,28 @@ such as `filter.iir.eq.low_high`), independently compress each of those (using
 `compress`), and add them back together (using `add`). In other words, we apply
 the same principle as the above "bass booster" to all the spectrum.
 
+For instance, the script
+
+```{.liquidsoap include="liq/compress.multiband.liq" from=2 to=-1}
+```
+
+defines a `compress` function by specifying values for some of the arguments of
+the original one. It then splits the sound in 5 bands: below 200 Hz, 200 to
+800 Hz, 800 to 1500 Hz, 1500 to 8000 Hz and above 8000 Hz. Finally, it applies
+compression to each of these bands and adds back the bands.
+
 For convenience, the function `compress.multiband` of the standard library
-already implements this. In the script,
+already implements this: it takes in account the specification of the bands,
+which consists in its frequency (this is the higher frequency, the lower one is
+taken from the previous band) as well as the threshold, ratio, attack and
+release time parameters of the corresponding compressor. The script
 
 ```{.liquidsoap include="liq/compress.multiband2.liq" from=2 to=-1}
 ```
 
-we are splitting the sound in 5 bands: below 200 Hz, 200 to 800 Hz, 800 to
-1500 Hz, 1500 to 8000 Hz and above 8000 Hz. For each of those bands we specify
-the threshold, ratio, attack and release time of the corresponding
-compressor. Of course getting the parameters right requires quite some trial and
-error, and listening to the results. Below, we describe
+is therefore roughly the same as the above one, excepting that we are varying
+the parameters for fun. Of course getting the parameters right requires quite
+some trial and error, and listening to the results. Below, we describe
 `compress.multiband.interactive` which helps much by providing a simple
 graphical interface in which we can have access to those parameters.
 
@@ -2191,45 +2219,344 @@ Good examples:
 - <https://github.com/JamesHarrison/conduit>
 - <https://pzwiki.wdka.nl/mediadesign/Liquidsoap>
 - <https://gist.github.com/130db/6001343>
+- <https://c-mh.fr/posts/radiomino-mise-a-jour>
 -->
 
-### Other plugins
+### Other effects
 
-#### Other effects
+We have presented the most useful effects above, but some other are available in
+Liquidsoap. You are advised to have a look at the documentation to discover
+them.
 
-- `pan`, `stereo.width`
-- `echo`, `flanger`
-- `stretch`, `helium`
+In particular, there are some effects on stereo stream such as left/right
+_panning_ (the `pan` operator) or modifying the width of the signal (the `width`
+operator, which takes a float parameter such that -1 turns the original source
+into mono, 0 returns the original source and a value greater than 0 returns the
+source with "widened" sound). There are some traditional effects used in music
+such as `echo` or `flanger`. And finally, there are some effects which operate
+on the pitch of the sound such as `stretch` which reads a source quicker than
+realtime thus resulting in high-pitched sounds and the `soundtouch` operator
+which is able to perform _pitch-shifting_ and _time-stretching_.
 
+<!--
 ```{.liquidsoap include="liq/stereo.width.liq" from=1}
 ```
+-->
 
+#### LADSPA and LV2 plugins
 
-#### LADSPA plugins
+In the case where you are not satisfied by the builtin operators, Liquidsoap
+support LADSPA and LV2 plugins. Those are standards for signal processing
+plugins, for use in any application. Many free plugin packs are available, among
+which we recommend
 
-#### Jack
+- [Calf Studio Gear](https://calf-studio-gear.org/),
+- [Linux Studio Plugins](https://lsp-plug.in/),
+- [Steve Harris' plugins](https://github.com/swh/ladspa),
+- [Tom's plugins](https://tomscii.sig7.se/tap-plugins/ladspa.html).
 
-mention jack again
+Once installed on your system, those plugins will appear has operators named
+`ladspa.*` or `lv2.*` (here `*` is replaced by the plugin name). You can use the
+command
 
-#### Stereotool
+```
+liquidsoap --list-functions
+```
 
-TODO.......
+to list all Liquidsoap operators and thus discover those which are present in
+your installation. You can then use the `-h` option to read the help about a
+particular plugin. For instance, if we type
+
+```
+liquidsoap -h ladspa.fastlookaheadlimiter
+```
+
+we obtain
+
+```
+Fast Lookahead limiter by Steve Harris.
+
+Type: (?id : string, ?input_gain : {float}, ?limit : {float}, ?release_time : {float}, source(audio=pcm(stereo), video='a, midi='b)) -> source(audio=pcm(stereo), video='c, midi='d)
+
+Category: Source / Sound Processing
+Flag: extra
+
+Parameters:
+
+ * id : string (default: "")
+     Force the value of the source ID.
+
+ * input_gain : {float} (default: 0.)
+     Input gain (dB) (-20 <= `input_gain` <= 20).
+
+ * limit : {float} (default: 0.)
+     Limit (dB) (-20 <= `limit` <= 0).
+
+ * release_time : {float} (default: 0.507499992847)
+     Release time (s) (0.01 <= `release_time` <= 2).
+
+ * (unlabeled) : source(audio=pcm(stereo), video='a, midi='b)
+```
+
+from which we understand that we have some sort of limiter, whose input gain,
+threshold and release time can be configured, and can use it in a script as
+follows:
+
+```{.liquidsoap include="liq/ladspa.fastlookaheadlimiter.liq" from=2 to=-1}
+```
+
+Plugins can be a bit difficult to understand if you have no idea what the plugin
+does, in which case the documentation on the author's websites can be useful.
+
+#### Stereo Tool
+
+A last possibility to handle your sound is to use software dedicated to
+producing high quality radio sound, such as _[Stereo
+Tool](https://www.stereotool.com/)_. If you want to do so, you can use the
+`pipe` operator which allow exchanging audio data with external software through
+the standard input and output and is described in [a later
+section](#sec:pipe). Typically, one would use it to handle a source `s` with
+Stereo Tool as follows:
+
+```{.liquidsoap include="liq/stereotool.liq" from=2 to=-1}
+```
+
+The `process` argument gives the program we want to run along with its options
+(here, you should replace `/usr/bin/stereo_tool_cmd_64` by the actual path where
+the Stereo Tool binary is located, `myradio.sts` by your configuration file and
+`secretkey` by your actual license key).
 
 ### Playing with parameters
 
+We would now like to make a few remarks about the way parameters can be handled
+in order to configure sound effects. As you will remark, you quickly face with
+loads of parameters and, when you want to find the right values, it can be very
+tedious to change them in your script, save the file, and relaunch the whole
+script in order to listen to the effect.
+
 #### Decibels
 
-TODO: `lin_of_dB` and `dB_of_lin`
+Before dealing with parameters themselves, we remind you that there are two ways
+to measure amplitude, either _linearly_ or in _decibels_. The relationship
+between the two is not simple: recall from [the beginning of the
+book](#sec:audio-processing) that linear _l_ and decibel _d_ measurements are
+related by the relations _d_=20 log~10~(_l_) and _l_=10^_d_/20^. What you should
+remember is that
 
-```{.liquidsoap include="liq/amplify-db.liq" from=1}
+- 0 dB is an amplitude of 1,
+- subtracting 6 dB amounts to dividing the amplitude by 2,
+- adding 6 dB amounts to multiplying the amplitude by 2.
+
+Graphically, the relationship between the linear amplitude and the gain in
+decibels is pictured below in both ways:
+
+![Linear vs decibels](fig/lin-dB)\
+
+In Liquidsoap, the functions `lin_of_dB` and `dB_of_lin` can be used to convert
+between the two (the first converts decibels in linear units and the second does
+the converse). For instance, we can amplify a source `s` by 2 dB with
+
+```{.liquidsoap include="liq/amplify-db.liq" from=2 to=-1}
 ```
 
-#### Interactive parameters
+When using operators, you should always check in the doc the unit for the
+amplitudes. Unfortunately, both exist in nature (for instance, `amplify` takes a
+linear parameter whereas most effects such as compressors expect decibels).
 
-We can obtain parameters through telnet (explain how to save the values with
-persistency + harbor server) / OSC
+#### Getters
 
-`getter.file`
+Most sound operators take _getters_ as arguments, as already explained in [an
+earlier section](#sec:getters). For instance, the type of `amplify` is (roughly)
+
+```
+({float}, source) -> source
+```
+
+The first argument, which corresponds to the amplification parameter, is of type
+`{float}` which means that both
+
+- a `float`, or
+- a function of type `() -> float`
+
+are accepted. This means that we can either directly provide a value as in
+
+```{.liquidsoap include="liq/amplify.liq" from=2 to=-1}
+```
+
+or we can provide a function which returns a `float` each time it is called,
+which can be different each time. For instance, in the script
+
+```{.liquidsoap include="liq/amplify-time.liq" from=2 to=-1}
+```
+
+we store in `t0` the time (in seconds) at the startup of the program, define `a`
+as the function which returns the difference between the current time and the
+startup time (in seconds), and use it as amplification factor for the source
+`s`: this means that after running the script for _n_ seconds our source `s`
+will be amplified by _n_. We also recall that this can be written more concisely
+as
+
+```{.liquidsoap include="liq/amplify-time2.liq" from=2 to=-1}
+```
+
+This is quite useful for retrieving parameters from external sources. For
+instance, the function `file.getter.float` has type
+
+```
+(string) -> () -> float
+```
+
+It takes as argument a file name (a string) and returns a function which, each
+time it is called, returns the float which is contained in the file (and this is
+done in an efficient way). This means that the following script
+
+```{.liquidsoap include="liq/amplify-file.liq" from=2 to=-1}
+```
+
+will amplify the source `s` by the value indicated in the file `volume`: as soon
+as you change the value in this file, you will hear a corresponding change in
+the volume.
+
+#### Interactive variables: telnet
+
+Instead of using files to store parameters as described above, our preferred way
+of handling those is with _interactive variables_. These can be thought of as
+references whose contents can be changed in various ways. An interactive
+variable of type `float` can be created with the function `interactive.float`
+(and similarly interactive strings and booleans can be created by
+`interactive.string` and `interactive.bool`). This function takes as argument
+the name of the interactive variable, which we will use to modify it, as well as
+the initial value. For instance, we can amplify a source `s` by an interactive
+float named `main_volume` by
+
+```{.liquidsoap include="liq/amplify-interactive.liq" from=2 to=-1}
+```
+
+A first way to modify such variables is through the telnet server. It can be
+started by adding
+
+```liquidsoap
+set("server.telnet", true)
+```
+
+add the beginning of the script. We can the connect to the telnet server by
+typing
+
+```
+telnet localhost 1234
+```
+
+(here, we suppose that we are on the machine running the script, otherwise
+`localhost` has to be replaced by its address, and `1234` is the default port
+for the telnet server). Then we can change the value of the interactive variable
+`main_volume` to 0.75 by typing
+
+```
+var.set main_volume = 0.75
+```
+
+to which the server will answer
+
+```
+Variable main_volume set.
+END
+```
+
+We can also retrieve the value of the variable by typing
+
+```
+var.get main_volume
+```
+
+which will prompt the answer
+
+```
+0.75
+END
+```
+
+The `telnet` command can also read commands to send from its standard input,
+allowing to automate the process of setting variables in scripts. For instance,
+we can type
+
+```
+echo "var.set main_volume = 0.5" | telnet localhost 1234
+```
+
+to set `main_volume` in one go.
+
+#### Interactive variables: persistency
+
+One issue with interactive variables is that they are not _persistent_: if we
+stop the script and run it again, their values are lost and we get the default
+values again. However, this is easily solved by using the
+`interactive.persistent` function, which takes a filename and stores the values
+of all interactive variables in this file (in JSON format, which should easily
+be readable). For instance, if you end the previous script with
+
+```liquidsoap
+interactive.persistent("script.params")
+```
+
+you will observe that a file `script.params` has been created and its contents is
+
+```
+[ [  ], { "main_volume": 0.5 }, [  ], [  ] ]
+```
+
+which, without entering the details, contains the value for
+`main_volume`. Moreover, it will automatically be read on next run of the
+script, so that interactive variables will keep their values across executions.
+
+There is one important caveat: the function `interactive.persistent` must be
+called after all interactive values have been created (i.e. after all calls to
+functions `interactive.float` and similar), otherwise previous values are not
+taken in account when restarting scripts. If you do not want to think too much,
+follow this simple rule: put any call to `interactive.persistent` toward the end
+of the script!
+
+#### Interactive variables: web interface
+
+All this is very nice, but having to go though a telnet interface to change
+values is not very user-friendly. Fortunately, we can also get a web interface
+for free, simply by typing
+
+```liquidsoap
+interactive.harbor()
+```
+
+This will run a web server, which is accessible at the url
+
+  `http://localhost:8080/interactive`
+  
+which can be configured by setting parameters of the function, and allows
+modifying the values of the variables. If you connect to it, you will see a
+webpage like
+
+<!-- \begin{center}\includegraphics{img/interactive1.png}\end{center} -->
+
+![Interactive variables webpage](img/interactive1.png) \
+
+where we can edit in realtime the value of the interactive variable (of course
+if we had many variables we would have one line for each of them). If we specify
+the minimal and maximal value of the interactive variable (`min` and `max`
+parameters of `interactive.float`) we moreover get a slider and if we moreover
+set the `description` it will be displayed. This means that by changing the
+declaration of the interactive variable to
+
+```liquidsoap
+a = interactive.float("main_volume", description="Our volume",
+                      min=0., max=3., 1.)
+```
+
+the webpage will change to
+
+![Interactive variables webpage](img/interactive2.png) \
+
+In this way you easily get access to a convenient interface for setting your
+parameters, and its values can be stored on the long run by using
+`interactive.persistent`.
+
 
 ```{.liquidsoap include="liq/bass-boost2.liq" from=1}
 ```
@@ -2239,6 +2566,12 @@ explain
 
 ```{.liquidsoap include="liq/compress.multiband3.liq" from=1}
 ```
+
+#### OSC
+
+#### Comparing dry an wet
+
+The `dry_wet` operator
 
 
 Outputs
@@ -2406,6 +2739,27 @@ testing blank
 
 Interacting with other programs {#sec:interaction}
 -------------------------------
+
+### Sound from external sources
+
+#### External decoders/encoders {#sec:pipe}
+
+TODO: many people want to use [stereotool](https://www.stereotool.com/), cf
+https://github.com/savonet/liquidsoap/issues/885
+
+`pipe`
+
+#### Jack
+
+mention jack again
+
+jamin
+
+`input.jack` / `output.jack`
+
+qjackctl
+
+#### Webcast
 
 ### Running external programs
 
@@ -2650,11 +3004,6 @@ TODO: maybe other interactions here : harbor / OSC
 
 ```{.liquidsoap include="liq/file.watch.liq"}
 ```
-
-###  External decoders/encoders
-
-TODO: many people want to use [stereotool](https://www.stereotool.com/), cf
-https://github.com/savonet/liquidsoap/issues/885
 
 ### Harbor
 
@@ -2926,5 +3275,3 @@ final user. In particular, the harbor server is not meant to server big files
 because it loads their entire content in memory before sending them. However,
 the harbor HTTP server is fully equipped to serve any kind of CGI script.
 
-
-### Webcast

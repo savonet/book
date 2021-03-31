@@ -1,6 +1,4 @@
 #!./liquidsoap
-log.level.set(4)
-s = single("test.mp3")
-s = replaygain(s)
-s.on_track(fun (m) -> print("*** Replaygain of #{m['title']}: #{m['replaygain_track_gain']}"))
+s = playlist("~/Music")
+s = fade.out(duration=5., track_sensitive=false, s)
 output(s)
