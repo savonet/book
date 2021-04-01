@@ -242,6 +242,11 @@ free time!
 
 \TODO{explain how to report bugs about this book}
 
+### How to improve the book
+
+TODO: explain where to report bugs, that we are open to suggestions (in
+particular for signal processing)
+
 ### The authors
 
 The authors of the book you have in your hands are the two main current

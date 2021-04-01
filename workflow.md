@@ -98,6 +98,11 @@ metadata with `request.metadata`, and declare that we should play a file only if
 its genre is "Rock" (remember that the metadata are encoded as an association
 list as explained in [there](#sec:association-list)).
 
+\TODO{do the same with playlist.list which has the advantage of being predictable and more efficient, but takes time at startup...}
+
+```{.liquidsoap include="liq/playlist-check3.liq" from=1 to=-1}
+```
+
 If you only need to play one file, you can avoid creating a playlist with this
 file only, by using the operator `single` which loops on one file. This operator
 is also more efficient in the case the file is distant because it is downloaded
@@ -533,7 +538,6 @@ Icecast. Ours obviously being Liquidsoap, you can run the script
 which will stream connect to the harbor Icecast server and stream our music
 library in mp3 format.
 
-
 #### Security
 
 Since harbor exposes a server to the internet, you should be serious about
@@ -652,6 +656,10 @@ file `test.mp3` with
 
 In practice, no one would use the above example as is, because Liquidsoap
 already has builtin support for using GStreamer to decode files...
+
+### Webcast
+
+TODO
 
 Scheduling
 ----------
@@ -2308,6 +2316,8 @@ follows:
 Plugins can be a bit difficult to understand if you have no idea what the plugin
 does, in which case the documentation on the author's websites can be useful.
 
+\TODO{explain that it takes startup time and that loading can be disabled}
+
 #### Stereo Tool
 
 A last possibility to handle your sound is to use software dedicated to
@@ -2324,7 +2334,7 @@ Stereo Tool as follows:
 The `process` argument gives the program we want to run along with its options
 (here, you should replace `/usr/bin/stereo_tool_cmd_64` by the actual path where
 the Stereo Tool binary is located, `myradio.sts` by your configuration file and
-`secretkey` by your actual license key).
+`seckey` by your actual license key).
 
 ### Playing with parameters
 
@@ -2586,19 +2596,98 @@ will give rise tot he following interface
 
 ![Interactive variables webpage](img/interactive4.png)\
 
-which allows to easily set up the multiband compressor using our ears.
+which allows to easily set up the multiband compressor using our ears. The _wet_
+parameter allows to compare the output with and without compression, as
+explained below.
 
-#### OSC
+#### Interactive variables: OSC
+
+Another way to modify interactive variables is through the OSC (_Open Sound
+Control_) protocol, which is used to communicate values over a local
+network. There is plenty of software for your tablet or your phone, which
+emulate controllers with loads of sliders and send their values using this
+protocol. Each of the sliders has an OSC address which looks like
+`/the/address`, whose name depend on the software you use. When launching your
+software, you should first enter the IP address of the machine you want to
+communicate with (in our case, the machine where Liquidsoap is running) and the
+port on which we want to communicate (Liquidsoap uses 7777 by default, this can
+be changed by setting the `osc.port` parameter). The function
+`interactive.float` takes an `osc` parameter which can be used to specify an OSC
+controller to listen to: when set, the variable will change when the
+corresponding controller updates its value. For instance, the script
+
+```{.liquidsoap include="liq/amplify-osc.liq" from=2}
+```
+
+listens on the port 9000 for OSC events and changes the value of the interactive
+variable `a` when a new float value is sent at the OSC address `/volume`.
 
 #### Comparing dry an wet
 
-The `dry_wet` operator
+In order to test the pertinence of an effect, it is often useful to compare the
+sound without and with the effect. The `dry_wet` operator can help for this: it
+takes a float parameter, a source with the original sound (the _dry_ source) and
+a source with the modified sound (the _wet_ source). When the parameter varies
+between 0 and 1, the output varies between the dry and the wet source: with 0
+only the dry source is played, with 1 only the wet source is played. For
+instance, if we want to test a compressor on a source `s`, we could have a setup
+such as
 
+```{.liquidsoap include="liq/dry_wet.liq" from=2}
+```
+
+Here, `s` is the original source and `s2` is the source with the compressor
+effect applied. By varying the interactive variable `wet`, we can hear how
+compression affects the source.
 
 Outputs
 -------
 
-### Files
+Now that we have the sound we were dreaming of for our radio, we are ready to
+export it to the world. We present here the various ways our stream can be
+distributed, as well as the various ways it can be encoded.
+
+### Soundcard output
+
+The first basic output is the soundcard. As we have already seen many times, the
+`output` operator should select for us a decent soundcard output. You can also
+use various output operators, depending on the library you want to use to
+communicate with the soundcard `output.pulseaudio`, `output.alsa`,
+`output.portaudio` and `output.ao`. The first two are generally a good choice.
+
+### Dummy output
+
+Liquidsoap also features an output called `output.dummy` which allows streaming
+to... nowhere! It can still be useful to animate source: without an output a
+source does not produces a stream. As an illustration, suppose that we want to
+log the metadata (say, the title and artist) of a stream without listening to
+it. This could be performed as follows:
+
+```{.liquidsoap include="liq/output.dummy.liq" from=1}
+```
+
+The source `s` is here a distant stream fetched by `input.http`. Whenever we see
+a new track on `s`, we log the metadata in some file. The important part here is
+the last line: the use of `output.dummy` will make the source regularly produce
+a stream (as if it was connected to a soundcard output for instance) and we will
+thus be able to inspect tracks. If there is no output it is connected to, no one
+will ever ask `s` for data, and we would never see a track.
+
+In fact, a script without any output will never do anything sensible with
+respect to streams, and for this reason Liquidsoap will simply refuse to start
+when there is no output, displaying the message
+
+```
+No output defined, nothing to do.
+```
+
+### File output
+
+The next output we are going to see is file output which, as you would expect,
+is performed by the operator `file.output`.
+
+```{.liquidsoap include="liq/output.file.liq" from=1}
+```
 
 `output.file`, common encoding formats
 
@@ -2639,9 +2728,13 @@ TODO: multiple qualities, we can convert to mono with `mean`
 
 TODO: example of Youtube output, we should work out native ffmpeg youtube output
 
+actually we should only give a simple example here (say a static image) and
+defer more fancy stuff to [the dedicated chapter](#chap:video).
+
 ### Encode once, output multiple times
 
-TODO: explain how to encode in mp3 and output both in a file and to Icecast without re-encoding
+TODO: explain how to encode in mp3 and output both in a file and to Icecast
+without re-encoding
 
 Testing and monitoring
 ----------------------
@@ -2780,7 +2873,11 @@ jamin
 
 qjackctl
 
-#### Webcast
+#### OSC
+
+we have already seen interactive variables
+
+`osc.float` / `osc.on_float` / `osc.send_float`
 
 ### Running external programs
 

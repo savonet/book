@@ -1,4 +1,4 @@
-Video
+Video {#chap:video}
 =====
 
 Playing locally
