@@ -2681,13 +2681,111 @@ when there is no output, displaying the message
 No output defined, nothing to do.
 ```
 
+### Icecast
+
+Icecast is a server on which Liquidsoap can send a stream, which will take care
+of redistributing to the world. In order to use this method, you first need to
+setup such a server, which will not be detailed here: you can refer to [the
+introductory material](#sec:icecast-setup) or the [official
+documentation](http://www.icecast.org) for this. We simply suppose here that we
+have setup a sever on the local machine (its address will be `localhost`) with
+the default password `hackme` (that you should really really change if you do
+not want to have problems).
+
+Streaming our radio to the world is then as simple as this:
+
+```{.liquidsoap include="liq/output.icecast.liq" from=2}
+```
+
+The `output.icecast` operator takes as first argument the encoding format
+(`%mp3` means that we want to encode our stream in mp3, more about this below),
+the host where Icecast is located, the port of the Icecast server (`8000` is the
+default port), the password to connect to the Icecast server, the mountpoint
+(this is the name of the radio for Icecast) and finally the source we want to
+encode (here, we suppose that our stream is named `radio`). We can then listen
+to the stream by connecting to the url
+
+  `http://localhost:8000/my-radio.mp3`
+
+The url consists of the name of the Icecast server and its port, followed by the
+mountpoint. This allows streaming multiple radios in a same servers, by giving
+them different mountpoint names. For instance, if we have a `rock` and a
+`techno` stream, we can encode both of them, and encode each of them both in mp3
+and aac with
+
+```{.liquidsoap include="liq/output.icecast3.liq" from=2}
+```
+
+Here, first define a function `out` which consists in `output.icecast` partially
+applied to the common parameters in order not to have to repeat them for each
+output, and then we define the various outputs. Note that it is absolutely not a
+problem that a given source is encoded multiple times.
+
+Various arguments of `output.icecast` are available to provide more information
+about your radio including its `name`, `genre` and provide a `description` of
+it. The argument `dumpfile` can be useful to store the stream which is sent, in
+order to keep it for later inspection, although we would advise to set up a
+proper file output as described below.
+
+#### Casting without ice
+
+If you want to quickly test Icecast output without going through the hassle of
+setting up an Icecast server, you can use the `output.harbor` operator. It will
+make Liquidsoap start a server which behave like Icecast would, and it is as
+simple as this:
+
+```{.liquidsoap include="liq/output.harbor.liq" from=2}
+```
+
+As you can remark, for `output.harbor`, you only need to specify the encoding
+format, the mountpoint and the source to encode, and it will be available at
+
+  `http://localhost:8000/my-radio.mp3`
+  
+for you to listen. You can protect the stream by specifying a `user` and a
+`password` argument (both need to specified) which will be required when trying
+to listen to the stream:
+
+```{.liquidsoap include="liq/output.harbor2.liq" from=2}
+```
+
+Alternatively, you can also specify an authentication function in the `auth`
+argument: this function itself takes the user and password as argument and
+returns whether the listener should be granted access to the stream. For
+instance, the following allows listeners whose password have odd length:
+
+```{.liquidsoap include="liq/output.harbor3.liq" from=2}
+```
+
+The arguments `on_connect` and `on_disconnect` are also useful to monitor
+connections from listeners.
+
+### Encoding formats
+
+TODO: encoding formats `%mp3`, `%wav`, main parameters (quality, numbers of
+channels, etc.)
+
+TODO: also explain that we can both pass encoded contents and decode it with
+`ffmpeg.decode` (see #1461).
+
+### HLS output
+
+TODO: multiple qualities, we can convert to mono with `mean`
+
+
 ### File output
 
 The next output we are going to see is file output which, as you would expect,
-is performed by the operator `file.output`.
+is performed by the operator `file.output`. It takes three arguments: the format
+(which describes the format in which we are going to encode the file and is
+detailed below), the name of the file, and the source we want to encode in the
+file. For instance, we can encode a source `s` in the mp3 file `out.mp3` with
 
-```{.liquidsoap include="liq/output.file.liq" from=1}
+```{.liquidsoap include="liq/output.file.liq" from=2}
 ```
+
+`on_stop` with `fallible=true` : shutdown when the encoding is over
+
 
 `output.file`, common encoding formats
 
@@ -2708,21 +2806,12 @@ This will save your source into a `mp3` file with name specified by `file_name`.
 In this example, we use [string interpolation](language.html) and time litterals to generate a different
 file name each time new metadata are coming from `s`.
 
-### Encoding formats
+In the following variant we write a new mp3 file each time new metadata is coming from s:
 
-TODO: encoding formats `%mp3`, `%wav`, main parameters (quality, numbers of
-channels, etc.)
-
-TODO: also explain that we can both pass encoded contents and decode it with
-`ffmpeg.decode` (see #1461).
-
-### Icecast
-
-mention `output.harbor`
-
-### HLS output
-
-TODO: multiple qualities, we can convert to mono with `mean`
+```
+file_name = '/archive/$(if $(title),"$(title)","Unknown archive")-%Y-%m-%d/%Y-%m-%d-%H_%M_%S.mp3'
+output.file(%mp3, filename, s, reopen_on_metadata=true)
+```
 
 ### Youtube
 

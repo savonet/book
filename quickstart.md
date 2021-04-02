@@ -257,10 +257,11 @@ a single file and ensures that the file is available before running the script
 so that we know it will not fail. The argument
 `track_sensitive=false`{.liquidsoap} means that we want to get back to the live
 stream as soon as it is available again (otherwise it would wait the end of the
-track for switching back from emergency playlist to the main radio). Also remark that we are defining `s` twice:
-this is not a problem at all, whenever we reference `s`, the last definition is
-used (otherwise said the second definition replaces the first afterward). Another option would be to fallback to silence, which in Liquidsoap can be
-generated with the operator `blank`:
+track for switching back from emergency playlist to the main radio). Also remark
+that we are defining `s` twice: this is not a problem at all, whenever we
+reference `s`, the last definition is used (otherwise said the second definition
+replaces the first). Another option would be to fallback to silence, which in
+Liquidsoap can be generated with the operator `blank`:
 
 ```{.liquidsoap include="liq/fallible3.liq"}
 ```
@@ -358,7 +359,7 @@ radio = nrj(radio)
 
 see\TODO{reference} for details on sound processing.
 
-### Icecast output
+### Icecast output {#sec:icecast-setup}
 
 Now that we have set up our radio, we could play it locally by adding
 
@@ -412,9 +413,7 @@ up Icecast can be found on [its website](http://www.icecast.org).
 Once this is set up, you should add the following line to your script in
 order to instruct Liquidsoap to send the stream to Icecast:
 
-```liquidsoap
-output.icecast(%mp3, host="localhost", port=8000,
-               password="hackme", mount="my-radio.mp3", radio)
+```{.liquidsoap include="liq/output.icecast.liq" from=2}
 ```
 
 The parameters of the operator `output.icecast` we used here are
@@ -438,9 +437,7 @@ bitrate, we should pass `%mp3(bitrate=256)`. It is perfectly possible to have
 multiple streams with different formats for a single radio: if we want to also
 have an aac stream we can add the line
 
-```liquidsoap
-output.icecast(%fdkaac, host="localhost", port=8000,
-               password="hackme", mount="my-radio.aac", radio)
+```{.liquidsoap include="liq/output.icecast2.liq" from=2}
 ```
 
 By the way, support for aac is not built in in the default installation. If you
