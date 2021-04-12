@@ -676,3 +676,8 @@ Synthesizers
 ------------
 
 TODO: midi, `synth.*`, etc.
+
+TODO
+----
+
+- mention <https://github.com/mbugeia/srt2hls>

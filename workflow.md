@@ -92,11 +92,9 @@ as follows:
 ```{.liquidsoap include="liq/playlist-check2.liq" from=1 to=-1}
 ```
 
-Here, we use the function `request.read_metadata` to force the reading of the
-metadata for the request (this is not done by default at this point), obtain the
-metadata with `request.metadata`, and declare that we should play a file only if
-its genre is "Rock" (remember that the metadata are encoded as an association
-list as explained in [there](#sec:association-list)).
+Here, we obtain the metadata with `request.metadata`, and declare that we should
+play a file only if its genre is "Rock" (remember that the metadata are encoded
+as an association list as explained in [there](#sec:association-list)).
 
 \TODO{do the same with playlist.list which has the advantage of being predictable and more efficient, but takes time at startup...}
 
@@ -733,6 +731,10 @@ will play the `live` source and default to the `music` source, like a regular
 track insensitive fallback operator, but it will also skip the current track of
 the `music` source after switching to the `live` source, so that we will begin
 on a fresh track when switching back again to `music`.
+
+\TODO{fill me in!!!}
+
+TODO: with `s.on_leave`, see <https://github.com/savonet/liquidsoap/pull/1560>
 
 ### Switching and time predicates
 
@@ -2697,13 +2699,16 @@ Streaming our radio to the world is then as simple as this:
 ```{.liquidsoap include="liq/output.icecast.liq" from=2}
 ```
 
-The `output.icecast` operator takes as first argument the encoding format
-(`%mp3` means that we want to encode our stream in mp3, more about this below),
-the host where Icecast is located, the port of the Icecast server (`8000` is the
-default port), the password to connect to the Icecast server, the mountpoint
-(this is the name of the radio for Icecast) and finally the source we want to
-encode (here, we suppose that our stream is named `radio`). We can then listen
-to the stream by connecting to the url
+The `output.icecast` operator takes as first argument the encoding format:
+`%mp3` means that we want to encode our stream in mp3. The encoding formats are
+detailed below, for instance `%mp3.abr(bitrate=160)` would specify encoding in
+mp3 with average bitrate of 160 kbps, or `%fdkaac(bitrate=64)` would specify
+encoding in aac format with bitrate of 64 kbps. Other arguments of
+`output.icecast` are: the host where Icecast is located, the port of the Icecast
+server (`8000` is the default port), the password to connect to the Icecast
+server, the mountpoint (this is the name of the radio for Icecast) and finally
+the source we want to encode (here, we suppose that our stream is named
+`radio`). We can then listen to the stream by connecting to the url
 
   `http://localhost:8000/my-radio.mp3`
 
@@ -2730,9 +2735,9 @@ proper file output as described below.
 #### Casting without ice
 
 If you want to quickly test Icecast output without going through the hassle of
-setting up an Icecast server, you can use the `output.harbor` operator. It will
-make Liquidsoap start a server which behave like Icecast would, and it is as
-simple as this:
+setting up an Icecast server, you can use the `output.harbor` operator which
+will use Liquidsoap's internal webserver _harbor_. It will make Liquidsoap
+start a server which behave like Icecast would, and it is as simple as this:
 
 ```{.liquidsoap include="liq/output.harbor.liq" from=2}
 ```
@@ -2760,58 +2765,609 @@ instance, the following allows listeners whose password have odd length:
 The arguments `on_connect` and `on_disconnect` are also useful to monitor
 connections from listeners.
 
+### HLS output {#sec:HLS-output}
+
+In the last few years, people have started moving away from Icecast and turn to
+HLS to distribute streams. Basically, a stream in HLS is a playlist of very
+short portions of the stream, called segments, whose duration is generally 2
+around seconds. The playlist itself contains the last minute or so of the
+stream, split in segments, and is regularly updated. Compared to Icecast, this
+has the advantage of not requiring a constant connection from the user, and is
+thus robust to network changes or disconnections, and moreover, the segments are
+regular files and can thus be cached using the standard techniques for serving
+files over http. Another useful feature of HLS is that multiple encodings of the
+same stream can be served simultaneously: typically, one would serve both a low
+and a high quality version of the stream, and the user can seamlessly switch
+between the two depending on the quality of its connection (e.g. when going from
+3G to 4G on a phone).
+
+The `output.file.hls` operator takes care of this. It takes as mandatory arguments
+the directory where all the files will be put (the playlist and the segments), a
+list of pairs of stream names and encoding formats (remember that a stream can
+be encoded in multiple formats at once), and the source to encode. For instance,
+if  we have a stream named `radio`, the script
+
+```{.liquidsoap include="liq/output.file.hls.liq" from=2}
+```
+
+will generate an HLS stream in the directory `/tmp/hls`, encoding it in two
+qualities (`mp3-low` which is mp3 encoded at the bitrate 96 kbps and `mp3-hi`
+which is mp3 encoded at 160 kbps). The directory `/tmp/hls` would then typically
+be served by an http server. If you have a look at it you will see that it
+contains
+
+- a file `stream.m3u8`: this is the main playlist that your listeners should
+  listen to (it links to streams in both qualities, between which the listener
+  is able to choose),
+- files `mp3-low.m3u8` and `mp3-hi.m3u8`: these are the playlists respectively
+  corresponding to the stream in low and high quality,
+- files `mp3-low_XX.mp3` and `mp3hi_XX.mp3`, where `XX` are numbers: these are
+  the encoded segments, which are created and removed as the stream goes by.
+  
+Some useful arguments of the `output.file.hls` operator are the following.
+
+- `encode_metadata`: whether to add metadata or not in the stream. This is
+  disabled by default because some players assume that there will be one stream,
+  and thus stop when they see metadata.
+- `on_file_change`: this specifies a function which can be used to execute an
+  action when a file is created or removed, which can typically to upload
+  segments to a webserver when they are created and remove them when they are
+  not in use anymore. This function takes an argument labeled `state` and the
+  name of the file concerned. The `state` is a string which can be
+  
+  - `"opened"`: we have opened the file to start writing on it,
+  - `"closed"`: we have finished writing to the file (and it could thus be
+    uploaded to a server),
+  - `"removed"`: we have removed the file (and it could thus be removed from the
+    server).
+  
+  A simple example of such a function would be
+  
+  ```{.liquidsoap include="liq/output.file.hls-on_file_change.liq"}
+  ```
+  
+  Here, we are only printing but, again, we would typically copy the files
+  somewhere.
+
+- `persist_at`: this specifies a file name which stores the state of the output
+  (such as the currently created segments) and will be used to properly continue
+  the HLS playlist in the case the script is stopped and restarted.
+- `playlist`: the name of the main playlist, which is `"stream.m3u8"` by
+  default.
+- `segment_duration`: the duration of each segment, 10 seconds by default.
+- `segment_name`: specify a function to generate the name of the segment files.
+- `segments`: the number of segments per playlist, 10 by default.
+- `segments_overhead`: the number of segments to keep, which are not anymore in
+  the playlist, 5 by default. It might happen that some listeners take some time
+  to download the files, and that they have an "old" version of the playlist,
+  which will contain names for "old" segments. It is thus important to keep a
+  few old segments in order to accommodate for such situations.
+- `streams_info`: can be used to specify additional information for the streams
+  such as the bandwith (in bits per second), the codecs (following RFC 6381),
+  the extension for the files, and the dimensions in pixels for video streams.
+
+A more involved example, inspired of
+[srt2hls](https://github.com/mbugeia/srt2hls), is
+
+```{.liquidsoap include="liq/output.file.hls2.liq" from=2}
+```
+
+It encodes the stream in AAC format, in three different qualities, with
+some custom parameters set up.
+
+#### Encoders
+
+Any encoder can be used for streams in Liquidsoap. However, the
+[HLS specification](https://tools.ietf.org/html/rfc8216) enforces that the
+codecs used should be mp3 and aac, so that you should restrict to those for
+maximum compatibility with players. Furthermore, in order to improve
+compatibility, it is recommended that sent data encapsulated in a `MPEG-TS`
+stream: currently, the only encoder capable of doing this in Liquidsoap is
+`%ffmpeg`, as illustrated above.
+
+#### Serving with Liquidsoap
+
+It is possible to have Liquidsoap to serve directly the files for the HLS stream
+with its internal web server with the operator `output.harbor.hls` (and
+`output.harbor.hls.ssl` for encrypting with SSL). The arguments of this operator
+are the same as those of `output.file.hls`, excepting `port` and `path` which
+respectively specify the port of the server, and the path where the stream is
+served. It is not recommended for listener-facing setup, because we do not
+consider the internal web server harbor ready for heavy loads, but it can be
+useful to sync up with a caching system such as cloudfront. A simple setup would
+be
+
+```{.liquidsoap include="liq/output.harbor.hls.liq" from=2}
+```
+
+which would make the stream of the `radio` source available at the url
+
+  `http://localhost:8080/radio/stream.m3u8`
+
+### File output
+
+The next output we are going to see is file output which, as you would expect,
+is performed by the operator `file.output`. It takes three arguments: the
+encoding format, the name of the file, and the source we want to encode in the
+file. For instance, we can encode a source `s` in the mp3 file `out.mp3` with
+
+```{.liquidsoap include="liq/output.file.liq" from=2}
+```
+
+The file name can contain special substring which will automatically be replaced:
+
+- some strings stand for the current time: `%Y` (year), `%m` (month), `%d`
+  (day), `%H` (hour), `%M` (minute), `%S` (second), `%w` (weekday), `%z`
+  (timezone),
+- because of the above replacements, `%` is a special character: if you want to
+  write `%` in a filename, you should write `%%` instead,
+- some strings stand for the current metadata of the source: `$(title)` is the
+  title, `$(artist)` is the artist, `$(album)` is the album, and so on.
+
+For instance, when archiving the radio stream, it is useful to have the current
+time in the filename in order not to overwrite the file if the script is
+restarted:
+
+```{.liquidsoap include="liq/output.file2.liq" from=2}
+```
+
+The parameters `reopen_when` and `reopen_on_metadata` are particularly useful in
+association to this mechanism in order to generate multiple files. The parameter
+`reopen_when` allows to regenerate a new file (with an updated filename) when a
+predicate is true. For instance, we can generate an archive per hour with:
+
+```{.liquidsoap include="liq/output.file3.liq" from=2}
+```
+
+Here, the predicate `{0m}` given for the `reopen_when` argument is true whenever
+the current minute is 0, i.e. at the beginning of every hour: we will thus
+change file at the beginning of every hour. Also note that the path of the
+archive file contains a directory which depends on the current date: Liquidsoap
+will take care of creating the required directories for us. Similarly, when the
+argument `reopen_on_metadata` is set to `true`, the file will be updated when
+some new track begins. For instance, we can create a new file for each track
+with the current date, artist and title with:
+
+```{.liquidsoap include="liq/output.file4.liq" from=2}
+```
+
+The argument `on_close` can be used to specify a function which is called
+whenever we have finished writing to a file: this function takes the filename as
+argument. This is particularly useful to upload archive files to a backup
+server. For instance, in the script
+
+```{.liquidsoap include="liq/output.file5.liq" from=2}
+```
+
+The function `on_file` is called each time an archive file is created. Here, we
+call a command to simply copy this file to the `/tmp` directory, but a more
+realistic application would for instance upload it on a ftp server or so.
+
+Some other useful optional argument of the `output.file` operator are
+
+- `append`: when set to `true`, the file will not be overwritten if it exists,
+  but new data will be added at the end instead,
+- `fallible`: when set to `true` the operator will accept fallible sources, it
+  will start recording the source when it is available and stop when this is not
+  the case anymore,
+- `on_start` and `on_stop` specify functions which are called whenever the
+  source starts or stops.
+
+The `on_stop` function is particularly useful when `fallible` is set to `true`:
+this allows calling a function when the source fails, see
+[there](#sec:offline-processing) for a concrete application.
+
 ### Encoding formats
+
+The encoding formats are specified by expressions of the form `%encoder` or
+`%encoder(parameters...)` if we need to specify parameters. For instance, the
+encoding format for mp3 with default parameters is `%mp3` and the format for mp3
+at 192 kbps in joint stereo is
+`%mp3(bitrate=192,stereo_mode="joint_stereo")`. This means that if we want to
+use this for an harbor output, we will write
+
+```{.liquidsoap include="liq/output.harbor4.liq" from=2}
+```
+
+#### MP3
+
+The mp3 format is perhaps the most widespread and well-supported compressed
+audio format. It provides reasonable quality and reasonable compression, so that
+it is often a good choice. There are three variants of the mp3 encoder depending
+on the way you want to handle bitrate (the number of bits of data per second the
+encoder will produce):
+
+- `%mp3` or `%mp3.cbr`: constant bitrate encoding,
+- `%mp3.vbr`: variable bitrate, quality-based, encoding,
+- `%mp3.abr`: average bitrate based encoding,
+- `%mp3.fxp` or `%shine`: constant bitrate fixed-point encoding.
+
+The first one is predictable: it will always output the same amount of data. The
+second one is more adaptative: it will produce much data when the stream is
+"complex", and less when it is more "simple", which means that we get a stream
+of better quality, but whose bitrate is less predictable. The third one is a
+balance between the two: it will adapt to the complexity of the stream, but will
+always output the same bitrate on average. You should rarely have to use the
+last one: it is a constant bitrate encoder, like `%mp3`, which does not use
+floating point computations (`fxp` stands for fixed-point), and is thus more
+suitable for devices without hardware support for floats, such as some low-end
+embedded devices.
+
+The parameters common to all variants are
+
+- `stereo` is either `false` or `true`: encode in mono or stereo (default is
+  `stereo`),
+- `stereo_mode` is either `"stereo"` or `"joint_stereo"` or `"default"`: encode
+  left and right channels separately or conjointly (default is `"default"`),
+- `samplerate` is an integer: samplerate of encoded stream in samples per second
+  (default is `44100` Hz),
+- `internal_quality` is an integer between 0 and 9: controls the quality of the
+  encoding, 0 being the highest quality and 9 being the worst (default is 2, the
+  higher the quality the more cpu encoding takes),
+- `id3v2` is either `false` or `true`: whether to add Id3v2 tags to the stream
+  (default is `false`).
+
+The parameters for `%mp3` are
+
+- `bitrate`: the fixed bitrate in kilobits per second of the encoded stream
+  (common values are 128, 160 and 192 kbps).
+
+The parameters for `%mp3.vbr` are
+
+- `quality`: quality of encoded data from `0` (highest quality) to `9` (worst
+  quality).
+
+The parameters for `%mp3.abr` are
+
+- `bitrate`: average bitrate (kbps),
+- `min_bitrate`: minimun bitrate (kbps),
+- `max_bitrate`: maximun bitrate (kbps),
+- `hard_min`: minimal bitrate to enforce (kbps).
+
+The parameters for `%mp3.fxp` are
+
+- `channels`: the number of audio channels (typically 2 for stereo),
+- `samplerate`: the desired samplerate (typically 44100),
+- `bitrate`: the desired bitrate (in kbps, typically 128).
+
+For instance, contstant `128` kbps bitrate encoding is achieved with
+
+```{.liquidsoap include="liq/encoder-mp3-1.liq" from=2 to=-1}
+```
+
+Variable bitrate with quality 7 and samplerate of 22050 Hz is
+
+```{.liquidsoap include="liq/encoder-mp3-2.liq" from=2 to=-1}
+```
+
+Average bitrate with mean of 128 kbps, maximun bitrate 192 kbps and ID3v2 tags
+is
+
+```{.liquidsoap include="liq/encoder-mp3-3.liq" from=2 to=-1}
+```
+
+<!--
+Optionally, liquidsoap can insert a message within mp3 data. You can set its
+value using the `msg` parameter.  Setting it to `""` disables this feature. This
+is its default value.
+-->
+
+Fixed-point encoding in stereo at 44100 Hz at 128 kbps is
+
+```{.liquidsoap include="liq/encoder-mp3-4.liq" from=2 to=-1}
+```
+
+#### Wav
+
+Wav is a non-compressed format: this means that you do not loose anything, but
+it takes quite some space to store audio. Not recommended for streaming. The
+parameters are
+
+- `channels`: the number of channels (1 and 2 can also be specified with `mono`
+  and `stereo`),
+- `duration`: duration in seconds to set in the wav header,
+- `samplerate`: the samplerate in Hz,
+- `samplesize`: the number of bits per sample (only the values 8, 16, 24 and 32
+  are supported for now),
+- `header`: whether a header should be issued or not (the value `false` means no
+  header, and can be used for exachanging raw PCM data).
+  
+For instance,
+
+```{.liquidsoap include="liq/encoder-wav.liq" from=2 to=-1}
+```
+
+Because Liquidsoap encodes a possibly infinite stream, there is no way to know
+in advance the duration of encoded data. Since wav header has to be written
+first, by default its length is set to the maximun possible value. If you know
+the expected duration of the encoded data and you actually care about the wav
+length header then you should use the `duration` parameter.
+
+#### Ogg
+
+Liquidsoap has native support for ogg which is a _container_: it is a file
+format which can contain multiple streams (typically, audio and/or video). The
+syntax for encoding in ogg is `%ogg(...)`, where the `...` is a list of
+streams. The currently supported encoders for the streams them selves are opus,
+vorbis, speex and flac for audio, and theora for video. For instance, we can
+encode an opus stream in an ogg container with the encoder
+
+```{.liquidsoap include="liq/encoder-ogg-1.liq" from=2 to=-1}
+```
+
+For convenience, it is possible to simply write
+
+```{.liquidsoap include="liq/encoder-ogg-2.liq" from=2 to=-1}
+```
+
+instead of `%ogg(%opus)`, and similarly for other encoders. All ogg encoders
+have a `bytes_per_page` parameter, which can be used to try to limit ogg logical
+pages size, in bytes: this is the minimal amount of data which has to be read
+contiguously. For instance,
+
+```{.liquidsoap include="liq/encoder-ogg-3.liq" from=2 to=-1}
+```
+
+The usual value is between 4 kB and 8 kB.
+
+#### Ogg/opus
+
+The opus codec is an open-source codec intended as a modern replacement of both
+standard codecs (mp3, vorbis) and highly compressed codecs (aac, speex). This is
+the one you should use by default for sound encapsulated in ogg, unless you have
+specific needs. It has the same or better quality than equivalent codecs and is
+free (both as in beer and as in speech). The only drawback is that it is
+slightly less supported on user-end than, say, mp3 and aac, although this tends
+to be less and less the case.
+
+The encoder is named `%opus` and its parameters are
+
+- `vbr` specifies whether we want variable bitrate or not: it can either be
+  `"none"` (for constant bitrate), `"constrained"` (to achieve a) or `"unconstrained"`
+- `application`: One of `"audio"`, `"voip"` or `"restricted_lowdelay"`
+- `complexity`: Integer value between `0` and `10`.
+- `max_bandwidth`: One of `"narrow_band"`, `"medium_band"`, `"wide_band"`, `"super_wide_band"` or `"full_band"`
+- `samplerate`: input samplerate. Must be one of: `8000`, `12000`, `16000`, `24000` or `48000`
+- `frame_size`: encoding frame size, in milliseconds. Must be one of: `2.5`, `5.`, `10.`, `20.`, `40.` or `60.`. 
+- `bitrate`: encoding bitrate, in `kbps`. Must be a value between `5` and `512`. You can also set it to `"auto"`.
+- `channels`: currently, only `1` or `2` channels are allowed (`mono`, `stereo`: equivalent to `channels=1` and `channels=2`)
+- `signal`: one of `"voice"` or `"music"`
+- `dtx`: boolean
+- `phase_inversion`: boolean
+
+Please refer to the [Opus documentation](http://www.opus-codec.org/docs/) for
+information about their meanings and values.
+
+#### Ogg/vorbis
+
+Vorbis is an audio codec which was developed as an open-source replacement for
+mp3. It is now largely considered as superseded by opus. There are three
+variants of the encoder:
+
+- `%vorbis`: quality-based encoder,
+- `%vorbis.abr`: encoder with variable bitrate,
+- `%vorbis.cbr`: encoder with fixed constant bitrate.
+
+The common parameters are
+
+- `channels`: the number of audio channels (`mono` and `stereo` are also
+  supported for 1 and 2 channels, the default is 2),
+- `samplerate`: the number of samples per second (the default is 44100).
+
+The parameters specific to `%vorbis` are
+
+- `quality`: the quality of the stream between -0.1 (lowest quality, smallest
+  files) and 1 (highest quality, largest files). The aotuv implementation of
+  vorbis can even go down to -0.2.
+  
+The parameters specific to `%vorbis.abr` are
+
+- `bitrate`: the target average bitrate (in kilobits per second),
+- `min_bitrate` and `max_bitrate`: the minimal and maximal bitrates.
+
+The parameters specific to `%vorbis.cbr` are
+
+- `bitrate`: the target bitrate (in kilobits per second).
+
+For instance, a variable bitrate encoding can be achieved with
+
+```liquidsoap
+%vorbis(samplerate=44100, channels=2, quality=0.3)
+```
+
+an average bitrate encoding with
+
+```liquidsoap
+%vorbis.abr(samplerate=44100, channels=2, bitrate=128,
+            min_bitrate=64, max_bitrate=192)
+```
+
+and a constant bitrate encoding with
+
+```liquidsoap
+%vorbis.cbr(samplerate=44100, channels=2, bitrate=128)
+```
+
+#### Ogg/speex
+
+The speex codec is dedicated
+
+```liquidsoap
+%speex(stereo=false, samplerate=44100, quality=7,
+       mode=wideband, # One of: wideband|narrowband|ultra-wideband
+       frames_per_packet=1,
+       complexity=5)
+```
+
+You can also control quality using `abr=x` or `vbr=y`.
+
+#### Ogg/Flac
+
+The flac encoding format comes in two flavors:
+
+* `%flac` is the native flac format, useful for file output but not for streaming purpose
+* `%ogg(%flac,...)` is the ogg/flac format, which can be used to broadcast data with icecast
+
+The parameters are:
+
+```liquidsoap
+%flac(samplerate=44100, 
+      channels=2, 
+      compression=5, 
+      bits_per_sample=16)
+```
+
+`compression` ranges from 0 to 8 and `bits_per_sample` should be one of: `8`, `16`, `24` or `32`.
+Please note that `32` bits per sample is currently not supported by the underlying `libflac`.
+
+#### FDK-AAC
+
+This encoder can do both AAC and AAC+.
+
+Its syntax is:
+```liquidsoap
+%fdkaac(channels=2, samplerate=44100, bandwidth="auto", bitrate=64, afterburner=false, aot="mpeg2_he_aac_v2", transmux="adts", sbr_mode=false)
+```
+Where `aot` is one of: `"mpeg4_aac_lc"`, `"mpeg4_he_aac"`, `"mpeg4_he_aac_v2"`,
+`"mpeg4_aac_ld"`, `"mpeg4_aac_eld"`, `"mpeg2_aac_lc"`, `"mpeg2_he_aac"` or
+`"mpeg2_he_aac_v2"`
+
+`bandwidth` is one of: `"auto"`, any supported integer value.
+
+`transmux` is one of: `"raw"`, `"adif"`, `"adts"`, `"latm"`, `"latm_out_of_band"` or `"loas"`.
+
+Bitrate can be either constant by passing: `bitrate=64` or variable: `vbr=<1-5>`
+
+You can consult the [Hydrogenaudio knowledge base](http://wiki.hydrogenaud.io/index.php?title=Fraunhofer_FDK_AAC) for more details
+on configuration values and meanings.
+
+#### FFmpeg
+
+The `%ffmpeg` encoder is the latest addition to our collection. You need to have [ffmpeg-av, ffmpeg-avfilter, ffmpeg-swscale and ffmpeg-swresample](https://github.com/savonet/ocaml-ffmpeg) installed and up-to date to enable the encoder during liquidsoap's build.
+
+The encoder should support all the options for `ffmpeg`'s [muxers](https://ffmpeg.org/ffmpeg-formats.html#Muxers) and [encoders](https://www.ffmpeg.org/ffmpeg-codecs.html), including private configuration options. Configuration value are passed as key/values, with values being of types: `string`, `int`, or `float`. If an option is not recognized (or: unused), it will raise an error during the instantiation of the encoder. Here are some configuration examples:
+
+* **AAC encoding at `22050kHz` using `fdk-aac` encoder and `mpegts` muxer**
+```liquidsoap
+%ffmpeg(format="mpegts",
+        %audio(codec="libfdk_aac",samplerate=22050,b="32k",
+               afterburner=1,profile="aac_he_v2"))
+```
+
+* **Mp3 encoding using `libshine` at `48000kHz`**
+```liquidsoap
+%ffmpeg(format="mp3",%audio(codec="libshine",samplerate=48000))
+```
+
+* **AC3 audio and H264 video encapsulated in a MPEG-TS stream**
+```liquidsoap
+%ffmpeg(format="mpegts",
+        %audio(codec="ac3",channel_coupling=0),
+        %video(codec="libx264",b="2600k",
+               "x264-params"="scenecut=0:open_gop=0:min-keyint=150:keyint=150",
+               preset="ultrafast"))
+```
+
+* **AC3 audio and H264 video encapsulated in a MPEG-TS stream using ffmpeg raw frames**
+```liquidsoap
+%ffmpeg(format="mpegts",
+        %audio.raw(codec="ac3",channel_coupling=0),
+        %video.raw(codec="libx264",b="2600k",
+                   "x264-params"="scenecut=0:open_gop=0:min-keyint=150:keyint=150",
+                   preset="ultrafast"))
+```
+
+* **Mp3 encoding using `libmp3lame` and video copy**
+```liquidsoap
+%ffmpeg(format="mp3",
+        %audio(codec="libmp3lame"),
+        %video.copy)
+```
+
+The full syntax is as follows:
+
+```liquidsoap
+%ffmpeg(format=<format>,
+        # Audio section
+        %audio(codec=<codec>,<option_name>=<option_value>,..),
+        # Or:
+        %audio.raw(codec=<codec>,<option_name>=<option_value>,..),
+        # Or:
+        %audio.copy,
+        # Video section
+        %video(codec=<codec>,<option_name>=<option_value>,..),
+        # Or:
+        %video.raw(codec=<codec>,<option_name>=<option_value>,..),
+        # Or:
+        %video.copy,
+        # Generic options
+        <option_name>=<option_value>,..)
+```
+Where:
+
+* `<format>` is either a string value (e.g. `"mpegts"`), as returned by the `ffmpeg -formats` command or `none`. When set to `none` or simply no specified, the encoder will try to auto-detect it.
+* `<codec>` is either a string value (e.g. `"libmp3lame"`), as returned by the `ffmpeg -codecs` command or `none`. When set to `none`, for audio, `channels` is set to `0` and, for either audio or video, the stream is assumed to have no such content.
+* `<option_name>` can be any syntactically valid variable name or string. Strings are typically used when the option name is of the form: `foo-bar`.
+* `%audio(..)` is for options specific to the audio codec. Unused options will raise an exception. Any option supported by `ffmpeg` can be passed here. Streams encoded using `%audio` are using liquidsoap internal frame format and are fully handled on the liquidsoap side.
+* `%audio.raw(..)` behaves like `%audio` except that the audio data is kept as ffmpeg's internal format. This can avoid data copy and is also the format required to use [ffmpeg filters](ffmpeg_filters.html)..
+* `%audio.copy` copies data without decoding or encoding it. This is great to avoid using the CPU but, in this case, the data cannot be processed through operators that modify it such as `fade.{in,out}` aor `smart_cross`. Also, all stream must agree on the same data format.
+* `%video(..)` is for options specific to the video codec. Unused options will raise an exception. Any option supported by `ffmpeg` can be passed here.
+* `%video.raw` and `%video.copy` have the same meaning as their `%audio` counterpart.
+
+* Generic options are passed to audio, video and format (container) setup. Unused options will raise an exception. Any option supported by `ffmpeg` can be passed here. 
+
+The `%ffmpeg` encoder is the prime encoder for HLS output as it is the only one of our collection of encoder which can produce Mpeg-ts muxed data, which is required by most HLS clients.
+
+Some encoding formats, for instance `mp4` require to rewing their stream and write a header after the fact, when encoding of the current track has finished. For historical reasons, such formats
+cannot be used with `output.file`. To remedy that, we have introduced the `output.url` operator. When using this operator, the encoder is fully in charge of the output file and can thus write headers
+after the fact. The `%ffmpeg` encoder is one such encoder that can be used with this operator.
+
+#### GStreamer
+
+The `%gstreamer` encoder can be used to encode streams using the `gstreamer` multimedia framework.
+This encoder extends liquidsoap with all available GStreamer formats which includes most, if not all,
+formats available to your operating system.
+
+The encoder's parameters are as follows:
+
+```liquidsoap
+%gstreamer(channels=2,
+           audio="lamemp3enc",
+           has_video=true,
+           video="x264enc",
+           muxer="mpegtsmux",
+           metadata="metadata",
+           log=5,
+           pipeline="")
+```
+
+Please refer to the [Gstreamer encoder](gstreamer_encoder.html) page for a detailed explanation
+of this encoder.
+
+#### External encoders
+
+For a detailed presentation of external encoders, see [this page](external_encoders.html).
+
+```liquidsoap
+%external(channels=2,samplerate=44100,header=true,
+          restart_on_crash=false,
+          restart_on_metadata,
+          restart_after_delay=30,
+          process="progname")
+```
+
+Only one of `restart_on_metadata` and `restart_after_delay` should
+be passed. The delay is specified in seconds.
+The encoding process is mandatory, and can also be passed directly
+as a string, without `process=`.
+
+
 
 TODO: encoding formats `%mp3`, `%wav`, main parameters (quality, numbers of
 channels, etc.)
 
 TODO: also explain that we can both pass encoded contents and decode it with
 `ffmpeg.decode` (see #1461).
-
-### HLS output
-
-TODO: multiple qualities, we can convert to mono with `mean`
-
-
-### File output
-
-The next output we are going to see is file output which, as you would expect,
-is performed by the operator `file.output`. It takes three arguments: the format
-(which describes the format in which we are going to encode the file and is
-detailed below), the name of the file, and the source we want to encode in the
-file. For instance, we can encode a source `s` in the mp3 file `out.mp3` with
-
-```{.liquidsoap include="liq/output.file.liq" from=2}
-```
-
-`on_stop` with `fallible=true` : shutdown when the encoding is over
-
-
-`output.file`, common encoding formats
-
-It is sometimes useful (or even legally necessary) to keep a backup of an audio
-stream. Storing all the stream in one file can be very impractical. In order to
-save a file per hour in wav format, the following script can be used:
-
-```
-# A source to dump
-# s = ...
-
-# Dump the stream
-file_name = '/archive/$(if $(title),"$(title)","Unknown archive")-%Y-%m-%d/%Y-%m-%d-%H_%M_%S.mp3'
-output.file(%mp3,filename,s)
-```
-
-This will save your source into a `mp3` file with name specified by `file_name`.
-In this example, we use [string interpolation](language.html) and time litterals to generate a different
-file name each time new metadata are coming from `s`.
-
-In the following variant we write a new mp3 file each time new metadata is coming from s:
-
-```
-file_name = '/archive/$(if $(title),"$(title)","Unknown archive")-%Y-%m-%d/%Y-%m-%d-%H_%M_%S.mp3'
-output.file(%mp3, filename, s, reopen_on_metadata=true)
-```
 
 ### Youtube
 
@@ -2824,6 +3380,8 @@ defer more fancy stuff to [the dedicated chapter](#chap:video).
 
 TODO: explain how to encode in mp3 and output both in a file and to Icecast
 without re-encoding
+
+TODO: multiple qualities, we can convert to mono with `mean`
 
 Testing and monitoring
 ----------------------
@@ -2898,7 +3456,13 @@ TODO: explain the variant where we store on a file regularly
 ```{.liquidsoap include="liq/metrics-file.liq" from=1}
 ```
 
-TODO: expose metrics with prometeus
+TODO: expose metrics with prometeus, see
+<https://github.com/mbugeia/srt2hls/blob/master/radio/live.liq>
+
+### BPM
+
+```{.liquidsoap include="liq/bpm.liq" from=1}
+```
 
 ### Testing scripts
 
@@ -2918,7 +3482,7 @@ Full example (already presented, we only want to show the first part here)...:
 ```{.liquidsoap include="liq/jingles-metadata.liq"}
 ```
 
-It can also be useful to skip with `thread.run`
+It can also be useful to skip with `thread.run` or `source.run`
 
 ```{.liquidsoap include="liq/jingles-metadata2.liq"}
 ```
@@ -3211,6 +3775,8 @@ TODO: maybe other interactions here : harbor / OSC
 
 ```{.liquidsoap include="liq/file.watch.liq"}
 ```
+
+TODO: `unwatch`
 
 ### Harbor
 
