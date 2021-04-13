@@ -5,6 +5,9 @@ LIQUIDSOAP = ./liquidsoap
 
 all: test
 
+youtube:
+	ffmpeg -re -stream_loop -1 -i video.mkv -i test.mp3 -vcodec libx264 -pix_fmt yuv420p -preset:v superfast -codec:a libmp3lame -b:a 160k -f flv rtmp://a.rtmp.youtube.com/live2/$(shell cat youtube-key)
+
 test: check test-wav
 
 test-wav: test.mp3

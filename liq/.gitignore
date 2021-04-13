@@ -1,7 +1,10 @@
+*.jpg
 *.mid
+*.mkv
 *.mp3
 *.mp4
 *.png
 *.wav
 *.params
 metrics.json
+youtube-key

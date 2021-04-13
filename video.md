@@ -34,9 +34,28 @@ explain how to display the volume and bpm of the currently playing song.
 Encoders
 --------
 
-### FFmpeg
+### FFmpeg {#sec:ffmpeg-video}
 
 TODO: explain the specificities of video
+
+* **AC3 audio and H264 video encapsulated in a MPEG-TS stream**
+```liquidsoap
+%ffmpeg(format="mpegts",
+        %audio(codec="ac3",channel_coupling=0),
+        %video(codec="libx264",b="2600k",
+               "x264-params"="scenecut=0:open_gop=0:min-keyint=150:keyint=150",
+               preset="ultrafast"))
+```
+
+* **AC3 audio and H264 video encapsulated in a MPEG-TS stream using ffmpeg raw frames**
+```liquidsoap
+%ffmpeg(format="mpegts",
+        %audio.raw(codec="ac3",channel_coupling=0),
+        %video.raw(codec="libx264",b="2600k",
+                   "x264-params"="scenecut=0:open_gop=0:min-keyint=150:keyint=150",
+                   preset="ultrafast"))
+```
+
 
 ### Ogg/theora
 

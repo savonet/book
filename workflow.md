@@ -630,7 +630,7 @@ precision is expected than with the above method. We do not detail it here,
 because it involves some configuration (in particular, a dedicated Jack server
 should be running) which is not specific to Liquidsoap.
 
-#### GStreamer input
+#### GStreamer input {#sec:gstreamer-input}
 
 Finally, another very general possibility for input is to use the
 `input.gstreamer.audio` operator in order to use the GStreamer\index{GStreamer}
@@ -2701,14 +2701,15 @@ Streaming our radio to the world is then as simple as this:
 
 The `output.icecast` operator takes as first argument the encoding format:
 `%mp3` means that we want to encode our stream in mp3. The encoding formats are
-detailed below, for instance `%mp3.abr(bitrate=160)` would specify encoding in
-mp3 with average bitrate of 160 kbps, or `%fdkaac(bitrate=64)` would specify
-encoding in aac format with bitrate of 64 kbps. Other arguments of
-`output.icecast` are: the host where Icecast is located, the port of the Icecast
-server (`8000` is the default port), the password to connect to the Icecast
-server, the mountpoint (this is the name of the radio for Icecast) and finally
-the source we want to encode (here, we suppose that our stream is named
-`radio`). We can then listen to the stream by connecting to the url
+detailed in [next section](#sec:encoders), for instance `%mp3.abr(bitrate=160)`
+would specify encoding in mp3 with average bitrate of 160 kbps, or
+`%fdkaac(bitrate=64)` would specify encoding in aac format with bitrate of
+64 kbps. Other arguments of `output.icecast` are: the host where Icecast is
+located, the port of the Icecast server (`8000` is the default port), the
+password to connect to the Icecast server, the mountpoint (this is the name of
+the radio for Icecast) and finally the source we want to encode (here, we
+suppose that our stream is named `radio`). We can then listen to the stream by
+connecting to the url
 
   `http://localhost:8000/my-radio.mp3`
 
@@ -2957,7 +2958,51 @@ The `on_stop` function is particularly useful when `fallible` is set to `true`:
 this allows calling a function when the source fails, see
 [there](#sec:offline-processing) for a concrete application.
 
-### Encoding formats
+### Youtube
+
+Another way to stream your radio to the world consists in using the usual video
+streaming platforms to deliver the contents. Let us illustrate this by sending
+our `radio` stream to Youtube (the setup for streaming to other platforms such
+as Twich or Facebook live should more or less be the same). This is done as
+follows:
+
+```{.liquidsoap include="liq/youtube-output.liq" from=2}
+```
+
+The first thing we need to do here is to generate a video stream. Fancy ways to
+achieve this are detailed in [this chapter](#chap:video). Here, we simply take
+an image `image.jpg`, generate a `video` stream from it and add it to the
+`radio` stream using the `mux_video` operator. Note that if you wanted to stream
+a video `video.mp4` instead of a static image, you could simply replace the
+second line by
+
+```liquidsoap
+video = single("video.mp4")
+```
+
+as expected. Now that our `radio` stream has both audio and video, we need to
+send it to Youtube. In order to do so, you first need to obtain the _stream key_
+from [Youtube studio](https://studio.youtube.com/): this is the secret key which
+will allow us to send our stream. Since we do not like to put secrets in
+Liquidsoap scripts, we suppose that it is stored in the file `youtube-key` and
+read it in the variable `ykey`: the function `file.contents` returns the
+contents of the file and the `string.trim` function removes extraneous spaces or
+newlines that you might have put around the key. Finally, we specify in `enc`
+the way we want to encode video. Here, we use the FFmpeg encoder `%ffmpeg` which
+is further described in [there](#sec:ffmpeg-encoder), and encode the video in
+H.264 using the `libx264` encoder and the audio in mp3 using the `libmp3lame`
+encoder. These settings should get you started on most setups, however they
+require fine-tuning in order to improve quality, following explanations of
+[there](#sec:encoders) and [there](#chap:video). In particular, the video
+bitrate given by `b="300k"` is very low in order to make sure that it will be
+working on any internet connection: if you have a fast one we suggest that you
+increase this to something like `2000k` in order to have decent video
+quality. Finally, we store in `url` the address where we should stream (for
+Youtube, this is `rtmp://a.rtmp.youtube.com/live2/` followed by the key) and use
+the `output.url` operator to send our stream `radio` encoded with the encoder
+`enc` to the url.
+
+## Encoding formats {#sec:encoders}
 
 The encoding formats are specified by expressions of the form `%encoder` or
 `%encoder(parameters...)` if we need to specify parameters. For instance, the
@@ -2969,7 +3014,7 @@ use this for an harbor output, we will write
 ```{.liquidsoap include="liq/output.harbor4.liq" from=2}
 ```
 
-#### MP3
+### MP3
 
 The mp3 format is perhaps the most widespread and well-supported compressed
 audio format. It provides reasonable quality and reasonable compression, so that
@@ -3030,7 +3075,7 @@ The parameters for `%mp3.fxp` are
 - `samplerate`: the desired samplerate (typically 44100),
 - `bitrate`: the desired bitrate (in kbps, typically 128).
 
-For instance, contstant `128` kbps bitrate encoding is achieved with
+For instance, constant 128 kbps bitrate encoding is achieved with
 
 ```{.liquidsoap include="liq/encoder-mp3-1.liq" from=2 to=-1}
 ```
@@ -3057,7 +3102,7 @@ Fixed-point encoding in stereo at 44100 Hz at 128 kbps is
 ```{.liquidsoap include="liq/encoder-mp3-4.liq" from=2 to=-1}
 ```
 
-#### Wav
+### Wav
 
 Wav is a non-compressed format: this means that you do not loose anything, but
 it takes quite some space to store audio. Not recommended for streaming. The
@@ -3083,7 +3128,7 @@ first, by default its length is set to the maximun possible value. If you know
 the expected duration of the encoded data and you actually care about the wav
 length header then you should use the `duration` parameter.
 
-#### Ogg
+### Ogg
 
 Liquidsoap has native support for ogg which is a _container_: it is a file
 format which can contain multiple streams (typically, audio and/or video). The
@@ -3122,21 +3167,43 @@ to be less and less the case.
 
 The encoder is named `%opus` and its parameters are
 
+- `samplerate`: samples per second (must be one of `8000`, `12000`, `16000`,
+  `24000` or `48000`, default is 48000),
+- `channels`: number of audio channels (must be `1` or `2`, default is 2, you
+  can also write `mono` or `stereo` instead of `channels=1` or `channels=2`
+  respectively),
 - `vbr` specifies whether we want variable bitrate or not: it can either be
-  `"none"` (for constant bitrate), `"constrained"` (to achieve a) or `"unconstrained"`
-- `application`: One of `"audio"`, `"voip"` or `"restricted_lowdelay"`
-- `complexity`: Integer value between `0` and `10`.
-- `max_bandwidth`: One of `"narrow_band"`, `"medium_band"`, `"wide_band"`, `"super_wide_band"` or `"full_band"`
-- `samplerate`: input samplerate. Must be one of: `8000`, `12000`, `16000`, `24000` or `48000`
-- `frame_size`: encoding frame size, in milliseconds. Must be one of: `2.5`, `5.`, `10.`, `20.`, `40.` or `60.`. 
-- `bitrate`: encoding bitrate, in `kbps`. Must be a value between `5` and `512`. You can also set it to `"auto"`.
-- `channels`: currently, only `1` or `2` channels are allowed (`mono`, `stereo`: equivalent to `channels=1` and `channels=2`)
-- `signal`: one of `"voice"` or `"music"`
-- `dtx`: boolean
-- `phase_inversion`: boolean
+  `"none"` (for constant bitrate), `"constrained"` (for variable bitrate with
+  constraints such as average target bitrate) or `"unconstrained"` (for
+  unconstrained variable bitrate, which is the default),
+- `bitrate`: encoding bitrate, in kilobits per second (between 5 and 512, can
+  also be `"auto"` to leave the decision to the encoder which is the default),
+- `signal`: can either be `"music"` or `"voice"` to specify the kind of input
+  (this will influence the parameters of the encoder, by default the encoder
+  regularly automatically determines the kind of input),
+- `complexity`: the computational complexity between 0 (fastest encoding, lowest
+  quality) and 10 (slowest encoding, highest quality, which is the default),
+- `frame_size`: encoding frame size, in milliseconds (must be one of `2.5`,
+  `5.`, `10.`, `20.`, `40.` or `60.`), smallest frame sizes lower latency but
+  degrade quality, default is 20,
+- `application` specifies the target application: `"audio"` (the encoder
+  determines it automatically, the default), `"voip"` (transmit voice over the
+  internet) or `"restricted_lowdelay"` (lower the encoding delay down to 5 ms),
+- `max_bandwidth` specifies the bandwidth of the sound to encode: can be
+  `"narrow_band"` (for 3--4000 Hz), `"medium_band"` (for 3--6000 Hz),
+  `"wide_band"` (for 3--8000 Hz), `"super_wide_band"` (for 3--12000 Hz) or
+  `"full_band"` (for 3--20000 Hz), this is automatically detected by default,
+- `dtx`: when set to `true`, the bitrate is reduced during silence or background
+  noise,
+- `phase_inversion`: when set to `false`, disables the use of phase inversion
+  for intensity stereo, improving the quality of mono downmixes, but slightly
+  reducing normal stereo quality.
 
-Please refer to the [Opus documentation](http://www.opus-codec.org/docs/) for
-information about their meanings and values.
+More information about the parameters can be found in the [opus
+documentation](http://www.opus-codec.org/docs/). A typical encoder would be
+
+```{.liquidsoap include="liq/encoder-opus.liq" from=2 to=-1}
+```
 
 #### Ogg/vorbis
 
@@ -3171,178 +3238,258 @@ The parameters specific to `%vorbis.cbr` are
 
 For instance, a variable bitrate encoding can be achieved with
 
-```liquidsoap
-%vorbis(samplerate=44100, channels=2, quality=0.3)
+```{.liquidsoap include="liq/encoder-vorbis-vbr.liq" from=2 to=-1}
 ```
 
 an average bitrate encoding with
 
-```liquidsoap
-%vorbis.abr(samplerate=44100, channels=2, bitrate=128,
-            min_bitrate=64, max_bitrate=192)
+```{.liquidsoap include="liq/encoder-vorbis-abr.liq" from=2 to=-1}
 ```
 
 and a constant bitrate encoding with
 
-```liquidsoap
-%vorbis.cbr(samplerate=44100, channels=2, bitrate=128)
+```{.liquidsoap include="liq/encoder-vorbis-cbr.liq" from=2 to=-1}
 ```
 
 #### Ogg/speex
 
-The speex codec is dedicated
+The speex codec is dedicated to encoding at low bitrates, targeting applications
+such as the transmission of voice over the internet, where having uninterrupted
+transmission of the stream, with low latency, is considered more important than
+having high-quality sound. It is now considered as superseded by the opus codec.
 
-```liquidsoap
-%speex(stereo=false, samplerate=44100, quality=7,
-       mode=wideband, # One of: wideband|narrowband|ultra-wideband
-       frames_per_packet=1,
-       complexity=5)
-```
+The encoder is named `%speex` and its parameters are
 
-You can also control quality using `abr=x` or `vbr=y`.
+- `samplerate`: the number of samples per second,
+- `mono` / `stereo`: set the number of channels to 1 or 2,
+- `abr`: encode with specified average bitrate
+- `quality`: use quality based encoding with specific value between 0 (lowest
+  quality) and 10 (highest quality), default being 7,
+- `vbr`: encode with variable bitrate,
+- `mode` sets the bandwidth of the signal: either `"narrowband"` (8 kHz,
+  default), `"wideband"` (16 kHz) or `"ultra-wideband"` (32 kHz),
+- `complexity`: the computational complexity between 1 (fastest encoding, lowest
+  quality) and 10 (slowest encoding, highest quality),
+- `vad`: when set to `true` detects whether the audio being encoded is speech or
+  silence/background noise,
+- `dtx`: when set to `true` further reduce the bitrate during silence.
 
-#### Ogg/Flac
+#### Ogg/flac
+
+The last audio codec supported in the ogg container is flac. Contrary to other
+codecs, it is a _lossless_ one, which means that after decoding you get the
+exact same signal you encoded, but the signal still takes less space than raw
+data, as found for instance in the wav format. By opposition, most other codecs
+are lossy: they deliberately forget about some parts of the signal in order to
+achieve higher compression rates.
 
 The flac encoding format comes in two flavors:
 
-* `%flac` is the native flac format, useful for file output but not for streaming purpose
-* `%ogg(%flac,...)` is the ogg/flac format, which can be used to broadcast data with icecast
+- `%flac` is the native flac format, useful for file output but not for
+  streaming purpose,
+- `%ogg(%flac)` is the ogg/flac format, which can be used to broadcast data with
+  icecast.
+  
+Note that contrarily to most other codecs, the two are not exactly the same.
 
-The parameters are:
+The parameters are
 
-```liquidsoap
-%flac(samplerate=44100, 
-      channels=2, 
-      compression=5, 
-      bits_per_sample=16)
+- `channels`: the number of audio channels (2 by default, `mono` and `stereo`
+  can also be used instead of `channels=1` and `channels=2`),
+- `samplerate`: the number of samples per second (44100 by default),
+- `bits_per_sample`: the number of bits per sample, must be one of 8, 16, 24 or
+  32, the default being 16,
+- `compression`: the compression level between 0 (faster compression time, lower
+  compression rates)) and 8 (slower compression time, higher compression rate),
+  default being 5.
+  
+For instance,
+  
+```{.liquidsoap include="liq/encoder-flac.liq" from=2 to=-1}
 ```
 
 `compression` ranges from 0 to 8 and `bits_per_sample` should be one of: `8`, `16`, `24` or `32`.
 Please note that `32` bits per sample is currently not supported by the underlying `libflac`.
 
-#### FDK-AAC
+### AAC
 
-This encoder can do both AAC and AAC+.
+The AAC codec (AAC stands for _Advanced Audio Coding_) was designed to be a
+better replacement for MP3: it achieves better quality at the same bitrates and
+can decently encode the stream it low bitrates. Unlike opus, it main competitor,
+patent license is required for distributing an AAC codec.
 
-Its syntax is:
-```liquidsoap
-%fdkaac(channels=2, samplerate=44100, bandwidth="auto", bitrate=64, afterburner=false, aot="mpeg2_he_aac_v2", transmux="adts", sbr_mode=false)
-```
-Where `aot` is one of: `"mpeg4_aac_lc"`, `"mpeg4_he_aac"`, `"mpeg4_he_aac_v2"`,
-`"mpeg4_aac_ld"`, `"mpeg4_aac_eld"`, `"mpeg2_aac_lc"`, `"mpeg2_he_aac"` or
-`"mpeg2_he_aac_v2"`
+The encoder is called `%fdkaac` and its parameters are
 
-`bandwidth` is one of: `"auto"`, any supported integer value.
+- `channels`: the number of audio channels (2 by default),
+- `samplerate`: the number of samples per second,
+- `bitrate`: encode at given constant bitrate
+- `vbr`: encode in variable bitrate with given quality between 1 (lowest bitrate
+  and quality) to 5 (highest bitrate and quality),
+- `aot` specifies the _audio object type_ (the kind of encoding for AAC data,
+  which has influence on quality and delay): it can either be `"mpeg4_aac_lc"`,
+  `"mpeg4_he_aac"`, `"mpeg4_he_aac_v2"` (the default), `"mpeg4_aac_ld"`,
+  `"mpeg4_aac_eld"`, `"mpeg2_aac_lc"`, `"mpeg2_he_aac"` or `"mpeg2_he_aac_v2"`,
+- `bandwidth`: encode with fixed given bandwidth (default is `"auto"`, which
+  means that the encoder is free to determine the best one),
+- `transmux` sets the transport format: should be one of `"raw"`, `"adif"`,
+  `"adts"` (the default), `"latm"`, `"latm_out_of_band"` or `"loas"`,
+- `afterburner`: when set to `true` use _afterburner_ which should increase
+  quality, but also encoding time,
+- `sbr_mode`: when set to `true`, use _spectral band replication_, which should
+  enhance audio quality at low bitrates.
 
-`transmux` is one of: `"raw"`, `"adif"`, `"adts"`, `"latm"`, `"latm_out_of_band"` or `"loas"`.
+More information about the parameters can be found in the [hydrogenaudio
+knowledge
+base](http://wiki.hydrogenaud.io/index.php?title=Fraunhofer_FDK_AAC). For
+instance,
 
-Bitrate can be either constant by passing: `bitrate=64` or variable: `vbr=<1-5>`
-
-You can consult the [Hydrogenaudio knowledge base](http://wiki.hydrogenaud.io/index.php?title=Fraunhofer_FDK_AAC) for more details
-on configuration values and meanings.
-
-#### FFmpeg
-
-The `%ffmpeg` encoder is the latest addition to our collection. You need to have [ffmpeg-av, ffmpeg-avfilter, ffmpeg-swscale and ffmpeg-swresample](https://github.com/savonet/ocaml-ffmpeg) installed and up-to date to enable the encoder during liquidsoap's build.
-
-The encoder should support all the options for `ffmpeg`'s [muxers](https://ffmpeg.org/ffmpeg-formats.html#Muxers) and [encoders](https://www.ffmpeg.org/ffmpeg-codecs.html), including private configuration options. Configuration value are passed as key/values, with values being of types: `string`, `int`, or `float`. If an option is not recognized (or: unused), it will raise an error during the instantiation of the encoder. Here are some configuration examples:
-
-* **AAC encoding at `22050kHz` using `fdk-aac` encoder and `mpegts` muxer**
-```liquidsoap
-%ffmpeg(format="mpegts",
-        %audio(codec="libfdk_aac",samplerate=22050,b="32k",
-               afterburner=1,profile="aac_he_v2"))
-```
-
-* **Mp3 encoding using `libshine` at `48000kHz`**
-```liquidsoap
-%ffmpeg(format="mp3",%audio(codec="libshine",samplerate=48000))
+```{.liquidsoap include="liq/encoder-fdkaac.liq" from=2 to=-1}
 ```
 
-* **AC3 audio and H264 video encapsulated in a MPEG-TS stream**
-```liquidsoap
-%ffmpeg(format="mpegts",
-        %audio(codec="ac3",channel_coupling=0),
-        %video(codec="libx264",b="2600k",
-               "x264-params"="scenecut=0:open_gop=0:min-keyint=150:keyint=150",
-               preset="ultrafast"))
+### GStreamer
+
+The `%gstreamer` encoder can be used to encode streams using the GStreamer
+multimedia framework, which handles many formats, and can provide effects and
+more on the stream. It is quite useful, although it is considered as less mature
+than the FFmpeg encoder, which fulfills similar purposes, and is presented next.
+
+The parameters of the `%gstreamer` encoder are
+
+- `channels`: the number of audio channels (2 by default),
+- `log`: the log level of GStreamer between 0 (no message) and 9 (very very
+  verbose), default is 5.
+
+In GStreamer, the _pipelines_ describe sequences of GStreamer operators to be
+applied, separated by `!`, see also [there](#sec:gstreamer-input). Those are
+specified by three further parameters of the encoder:
+
+- `audio`: the audio pipeline (default is `"lamemp3enc"`),
+- `video`: the video pipeline (default is `"x264enc"`),
+- `muxer`: the muxer which takes care of encapsulating both audio and video
+  streams (default is `"mpegtsmux"`).
+
+If the `audio` pipeline is not empty then `channels` audio channels are
+expected, and if the `video` pipeline is not empty then one video channel is
+expected.
+
+For instance, we can encode a source in mp3 with
+
+```{.liquidsoap include="liq/encoder-gstreamer-1.liq" from=2 to=-1}
 ```
 
-* **AC3 audio and H264 video encapsulated in a MPEG-TS stream using ffmpeg raw frames**
-```liquidsoap
-%ffmpeg(format="mpegts",
-        %audio.raw(codec="ac3",channel_coupling=0),
-        %video.raw(codec="libx264",b="2600k",
-                   "x264-params"="scenecut=0:open_gop=0:min-keyint=150:keyint=150",
-                   preset="ultrafast"))
+The metadata of the encoded is passed to the pipeline element named `"metadata"`
+(the name can be changed with the `metadata` parameter of `%gstreamer`) using
+the "tag setter" API. We can thus encode our stream in mp3 with tags using
+
+```{.liquidsoap include="liq/encoder-gstreamer-2.liq" from=2 to=-1}
 ```
 
-* **Mp3 encoding using `libmp3lame` and video copy**
-```liquidsoap
-%ffmpeg(format="mp3",
-        %audio(codec="libmp3lame"),
-        %video.copy)
+or in vorbis with tags using
+
+```{.liquidsoap include="liq/encoder-gstreamer-3.liq" from=2 to=-1}
 ```
 
-The full syntax is as follows:
+Encoding a video in H.264 with mp3 audio encapsulated in MPEG transport stream
+is performed with
 
-```liquidsoap
-%ffmpeg(format=<format>,
-        # Audio section
-        %audio(codec=<codec>,<option_name>=<option_value>,..),
-        # Or:
-        %audio.raw(codec=<codec>,<option_name>=<option_value>,..),
-        # Or:
-        %audio.copy,
-        # Video section
-        %video(codec=<codec>,<option_name>=<option_value>,..),
-        # Or:
-        %video.raw(codec=<codec>,<option_name>=<option_value>,..),
-        # Or:
-        %video.copy,
-        # Generic options
-        <option_name>=<option_value>,..)
-```
-Where:
-
-* `<format>` is either a string value (e.g. `"mpegts"`), as returned by the `ffmpeg -formats` command or `none`. When set to `none` or simply no specified, the encoder will try to auto-detect it.
-* `<codec>` is either a string value (e.g. `"libmp3lame"`), as returned by the `ffmpeg -codecs` command or `none`. When set to `none`, for audio, `channels` is set to `0` and, for either audio or video, the stream is assumed to have no such content.
-* `<option_name>` can be any syntactically valid variable name or string. Strings are typically used when the option name is of the form: `foo-bar`.
-* `%audio(..)` is for options specific to the audio codec. Unused options will raise an exception. Any option supported by `ffmpeg` can be passed here. Streams encoded using `%audio` are using liquidsoap internal frame format and are fully handled on the liquidsoap side.
-* `%audio.raw(..)` behaves like `%audio` except that the audio data is kept as ffmpeg's internal format. This can avoid data copy and is also the format required to use [ffmpeg filters](ffmpeg_filters.html)..
-* `%audio.copy` copies data without decoding or encoding it. This is great to avoid using the CPU but, in this case, the data cannot be processed through operators that modify it such as `fade.{in,out}` aor `smart_cross`. Also, all stream must agree on the same data format.
-* `%video(..)` is for options specific to the video codec. Unused options will raise an exception. Any option supported by `ffmpeg` can be passed here.
-* `%video.raw` and `%video.copy` have the same meaning as their `%audio` counterpart.
-
-* Generic options are passed to audio, video and format (container) setup. Unused options will raise an exception. Any option supported by `ffmpeg` can be passed here. 
-
-The `%ffmpeg` encoder is the prime encoder for HLS output as it is the only one of our collection of encoder which can produce Mpeg-ts muxed data, which is required by most HLS clients.
-
-Some encoding formats, for instance `mp4` require to rewing their stream and write a header after the fact, when encoding of the current track has finished. For historical reasons, such formats
-cannot be used with `output.file`. To remedy that, we have introduced the `output.url` operator. When using this operator, the encoder is fully in charge of the output file and can thus write headers
-after the fact. The `%ffmpeg` encoder is one such encoder that can be used with this operator.
-
-#### GStreamer
-
-The `%gstreamer` encoder can be used to encode streams using the `gstreamer` multimedia framework.
-This encoder extends liquidsoap with all available GStreamer formats which includes most, if not all,
-formats available to your operating system.
-
-The encoder's parameters are as follows:
-
-```liquidsoap
-%gstreamer(channels=2,
-           audio="lamemp3enc",
-           has_video=true,
-           video="x264enc",
-           muxer="mpegtsmux",
-           metadata="metadata",
-           log=5,
-           pipeline="")
+```{.liquidsoap include="liq/encoder-gstreamer-4.liq" from=2 to=-1}
 ```
 
-Please refer to the [Gstreamer encoder](gstreamer_encoder.html) page for a detailed explanation
-of this encoder.
+and in ogg/vorbis+theora with
+
+```{.liquidsoap include="liq/encoder-gstreamer-5.liq" from=2 to=-1}
+```
+
+The `audio`, `video` and `muxer` are combined internally to form one GStreamer
+pipeline which will handle the whole encoding. For instance, with previous
+example, the generated pipeline is indicated with the following debug message:
+
+```
+[encoder.gstreamer:5] Gstreamer encoder pipeline: appsrc name="audio_src" block=true caps="audio/x-raw, format=S16LE, layout=interleaved, channels=2, rate=44100" format=time max-bytes=40960 ! queue ! audioconvert ! audioresample ! vorbisenc ! muxer. appsrc name="video_src" block=true caps="video/x-raw, format=I420, width=1280, height=720, framerate=25/1, pixel-aspect-ratio=1/1" format=time blocksize=3686400 max-bytes=40960 ! queue ! videoconvert ! videoscale add-borders=true ! videorate ! theoraenc ! muxer. oggmux name=muxer ! appsink name=sink sync=false emit-signals=true
+```
+
+For advanced users, the `pipeline` argument can be used to directly specify the
+whole pipeline. In this case, the parameter `has_video` is used to determine
+whether the stream has video or not (video is assumed by default). For instance,
+mp3 encoding can also be performed with
+
+```{.liquidsoap include="liq/encoder-gstreamer-pipeline.liq" from=2 to=-1}
+```
+
+Beware that, when using the `%gstreamer` encoder, one must think of it as an
+encoder for an infinite stream. This means that not all containers (and muxers)
+will work. For instance, the AVI and MP4 containers need to write in their
+header some information that is only known with finite streams, such as the
+total time of the stream. These containers are usually not suitable for
+streaming, which is the main purpose of Liquidsoap.
+
+### FFmpeg {#sec:ffmpeg-encoder}
+
+The `%ffmpeg` encoder is a "meta-encoder": it uses the versatile FFmpeg library
+in order to encode in various formats, including the ones presented above, but
+also many more. The general syntax is
+
+```liquidsoap
+%ffmpeg(format="<format>", ...)
+```
+
+where `<format>` is the container type and `...` is the list of streams we want
+to encode. All [FFmpeg muxers](https://ffmpeg.org/ffmpeg-formats.html#Muxers)
+should be supported as formats, the full list can also be obtained by running
+`ffmpeg -formats`. The special value `none` is also supported as format, in
+which case the encoder will try to find the best possible one.
+
+Each stream can either be
+
+- `%audio`: for encoding native audio (this is the one you want to generally
+  use),
+- `%audio.raw`: for encoding raw audio,
+- `%audio.copy`: for transmitting encoded audio (see below),
+- `%video` / `%video.raw` / `%video.copy`: similar but for video (see [later
+  on](#sec:ffmpeg-video)).
+
+The `%audio` and `%audio.raw` streams all take as parameters
+
+- `codec`: the name of the codec to encode the stream (all [FFmpeg
+  codecs](https://www.ffmpeg.org/ffmpeg-codecs.html) should be supported here,
+  you can run the command `ffmpeg -codecs` to have a full list),
+- `channels`: the number of audio channels,
+- `samplerate`: the number of samples per second,
+
+as well as parameters specific to the codec (any option supported by FFmpeg can
+be passed here). If an option is not recognized, it will raise an error during
+the instantiation of the encoder.
+
+For instance, AAC encoding using mpegts muxer and and fdk-aac encoder, at
+22050 Hz,
+
+```{.liquidsoap include="liq/encoder-ffmpeg-fdkaac.liq" from=2 to=-1}
+```
+
+we can encode mp3 at constant bitrate of 160 kbps with
+
+```{.liquidsoap include="liq/encoder-ffmpeg-mp3.liq" from=2 to=-1}
+```
+
+we can encode mp3 in variable bitrate quality 4 with
+
+```{.liquidsoap include="liq/encoder-ffmpeg-mp3-2.liq" from=2 to=-1}
+```
+
+Some encoding formats, such as mp4,\TODO{peut-on avoir une liste ? est-ce que
+c'est le cas pour wav ?} require rewinding their stream and write a header after
+the encoding of the current track is over. For historical reasons, such formats
+cannot be used with `output.file`. To remedy that, we have introduced the
+`output.url` operator. When using this operator, the encoder is fully in charge
+of the output file and can thus write headers after the encoding. The `%ffmpeg`
+encoder is one such encoder that can be used with this operator.
+
+#### Encode once, output multiple times
+
+TODO: explain how to encode in mp3 and output both in a file and to Icecast
+without re-encoding
+
+TODO: multiple qualities, we can convert to mono with `mean`
 
 #### External encoders
 
@@ -3362,26 +3509,8 @@ The encoding process is mandatory, and can also be passed directly
 as a string, without `process=`.
 
 
-
-TODO: encoding formats `%mp3`, `%wav`, main parameters (quality, numbers of
-channels, etc.)
-
 TODO: also explain that we can both pass encoded contents and decode it with
 `ffmpeg.decode` (see #1461).
-
-### Youtube
-
-TODO: example of Youtube output, we should work out native ffmpeg youtube output
-
-actually we should only give a simple example here (say a static image) and
-defer more fancy stuff to [the dedicated chapter](#chap:video).
-
-### Encode once, output multiple times
-
-TODO: explain how to encode in mp3 and output both in a file and to Icecast
-without re-encoding
-
-TODO: multiple qualities, we can convert to mono with `mean`
 
 Testing and monitoring
 ----------------------
