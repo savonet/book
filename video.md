@@ -73,7 +73,9 @@ You can also pass `bitrate=x` explicitly instead of a quality.
 The default dimensions are liquidsoap's default,
 from the settings `frame.video.height/width`.
 
+### AVI
 
+TODO
 
 Streaming to youtube
 --------------------

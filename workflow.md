@@ -3441,7 +3441,7 @@ which case the encoder will try to find the best possible one.
 
 Each stream can either be
 
-- `%audio`: for encoding native audio (this is the one you want to generally
+- `%audio`: for encoding native audio (this is the one you generally want to
   use),
 - `%audio.raw`: for encoding raw audio,
 - `%audio.copy`: for transmitting encoded audio (see below),
@@ -3471,7 +3471,7 @@ we can encode mp3 at constant bitrate of 160 kbps with
 ```{.liquidsoap include="liq/encoder-ffmpeg-mp3.liq" from=2 to=-1}
 ```
 
-we can encode mp3 in variable bitrate quality 4 with
+we can encode mp3 in variable bitrate quality 4 with\TODO{change "global quality" to "q" if \#1567 gets merged}
 
 ```{.liquidsoap include="liq/encoder-ffmpeg-mp3-2.liq" from=2 to=-1}
 ```
@@ -3486,31 +3486,106 @@ encoder is one such encoder that can be used with this operator.
 
 #### Encode once, output multiple times
 
-TODO: explain how to encode in mp3 and output both in a file and to Icecast
-without re-encoding
+It often happens that we have the same source, encoded in the same format, by
+multiple outputs. For instance, in the following script, we have a `radio`
+source that we want to encode in mp3 and output in icecast, in HLS and in a
+file:
 
-TODO: multiple qualities, we can convert to mono with `mean`
-
-#### External encoders
-
-For a detailed presentation of external encoders, see [this page](external_encoders.html).
-
-```liquidsoap
-%external(channels=2,samplerate=44100,header=true,
-          restart_on_crash=false,
-          restart_on_metadata,
-          restart_after_delay=30,
-          process="progname")
+```{.liquidsoap include="liq/multiple-encoders.liq" from=2}
 ```
 
-Only one of `restart_on_metadata` and `restart_after_delay` should
-be passed. The delay is specified in seconds.
-The encoding process is mandatory, and can also be passed directly
-as a string, without `process=`.
+Because there are three outputs with `%mp3` format, Liquidsoap will encode the
+stream three times in the same format, which is useless and can be costly if you
+have many streams or video streams. We would thus like to encode in mp3 once,
+and send the result to icecast, HLS and the file. The `%mp3` encoder does not
+support this, but fortunately the FFmpeg encoder does. Recall that we can encode
+in mp3 using this encoder as follows:
 
+```{.liquidsoap include="liq/multiple-encoders2.liq" from=2}
+```
+
+For now, we have not gained much: we are still encoding three times, using
+`%ffmpeg` instead of `%mp3`. We can then improve things by splitting the
+encoding in two parts:
+
+- firstly, we are going to use `ffmpeg.encode.audio` with
+  ```
+  %ffmpeg(%audio(codec="libmp3lame"))
+  ```
+  in order to have our `radio` source stream mp3 instead of streaming audio in
+  Liquidsoap's internal format,
+- secondly, we are going to use for the outputs the encoder
+  ```
+  %ffmpeg(format="mp3", %audio.copy)
+  ```
+  where `%audio.copy` means that the encoder should simply pass on the audio
+  data (which is already encoded in mp3 by the preceding point) instead of
+  trying to encode by itself.
+
+Concretely, the following script will encode the `radio` source once in mp3, and
+then broadcast it using icecast, HLS and file outputs.
+
+```{.liquidsoap include="liq/multiple-encoders3.liq" from=2}
+```
+
+Note that this change forces us to make minor modifications to our script. For
+technical reasons, the output of `ffmpeg.encode.audio` is always fallible. We
+thus have to pass the argument `fallible=true` to all outputs in order to have
+them accept this. Also, the `output.icecast` output cannot determine the MIME
+type from the encoder anymore, we thus have to specify it by hand with
+`format="audio/mpeg"`.
+
+We shall mention here that the variants `ffmpeg.encode.video` and
+`ffmpeg.encode.audio_video` of the `ffmpeg.encode.audio` function are also
+available to encode video sources or sources with both audio and video. Also,
+the functions `ffmpeg.decode.audio`, `ffmpeg.decode.video`,
+`ffmpeg.decode.audio_video` are available to decode sources with encoded
+data. This means that the script\TODO{make sure that \#1573 gets this example
+fixed}
+
+```{.liquidsoap include="liq/ffmpeg.encode-decode.liq" from=2}
+```
+
+will play the source `s`, after encoding it in mp3 and decoding it back to
+Liquidsoap's internal format for sources.
 
 TODO: also explain that we can both pass encoded contents and decode it with
 `ffmpeg.decode` (see #1461).
+
+### External encoders
+
+Although the `%ffmpeg` encoder does almost everything one could dream of, it is
+sometimes desirable to use an external program in order to encode our audio
+streams. In order to achieve this, the `%external` encoder can be used: with it,
+an external program will be executed and given the audio data on the standard
+input (as interleaved little-endian 16 bit samples), while we expect to read the
+encoded data on the standard output of the program.
+
+The parameters of the `%external` encoder are
+- `process`: the name of the program to execute,
+- `channels`: the number of audio channels (2 by default),
+- `samplerate`: the number of samples per seconds (44100 by default),
+- `header`: whether a wav header should be added to the audio data (true by
+  default),
+- `restart_on_metadata` or `restart_after_delay`: restart the encoding process
+  on each new metadata or after some time (in seconds),
+- `restart_on_crash`: whether to restart the encoding process if it crashed
+  (this is useful when the external process fails to encode properly data after
+  some time).
+
+For instance, we can encode in mp3 format using the `lame` binary with the
+encoder
+
+```{.liquidsoap include="liq/encoder-external.liq" from=2 to=-1}
+```
+
+Videos can also be encoded by programs able to read files in avi format from
+standard input. To use it, the flag `video=true` should be passed to
+`%external`. For instance, a compressed avi file can be generated with the
+`ffmpeg` binary with
+
+```{.liquidsoap include="liq/encoder-external2.liq" from=2 to=-1}
+```
 
 Testing and monitoring
 ----------------------
