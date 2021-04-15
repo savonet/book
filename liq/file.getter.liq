@@ -1,4 +1,4 @@
 #!./liquidsoap
-f = getter.file("playlist")
+f = file.getter("playlist")
 print(f())
 output.dummy(blank())

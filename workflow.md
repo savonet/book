@@ -621,13 +621,13 @@ The argument `cmd` is the program which is going to be executed: here, we use
 'sine=frequency=440'`) in stereo (`-ac 2`), encode it in wav (`-f wav`) or raw
 format (`-f s16le`), and output it on the standard output (`-`).
 
-#### Jack input
+#### JACK input
 
 If the other program has support for it, it is possible to use
-Jack\index{Jack} with the `input.jack` operator. This library is dedicated to
+JACK\index{JACK} with the `input.jack` operator. This library is dedicated to
 the communication of audio data between programs and greater stability and
 precision is expected than with the above method. We do not detail it here,
-because it involves some configuration (in particular, a dedicated Jack server
+because it involves some configuration (in particular, a dedicated JACK server
 should be running) which is not specific to Liquidsoap.
 
 #### GStreamer input {#sec:gstreamer-input}
@@ -2624,6 +2624,14 @@ corresponding controller updates its value. For instance, the script
 listens on the port 9000 for OSC events and changes the value of the interactive
 variable `a` when a new float value is sent at the OSC address `/volume`.
 
+#### Low-level OSC
+
+\TODO{fill me in!}
+
+It is also
+
+`osc.float` / `osc.on_float` / `osc.send_float`
+
 #### Comparing dry an wet
 
 In order to test the pertinence of an effect, it is often useful to compare the
@@ -3308,9 +3316,6 @@ For instance,
 ```{.liquidsoap include="liq/encoder-flac.liq" from=2 to=-1}
 ```
 
-`compression` ranges from 0 to 8 and `bits_per_sample` should be one of: `8`, `16`, `24` or `32`.
-Please note that `32` bits per sample is currently not supported by the underlying `libflac`.
-
 ### AAC
 
 The AAC codec (AAC stands for _Advanced Audio Coding_) was designed to be a
@@ -3484,12 +3489,108 @@ cannot be used with `output.file`. To remedy that, we have introduced the
 of the output file and can thus write headers after the encoding. The `%ffmpeg`
 encoder is one such encoder that can be used with this operator.
 
+### Encoded streams
+
+By default, all the sources manipulate audio (or video) in Liquidsoap's internal
+format, which is raw data: for audio, it consists in sequences of samples (which
+are floats between -1 and 1). This is adapted to the manipulations of streams we
+want to make, such as applying effects or switching between sources. Once we
+have properly generated the stream, the outputs use encoders to convert this to
+compressed formats (such as mp3) which take less space. We detail here a unique
+feature of the FFmpeg encoder: the ability to directly manipulate encoded data
+(such as audio encoded in mp3 format) within Liquidsoap, thus avoiding useless
+decoding and re-encoding of streams in some situations. Note that most
+operations (even changing the volume for instance) are not available on encoded
+sources, but this is still quite useful in many situations.
+
+Remember that we can encode audio in mp3 format using FFmpeg with the encoder
+
+```liquidsoap
+%ffmpeg(format="mp3", %audio(codec="libmp3lame))
+```
+
+This says that we want to generate generate a file in the mp3 format, and that
+we should put in audio which is encoded in mp3 with the `libmp3lame`
+library. Now, if we change this to
+
+```liquidsoap
+%ffmpeg(format="mp3", %audio.copy)
+```
+
+this says that we want to generate a file in the mp3 format, and that we should
+put in directly the stream we receive, which is supposed to be already
+encoded. The name `%audio.copy` thus means here that we are going to copy audio
+data, without trying to understand what is in there or manipulate it in any way.
+
+#### Streaming without re-encoding
+
+As a first example, consider the following very simple radio setup:
+
+```{.liquidsoap include="liq/no-decoding1.liq" from=1 to=-1}
+```
+
+Our radio consists of a playlist, that we stream using Icecast in mp3. When
+executing the script, Liquidsoap will decode the files of the playlist in its
+internal format and then encode them in mp3 before sending them to Icecast.
+However, if our files are already in mp3 we are doing useless work here: we are
+decoding mp3 files and then encoding them in mp3 again to broadcast
+them. Firstly, this decoding-reencoding degrades the audio quality. And
+secondly, this is costly in terms of cpu computations: if we have many streams
+or have more involved data such as video, we would rather avoid that. This can
+be done as explained above as follows:
+
+```{.liquidsoap include="liq/no-decoding2.liq" from=1 to=-1}
+```
+
+Here, since we use the FFmpeg encoder with `%audio.copy`, Liquidsoap knows that
+we want `radio` to contain encoded data, and it will propagate this information
+to the `playlist` operator, which will thus not try to decode the audio
+files. Note that the `output.icecast` operator cannot determine the MIME type
+from the encoder anymore, we thus have to specify it by hand with
+`format="audio/mpeg"`.
+
+Again, this is mostly useful for relaying encoded data, but we loose much of the
+Liquidsoap power, which does not know how to edit encoded data. For instance, if
+we insert the line
+
+```liquidsoap
+radio = amplify(0.8, radio)
+```
+
+in the middle, in order to change the volume of the `radio`, we will obtain the
+error
+
+```
+Error 5: this value has type
+  source(audio=pcm(_),...)
+but it should be a subtype of
+  source(audio=ffmpeg.audio.copy(_),...)
+```
+
+which says that `amplify` only knows to manipulate audio data in internal format
+(`audio=pcm(_)`) whereas we have here encoded data
+(`audio=ffmpeg.audio.copy(_)`).
+
+Now suppose that, in addition to transmitting the mp3 files through Icecast, we
+also want to provide another version of the stream in opus. In this, case we
+need to decode the stream provided by the source, which is encoded in mp3,
+before being able to convert it in opus. This can be achieved with
+`ffmpeg.decode.audio`, which will decode any encoded stream into Liquidsoap
+internal format, after which we can handle it as usual:
+
+```{.liquidsoap include="liq/no-decoding4.liq" from=1 to=-1}
+```
+
+Incidentally, the functions `ffmpeg.decode.video` and
+`ffmpeg.decode.audio_video` are also provided to decode streams with video and
+both audio and video respectively.
+
 #### Encode once, output multiple times
 
-It often happens that we have the same source, encoded in the same format, by
-multiple outputs. For instance, in the following script, we have a `radio`
-source that we want to encode in mp3 and output in icecast, in HLS and in a
-file:
+It sometimes happens that we want to have the same source, encoded in the same
+format, by multiple outputs. For instance, in the following script, we have a
+`radio` source that we want to encode in mp3 and output in Icecast, in HLS and
+in a file:
 
 ```{.liquidsoap include="liq/multiple-encoders.liq" from=2}
 ```
@@ -3497,16 +3598,19 @@ file:
 Because there are three outputs with `%mp3` format, Liquidsoap will encode the
 stream three times in the same format, which is useless and can be costly if you
 have many streams or video streams. We would thus like to encode in mp3 once,
-and send the result to icecast, HLS and the file. The `%mp3` encoder does not
-support this, but fortunately the FFmpeg encoder does. Recall that we can encode
-in mp3 using this encoder as follows:
+and send the result to Icecast, HLS and the file.
+<!--
+
+The `%mp3` encoder does not support this, but fortunately the FFmpeg encoder
+does. Recall that we can encode in mp3 using this encoder as follows:
 
 ```{.liquidsoap include="liq/multiple-encoders2.liq" from=2}
 ```
 
 For now, we have not gained much: we are still encoding three times, using
-`%ffmpeg` instead of `%mp3`. We can then improve things by splitting the
-encoding in two parts:
+`%ffmpeg` instead of `%mp3`.
+
+We can then improve things by splitting the encoding in two parts:
 
 - firstly, we are going to use `ffmpeg.encode.audio` with
   ```
@@ -3522,35 +3626,33 @@ encoding in two parts:
   data (which is already encoded in mp3 by the preceding point) instead of
   trying to encode by itself.
 
-Concretely, the following script will encode the `radio` source once in mp3, and
-then broadcast it using icecast, HLS and file outputs.
+--> This can be achieved by using the `ffmpeg.encode.audio` operator which will
+turn our source in Liquidsoap's internal format into one with encoded audio
+(using FFmpeg). This encoded audio can then be passed to the various outputs
+using the `%ffmpeg` encoder with `%audio.copy` to specify that we want to simply
+pass on the encoded audio. Concretely, the following script will encode the
+`radio` source once in mp3, and then broadcast it using Icecast, HLS and file
+outputs:
 
 ```{.liquidsoap include="liq/multiple-encoders3.liq" from=2}
 ```
 
-Note that this change forces us to make minor modifications to our script. For
-technical reasons, the output of `ffmpeg.encode.audio` is always fallible. We
-thus have to pass the argument `fallible=true` to all outputs in order to have
-them accept this. Also, the `output.icecast` output cannot determine the MIME
-type from the encoder anymore, we thus have to specify it by hand with
-`format="audio/mpeg"`.
+For technical reasons, the output of `ffmpeg.encode.audio` is always
+fallible. We thus now have to pass the argument `fallible=true` to all outputs
+in order to have them accept this. As expected, Liquidsoap also provides the
+variants `ffmpeg.encode.video` and `ffmpeg.encode.audio_video` of the
+`ffmpeg.encode.audio` function in order to encode video sources or sources with
+both audio and video.
 
-We shall mention here that the variants `ffmpeg.encode.video` and
-`ffmpeg.encode.audio_video` of the `ffmpeg.encode.audio` function are also
-available to encode video sources or sources with both audio and video. Also,
-the functions `ffmpeg.decode.audio`, `ffmpeg.decode.video`,
-`ffmpeg.decode.audio_video` are available to decode sources with encoded
-data. This means that the script\TODO{make sure that \#1573 gets this example
-fixed}
+Note that the function `ffmpeg.decode.audio` can be thought of as an "inverse"
+of the function `ffmpeg.encode.audio`: this means that the script\TODO{make sure
+that \#1573 gets this example fixed}
 
 ```{.liquidsoap include="liq/ffmpeg.encode-decode.liq" from=2}
 ```
 
 will play the source `s`, after encoding it in mp3 and decoding it back to
 Liquidsoap's internal format for sources.
-
-TODO: also explain that we can both pass encoded contents and decode it with
-`ffmpeg.decode` (see #1461).
 
 ### External encoders
 
@@ -3587,154 +3689,63 @@ standard input. To use it, the flag `video=true` should be passed to
 ```{.liquidsoap include="liq/encoder-external2.liq" from=2 to=-1}
 ```
 
-Testing and monitoring
-----------------------
-
-See above for logging tracks
-
-### Blank detection
-
-Use `on_blank` to detect blank...
-
-Some telnet (e.g. know the current song for a source, etc.)
-
-
-On GeekRadio, we play many files, some of which include bonus tracks, which
-means that they end with a very long blank and then a little extra music. It's
-annoying to get that on air. The `skip_blank` operator skips the
-current track when a too long blank is detected, which avoids that. The typical
-usage is simple:
-
-```liquidsoap
-# Wrap it with a blank skipper
-source = skip_blank(source)
-```
-
-At [RadioPi](http://www.radiopi.org/) they have another problem: sometimes they
-have technical problems, and while they think they are doing a live show,
-they're making noise only in the studio, while only blank is on air; sometimes,
-the staff has so much fun (or is it something else ?) doing live shows that they
-leave at the end of the show without thinking to turn off the live, and the
-listeners get some silence again. To avoid that problem we made the
-`strip_blank` operators which hides the stream when it's too blank
-(i.e. declare it as unavailable), which perfectly suits the typical setup used
-for live shows:
-
-```liquidsoap
-interlude = single("/path/to/sorryfortheblank.ogg")
-# After 5 sec of blank the microphone stream is ignored,
-# which causes the stream to fallback to interlude.
-# As soon as noise comes back to the microphone the stream comes
-# back to the live -- thanks to track_sensitive=false.
-stream = fallback(track_sensitive=false,
-	              [ strip_blank(max_blank=5.,live) , interlude ])
-
-# Put that stream to a local file
-output.file(%vorbis, "/tmp/hop.ogg", stream)
-```
-
-If you don't get the difference between these two operators, you should learn
-more about liquidsoap's notion of [source](sources.html).
-
-Finally, if you need to do some custom action when there's too much blank, we
-have `on_blank`:
-
-```liquidsoap
-def handler()
-  system("/path/to/your/script to do whatever you want")
-end
-source = on_blank(handler,source)
-```
-
-### Metrics
-
-Compute RMS and LUFS, conversion with `dB_of_lin` and conversely, `vumeter`, etc.
-
-TODO: expose metrics with JSON on harbor
-
-```{.liquidsoap include="liq/metrics-harbor.liq" from=1}
-```
-
-TODO: explain the variant where we store on a file regularly
-
-```{.liquidsoap include="liq/metrics-file.liq" from=1}
-```
-
-TODO: expose metrics with prometeus, see
-<https://github.com/mbugeia/srt2hls/blob/master/radio/live.liq>
-
-### BPM
-
-```{.liquidsoap include="liq/bpm.liq" from=1}
-```
-
-### Testing scripts
-
-- log as much as possible and use priorities meaningfully
-- mention `chopper`, which is useful to simulate track boundaries
-- `sine` etc are of course useful to generate sound, also `metronome`
-- tracks can be generated with the `synth:` protocol
-  (`"synth:shape=sine,frequency=880,duration=1`", default values (shape is sine,
-  freq is 440, duration is 1))
-- `sleeper`
-- `skipper`
-- `accelerate`
-- what else?
-
-Full example (already presented, we only want to show the first part here)...:
-
-```{.liquidsoap include="liq/jingles-metadata.liq"}
-```
-
-It can also be useful to skip with `thread.run` or `source.run`
-
-```{.liquidsoap include="liq/jingles-metadata2.liq"}
-```
-
-we can simulate a live source as in
-
-```{.liquidsoap include="liq/fallback-transition.liq"}
-```
-
-or
-
-```{.liquidsoap include="liq/fallback.skip.liq"}
-```
-
-testing blank
-
-```{.liquidsoap include="liq/blank.skip.liq"}
-```
-
-- the `synth` protocol (already presented in "testing scripts" section)
-
 Interacting with other programs {#sec:interaction}
 -------------------------------
 
+We now present the various ways offered by Liquidsoap in order to interact with
+other programs.
+
 ### Sound from external sources
 
+Let us first investigate the ways we provide in order to exchange audio data
+with other programs.
+
+#### JACK
+
+If the other program has support for it, the best way to exchange audio data is
+to use the [_JACK library_](https://jackaudio.org/), which is dedicated to this
+and provides very good performances and low latency. In order to use it, you
+first need to run a JACK server: this is most easily done by using applications
+such as _QjackCtl_ which provide a convenient graphical interface. Once this is
+done, various applications provide virtual ports which can be connected
+together.
+
+In Liquidsoap, you can use the operator `output.jack` to create a port to which
+the contents of a source will be streamed, and `input.jack` to create a port
+from which we should input a stream. When using this operators, it is a good
+idea to set the `id` parameter, which will be used as the name of the
+application owning the virtual ports.
+
+For instance, in order to shape the sound of our radio, we might want to use
+[_JAMin_](http://jamin.sourceforge.net/), which is an audio mastering tool
+providing a multiband equalizer, a multiband compressor, a limiter, a spectrum
+analyzer and various other useful tools along with a graphical interface:
+
+![JAMin](img/jamin.png) \
+
+In order to do so, our script might look like this:
+
+```{.liquidsoap include="liq/jack.liq" from=1 to=-1}
+```
+
+We generate a `radio` source (here, this is a simple playlist), and send it to
+JACK using `output.jack`. Then we receive audio from JACK using `input.jack` and
+output it to Icecast. Finally, using an external tool such as QjackCtl we need
+to connect the output we created to JAMin, as well as the output of JAMin to our
+script:
+
+![JACK example](img/jack-ex.png) \
+
+
 #### External decoders/encoders {#sec:pipe}
+
+The first basic way to interact with other programs is by exchanging audio with
+them. In order to do
 
 TODO: many people want to use [stereotool](https://www.stereotool.com/), cf
 https://github.com/savonet/liquidsoap/issues/885
 
 `pipe`
-
-#### Jack
-
-mention jack again
-
-jamin
-
-`input.jack` / `output.jack`
-
-qjackctl
-
-#### OSC
-
-we have already seen interactive variables
-
-`osc.float` / `osc.on_float` / `osc.send_float`
 
 ### Running external programs
 
@@ -4252,3 +4263,95 @@ final user. In particular, the harbor server is not meant to server big files
 because it loads their entire content in memory before sending them. However,
 the harbor HTTP server is fully equipped to serve any kind of CGI script.
 
+Monitoring and testing
+----------------------
+
+If you have read this chapter up to there, you should now have all the tools to
+write the script for the radio you have always dreamed of.
+
+### Metrics
+
+#### Inspecting the stream
+
+TODO: expose metrics with JSON on harbor
+
+```{.liquidsoap include="liq/metrics-harbor.liq" from=1}
+```
+
+TODO: explain the variant where we store on a file regularly
+
+```{.liquidsoap include="liq/metrics-file.liq" from=1}
+```
+
+TODO: expose metrics with prometeus, see
+<https://github.com/mbugeia/srt2hls/blob/master/radio/live.liq>
+
+#### Volume
+
+Compute RMS and LUFS, conversion with `dB_of_lin` and conversely, `vumeter`, etc.
+
+#### BPM
+
+```{.liquidsoap include="liq/bpm.liq" from=1}
+```
+
+#### Blank detection
+
+Use `on_blank` to detect blank...
+
+Finally, if you need to do some custom action when there's too much blank, we
+have `on_blank`:
+
+```liquidsoap
+def handler()
+  system("/path/to/your/script to do whatever you want")
+end
+source = on_blank(handler,source)
+```
+
+### Testing scripts
+
+#### Telnet
+
+Some telnet (e.g. know the current song for a source, etc.)
+
+#### Logging
+
+- log as much as possible and use priorities meaningfully: see above for logging
+  tracks
+- mention `chopper`, which is useful to simulate track boundaries
+- `sine` etc are of course useful to generate sound, also `metronome`
+- tracks can be generated with the `synth:` protocol
+  (`"synth:shape=sine,frequency=880,duration=1`", default values (shape is sine,
+  freq is 440, duration is 1))
+- `sleeper`
+- `skipper`
+- `accelerate`
+- what else?
+
+Full example (already presented, we only want to show the first part here)...:
+
+```{.liquidsoap include="liq/jingles-metadata.liq"}
+```
+
+It can also be useful to skip with `thread.run` or `source.run`
+
+```{.liquidsoap include="liq/jingles-metadata2.liq"}
+```
+
+we can simulate a live source as in
+
+```{.liquidsoap include="liq/fallback-transition.liq"}
+```
+
+or
+
+```{.liquidsoap include="liq/fallback.skip.liq"}
+```
+
+testing blank
+
+```{.liquidsoap include="liq/blank.skip.liq"}
+```
+
+- the `synth` protocol (already presented in "testing scripts" section)
