@@ -2,7 +2,7 @@ FROM savonet/liquidsoap:main
 
 USER root
 
-RUN apt-get install build-essential
+RUN apt-get -y install build-essential
 
 USER liquidsoap
 
