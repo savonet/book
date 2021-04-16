@@ -2320,7 +2320,7 @@ does, in which case the documentation on the author's websites can be useful.
 
 \TODO{explain that it takes startup time and that loading can be disabled}
 
-#### Stereo Tool
+#### Stereo Tool {#sec:stereo-tool}
 
 A last possibility to handle your sound is to use software dedicated to
 producing high quality radio sound, such as _[Stereo
@@ -3010,6 +3010,8 @@ Youtube, this is `rtmp://a.rtmp.youtube.com/live2/` followed by the key) and use
 the `output.url` operator to send our stream `radio` encoded with the encoder
 `enc` to the url.
 
+\TODO{mention other youtube outputs}
+
 ## Encoding formats {#sec:encoders}
 
 The encoding formats are specified by expressions of the form `%encoder` or
@@ -3465,21 +3467,45 @@ as well as parameters specific to the codec (any option supported by FFmpeg can
 be passed here). If an option is not recognized, it will raise an error during
 the instantiation of the encoder.
 
-For instance, AAC encoding using mpegts muxer and and fdk-aac encoder, at
-22050 Hz,
+For instance, we can encode in AAC using mpegts muxer and and fdk-aac encoder,
+at 22050 Hz with
 
 ```{.liquidsoap include="liq/encoder-ffmpeg-fdkaac.liq" from=2 to=-1}
 ```
 
-we can encode mp3 at constant bitrate of 160 kbps with
+The profile `aac_he_v2` we use here stands for _high-efficiency_ version 2 and
+is adapted for encoding at low bitrates. Here is a list of profiles you can use
+
+- `aac_he_v2`: bitrates below 48 kbps,
+- `aac_he`: bitrates between 48 kpbs and 128 kbps,
+- `aac_low`: the default profile (_low complexity_), adapted for bitrates above
+  128 kbps.
+
+We can encode in AAC in variable bitrate with
+
+```{.liquidsoap include="liq/encoder-ffmpeg-fdkaac.liq" from=2 to=-1}
+```
+
+where `vbr` specifies the quality between 1 (lowest quality and bitrate) and 5
+(highest quality and bitrate). We can encode mp3 at constant bitrate of 160 kbps
+with
 
 ```{.liquidsoap include="liq/encoder-ffmpeg-mp3.liq" from=2 to=-1}
 ```
 
-we can encode mp3 in variable bitrate quality 4 with\TODO{change "global quality" to "q" if \#1567 gets merged}
+We can encode mp3 in variable bitrate quality 4 with
 
 ```{.liquidsoap include="liq/encoder-ffmpeg-mp3-2.liq" from=2 to=-1}
 ```
+
+where quality ranges from 0 (highest quality, 245 kbs average bitrate) to 9
+(lowest quality, 65 kbps average bitrate). We can encode mp3 in variable bitrate
+with 160 kbps average bitrate with
+
+
+```{.liquidsoap include="liq/encoder-ffmpeg-mp3-3.liq" from=2 to=-1}
+```
+
 
 Some encoding formats, such as mp4,\TODO{peut-on avoir une liste ? est-ce que
 c'est le cas pour wav ?} require rewinding their stream and write a header after
@@ -3736,28 +3762,141 @@ script:
 
 ![JACK example](img/jack-ex.png) \
 
-
 #### External decoders/encoders {#sec:pipe}
 
-The first basic way to interact with other programs is by exchanging audio with
-them. In order to do
+If JACK is not available, a more basic way of interacting with external tools is
+by the `pipe` operator, which runs the program specified in the `process`
+argument, writes audio to the standard input of the program and reads the audio
+from the standard output of the program. Both input and output are supposed to
+be encoded in wav format. We have already seen this illustrated in
+[there](#sec:stereo-tool) in order to use _Stereo Tool_ to perform mastering:
 
-TODO: many people want to use [stereotool](https://www.stereotool.com/), cf
-https://github.com/savonet/liquidsoap/issues/885
+```{.liquidsoap include="liq/stereotool.liq" from=2 to=-1}
+```
 
-`pipe`
+By default, the `pipe` operator launches a new process on each new
+track. However, this does not play well with Stereo Tool which needs to be run
+continuously: this is why we set `replay_delay` to 1, which means that we want
+to keep the same process across tracks and that metadata should be passed from
+the input to the output source with a delay of 1 second (which is approximately
+the delay introduced by the tool to process sound).
+
+As another artificial illustration, we can use the `ffmpeg` binary in order to
+amplify a source `s` with
+
+```{.liquidsoap include="liq/pipe-ffmpeg.liq" from=2 to=-1}
+```
+
+(of course, using the builtin `amplify` operator is a much better idea if you
+simply want to change the volume).
 
 ### Running external programs
 
-`process.run`
+We also have the possibility of executing external programs for performing
+various actions, by using the `process.run` function. For instance, suppose that
+we have a program `send-text-msg` to send a text message to the owner of the
+radio. The script
+
+```{.liquidsoap include="liq/blank.detect.liq" from=2 to=-1}
+```
+
+uses the `blank.detect` operator, which calls a function when blank is detected
+on a source, and runs this program in order to alert that the radio has a
+problem.
+
+The function `process.run` optionally takes an argument `timeout` which
+specifies the maximum number of seconds the program can take (if this is
+exceeded, the program is ended). It returns a record whose fields are as
+follows:
+
+- `status`: a string describing how the program ended. It can either be
+  
+  - `"exited"`: the program exited normally (this is the value usually
+    returned),
+  - `"stopped"`: the program was stopped (it has received a STOP signal),
+  - `"killed"`: the program was killed (it has received a KILL signal),
+  - `"exception"`: program raised an exception.
+  
+  This field itself has two fields detailing the return value:
+  
+  - `code`: this is an integer containing the return code if the program exited,
+    or the signal number if the program was stopped or killed,
+  - `description`: a string containing details about the exception in the case
+    the program raised one.
+    
+- `stdout`: what the program wrote on the standard output,
+- `stderr`: what the program wrote on the standard error.
+
+In the vast majority of cases, the program will return `"exit"` as status, in
+this case one should check whether the return code is 0 (the program ended
+normally) or not (the status generally indicates the cause of an error leading
+to the end of the program, in a way which depends on the program). One thus
+typically checks for the end of the program in the following way:
+
+```{.liquidsoap include="liq/process.run-check.liq" from=1}
+```
+
+For convenience, the function `process.test` essentially implements this and
+returns whether the process exited correctly or not, which is convenient if you
+do not need to retrieve the standard output or error:
+
+```{.liquidsoap include="liq/process.test.liq" from=1}
+```
+
+The field `stdout` of the returned value contains what the program printed. For
+instance, in the script
+
+```{.liquidsoap include="liq/process.run-stdout.liq" from=1}
+```
+
+we use `process.run` to execute the command
+
+```
+find ~/Music -type f | wc -l
+```
+
+which prints the number of files in the `~/Music` directory, we then read the
+standard output, use `string.trim` to remove the newline printed after the
+number, and then `int_of_string` to convert this value to an integer. Finally,
+we print the number of files. For convenience, the command `process.read`
+executes a command and returns its standard output, which is a bit shorter if we
+assume that the program will exit normally:
+
+```{.liquidsoap include="liq/process.read.liq" from=1}
+```
+
+Finally, the variant `process.read.lines` returns the list of all lines printed
+by the process on the standard output. For instance, the command
+
+```
+find ~/Music -type f
+```
+
+will list all files in the `~/Music` directory. We can use this to play all
+files in this directory as follows:
+
+```{.liquidsoap include="liq/process.read.lines2.liq" from=1}
+```
+
+Here, `l` contains the list of all our files. We use `list.shuffle` to put it in
+a random order, print its length (obtained with `list.length`) and finally pass
+it to the `playlist.list` operator which will play all the files.
+
+#### Security
+
+
+
+`process.quote`: authentifying users for harbor
 
 A queue fed from a script (if we have not already done this)
 
-#### Exchanging data: JSON
+#### Sandboxing
+
+### JSON
 
 explain that JSON is the preferred way of exchanging structured data
 
-**Exporting values**
+_Exporting values_
 
 Liquidsoap can export any language value in JSON using `json_of`.
 
@@ -3787,7 +3926,7 @@ The two particular cases are:
 Output format is pretty printed by default. A compact output can
 be obtained by using the optional argument: `compact=true`.
 
-**Importing values**
+_Importing values_
 
 If compiled with `yojson` support, Liquidsoap can also
 parse JSON data into values. using `of_json`.

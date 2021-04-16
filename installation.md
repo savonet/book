@@ -127,6 +127,8 @@ opam upgrade liquidsoap
 Using binaries
 --------------
 
+\TODO{this is apparently not maintained anymore}
+
 If you want to avoid compiling Liquidsoap, or if opam is not working on your
 platform, the easiest way is to use precompiled binaries of Liquidsoap, if
 available.
@@ -263,6 +265,8 @@ make install
 
 You may need to be root to run the above command in order to have the right to
 install in the usual directories for libraries and binaries.
+
+\TODO{Docker image}
 
 Libraries used by Liquidsoap
 ----------------------------
