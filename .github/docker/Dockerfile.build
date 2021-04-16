@@ -1,7 +1,11 @@
 FROM savonet/liquidsoap:main
 
-WORKDIR liq
+USER root
 
-RUN sudo apt-get install build-essential ffmpeg
+RUN apt-get install build-essential
+
+USER liquidsoap
+
+WORKDIR liq
 
 RUN make test
