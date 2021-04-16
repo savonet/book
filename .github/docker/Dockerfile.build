@@ -1,0 +1,5 @@
+FROM savonet/liquidsoap:main
+
+WORKDIR liq
+
+RUN make
