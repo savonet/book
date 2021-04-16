@@ -5,6 +5,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
+    - name: Test scripts
+      run: docker build . -f .github/docker/Dockerfile.build
     - name: Install packages
       run: sudo apt-get install pandoc pandoc-citeproc texlive texlive-fonts-extra ocaml-nox ocaml-findlib libyojson-ocaml-dev
     - name: Build
@@ -15,8 +17,6 @@ jobs:
       with:
         name: book
         path: book.pdf
-    - name: Test scripts
-      run: docker build . -f .github/docker/Dockerfile.build
     # - name: Install Liquidsoap
       # run: |
         # sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 20D63CCDDD0F62C2
