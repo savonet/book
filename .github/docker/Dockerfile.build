@@ -2,10 +2,14 @@ FROM savonet/liquidsoap:main
 
 USER root
 
-RUN apt-get -y install build-essential
+RUN apt-get -y install make
 
 USER liquidsoap
 
+RUN ls -a
+
 WORKDIR liq
+
+RUN ls -a
 
 RUN make test
