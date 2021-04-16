@@ -2,4 +2,6 @@ FROM savonet/liquidsoap:main
 
 WORKDIR liq
 
-RUN make
+RUN sudo apt-get install build-essential ffmpeg
+
+RUN make test
