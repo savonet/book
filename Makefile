@@ -45,6 +45,9 @@ test:
 	$(MAKE) -C scripts
 	pandoc --filter=scripts/inspect --filter=scripts/include -t LaTeX test.md
 
+docker:
+	docker build . -f .github/docker/Dockerfile.build
+
 %.html: %.md $(MD) liquidsoap.xml
 	$(PANDOC) -s $< -o $@
 

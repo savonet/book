@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "Running program"
+exit 4

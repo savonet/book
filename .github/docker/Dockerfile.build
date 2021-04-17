@@ -6,10 +6,10 @@ RUN apt-get -y install make
 
 USER liquidsoap
 
-RUN ls -a
+RUN mkdir /tmp/liq
 
-WORKDIR liq
+ADD liq /tmp/liq
 
-RUN ls -a
+WORKDIR /tmp/liq
 
 RUN make test
