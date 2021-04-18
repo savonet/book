@@ -1459,12 +1459,12 @@ points which are stored in the metadata: by default, the metadata `liq_cue_in`
 and `liq_cue_out` are used for cue in and cue out points (the name of the
 metadata can be changed with the `cue_in_metadata` and `cue_out_metadata`
 parameters of `cue_cut`), and are supposed to be specified in seconds relative
-to the beginning of the track.
+to the beginning of the track. Negative cue points are ignored and if the cue
+out point is earlier than the cue in point then only the cue in point is kept.
 
 For instance, in the following example, we use the `prefix` argument of
 `playlist` to set `liq_cue_in` to `30` and `liq_cue_out` to `40.5` for every
 track of the playlist:
-
 
 ```{.liquidsoap include="liq/cue_cut.liq" from=2}
 ```
@@ -3976,70 +3976,57 @@ It takes a string containing the JSON representation of a value and a `default`
 value, which is used both in order to determine the expected type for the value
 and is returned in the case where the JSON data does not have the right type.
 
-To be precise, only the part of the JSON data which has the same type as the
-`default` parameter will be kept: this is because data of heterogeneous types
-cannot be represented in Liquidsoap.
-
-The default parameter is very important in order to assure 
-type inference of the parsed value. Its value constrains
-the parser to only recognize JSON data of the the default value's 
-type and is returned in case parsing fails.
-
-Suppose that we want to receive a list of metadata, encoded as an object:
+For instance, suppose that we have a script `next-song-json` which returns, in
+JSON format, the next song to be played along with cue in and out points and
+fade in and out durations. A typical output of the script would be of the form
 
 ```
-{ "title": "foo",
- "artist": "bar" }
+{
+  "file": "test.mp3",
+  "cue_in": 1.1,
+  "cue_out": 239.0,
+  "fade_in": 2.5,
+  "fade_out": 3.2
+}
 ```
 
-Then, you would use of_json with default value `[("error","fail")]` and do:
+The following script uses `request.dynamic` which will call a function
+`next_song` in order to get the next song to be played. This function
+
+- uses `process.read` to obtain the output of the external script
+  `next-song-json`,
+- uses `of_json` with `default=[("","")]` in order to parse this JSON as a list
+  of pairs of strings,
+- extracts the parameters of the song from the returned list,
+- returns a request from the song annotated with cue and fade parameters.
+
+The cue and fade parameters are then applied by using the operators `cue_cut`,
+`fade.in` and `fade.out` because we annotated the parameters with the metadata
+expected by those operators.
+
+```{.liquidsoap include="liq/json-fade-cue.liq" from=2}
+```
+
+Note that the typing provided by `default` is important. If we had parsed the
+JSON data as
+
+```{.liquidsoap include="liq/json-fade-cue3.liq" from=1 to=-1}
+```
+
+the default value `[("", 0.)]` would indicate that we want to parse it as a list
+of pairs of a string and a float, and we would have had the following Liquidsoap
+value as a result:
 
 ```liquidsoap
-# Parse metadata from json
-m = of_json(default= [("error","fail")], json_string)
+[("cue_in",1.1), ("cue_out",239.), ("fade_in",2.5), ("fade_out",3.2)]
 ```
 
-\TODO{note that it would not work with `default=[]` because we match the
-type... Also explain that we cannot represent heterogeneous objects such as
-`{"a": "a", "b": 5}`} The type of the default value constrains the parser. For
-instance, in the above example, a JSON string `"[1,2,3,4]"` will not be accepted
-and the function will return the values passed as default.
+Here, the fade parameters are given in floats instead of strings as in previous
+example. Moreover, the `file` field is not present, because there is no sensible
+way to parse it as a float. We could also parse the JSON data as a record:
 
-You can use the default value in two different ways:
-
-- To detect that the received json string was invalid/could not be parsed to the
-  expected type. In the example above, if `of_json` return a metadata value of
-  `[("error","fail")]` (the default) then you can detect in your code that
-  parsing has failed.
-- As a default value for the rest of the script, if you do not want to care
-  about parsing errors... This can be useful for instance for JSON-RPC
-  notifications, which should not send any response to the client anyway.
-
-If your JSON object is of mixed type, like this one:
-
+```{.liquidsoap include="liq/json-fade-cue2.liq" from=2 to=-3}
 ```
-{ "uri": "https://...",
-  "metadata": { "title": "foo", "artist": "bar" } }
-```
-
-You can parse it in multiple steps. For instance:
-
-```liquidsoap
-# First parse key,value list:
-hint = [("key","value")]
-data = of_json(default=hint,payload)
-print(data["uri"]) # "https://..."
-
-# Then key -> (key,value) list
-hint = [("list",[("key","value")])]
-data = of_json(default=hint,payload)
-m    = list.assoc(default=[],"metadata",data)
-print(m["title"]) # "foo"
-```
-
-TODO: typical use case, reading values from MySQL database, which [can export to
-JSON](https://dev.mysql.com/doc/mysql-shell/8.0/en/mysql-shell-json-output.html)
-
 
 ### Telnet {#sec:telnet}
 
