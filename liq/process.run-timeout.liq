@@ -1,3 +1,5 @@
 #!./liquidsoap
-p = process.run(timeout=2., "sleep 10")
-print("Program ended: #{p.status} #{p.status.code}")
+t0 = time()
+p = process.run(timeout=1., "sleep 3")
+t = time() - t0
+print("Program ended in #{t} seconds: #{p.status} #{p.status.code}")

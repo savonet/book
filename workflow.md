@@ -3948,68 +3948,37 @@ of users.
 
 In order to exchange data with other programs, the preferred way is _JSON_,
 which is a standard way of storing structured data (consisting of records,
-arrays, etc.).
+arrays, etc.) and is supported by most modern languages. You can obtain the JSON
+representation of any Liquidsoap value with the function `json_of`, which takes
+a value as argument and returns its JSON representation. For instance, here is
+the way some Liquidsoap values are converted to JSON:
 
-explain that JSON is the preferred way of exchanging structured data
+Liquidsoap `()` `true` `"abc"` `23` `2.4`
+---------- ---- ------ ------- ---- -----
+JSON       `[]` `true` `"abc"` `23` `2.4`
 
-_Exporting values_
+Liquidsoap `[2, 3, 4]` `[("f", 1), ("b", 4)]` `(12, 1.2)`
+---------- ----------- ---------------------- -----------
+JSON       `[2, 3, 4]` `{"f": 1, "b": 4}`     `[12, 1.2]`
 
-Liquidsoap can export any language value in JSON using `json_of`.
+The default output of `json_of` is designed to be pleasant to read for
+humans. If you want to have a small representation (without useless spaces and
+newlines), you can pass the argument `compact=true` to the function.
 
-The format is the following :
-
-* `() : unit` -> `null`
-* `true: bool` -> `true`
-* `"abc" : string` -> `"abc"`
-* `23 : int` -> `23`
-* `2.0 : float` -> `2.0`
-* `[2,3,4] : [int]` -> `[2,3,4]`
-* `[("f",1),("b",4)] : [(string*int)]` -> `{ "f": 1, "b": 4 }`
-* `("foo",123) : string*int` -> `[ "foo", 123 ]`
-* `s : source` -> `"<source>"`
-* `r : ref(int)` -> `{ "reference":4 }`
-* `%mp3 : format(...)` -> ```
-"%mp3(stereo,bitrate=128,samplerate=44100)"```
-
-* `r : request(...)` -> `"<request>"`
-* `f : (...)->_` -> `"<fun>"`
-
-The two particular cases are:
-
-* Products are exported as lists.
-* Lists of type `[(string*'a)]` are exported as objects of the form `{"key": value}`.
-
-Output format is pretty printed by default. A compact output can
-be obtained by using the optional argument: `compact=true`.
-
-_Importing values_
-
-If compiled with `yojson` support, Liquidsoap can also
-parse JSON data into values. using `of_json`.
-
-The format is a subset of the format of exported values with the notable
-difference that only ground types (`int`, `floats`, `string`, ...)
-are supported and not variable references, sources, formats,
-requests and functions:
-
-* `null` -> `() : unit`
-* `true/false` -> `true/false : bool`
-* `"abc"` -> `"abc" : string`
-* `23` -> `23 : int`
-* `2.0` -> `2.0 : float`
-* `[2,3,4]` -> `[2,3,4] : int`
-* `{"f": 1, "b": 4}` -> `[("f",1),("b",4)] : [(string*int)]`
-* `[ "foo", 123 ]` -> `("foo",123) : string*int`
-
-The JSON standards specify that a proper JSON payload can only be an array or an
-object. However, simple integers, floats, strings and null values are
-also accepted by Liquidsoap.
-
-The function `of_json` has the following type:
+Conversely, JSON values can be converted to Liquidsoap using the `of_json`
+function whose type is
 
 ```
-  (default:'a,string)->'a
+(default : 'a, string) -> 'a
 ```
+
+It takes a string containing the JSON representation of a value and a `default`
+value, which is used both in order to determine the expected type for the value
+and is returned in the case where the JSON data does not have the right type.
+
+To be precise, only the part of the JSON data which has the same type as the
+`default` parameter will be kept: this is because data of heterogeneous types
+cannot be represented in Liquidsoap.
 
 The default parameter is very important in order to assure 
 type inference of the parsed value. Its value constrains
