@@ -13,4 +13,4 @@ s = compress(ratio=ratio, wet=wet, threshold=threshold, s)
 # s = ladspa.sc4(ratio=ratio, threshold_level=threshold, s).{gain = fun()->0.}
 s = source.run(s, every=.5, {print("norm: #{n()}\tgain: #{s.gain()}")})
 output(s)
-output.file(%wav, "/tmp/out.wav", s)
+output.file(fallible=true, %wav, "/tmp/out.wav", s)

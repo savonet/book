@@ -1,9 +1,13 @@
-LIQ = $(filter-out convert2wav.liq, $(sort $(wildcard *.liq)))
-CHECKS = $(foreach l, $(LIQ), check-$(basename $l))
+LIQ := $(filter-out convert2wav.liq, $(sort $(wildcard *.liq)))
+CHECKS := $(foreach l, $(LIQ), check-$(basename $l))
+CHECKS := $(filter-out check-ladspa.fastlookaheadlimiter, $(CHECKS))
 
 LIQUIDSOAP = ./liquidsoap
 
 all: test
+
+xxx:
+	echo $(CHECKS)
 
 youtube:
 	ffmpeg -re -stream_loop -1 -i video.mkv -i test.mp3 -vcodec libx264 -pix_fmt yuv420p -preset:v superfast -codec:a libmp3lame -b:a 160k -f flv rtmp://a.rtmp.youtube.com/live2/$(shell cat youtube-key)

@@ -2,7 +2,7 @@
 jingles = playlist("jingles")
 music = playlist("~/Music")
 radio = add([
-    available(predicate.once({0m-10m or 30m-40m}), jingles),
+    source.available(jingles, predicate.once({0m-10m or 30m-40m})),
     music
   ])
 output(radio)

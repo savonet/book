@@ -969,8 +969,8 @@ number of times instead of only once (its it pointless to play 3 jingles in a
 row, but this can be quite useful for ads for instance).
 
 If we want to add the jingle on top of the currently playing music, we can use
-the function `available(p, s)` which takes as arguments a predicate `p` and a
-source `s` and makes the source available only when the predicate is
+the function `source.available` which takes as arguments a source and a
+predicate, and makes the source available only when the predicate is
 satisfied. We can then add the music with the jingles source made available once
 every half hour as follows:
 
@@ -3884,15 +3884,71 @@ it to the `playlist.list` operator which will play all the files.
 
 #### Security
 
+As usual in the modern world, extra care should be taken when passing data from
+external users to applications, in order to mitigate the possibility of
+executing malicious code. This is typically the case if we use an external
+script in order to validate credentials for `input.harbor`. In such situations,
+one should always apply the function `string.quote` to the users' data, in order
+to remove the possibility that some parts of it are interpreted as bash
+commands. For instance,
 
+```{.liquidsoap include="liq/input.harbor-auth2.liq" from=1 to=-1}
+```
 
-`process.quote`: authentifying users for harbor
+Following this practice should make your script pretty secure, but there is no
+way to be 100% sure that a corner case was not missed. In order to further
+improve security, Liquidsoap provides the possibility to _sandbox_ processes,
+which means running them in a special environment which checks whether the
+directories the program reads from and writes to are allowed ones, whether it is
+allowed to use the network, and so on. In order to use this, one should set the
+`sandbox` configuration key as follows:\TODO{what is "auto" for the conf key?}
 
-A queue fed from a script (if we have not already done this)
+```liquidsoap
+set("sandbox","enabled")
+```
 
-#### Sandboxing
+When this is done, every execution of a program by `process.run` (or derived
+functions) will be done using the sandboxing program `bwrap` (which can be
+changed with the configuration key `sandbox.binary`). The following
+configuration keys can then be changed in order to change the permissions the
+run programs have by default:
+
+- `sandbox.ro`: which directories the programs can read from (the root directory
+  by default),
+- `sandbox.rw`: which directories the programs can read from and write to (the
+  home directory and the temporary directory by default),
+- `sandbox.network`: whether programs have the right to use network (this it the
+  case by default),
+- `sandbox.shell`: whether programs have the right to run commands inside shell
+  (this it the case by default).
+
+The following arguments of the function `process.run`, can also be set for
+changing these values for a particular program instead of using the default
+settings as specified above:
+
+- `rodirs`: which directories the program can read from (defaults to the value
+  specified in `sandbox.ro` configuration key),
+- `rwdirs`: which directories the program can read from and write to (defaults
+  to the value specified in `sandbox.rw` configuration key),
+- `network`: whether program has the right to use network (defaults to the value
+  specified in `sandbox.network` configuration key).
+
+For instance, suppose that the program `harbor-auth` we are using to
+authenticate harbor clients uses files in the directory `/users`. We can ensure
+that it only reads from there with
+
+```{.liquidsoap include="liq/input.harbor-auth3.liq" from=1 to=-1}
+```
+
+In this way, even if a malicious user manages to use our authentication script
+to take control of our machine, he will not be able to access more than the list
+of users.
 
 ### JSON
+
+In order to exchange data with other programs, the preferred way is _JSON_,
+which is a standard way of storing structured data (consisting of records,
+arrays, etc.).
 
 explain that JSON is the preferred way of exchanging structured data
 

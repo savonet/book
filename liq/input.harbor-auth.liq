@@ -1,5 +1,5 @@
-#!/usr/bin/env liquidsoap
-def auth(username, password)
+#!./liquidsoap
+def auth(~address, username, password)
   ans = process.read.lines("./harbor-auth \
         #{string.quote(username)} #{string.quote(password)}")
   if list.hd(default="", ans) == "allowed" then

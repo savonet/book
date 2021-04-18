@@ -1,0 +1,16 @@
+#!./liquidsoap
+def f(x)
+  print("#{x} => #{json_of(x)}")
+end
+f(())
+f(true)
+f("abc")
+f(23)
+f(2.4)
+f([2,3,4])
+f([("f",1),("b",4)])
+f(("foo",123))
+# f(sine())
+f(ref(3))
+# f(%mp3)
+f(fun () -> 5)

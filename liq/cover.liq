@@ -18,8 +18,8 @@ end
 
 s.on_metadata(f)
 
-output.pulseaudio(s)
-output.sdl(video)
+output(s)
+output.video(video)
 
 def skip () =
   print("Skipping!")
