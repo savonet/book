@@ -208,6 +208,11 @@ Implementation of `playlist.reloadable`
 
 TODO: explain the implementation of playlist.reloadable
 
+Avoid duplicate songs
+---------------------
+
+TODO: see #333
+
 Lastfm
 ------
 

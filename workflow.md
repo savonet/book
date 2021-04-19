@@ -2436,7 +2436,7 @@ will amplify the source `s` by the value indicated in the file `volume`: as soon
 as you change the value in this file, you will hear a corresponding change in
 the volume.
 
-#### Interactive variables: telnet
+#### Interactive variables: telnet {#sec:interactive-variables}
 
 Instead of using files to store parameters as described above, our preferred way
 of handling those is with _interactive variables_. These can be thought of as
@@ -4104,25 +4104,183 @@ explained in [an earlier section](#sec:amplification).
 
 ### Telnet {#sec:telnet}
 
-A common way of interacting between Liquidsoap and another program is 
+A common way of interacting between Liquidsoap and another program is through
+the telnet server, which can be used to by external programs to run commands in
+the scripts.
 
-- add a skip command
+#### Configuration
+
+In order to start the server, one should begin by setting the `server.telnet`
+configuration key to `true`:
+
+```liquidsoap
+set("server.telnet", true)
+```
+
+Other related configuration keys can be set:
+
+- `server.telnet.bind_addr`: the IPs from which the telnet server accepts
+  commands (`"127.0.0.1"` by default, which means that only the local host can
+  connect to the server, for security reasons),
+- `server.telnet.port`: the port on which the server is listening (`1234` by
+  default),
+- `server.timeout`: timeout for read and write operations (30 seconds by
+  default), if nothing happens for this duration the client is disconnected
+  (setting this to a negative value disables timeout).
+
+#### Commands
+
+Some telnet commands are always available, and some operators additionally
+register their own. For instance, consider the following simple radio script:
+
+```{.liquidsoap include="liq/telnet-radio.liq" from=1}
+```
+
+The radio consists of a request queue named `reqs` with a fallback on a playlist
+name `main`. We can connect to the server using the `telnet` program with
+
+```
+telnet localhost 1234
+```
+
+Here, `localhost` means that we want to connect on the local machine and `1234`
+is the default port for the server. Once this is done, we can begin typing
+commands and the server will answer to us. For instance, we can know the list of
+available commands by typing
+
+```
+help
+```
+
+to which the server will answer with
+
+```
+Available commands:
+| exit
+| help [<command>]
+| list
+| main.reload
+| main.skip
+| main.uri [<uri>]
+| quit
+| reqs.push <uri>
+| reqs.queue
+| reqs.skip
+| request.alive
+| request.all
+| request.metadata <rid>
+| request.on_air
+| request.resolving
+| request.trace <rid>
+| uptime
+| var.get <variable>
+| var.list
+| var.set <name> = <value>
+| version
+
+Type "help <command>" for more information.
+END
+```
+
+The answer to a command can be arbitrary text, but always ends with a line
+containing only `END`, which is convenient when automating communications
+through telnet. Let us present the generic commands listed above:
+
+- `exit` ends the telnet communication,
+- `help` prints the list of available commands, or prints detailed help about a
+  command if called with a command name as argument:
+  
+  ```
+help version
+Usage: version
+  Display liquidsoap version.
+END
+  ```
+
+  (the "usage" line explains how the command should be used, and which arguments
+  are expected),
+  
+- `list` details the available operators and their interfaces\TODO{explain this better},
+- `quit` is the same as `exit`,
+- `uptime` shows for how long the script has been running,
+- `version` displays the Liquidsoap version.
+
+Some commands can be used to inspect the requests manipulated by
+Liquidsoap. Those are identified by their _request identifier_, or _rid_, which
+is a number uniquely identifying the request.
+
+- `request.alive` lists all the requests which are in use, i.e. being played or
+  waiting to be played,
+- `request.all` lists all the requests used up to now,
+- `request.metadata` can be used to list the metadata associated to a particular request,
+- `request.alive` lists all the requests which are being played,
+- `request.resolving` lists all the requests which are being resolved, such as
+  distant files being downloaded,
+- `request.trace` shows the log associated to a particular request, which can be
+  useful to know information about it, such as the reason why it failed to
+  be resolved.
+  
+Some commands are specific to interactive variables and have been detailed in
+[an earlier section](#sec:interactive-variables):
+
+- `var.get` provides the contents of an interactive variable,
+- `var.list` lists all the defined interactive variables,
+- `var.set` changes the value of an interactive variable.
+
+Those are the commands which are available in the telnet server of every
+script. Moreover, the operators used in a particular script can register their
+own commands. This is the case for the `playlist` operator, which has registered
+the following three commands:
+
+- `main.reload` reloads the playlist,
+- `main.skip` skips the current song and goes to the next track,
+- `main.uri` can be used to retrieve or change the location of the playlist.
+
+Note that the commands are prefixed with `main`, which is the `id` of the
+playlist, so that we know which operator we are referring to. However, no prefix
+is added if no `id` is provided. The `request.queue` operator also has
+registered three commands
+
+- `reqs.push` allows adding a new request in the queue, for instance
+
+   ```
+reqs.push ~/Music/my file.mp3
+27
+END
+   ```
+   
+   where the server returns the corresponding rid (`27` in our example),
+- `reqs.queue` displays the list of requests in the queue,
+- `reqs.skip` skips the current request in the queue.
+
+#### Registering commands
+
+- add a skip command `add_skip_command`
 - switch between sources
 
+#### Interaction with other programs
+
 give an example of a python script (e.g. to skip)
+
+#### Sockets
+
+socket: `server.socket` / `server.socket.path` / `server.socket.permissions`
 
 TODO: couvrir les sockets \TODO{we should also mention sockets, there is an
 example in liq/request.queue.liq but it does not seem to be working right now,
 see bug 1542, it does if we use `socat`}
 
-
-TODO: ajout de commandes
+#### Harbor interface
 
 TODO: `server.harbor` (exemple pour pousser dans une queue). Question: comment gérer l'authentification?
 
-TODO: this should be the main section where everything is explained about telnet
+harbor: `server.harbor`
 
-TODO: use `nc` instead of `telnet`
+
+
+
+
+
 
 You can add more commands to interact with your script through telnet or the server socket.
 
@@ -4469,6 +4627,8 @@ Now, a request of the form `http://server:7000/setmeta?title=foo`
 will update the metadata of source `s` with `[("title","foo")]`. You
 can use this handler, for instance, in a custom HTML form.
 
+TODO: this is useful with websockets for instance, see #515
+
 #### File requests
 
 TODO: an example of a request queue with harbor (see #949).
@@ -4482,6 +4642,12 @@ as a backend/middle-end and have some kind of caching between harbor and the
 final user. In particular, the harbor server is not meant to server big files
 because it loads their entire content in memory before sending them. However,
 the harbor HTTP server is fully equipped to serve any kind of CGI script.
+
+#### Examples
+
+TODO:
+
+- a button to play an sfx (#476) such as Wilhelm scream
 
 Monitoring and testing
 ----------------------
