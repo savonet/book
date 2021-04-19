@@ -560,14 +560,19 @@ default password `"hackme"`. Even with a strong password, the security is not
 very good: if some of the clients leaks the password or you want to revoke some
 a client, you have to change it for every client which is not convenient. For
 this reason, the authentication can also be done through a function, which is
-passed as the `auth` argument of `input.harbor` and is of type `(string, string)
--> bool`: it takes as argument the username and the password of a client trying
-to log in and returns whether it should be allowed or not. Typically, you would
-like to call an external script, say `harbor-auth`, which will take the username
-and password as argument and print "`allowed`" if the user is allowed (such a
-command would usually look into a database to see whether the credentials match,
-and perhaps do additional checks such as ensuring that the user has the right to
-connect at the given time).
+passed as the `auth` argument of `input.harbor` and is of type
+
+```
+{user : string, password : string, address : string} -> bool
+```
+
+It takes as argument a record containing the username, the password and the IP
+address of a client trying to log in and returns whether it should be allowed or
+not. Typically, you would like to call an external script, say `harbor-auth`,
+which will take the username and password as argument and print "`allowed`" if
+the user is allowed (such a command would usually look into a database to see
+whether the credentials match, and perhaps do additional checks such as ensuring
+that the user has the right to connect at the given time).
 
 ```{.liquidsoap include="liq/input.harbor-auth.liq" from=1}
 ```

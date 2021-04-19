@@ -1,9 +1,9 @@
 #!./liquidsoap
 set("sandbox","enabled")
-def auth(~address, username, password)
+def auth(login)
   p = process.run(rodirs=["/users"], rwdirs=[], network=false,
         "./harbor-auth \
-        #{string.quote(username)} #{string.quote(password)}")
+        #{string.quote(login.user)} #{string.quote(login.password)}")
   p.status == "exit" and p.status.code == 0
 end
 s = input.harbor("live", auth=auth)

@@ -1,11 +1,11 @@
 #!./liquidsoap
-def auth(~address, username, password)
+def auth(login)
   ans = process.read.lines("./harbor-auth \
-        #{string.quote(username)} #{string.quote(password)}")
+        #{string.quote(login.user)} #{string.quote(login.password)}")
   if list.hd(default="", ans) == "allowed" then
     true
   else
-    log.important("Invalid login from #{username}")
+    log.important("Invalid login from #{login.user}")
     false
   end
 end
