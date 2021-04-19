@@ -1754,7 +1754,7 @@ of signal processing and what we describe below are the common uses\TODO{feel
 free to comment}
 -->
 
-### Amplification
+### Amplification {#sec:amplification}
 
 The first basic sound effect is _amplification_, i.e. raising or lowering the
 volume of a source. This is basically achieved with the `amplify` operator which
@@ -4069,12 +4069,42 @@ definition of the `next_song` function:
 
 ### Watching files
 
-```{.liquidsoap include="liq/file.watch.liq"}
+A simple, although not very robust, way of communicating with external programs
+is through files. For instance, suppose that we have a webserver on which users
+can make requests. When this is the case, our server writes the name of the file
+to play in a file `to-play`. In the following script, whenever the file
+`to-play` is modified, we push it in a queue so that it is played online, and we
+play the `default` source if there is no request:
+
+```{.liquidsoap include="liq/file.watch.liq" from=2 to=-1}
 ```
 
-TODO: `unwatch`
+In order to do so, we use the `file.watch` function, which registers a function
+to be called whenever a file changes: here, when `to-play` is modified, the
+function `on_request` is called, which reads the contents of the file and pushes
+a corresponding request on the queue. Of course, we could easily be combine this
+with the techniques of previous paragraph and store the file in JSON format to
+add additional information about the request.
+
+If at some point you do not need to watch the file for changes anymore, the
+(unit) value returned by `file.watch` has a method `unwatch` which can be called
+to stop calling the function when the file is modified. For instance,
+
+```{.liquidsoap include="liq/file.watch-unwatch.liq" from=2}
+```
+
+As another example, we could store the volume to be applied to our `radio`
+stream in a file named `volume` as follows:
+
+```{.liquidsoap include="liq/file.watch-volume.liq" from=2 to=-1}
+```
+
+although this is more easily achieved using the `file.getter.float` function, as
+explained in [an earlier section](#sec:amplification).
 
 ### Telnet {#sec:telnet}
+
+A common way of interacting between Liquidsoap and another program is 
 
 - add a skip command
 - switch between sources
