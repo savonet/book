@@ -1575,6 +1575,8 @@ brutal (i.e. loud) music. In details the transitions are as follows:
   ![Fading durations](fig/transition-left)\
   
   and dually if the first one is loud and the second one is not.
+  
+\TODO{explain smooth add}
 
 #### Under the hood: the `cross` operator
 
@@ -3946,20 +3948,25 @@ of users.
 
 ### JSON
 
-In order to exchange data with other programs, the preferred way is _JSON_,
-which is a standard way of storing structured data (consisting of records,
-arrays, etc.) and is supported by most modern languages. You can obtain the JSON
-representation of any Liquidsoap value with the function `json_of`, which takes
-a value as argument and returns its JSON representation. For instance, here is
-the way some Liquidsoap values are converted to JSON:
+In order to exchange data with other programs (via `process.run`, files, and so
+on), the preferred way for formatting data is _JSON_, which is a standard way of
+representing structured data (consisting of records, arrays, etc.) and is
+supported by most modern languages. You can obtain the JSON representation of
+any Liquidsoap value with the function `json_of`, which takes a value as
+argument and returns its JSON representation. For instance, here is the way some
+Liquidsoap values are converted to JSON:
 
 Liquidsoap `()` `true` `"abc"` `23` `2.4`
 ---------- ---- ------ ------- ---- -----
 JSON       `[]` `true` `"abc"` `23` `2.4`
 
-Liquidsoap `[2, 3, 4]` `[("f", 1), ("b", 4)]` `(12, 1.2)`
----------- ----------- ---------------------- -----------
-JSON       `[2, 3, 4]` `{"f": 1, "b": 4}`     `[12, 1.2]`
+Liquidsoap `[2, 3, 4]` `(12, 1.2)`
+---------- ----------- -----------
+JSON       `[2, 3, 4]` `[12, 1.2]`
+
+Liquidsoap  `[("f", 1), ("b", 4)]`  `{x=1, y="a"}`
+----------  ----------------------  --------------------
+JSON        `{"f": 1, "b": 4}`      `{"x": 1, "y": "a"}`
 
 The default output of `json_of` is designed to be pleasant to read for
 humans. If you want to have a small representation (without useless spaces and
@@ -4007,8 +4014,22 @@ expected by those operators.
 ```{.liquidsoap include="liq/json-fade-cue.liq" from=2}
 ```
 
-Note that the typing provided by `default` is important. If we had parsed the
-JSON data as
+Note that the typing provided by `default` is important. Here we parse the data with
+
+```{.liquidsoap include="liq/json-fade-cue2.liq" from=1 to=-1}
+```
+
+where the default value `[("","")]` is a list of pairs of strings and thus
+indicates that we want to parse it in this way, so that the returned value on
+the above input is
+
+```liquidsoap
+[("file", "test.mp3"),
+ ("cue_in", "1.1"), ("cue_out","239."),
+ ("fade_in","2.5"), ("fade_out","3.2")]
+```
+
+If we had parsed the JSON data as
 
 ```{.liquidsoap include="liq/json-fade-cue3.liq" from=1 to=-1}
 ```
@@ -4021,12 +4042,32 @@ value as a result:
 [("cue_in",1.1), ("cue_out",239.), ("fade_in",2.5), ("fade_out",3.2)]
 ```
 
-Here, the fade parameters are given in floats instead of strings as in previous
-example. Moreover, the `file` field is not present, because there is no sensible
-way to parse it as a float. We could also parse the JSON data as a record:
+Note that the fade parameters are given in floats instead of strings as in
+previous example, and that the `file` field is not present because there is no
+sensible way to parse it as a float. Alternatively, we could also parse the JSON
+data as a record
 
-```{.liquidsoap include="liq/json-fade-cue2.liq" from=2 to=-3}
+```{.liquidsoap include="liq/json-fade-cue4.liq" from=1 to=-1}
 ```
+
+which would give rise to the following records as result
+
+```liquidsoap
+{file="test.mp3", cue_in=1.1, cue_out=239., fade_in=2.5, fade_out=3.2}
+```
+
+and could therefore be used in order to provide the following alternative
+definition of the `next_song` function:
+
+```{.liquidsoap include="liq/json-fade-cue5.liq" from=2 to=-3}
+```
+
+### Watching files
+
+```{.liquidsoap include="liq/file.watch.liq"}
+```
+
+TODO: `unwatch`
 
 ### Telnet {#sec:telnet}
 
@@ -4136,13 +4177,6 @@ add_skip_command(s)
 TODO: (re)explain interactive variables
 
 TODO: maybe other interactions here : harbor / OSC
-
-### Watching files
-
-```{.liquidsoap include="liq/file.watch.liq"}
-```
-
-TODO: `unwatch`
 
 ### Harbor
 
