@@ -4102,7 +4102,7 @@ stream in a file named `volume` as follows:
 although this is more easily achieved using the `file.getter.float` function, as
 explained in [an earlier section](#sec:amplification).
 
-### Telnet {#sec:telnet}
+### The telnet server {#sec:telnet}
 
 A common way of interacting between Liquidsoap and another program is through
 the telnet server, which can be used to by external programs to run commands in
@@ -4182,6 +4182,18 @@ Type "help <command>" for more information.
 END
 ```
 
+Alternatively, if you add
+
+```liquidsoap
+server.harbor()
+```
+
+in your script, the telnet server will be available on your browser at the url
+`http://localhost:8080/telnet` (the port and the url can be configured by
+passing `port` and `uri` parameters to the function `server.harbor`:
+
+![Web interface for telnet server](img/server.harbor.png)\
+
 The answer to a command can be arbitrary text, but always ends with a line
 containing only `END`, which is convenient when automating communications
 through telnet. Let us present the generic commands listed above:
@@ -4255,121 +4267,87 @@ END
 
 #### Registering commands
 
-- add a skip command `add_skip_command`
-- switch between sources
+You can register your own telnet commands with the `server.register`
+function. This function takes as argument the name of the command, and a
+function which will be called when the command is issued (the function receives
+as argument the argument on the command on telnet, and returns the message that
+will be printed after the command has been executed). Optional arguments labeled
+`usage` and `description` allow describing the way the commend is intended to be
+used and what it does, and are used when displaying help.
+
+For instance, suppose that we have three sources `rap`, `rock` and `techno`, and
+that we want to be able to switch between them whenever we want by typing the
+command `select rap`, `select rock` or `select techno` on the telnet. This can
+be achieved as follows:
+
+```{.liquidsoap include="liq/server.register.liq" from=2}
+```
+
+After enabling the telnet, we declare a reference `selected` to a string
+describing the currently selected source (it can be `"rap"`, `"rock"` or
+`"techno"`, and is initially the last one). We then define the callback function
+`on_select`, which changes the value of `selected` according to its argument. We
+then use `server.register` to have `on_select` be called when the `select`
+command is typed on the telnet. Finally we define our radio with a `switch`
+which plays the `rap` source when the value of `selected` is `"rap"` and
+similarly for other sources. We can then change the played source to `rock` by
+typing the telnet command
+
+```
+select rock
+```
+
+to which the script will answer
+
+```
+Source rock selected.
+END
+```
+
+As another example, the script
+
+```{.liquidsoap include="liq/server.register-title.liq" from=2 to=-1}
+```
+
+adds a command so that we can set the title of our `radio` stream by issuing a
+command of the form
+
+```
+title My new title
+```
+
+on the telnet server.
 
 #### Interaction with other programs
 
-give an example of a python script (e.g. to skip)
+The telnet server can be connected to using the usual means (TCP sockets), in
+almost every programming language. It is also possible to use commands such as
+`telnet` in order to send commands over the commandline. For instance:
 
-#### Sockets
+```
+echo select rock | telnet localhost 1234
+```
 
-socket: `server.socket` / `server.socket.path` / `server.socket.permissions`
+When the web interface for the telnet server is enabled with `server.harbor()`,
+it is also possible to POST the command at the url of the server (by default
+`http://localhost:8080/telnet`). You should have a look at the implementation of
+`server.harbor` in the standard library if you want to customize this (e.g. in
+order to support GET).
 
-TODO: couvrir les sockets \TODO{we should also mention sockets, there is an
-example in liq/request.queue.liq but it does not seem to be working right now,
-see bug 1542, it does if we use `socat`}
-
-#### Harbor interface
-
-TODO: `server.harbor` (exemple pour pousser dans une queue). Question: comment gérer l'authentification?
-
-harbor: `server.harbor`
-
-
-
-
-
-
-
-You can add more commands to interact with your script through telnet or the server socket.
-
-For instance, the following code, available in the standard API, attaches a source.skip command to a source. It is useful when the original source do not have a built-in skip command.
+Finally, it is also possible to run a server command from within the Liquidsoap
+script itself by using `server.execute` function such as
 
 ```liquidsoap
-# Add a skip function to a source
-# when it does not have one
-# by default
-def add_skip_command(s) =
- # A command to skip
- def skip(_) =
-   source.skip(s)
-   "Done!"
- end
- # Register the command:
- server.register(namespace="#{source.id(s)}",
-                 usage="skip",
-                 description="Skip the current song.",
-                 "skip",skip)
-end
+server.execute("title My new title")
 ```
 
-Liquidsoap starts with one or several scripts as its configuration,
-and then streams forever if everything goes well.
-Once started, you can still interact with it by means of the *server*.
-The server allows you to run commands. Some are general and always available,
-some belong to a specific operator. For example the `request.queue()` instances register commands to enqueue new requests, the outputs register commands
-to start or stop the outputting, display the last ten metadata chunks, etc.
-
-The protocol of the server is a simple human-readable one.
-Currently it does not have any kind of authentication and permissions.
-It is currently available via two media: TCP and Unix sockets.
-The TCP socket provides a simple telnet-like interface, available only on
-the local host by default.
-The Unix socket interface (*cf.* the `server.socket` setting)
-is through some sort of virtual file.
-This is more constraining, which allows one to restrict the use of the socket
-to some priviledged users.
-
-You can find more details on how to configure the server in the
-[documentation](help.html#settings) of the settings key `server`,
-in particular `server.telnet` for the TCP interface and `server.socket`
-for the Unix interface.
-Liquidsoap also embeds some [documentation](help.html#server)
-about the available server commands.
-
-Now, we shall simply enable the Telnet interface to the server,
-by setting `set("server.telnet",true)` or simply passing the `-t` option on
-the command-line.
-In a [complete case analysis](complete_case.html) we set up a `request.queue()`
-instance to play user requests. It had the identifier `"queue"`.
-We are now going to interact via the server to push requests into that queue:
-
-```
-dbaelde@selassie:~$ telnet localhost 1234
-Trying 127.0.0.1...
-Connected to localhost.localdomain.
-Escape character is '^]'.
-request.push /path/to/some/file.ogg
-5
-END
-metadata 5
-[...]
-END
-request.push http://remote/audio.ogg
-6
-END
-trace 6
-[...see if the download started/succeeded...]
-END
-exit
-```
-
-Of course, the server isn't very user-friendly.
-But it is easy to write scripts to interact with Liquidsoap in that way,
-to implement a website or an IRC interface to your radio.
-However, this sort of tool is often bound to a specific usage, so we have
-not released any of ours. Feel free to
-[ask the community](mailto:savonet-users@lists.sf.net) about code that you could re-use.
+or
 
 ```liquidsoap
-# Attach a skip command to the source s:
-add_skip_command(s)
+server.execute("title", "My new title")
 ```
 
-TODO: (re)explain interactive variables
-
-TODO: maybe other interactions here : harbor / OSC
+if you want to separate the command from the argument.
 
 ### Harbor
 

@@ -211,7 +211,8 @@ TODO: explain the implementation of playlist.reloadable
 Avoid duplicate songs
 ---------------------
 
-TODO: see #333
+TODO: when reloading a playlist, there is no guarantee that we will not play a
+recently played song, see #333 and #1530
 
 Lastfm
 ------
