@@ -1700,7 +1700,8 @@ type:
 ```
 (?headers : [string * string], ?timeout : float, string) ->
 string.{headers : [string * string],
-        status_message : string, status_code : int,
+        status_message : string,
+        status_code : int,
         protocol_version : string}
 ```
 

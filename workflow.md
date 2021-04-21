@@ -4330,9 +4330,10 @@ echo select rock | telnet localhost 1234
 
 When the web interface for the telnet server is enabled with `server.harbor()`,
 it is also possible to POST the command at the url of the server (by default
-`http://localhost:8080/telnet`). You should have a look at the implementation of
-`server.harbor` in the standard library if you want to customize this (e.g. in
-order to support GET).
+[`http://localhost:8080/telnet`](http://localhost:8080/telnet)). You should have
+a look at the implementation of `server.harbor` in the standard library if you
+want to customize this (e.g. in order to support GET).\TODO{actually give this
+as an example}
 
 Finally, it is also possible to run a server command from within the Liquidsoap
 script itself by using `server.execute` function such as
@@ -4349,15 +4350,63 @@ server.execute("title", "My new title")
 
 if you want to separate the command from the argument.
 
-### Harbor
+### Web-based interactions
+
+A more and more common way of interacting with other programs and services
+nowadays is through the web, and Liquidsoap has support for this. Not only can
+we easily fetch webpages and distant files, but we also feature a builtin web
+server, called _harbor_, which can be handy in order to expose information on
+webpages or implement web services.
 
 #### Making http requests to other sites
 
-#### Serving webpages and services
+We recall that Liquidsoap has integrated support distant files, in particular
+through the http and https protocols. This means that you can load a playlist on
+some web server by writing something like
 
-We should put the telnet and http here?
+```liquidsoap
+radio = playlist("http://www.some-server.com/playlist")
+```
+
+and the playlist can itself consist in a list of urls of files to be played.
+
+It might also happen that you need to retrieve some distant file over http and
+https. This can be achieved with the functions `http.get` (or `https.get`) which
+takes a url as argument and returns the contents of the file as a string. For
+instance, you can display the changelog for Liquidsoap with
+
+```{.liquidsoap include="liq/https.get.liq"}
+```
+
+The value returned by this function also features the following fields, which
+can be used to obtain more information about the request:
+
+- `headers` is the list of headers and their value,
+- `protocol_version` is the version of the http protocol we used (typically
+  `"HTTP/1.1"`)
+- `status_code` is a standard code for the http protocol indicating the status
+  of the answer (for instance, `200` means that everything went on fine and
+  `404` means that the page was not found),
+- `status_message` is a textual description of the status code.
+
+When making requests, you should always check the status code in order to ensure
+that everything went on fine
+
+
+```{.liquidsoap include="liq/http.get.liq" from=1}
+```
+
+
+- `http.get` / `http.post` / `http.head`
+- `http.put` / `http.delete`
 
 all functions have an `https` variant
+
+#### Serving webpages and services
+
+`http.response`
+
+
 
 we can serve static pages with `harbor.http.static`
 
@@ -4626,6 +4675,9 @@ the harbor HTTP server is fully equipped to serve any kind of CGI script.
 TODO:
 
 - a button to play an sfx (#476) such as Wilhelm scream
+- show the metadata of the last song
+- change metadata
+- allow any server command
 
 Monitoring and testing
 ----------------------
