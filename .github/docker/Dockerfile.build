@@ -12,4 +12,6 @@ ADD liq /tmp/liq
 
 WORKDIR /tmp/liq
 
+RUN chmod +w to-play
+
 RUN make test
