@@ -7,6 +7,7 @@ def on_request()
   log.important("Playing #{fname}.")
   queue.push(request.create(fname))
 end
+file.write(data=string_of(time()), "to-play")
 file.watch("to-play", on_request)
 output(radio)
-thread.run(delay=2., {log.important("touching"); process.run("touch to-play")})
+thread.run(delay=2., {log.important("touching"); file.write(data="test.mp3", "to-play")})

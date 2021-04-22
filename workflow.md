@@ -4392,15 +4392,33 @@ can be used to obtain more information about the request:
 When making requests, you should always check the status code in order to ensure
 that everything went on fine
 
-
 ```{.liquidsoap include="liq/http.get.liq" from=1}
 ```
 
+Finally, the parameter `headers` of `http.get` can be used to pass extra headers
+to the request and the parameter `timeout` controls how long we can take at most
+in order to fetch the page (default is 10 seconds).
 
-- `http.get` / `http.post` / `http.head`
-- `http.put` / `http.delete`
+The http protocol actually defines two main ways of retrieving webpages: GET,
+which is handled by the functions `http.get` and `https.get` presented above,
+and POST, which is handled by the functions `http.post` and `https.post`. The
+POST method is generally used for forms and takes an argument named `data`,
+which contains the data we want to pass as the contents of the form. The way
+this data is encoded is application-dependent and should be specified using the
+`Content-Type` header. For instance, suppose that we have a script
+`update_metadata.php` that we can call to update the metadata on our
+website. The script
 
-all functions have an `https` variant
+```{.liquidsoap include="liq/http.post.liq" from=2 to=-1}
+```
+
+calls it whenever there is a new track, with the metadata of the track encoded
+in JSON as data.
+
+Additional useful http functions are `http.head` to only retrieve the headers of
+the corresponding GET request, `http.put` and `http.delete` which respectively
+perform PUT and DELETE http requests in order to upload or delete a distant
+file. All those functions have an `https` variant as well.
 
 #### Serving webpages and services
 
