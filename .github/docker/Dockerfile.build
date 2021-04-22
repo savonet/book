@@ -12,6 +12,10 @@ ADD liq /tmp/liq
 
 WORKDIR /tmp/liq
 
-RUN chmod +w to-play
+USER root
+
+RUN chmod a+w to-play
+
+USER liquidsoap
 
 RUN make test
