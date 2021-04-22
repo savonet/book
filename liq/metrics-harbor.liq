@@ -9,5 +9,5 @@ def webpage(~protocol, ~data, ~headers, uri)
   data = json_of(metrics)
   http.response(data = data)
 end
-harbor.http.register(port=8080, method="GET", "/metrics", webpage)
+harbor.http.register(port=8000, method="GET", "/metrics", webpage)
 output(s)

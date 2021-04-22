@@ -1404,7 +1404,7 @@ next one. As another example, let us register skip as an http service: the scrip
 ```{.liquidsoap include="liq/source.skip3.liq" from=2}
 ```
 
-makes it so that whenever we connect to the url `http://localhost:8080/skip` the
+makes it so that whenever we connect to the url `http://localhost:8000/skip` the
 current song on the source `s` is abruptly ended: this is part of the
 interaction you would typically have when designing a web interface for your
 radio. Interaction through telnet and harbor http is handled in
@@ -2546,7 +2546,7 @@ interactive.harbor()
 
 This will run a web server, which is accessible at the url
 
-  `http://localhost:8080/interactive`
+  `http://localhost:8000/interactive`
   
 which can be configured by setting parameters of the function, and allows
 modifying the values of the variables. If you connect to it, you will see a
@@ -2898,7 +2898,7 @@ be
 
 which would make the stream of the `radio` source available at the url
 
-  `http://localhost:8080/radio/stream.m3u8`
+  `http://localhost:8000/radio/stream.m3u8`
 
 ### File output
 
@@ -4189,7 +4189,7 @@ server.harbor()
 ```
 
 in your script, the telnet server will be available on your browser at the url
-`http://localhost:8080/telnet` (the port and the url can be configured by
+`http://localhost:8000/telnet` (the port and the url can be configured by
 passing `port` and `uri` parameters to the function `server.harbor`:
 
 ![Web interface for telnet server](img/server.harbor.png)\
@@ -4330,7 +4330,7 @@ echo select rock | telnet localhost 1234
 
 When the web interface for the telnet server is enabled with `server.harbor()`,
 it is also possible to POST the command at the url of the server (by default
-[`http://localhost:8080/telnet`](http://localhost:8080/telnet)). You should have
+[`http://localhost:8000/telnet`](http://localhost:8000/telnet)). You should have
 a look at the implementation of `server.harbor` in the standard library if you
 want to customize this (e.g. in order to support GET).\TODO{actually give this
 as an example}
@@ -4422,7 +4422,37 @@ file. All those functions have an `https` variant as well.
 
 #### Serving webpages and services
 
+Liquidsoap embeds a webserver which makes it possible for it to serve
+webpages. The most basic way of doing so is by making a directory available on
+the server using the `harbor.http.static` function. For instance, the line
+
+```{.liquidsoap include="liq/harbor.http.static.liq" from=2 to=-1}
+```
+
+will make all the files of the `~/Music` directory available at the path
+`/music` of the server, which will be made available on the port 8000 of the
+local host. This means that a file
+
+```
+~/Music/dir/file.mp3
+```
+
+will be available at the url
+
+```
+http://localhost:8000/dir/file.mp3
+```
+
+The option `browse=true` makes it so that, for a directory, the list of files it
+contains is displayed. If the directory contains html pages, their contents will
+be displayed, so that this function can be handy to serve static pages.
+
+The full power of the harbor server can be used through the
+`harbor.http.register` function, which allows
+
 `http.response`
+
+`url.encode` / `url.decode`
 
 
 
@@ -4431,6 +4461,14 @@ we can serve static pages with `harbor.http.static`
 we can register dynamic pages with `harbor.http.register`: we can split
 parameters with `url.split_args` and we should forge answers with
 `http.response` (the interactive values example)
+
+
+TODO:
+
+- static page
+- current song (or in JSON)
+- we have already seen `source.skip3.liq`
+
 
 #### Harbor as HTTP server
 
