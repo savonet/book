@@ -10,7 +10,8 @@ def jingles(~protocol, ~headers, ~data, uri)
     jingle_queue.push(request.create("jingle#{n}.mp3"))
     http.response(data="Playing jingle.")
   else
-    http.response(content_type="text/html", data=file.contents("jingles.html"))
+    http.response(content_type="text/html",
+                  data=file.contents("jingles.html"))
   end
 end
 harbor.http.register("/jingles", jingles)

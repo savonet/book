@@ -4332,8 +4332,8 @@ When the web interface for the telnet server is enabled with `server.harbor()`,
 it is also possible to POST the command at the url of the server (by default
 [`http://localhost:8000/telnet`](http://localhost:8000/telnet)). You should have
 a look at the implementation of `server.harbor` in the standard library if you
-want to customize this (e.g. in order to support GET).\TODO{actually give this
-as an example}
+want to customize this (e.g. in order to support GET), which is based on
+`harbor.http.register` which is described next.
 
 Finally, it is also possible to run a server command from within the Liquidsoap
 script itself by using `server.execute` function such as
@@ -4619,17 +4619,42 @@ do not natively support passing metadata. <!-- #515 -->
 
 #### Launching jingles
 
-Suppose that you want to be able to easily launch jingles during your show.
+Suppose that you want to be able to easily launch jingles during your show, with
+buttons which you could press at any time to launch a particular jingle. More
+precisely, we are interested here in playing a file among `jingle1.mp3`,
+`jingle2.mp3` and `jingle3.mp3`. In order to do this, we have prepared the
+following `jingle.html` file:
 
-....
+```{.liquidsoap include="liq/jingles.html"}
+```
+
+Suppose that we serve this page at the url
+
+```
+http://localhost:8000/jingles
+```
+
+When we go there, we see three buttons like this
+
+![Jingle buttons](img/jingle-buttons.png)\
+
+Moreover, if we click on the button "Jingle 3", the page will fetch the url
+
+```
+http://localhost:8000/jingles?number=3
+```
+
+and similarly for other buttons. Now, we can achieve what we want with the
+following script:
 
 ```{.liquidsoap include="liq/harbor.http.register-jingles.liq" from=2 to=-1}
 ```
 
-```{.liquidsoap include="liq/jingles.html" from=2 to=-1}
-```
-
-
+Here we suppose that we already have a `radio` source. We begin by adding a
+queue `jingle_queue` on top of the radio. We then serve the url `/jingles` with
+function `jingles`: if there is a `number` argument, we play the file
+`jingleN.mp3` where `N` is the number passed as argument, otherwise we simply
+display the page `jingles.html`.
 
 #### Limitations
 
@@ -4638,15 +4663,6 @@ it is not meant to be used under heavy load. Therefore, it should not be exposed
 to your users/listeners if you expect many of them. In this case, you should use
 it as a backend/middle-end and have some kind of caching between harbor and the
 final user.
-
-#### Examples
-
-TODO:
-
-- a button to play an sfx (#476) such as Wilhelm scream
-- show the metadata of the last song
-- change metadata
-- allow any server command
 
 Monitoring and testing
 ----------------------
