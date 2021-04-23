@@ -7,7 +7,7 @@ lufs = s.lufs
 def webpage(~protocol, ~data, ~headers, uri)
   metrics = {rms = dB_of_lin(rms()), lufs = lufs()}
   data = json_of(metrics)
-  http.response(data = data)
+  http.response(content_type="application/json", data=data)
 end
-harbor.http.register(port=8000, method="GET", "/metrics", webpage)
+harbor.http.register("/metrics", webpage)
 output(s)

@@ -4265,7 +4265,7 @@ END
 - `reqs.queue` displays the list of requests in the queue,
 - `reqs.skip` skips the current request in the queue.
 
-#### Registering commands
+#### Registering commands {#sec:registering-commands}
 
 You can register your own telnet commands with the `server.register`
 function. This function takes as argument the name of the command, and a
@@ -4617,6 +4617,21 @@ sets the current metadata of the `radio` source accordingly (the artist will be
 This kind of mechanism can be handy when using inputs such as websockets, which
 do not natively support passing metadata. <!-- #515 -->
 
+#### Switching between sources
+
+In [an earlier section](#sec:registering-commands) we have seen how to switch
+between a `rock`, a `rap` and a `techno` source using telnet commands. Of
+course, this can also be achieved with web services as follows:
+
+```{.liquidsoap include="liq/harbor.http.register-switch.liq"}
+```
+
+Using this script, we can switch to the rap source by going to the url
+
+```
+http://localhost:8000/select?source=rap
+```
+
 #### Launching jingles
 
 Suppose that you want to be able to easily launch jingles during your show, with
@@ -4650,13 +4665,15 @@ following script:
 ```{.liquidsoap include="liq/harbor.http.register-jingles.liq" from=2 to=-1}
 ```
 
-Here we suppose that we already have a `radio` source. We begin by adding a
+Here, we suppose that we already have a `radio` source. We begin by adding a
 queue `jingle_queue` on top of the radio. We then serve the url `/jingles` with
 function `jingles`: if there is a `number` argument, we play the file
 `jingleN.mp3` where `N` is the number passed as argument, otherwise we simply
 display the page `jingles.html`.
 
-#### Limitations
+\TODO{multiple jingles with `request.player`}
+
+#### Limitations and configuration
 
 When using Liquidsoap's internal http server harbor, you should be warned that
 it is not meant to be used under heavy load. Therefore, it should not be exposed
@@ -4664,13 +4681,61 @@ to your users/listeners if you expect many of them. In this case, you should use
 it as a backend/middle-end and have some kind of caching between harbor and the
 final user.
 
+Because of this, extra-care should be taken when exposing harbor. An external
+firewall should preferably be used, but the following configuration options can
+help:
+
+- `harbor.bind_addrs`: list of IP addresses on which harbor should listen
+  (default is `["0.0.0.0"]` which means any address),
+- `harbor.max_connections`: maximum number of connections per port (default is 2
+  in order to mitigate the possibility of DDoS attacks),
+- `harbor.ssl.certificate` and `harbor.ssl.private_key` should also be set if
+  you want to use https connections.
+
 Monitoring and testing
 ----------------------
 
 If you have read this chapter up to there, you should now have all the tools to
-write the script for the radio you have always dreamed of.
+write the script for the radio you have always dreamed of. We give here some
+functions that you can use to check that your script is running correctly.
 
 ### Metrics
+
+#### Useful data
+
+The _power_ of the stream can be obtained with the `rms` operator, which adds to
+a source an `rms` method which returns the current rms. Here, rms stands for
+_root mean square_ and is a good way of measuring the power of the sound. This
+value is a float between 0 (silent sound) and 1 (very loud sound). It can be
+converted to decibels, which is a more usual way of measuring power using the
+`dB_of_lin` function. For instance, the script
+
+```{.liquidsoap include="liq/rms.liq" from=2 to=-1}
+```
+
+will print the power in decibels of the source `s` every second.
+
+Another measurement for loudness of sound is LUFS (for _Loudness Unit Full
+Scale_). It is often more relevant than rms because it takes in account the way
+human ears perceive the sound (which is not always the same depending on the
+frequency). It can be obtained quite in a similar way:
+
+```{.liquidsoap include="liq/lufs.liq" from=2 to=-1}
+```
+
+We can also detect whether the stream has sound or is streaming blank using
+`blank.detect`:
+
+
+```{.liquidsoap include="liq/blank.detect2.liq" from=2 to=-1}
+```
+
+Other useful information for a particular source `s` can be obtained using the
+following methods:
+
+- `s.is_up`: whether Liquidsoap has required the source to get ready for streaming,
+- `s.is_read`: whether the source has something to stream,
+- `s.time`: how much time (in seconds) the source has streamed.
 
 #### Inspecting the stream
 
