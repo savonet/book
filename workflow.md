@@ -4634,6 +4634,11 @@ function `url.encode` encodes a string into an url). Finally, the function
 pushes the corresponding request into the queue and answers that this has been
 performed.
 
+Here, we validate the request by ensuring that the corresponding file
+exists. Generally, you should always validate data coming from users (even if
+you trust them, you never know), especially when passing data in requests
+without `string.quote` as it is the case here for `fname`.
+
 #### Setting metadata
 
 As a variant, we can easily make a script which, when an url of the form
@@ -4653,11 +4658,11 @@ do not natively support passing metadata. <!-- #515 -->
 
 #### Switching between sources
 
-In [an earlier section](#sec:registering-commands) we have seen how to switch
+In [an earlier section](#sec:registering-commands), we have seen how to switch
 between a `rock`, a `rap` and a `techno` source using telnet commands. Of
 course, this can also be achieved with web services as follows:
 
-```{.liquidsoap include="liq/harbor.http.register-switch.liq"}
+```{.liquidsoap include="liq/harbor.http.register-switch.liq" from=2 to=-1}
 ```
 
 Using this script, we can switch to the rap source by going to the url
@@ -4742,7 +4747,12 @@ functions that you can use to check that your script is running correctly.
 
 ### Metrics
 
-#### Useful data
+In order to ensure that your script is running alright at all times and perform
+forensic investigation in case of a problem, it is useful to have _metrics_
+about the script: these are relevant which indicate relevant information about
+the stream production.
+
+#### Useful indicators
 
 The _power_ of the stream can be obtained with the `rms` operator, which adds to
 a source an `rms` method which returns the current rms. Here, rms stands for
@@ -4764,9 +4774,14 @@ frequency). It can be obtained quite in a similar way:
 ```{.liquidsoap include="liq/lufs.liq" from=2 to=-1}
 ```
 
+The current BPM (number of _beats per minute_, otherwise known as tempo) of a
+musical stream can be computed in a similar way:
+
+```{.liquidsoap include="liq/bpm.liq" from=1}
+```
+
 We can also detect whether the stream has sound or is streaming blank using
 `blank.detect`:
-
 
 ```{.liquidsoap include="liq/blank.detect2.liq" from=2 to=-1}
 ```
@@ -4792,29 +4807,6 @@ TODO: explain the variant where we store on a file regularly
 
 TODO: expose metrics with prometeus, see
 <https://github.com/mbugeia/srt2hls/blob/master/radio/live.liq>
-
-#### Volume
-
-Compute RMS and LUFS, conversion with `dB_of_lin` and conversely, `vumeter`, etc.
-
-#### BPM
-
-```{.liquidsoap include="liq/bpm.liq" from=1}
-```
-
-#### Blank detection
-
-Use `on_blank` to detect blank...
-
-Finally, if you need to do some custom action when there's too much blank, we
-have `on_blank`:
-
-```liquidsoap
-def handler()
-  system("/path/to/your/script to do whatever you want")
-end
-source = on_blank(handler,source)
-```
 
 ### Testing scripts
 
