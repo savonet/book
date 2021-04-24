@@ -103,6 +103,9 @@ Explain (recall) how to use in external encoders...
 Frei0r
 ------
 
+FFmpeg filters
+--------------
+
 GStreamer
 ---------
 

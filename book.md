@@ -35,8 +35,6 @@ toc: true
 
 !include "workflow.md"
 
-!include "advanced.md"
-
 !include "video.md"
 
 !include "streaming.md"
