@@ -4671,7 +4671,13 @@ function `jingles`: if there is a `number` argument, we play the file
 `jingleN.mp3` where `N` is the number passed as argument, otherwise we simply
 display the page `jingles.html`.
 
-\TODO{multiple jingles with `request.player`}
+Since we use a request queue, we cannot play two jingles at once: if we press
+multiple buttons at once, the jingles will be played sequentially. If instead of
+jingles you have some sound effects (for instance, laughter, clapping, etc.),
+you might want to play the files immediately. This can be achieved by using
+`request.player` instead of `request.queue` for the jingles.
+
+<!-- liq/harbor.http.register-jingles.liq -->
 
 #### Limitations and configuration
 
@@ -4821,3 +4827,5 @@ testing blank
 ```
 
 - the `synth` protocol (already presented in "testing scripts" section)
+
+### Profiling
