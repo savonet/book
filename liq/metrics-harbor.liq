@@ -1,13 +1,8 @@
 #!./liquidsoap
-s = playlist("~/Music")
-s = rms(s)
-rms = s.rms
-s = lufs(s)
-lufs = s.lufs
-def webpage(~protocol, ~data, ~headers, uri)
-  metrics = {rms = dB_of_lin(rms()), lufs = lufs()}
-  data = json_of(metrics)
+%include "metrics.liq"
+def metrics_page(~protocol, ~data, ~headers, uri)
+  data = json_of(metrics())
   http.response(content_type="application/json", data=data)
 end
-harbor.http.register("/metrics", webpage)
+harbor.http.register("/metrics", metrics_page)
 output(s)

@@ -1,10 +1,10 @@
 #!/usr/bin/env liquidsoap
 s = playlist("~/Music")
-def f(m)
+def update_metadata(m)
   [
     ("title",   "#{m['title']} (#{m['year']})"),
     ("comment", "Encoded by Liquidsoap!")
   ]
 end
-s = map_metadata(f, s)
+s = map_metadata(update_metadata, s)
 s.on_metadata(fun (m) -> print(json_of(m))); output(s)

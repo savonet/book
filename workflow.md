@@ -1270,12 +1270,20 @@ our source `s` with
 ```{.liquidsoap include="liq/map_metadata.liq" from=2 to=-1}
 ```
 
-Whenever a metadata passes on the source `s`, the function `f` is executed with
-it and returns the metadata to insert. Here, it states that we should set the
-title to `"<title> (<year>)"` (where `<title>` is the title and `<year>` is the
-year present in the original metadata) and that we should advertise about
-Liquidsoap in the field `comment`.
+Whenever a metadata passes on the source `s`, the function `update_metadata` is
+executed with it and returns the metadata to insert. Here, it states that we
+should set the title to `"<title> (<year>)"` (where `<title>` is the title and
+`<year>` is the year present in the original metadata) and that we should
+advertise about Liquidsoap in the field `comment`.
 
+As another example, suppose that your files do not have proper metadata. It is
+easy to use the filename as title as follows:\TODO{explain that there are always Liquidsoap's builtin metadata, and that they are not all exported}
+
+```{.liquidsoap include="liq/map_metadata2.liq" from=2 to=-1}
+```
+
+The function `path.basename` gives the filename without the leading path and
+`path.remove_extension` removes the extension of the file.
 
 ### Removing tracks and metadata
 
@@ -4790,34 +4798,102 @@ Other useful information for a particular source `s` can be obtained using the
 following methods:
 
 - `s.is_up`: whether Liquidsoap has required the source to get ready for streaming,
-- `s.is_read`: whether the source has something to stream,
+- `s.is_ready`: whether the source has something to stream,
 - `s.time`: how much time (in seconds) the source has streamed.
 
-#### Inspecting the stream
+#### Exposing metrics
 
-TODO: expose metrics with JSON on harbor
+Once we have decided upon which metrics you want to expose, we need to make them
+available to external tools. For instance, suppose that we have a source `s` and
+that we want to export readyness, RMS and LUFS as indicators. We thus first define a
+function which returns the metrics of interest:
 
-```{.liquidsoap include="liq/metrics-harbor.liq" from=1}
+```{.liquidsoap include="liq/metrics.liq" from=1}
 ```
 
-TODO: explain the variant where we store on a file regularly
+One way to do this is simply to export them in a file. This can be done with
 
-```{.liquidsoap include="liq/metrics-file.liq" from=1}
+```{.liquidsoap include="liq/metrics-file.liq" from=2 to=-1}
 ```
 
-TODO: expose metrics with prometeus, see
-<https://github.com/mbugeia/srt2hls/blob/master/radio/live.liq>
+Alternatively, metrics can be exposed using the webserver with
+
+```{.liquidsoap include="liq/metrics-harbor.liq" from=2 to=-1}
+```
+
+#### Prometheus
+
+If you need a more robust way of storing and exploring metrics, Liquidsoap has
+support for the [Prometheus](https://prometheus.io/) tool, which is dedicated to
+this task. Suppose that we have two sources named `radio1` and `radio2` for
+which we want to export the RMS. We first need to declare that we want to use
+prometheus and declare the port we want to run the server on:
+
+```{.liquidsoap include="liq/prometheus.liq" from=2 to=3}
+```
+
+We are then going to declare a new kind of metric (here the RMS) using the
+function `prometheus.gauge` function:
+
+```{.liquidsoap include="liq/prometheus.liq" from=4 to=5}
+```
+
+The type of `prometheus.gauge` is
+
+```
+(help : string, labels : [string], string) -> (label_values : [string]) -> (float) -> unit
+```
+
+this means that
+
+- we first need to apply it to `help`, `labels` and the name of the gauge in
+  order to create a new kind of gauge (here, the "RMS gauge"),
+- we can apply the resulting function to `label_values` in order to create an
+  instance of this gauge (we would typically do that once for every source of
+  which we want to record the RMS),
+- we finally obtain a function which takes a float as argument and can be used
+  to set the value of the gauge.
+
+In our case, we create two instances of the RMS gauge, one for each source:
+
+```{.liquidsoap include="liq/prometheus.liq" from=6 to=7}
+```
+
+Finally, we set the value of the gauges at regular intervals:
+
+```{.liquidsoap include="liq/prometheus.liq" from=8 to=11}
+```
+
+We also provide two variants of the function `prometheus.gauge`:
+
+- `prometheus.counter`: which increases a counter instead of setting the value
+  of the gauge,
+- `prometheus.summay`: which records an observation.
+
+Additional we provide the function `prometheus.latency` which can be used to
+monitor the internal latency of a given source.
 
 ### Testing scripts
 
-#### Telnet
+We provide here a few tips in order to help the elaboration and the testing of
+scripts.
+
+#### Log the script
+
+A first obvious remark is that you will not be able to understand the problems
+of your radio if you don't know what's going on
+
+log level
+
+- log as much as possible and use priorities meaningfully: see above for logging
+  tracks
+
+Telnet
 
 Some telnet (e.g. know the current song for a source, etc.)
 
 #### Logging
 
-- log as much as possible and use priorities meaningfully: see above for logging
-  tracks
 - mention `chopper`, which is useful to simulate track boundaries
 - `sine` etc are of course useful to generate sound, also `metronome`
 - tracks can be generated with the `synth:` protocol

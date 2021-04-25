@@ -1,9 +1,5 @@
 #!./liquidsoap
-s = playlist("~/Music")
-s = rms(s)
-rms = s.rms
-s = lufs(s)
-lufs = s.lufs
+%include "metrics.liq"
 def save_metrics()
   metrics = {rms = dB_of_lin(rms()), lufs = lufs()}
   data = json_of(metrics)
