@@ -4866,12 +4866,17 @@ Finally, we set the value of the gauges at regular intervals:
 
 We also provide two variants of the function `prometheus.gauge`:
 
-- `prometheus.counter`: which increases a counter instead of setting the value
-  of the gauge,
-- `prometheus.summay`: which records an observation.
+- `prometheus.counter` which increases a counter instead of setting the value of
+  the gauge,
+- `prometheus.summay` which records an observation.
 
 Additional we provide the function `prometheus.latency` which can be used to
 monitor the internal latency of a given source.
+
+On top of prometheus, [Grafana](https://grafana.com/) offers a nice web-based
+interface. The reader interested in those technologies is advised to have a look
+at the [SRT2HLS](https://github.com/mbugeia/srt2hls) projects which builds on
+Liquidsoap and those technologies.
 
 ### Testing scripts
 
@@ -4881,28 +4886,171 @@ scripts.
 #### Log the script
 
 A first obvious remark is that you will not be able to understand the problems
-of your radio if you don't know what's going on
+of your radio if you don't know what's going on, and a good way to obtain
+information is to read the logs, and write meaningful information in those. By
+default, the logs are printed on the standard output when you run a script. You
+can also have them written to a file with
 
-log level
+```liquidsoap
+set("log.file", false)
+set("log.file.path", "/tmp/liquidsoap.log")
+```
 
-- log as much as possible and use priorities meaningfully: see above for logging
-  tracks
+where the second line specifies the file those should be written to. A typical
+log line looks like this:
 
-Telnet
+```
+2021/04/26 09:18:46 [request.dynamic_65:3] Prepared "test.mp3" (RID 0).
+```
 
-Some telnet (e.g. know the current song for a source, etc.)
+It states that on the given day and time, an operator `request.dynamic` (the
+suffix `_65` was added in case there are multiple operators, to distinguish
+between them) has issued a message at level `3` (important) and the message is
+"`Prepared "test.mp3" (RID 0).`", which means here that a request to the file
+`test.mp3` is about to be played and has rid 0.\TODO{importance of the
+identifier we give to operators}
 
-#### Logging
+We recall that there are various levels of importance for information:
 
-- mention `chopper`, which is useful to simulate track boundaries
-- `sine` etc are of course useful to generate sound, also `metronome`
-- tracks can be generated with the `synth:` protocol
-  (`"synth:shape=sine,frequency=880,duration=1`", default values (shape is sine,
-  freq is 440, duration is 1))
-- `sleeper`
+1. a critical message (the program might crash after that),
+2. a severe message (something that might affect the program in a deep way),
+3. an important message,
+4. an information, and
+5. a debug message (which can generally be ignored).
+
+By default, only messages with importance up to 3 are displayed, and this can be
+changed by setting the `log.level` configuration:
+
+```liquidsoap
+set("log.level", 5)
+```
+
+You can log at various levels using the functions `log.critical`, `log.severe`,
+`log.important`, `log.info` and `log.debug`. Those functions take an optional
+argument `label` which will be used as "operator name" in the log. For instance,
+
+```{.liquidsoap include="liq/log.liq" from=2 to=-2}
+```
+
+will issue the following line in the logs:
+
+```
+2021/04/26 09:28:18 [testing:2] This is my message to you.
+```
+
+You should try to use priorities meaningfully: you will soon that at a high
+level such as 5 (debug) you get quite precise information, but the drawback is
+that you often actually get too much information and it is difficult to find the
+important one.
+
+The telnet server (see [above](#sec:telnet)) can also be useful to obtain
+information such as the song currently playing on a particular source. In
+particular, `request.trace` can sometimes be used to understand why a particular
+request has failed to be played (be it because there was an error in the path or
+a failure of the network...).
+
+#### Generating sound
+
+Apart from reading the logs, the way you are generally going to test and debug
+your scripts is by using your ears. The simplest way to generate sound is by
+having a few music files at hand that you know well.
+
+Another very efficient way to generate easily recognizable sound is by
+generating sines, with different frequencies for different events. Those can be
+generated with the `sine` operator where the `duration` argument specifies the
+length of the track (infinite by default) and the unlabeled argument specifies
+the frequency. For instance, we can test the `fallback` operator as follows:
+
+```{.liquidsoap include="liq/test-fallback.liq" from=1}
+```
+
+We have two sources: `s1` is a high-pitched sine lasting for 2 seconds and `s2`
+is an infinite medium-pitched sine. We play the source `s` which is `s1` with a
+fallback on `s2`. If you listen to it, you will hear 2 seconds of high frequency
+sine and then medium frequency sine:
+
+![Testing fallback](fig/test-fallback)\
+
+This can be particularly handy if you want to test fallback's transitions for
+instance.
+
+Sines can also be generated by special requests using the `synth` protocol,
+which are of the following form:
+
+```
+synth:shape=sine,frequency=440,duration=1
+```
+
+The parameters for the request are the shape (which can be `sine`, `saw`,
+`square` or `blank`, the default being `sine`), the frequency in Hz (440 by
+default) and the duration in seconds (10 by default). For instance, we can test
+request queues with the script
+
+```{.liquidsoap include="liq/test-queue.liq" from=1}
+```
+
+Our main source `s` consists of a request queue `q` with a fallback on a
+mid-pitched sine. After 2 seconds, we push on the request queue a high-pitch
+sine for 3 seconds. The frequency of what we hear will thus be
+
+![Testing queue](fig/test-queue)\
+
+As a variant on sines, the `metronome` operator is sometimes useful: it
+generates sine beeps at fixed rate (one every second, or 60 bpm, by
+default). This can be used to measure time with your ears. For instance, in the
+above example, if you replace the definition of the default source `d` by
+
+```{.liquidsoap include="liq/test-queue2.liq" from=1 to=1}
+```
+
+you will be able to observe that the request is played slightly after the second
+second: this is because the request takes some time to be processed (we have to
+synthesize the sine!).
+
+#### Generating events
+
+The last example should make it clear that the function `thread.run` is quite
+useful to generate "events" such as pushing in a queue. Apart from the function
+to run `thread.run` takes two interesting arguments:
+
+- `delay`: after how much time (in seconds) the function should be executed,
+- `every`: how often (in seconds) the function should be called (by default, the
+  function is only called once).
+
+Typically, suppose that we want to test a function `handle_metadata` which logs
+the metadata of a source `s`. In order to test it, it can be boring to wait for
+the next track. We can use the telnet in order to skip the current track of the
+source by issuing a skip command. Even better, we can automate the skipping
+every 10 seconds with `thread.run` as follows:
+
+```{.liquidsoap include="liq/test-metadata.liq" from=2}
+```
+
+The `thread.run` function can be used to execute a function regularly according
+to the time of the computer. Sometimes it is more convenient to run the function
+according to the internal time of a particular source, which can be achieved
+with the `source.run` function: this function takes similar arguments as
+`thread.run`, as well as a source which should be taken as time reference. For
+instance, suppose that you have a source `s2` which is in a fallback and that
+you want to skip it every 10 seconds when it is playing (and not skip when it is
+not playing). This is achieved with
+
+```{.liquidsoap include="liq/test-source.run.liq" from=2}
+```
+
+In this example, the internal time of the source `s2` will not advance when it
+is not selected by `fallback`, and the source will thus not be skipped when this
+is the case.
+
+#### Generating tracks
+
+
+- `chopper`
 - `skipper`
 - `accelerate`
-- what else?
+
+other (e.g. people randomly skipping)
+
 
 Full example (already presented, we only want to show the first part here)...:
 
@@ -4912,6 +5060,28 @@ Full example (already presented, we only want to show the first part here)...:
 It can also be useful to skip with `thread.run` or `source.run`
 
 ```{.liquidsoap include="liq/jingles-metadata2.liq"}
+```
+
+
+#### Availability of sources
+
+
+
+
+
+```{.liquidsoap include="liq/test-live.liq"}
+```
+
+TODO: also with a mod on time
+
+
+As another illustration, we can
+
+In order to simulate external events,
+
+testing blank
+
+```{.liquidsoap include="liq/blank.skip.liq"}
 ```
 
 we can simulate a live source as in
@@ -4924,12 +5094,26 @@ or
 ```{.liquidsoap include="liq/fallback.skip.liq"}
 ```
 
-testing blank
 
-```{.liquidsoap include="liq/blank.skip.liq"}
-```
 
-- the `synth` protocol (already presented in "testing scripts" section)
+#### Other tests
+
+`sleeper`
+
+TODO: test `buffer.adaptative`
+
+#### Logging
+
+- `sine` etc are of course useful to generate sound, also `metronome`
+- tracks can be generated with the `synth:` protocol
+  (`"synth:shape=sine,frequency=880,duration=1`", default values (shape is sine,
+  freq is 440, duration is 1))
+- `sleeper`
+- `skipper`
+- `accelerate`
+- what else?
+
+
 
 ### Profiling
 

@@ -1,0 +1,17 @@
+\documentclass[varwidth=40cm]{standalone}
+\usepackage{tikz}
+\usepackage{style}
+
+\begin{document}
+\begin{tikzpicture}[yscale=.25]
+  \draw[->] (0,0) -- (0,4) node[above]{frequency (Hz)};
+  \draw (-0.05,1) -- (0.05,1);
+  \draw (-0.05,3) -- (0.05,3);
+  \draw (0,1) node[left]{440};
+  \draw (0,3) node[left]{880};
+  \draw[->] (0,0) -- (5.5,0) node[right]{time (s)};
+  \foreach \x in {1,...,5} \draw (\x,-0.2) -- (\x,0.2);
+  \draw[thick] (0,3) -- (2,3) -- (2,1) -- (5,1);
+  \draw[thick,dotted] (5,1) -- (5.5,1);
+\end{tikzpicture}
+\end{document}

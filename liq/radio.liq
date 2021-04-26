@@ -1,4 +1,4 @@
-#!./liquidsoap -i
+#!./liquidsoap
 day   = playlist("/radio/day.pls")   # Day music
 night = playlist("/radio/night.pls") # Night music
 mic   = buffer(input.alsa())         # Microphone
