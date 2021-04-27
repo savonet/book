@@ -11,7 +11,11 @@ type attr = string * string list * (string * string) list
 (** Target: url, title. *)
 type target = string * string
 
-(* type list_attributes = int * [`Decimal] * [`Period] *)
+type list_number_style = Decimal
+
+type list_number_delim = Period
+
+type list_attributes = int * list_number_style * list_number_delim
 
 type math_type = DisplayMath | InlineMath
 
@@ -35,7 +39,7 @@ and block =
   | BulletList of block list list
   | CodeBlock of attr * string
   (* | Header of int * attr * inline list *)
-  (* | OrderedList of list_attributes * block list list *)
+  | OrderedList of list_attributes * block list list
   | Para of inline list
   | Plain of inline list
   | RawBlock of format * string
@@ -72,15 +76,15 @@ module JSON = struct
     let url, title = to_pair t in
     Util.to_string url, Util.to_string title
 
-  (* let to_list_attributes a = *)
-    (* let n, ns, nd = to_triple a in *)
-    (* let n = Util.to_int n in *)
-    (* let ns = element_type ns in *)
-    (* let nd = element_type nd in *)
-    (* (\* TODO *\) *)
-    (* assert (ns = "Decimal"); *)
-    (* assert (nd = "Period"); *)
-    (* n, Decimal, Period *)
+  let to_list_attributes a =
+    let n, ns, nd = to_triple a in
+    let n = Util.to_int n in
+    let ns = element_type ns in
+    let nd = element_type nd in
+    (* TODO *)
+    assert (ns = "Decimal");
+    assert (nd = "Period");
+    n, Decimal, Period
 
   let to_math_type t =
     match element_type t with
@@ -144,12 +148,12 @@ module JSON = struct
        (* let a = to_attr a in *)
        (* let t = List.map to_inline (Util.to_list t) in *)
        (* `Header (n, a, t) *)
-    (* | "OrderedList" -> *)
-       (* let la, l = to_pair (element_contents e) in *)
-       (* let la = to_list_attributes la in *)
-       (* let l = Util.to_list l in *)
-       (* let l = List.map (fun l -> List.map to_block (Util.to_list l)) l in *)
-       (* `OrderedList (la, l) *)
+    | "OrderedList" ->
+       let la, l = to_pair (element_contents e) in
+       let la = to_list_attributes la in
+       let l = Util.to_list l in
+       let l = List.map (fun l -> List.map to_block (Util.to_list l)) l in
+       OrderedList (la, l)
     | "Para" -> Para (List.map to_inline (Util.to_list (element_contents e)))
     | "Plain" -> Plain (List.map to_inline (Util.to_list (element_contents e)))
     | "RawBlock" ->
@@ -167,12 +171,25 @@ module JSON = struct
     let keyvals = `List (List.map (fun (k,v) -> `List [`String k; `String v]) keyvals) in
     `List [id; classes; keyvals]
 
+  let of_list_attr (n, style, delim) =
+    let n = `Int n in
+    let style = match style with
+      | Decimal -> "Decimal"
+    in
+    let delim = match delim with
+      | Period -> "Period"
+    in
+    let style = `Assoc ["t", `String style] in
+    let delim = `Assoc ["t", `String delim] in
+    `List [n; style; delim]
+
   let of_target (url, title) =
     `List [`String url; `String title]
 
   let rec of_block = function
     | BulletList l -> element "BulletList" (`List (List.map (fun l -> `List (List.map of_block l)) l))
     | CodeBlock (a, s) -> element "CodeBlock" (`List [of_attr a; `String s])
+    | OrderedList (la, l) -> element "OrderedList" (`List [of_list_attr la; `List (List.map (fun l -> `List (List.map of_block l)) l)])
     | Para l -> element "Para" (`List (List.map of_inline l))
     | Plain l -> element "Plain" (`List (List.map of_inline l))
     | RawBlock (f, c) -> element "RawBlock" (`List [`String f; `String c])
@@ -250,7 +267,8 @@ let map ?(block=(fun b -> None)) ?(inline=(fun i -> None)) p =
     | Some bb -> bb
     | None ->
       match b with
-      | BulletList l -> [BulletList (List.map (fun l -> map_blocks l) l)]
+      | BulletList l -> [BulletList (List.map map_blocks l)]
+      | OrderedList (la, l) -> [OrderedList (la, List.map map_blocks l)]
       | Para ii -> [Para (map_inlines ii)]
       | Plain ii -> [Plain (map_inlines ii)]
       | b -> [b]

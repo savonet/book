@@ -7,7 +7,7 @@ clean:
 	rm -f *.annot *.cmi *.cmx *.o
 
 test: all
-	pandoc --filter=inspect --filter=crossref -t LaTeX test.md
+	pandoc --filter=inspect --filter=crossref --filter=include -t LaTeX test.md
 
 %: pandoc.cmx %.ml
 	$(OCAMLOPT) $^ -o $@
