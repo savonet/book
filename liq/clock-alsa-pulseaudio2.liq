@@ -1,4 +1,4 @@
 #!./liquidsoap
 s = mksafe(playlist("~/Music"))
-output.alsa(s)
+output.alsa(mksafe(buffer(s)))
 output.pulseaudio(s)

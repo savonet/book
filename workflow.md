@@ -5251,170 +5251,162 @@ Some methods allow performing actions on the source.
 
 ### Clocks {#sec:clocks-ex}
 
-Explain the problem with multiple icecast outputs.
+In order to avoid synchronization issues, Liquidsoap maintains _clocks_, which
+handle how the time is flowing for operators. Their behavior and usefulness is
+detailed in [there](#sec:clocks), let us simply mention the two main causes of
+discrepancies between time flow between operators.
 
-In the [quickstart](quick_start.html) and in the introduction to liquidsoap
-[sources](sources.html), we have described a simple world in which sources
-communicate with each other, creating and transforming data that
-composes multimedia streams.
-In this simple view, all sources produce data at the same rate,
-animated by a single clock: at every cycle of the clock,
-a fixed amount of data is produced.
+1. When performing an output (e.g. with `output.alsa`, `output.pulseaudio`,
+   etc.) the speed at which the stream is generated is handled by the underlying
+   library (ALSA, Pulseaudio, etc.). For this reason, all the different
+   libraries have their own clock. In a script such as
+   
+   ```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=1}
+   ```
+   
+   the source `s` would be played at two different rates, which would result in
+   audio glitches. Liquidsoap detects this situation when the script is starting
+   and issues the error
+   
+   ```
+   A source cannot belong to two clocks (alsa[], pulseaudio[]).
+   ```
+   
+   which that you are trying to animate the source `s` with both the `alsa`
+   clock and the `pulseaudio` clock, which is forbidden.
+2. Some operators need to change the time at which the source flows. This is for
+   instance the case of the `soundtouch` operator which changes the speed at
+   which a source is played or of the `crossfade` operator, which performs
+   transitions between tracks, and thus needs to compute the next track in
+   advance together with the end of a track. Such operators thus have their own
+   clock. For this reason, the script
+   
+   ```{.liquidsoap include="liq/bad/clock-alsa-crossfade.liq" from=1}
+   ```
+   
+   will not be accepted either and will raise the error
+   
+   ```
+   A source cannot belong to two clocks (alsa[], cross_65057[]).
+   ```
+   
+   indicating that you are trying to animate the source `s` both at the `alsa`
+   speed and at the crossfade speed (the number `65057` is there to give a
+   unique identifier for each crossfade operator).
 
-While this simple picture is useful to get a fair idea of what's going on
-in liquidsoap, the full picture is more complex: in fact, a streaming
-system might involve *multiple clocks*, or in other words several
-time flows.
+If the speed of a source is not controlled by a particular library or operator,
+it is attached to the `cpu` clock, which is the default one, and animated by the
+computer's CPU.
 
-It is only in very particular cases that liquidsoap scripts
-need to mention clocks explicitly. Otherwise, you won't even notice
-how many clocks are involved in your setup: indeed, liquidsoap can figure
-out the clocks by itself, much like it infers types.
-Nevertheless, there will sometimes be cases where your script cannot
-be assigned clocks in a correct way, in which case liquidsoap will
-complain. For that reason, every user should eventually get a minimum
-understanding of clocks.
+#### Buffers
 
-In the following, we first describe why we need clocks.
-Then we go through the possible errors that any user might encounter
-regarding clocks.
-Finally, we describe how to explicitly use clocks,
-and show a few striking examples of what can be achieved that way.
+In order to mediate between operators with two different clocks, one can use a
+buffer, which will compute the stream of a source in advance, and will thus be
+able to cope with small time flow discrepancies. This can be achieved using the
+`buffer` operator which takes, in addition to the source, the following optional
+arguments:
 
-#### Error messages
-Most of the time you won't have to do anything special about clocks:
-operators that have special requirements regarding clocks will do
-what's necessary themselves, and liquidsoap will check that everything is 
-fine. But if the check fails, you'll need to understand the error,
-which is what this section is for.
+- `buffer`: how much time to buffer in advance (1 second by default),
+- `max`: how much time to buffer at most (10 seconds by default).
 
-#### Disjoint clocks
+Typically, we can make the first script above work by adding a buffer as
+follows:
 
-On the following example, liquidsoap will issue the fatal error
-`a source cannot belong to two clocks`:
-
-```liquidsoap
-s = playlist("~/media/audio")
-output.alsa(s) # perhaps for monitoring
-output.icecast(mount="radio.ogg",%vorbis,crossfade(s))
+```{.liquidsoap include="liq/clock-alsa-pulseaudio2.liq" from=1}
 ```
 
-Here, the source `s` is first assigned the ALSA clock,
-because it is tied to an ALSA output.
-Then, we attempt to build a `crossfade` over `s`.
-But this operator requires its source to belong to a dedicated
-internal clock (because crossfading requires control over the flow
-of the of the source, to accelerate it around track changes).
-The error expresses this conflict:
-`s` must belong at the same time to the ALSA clock
-and `crossfade`'s clock.
+Note that when executing it the ALSA output will be 1 second late compared to
+the Pulseaudio one: this is the price to pay to live in peace with clocks.
 
+A typical buffer can handle time discrepancies between clocks between 1 and 10
+seconds. It will not be able to handle more than this because the buffer will be
+either empty or full. Alternatively, you can use `buffer.adaptative` which tries
+to slow down the source if it is too fast or speed it up if it is too slow. This
+means that the pitch of the source will also be changed, but this is generally
+not audible if the time discrepancy evolves slowly.
 
-#### The clock API
+#### Dealing with clocks
 
-There are only a couple of operations dealing explicitly with clocks.
+Apart from inserting buffers, you should almost never have to explicitly deal
+with clocks. The language however provides functions in order to manipulate
+them, in case this is needed. The function `clock` creates a new clock and
+assigns it to a source given in argument. It takes a parameter `sync` which
+indicates how the clocks synchronizes and can be either
 
-The function `clock.assign_new(l)` creates a new clock
-and assigns it to all sources from the list `l`.
-For convenience, we also provide a wrapper, `clock(s)`
-which does the same with a single source instead of a list,
-and returns that source.
-With both functions, the new clock will follow (the computer's idea of)
-real time, unless `sync=false` is passed, in which case
-it will run as fast as possible.
+- `"cpu"`: the clock follows the one of the computer,
+- `"none"`: the clock goes as fast as possible,
+- `"auto"`: the clock follows the one of a source taking care of the
+  synchronization if there is one or to the one of the cpu by default.
 
-The old (pre-1.0.0) setting `root.sync` is superseded
-by `clock.assign_new()`.
-If you want to run an output as fast as your CPU allows,
-just attach it to a new clock without synchronization:
+Some other useful functions are
 
-```liquidsoap
-clock.assign_new(sync=false,[output.file(%vorbis,"audio.ogg",source)])
+- `clock.assign_new`: creates a clock and assigns it to a list of sources
+  (instead of one as in the case of `clock`),
+- `clock.unify`: ensures that a list of sources have the same clock,
+- `clock.status.seconds`: returns the current time for all allocated clocks.
+
+#### Decoupling latencies
+
+The first reason to explicitly assign clocks is to precisely handle the various
+latencies that might occur in your setup and make sure that those from an
+operator do not affect the ones from another operator. For instance, suppose
+that you have a script consisting of a microphone source, which is saved in a
+file for backup purposes and streamed to icecast:
+
+```{.liquidsoap include="liq/clock-decoupling.liq" from=1}
 ```
 
-This will automatically attach the appropriate sources to that clock.
-However, you may need to do it for other operators if they are totally
-unrelated to the first one.
+By default, all sources are animated by the same clock, which is the `alsa` one.
+If for some reason, the icecast output is slow (for instance, because of a
+network lag), it will slow down the `alsa` clock and thus all the operators will
+lag. This means that we might loose some of the microphone input, because we are
+not reading fast enough on it. In order to prevent from this happening, we can
+put the icecast output in its own clock:
 
-\TODO{mention the `buffer.adaptative` operator}
-The `buffer()` operator can be used to communicate between
-any two clocks: it takes a source in one clock and builds a source
-in another. The trick is that it uses a buffer: if one clock
-happens to run too fast or too slow, the buffer may empty or overflow.
-
-Finally, `get_clock_status` provides information on
-existing clocks and track their respective times:
-it returns a list containing for each clock a pair
-`(name,time)` indicating
-the clock id its current time in *clock cycles* --
-a cycle corresponds to the duration of a frame,
-which is given in ticks, displayed on startup in the logs.
-The helper function `log_clocks` built
-around `get_clock_status` can be used to directly
-obtain a simple log file, suitable for graphing with gnuplot.
-Those functions are useful to debug latency issues.
-
-#### External clocks: decoupling latencies
-
-The first reason to explicitly assign clocks is to precisely handle
-the various latencies that might occur in your setup.
-
-Most input/output operators (ALSA, AO, Jack, OSS, etc)
-require their own clocks. Indeed, their processing rate is constrained
-by external sound APIs or by the hardware itself.
-Sometimes, it is too much of an inconvenience,
-in which case one can set `clock_safe=false` to allow
-another clock assignment --
-use at your own risk, as this might create bad latency interferences.
-
-Currently, `output.icecast` does not require to belong
-to any particular clock. This allows to stream according to the
-soundcard's internal clock, like in most other tools:
-in
-
-```liquidsoap
-output.icecast(%vorbis,mount="live.ogg",input.alsa())
-```
-,
-the ALSA clock will drive the streaming of the soundcard input via
-icecast.
-
-Sometimes, the external factors tied to Icecast output cannot be
-disregarded: the network may lag. If you stream a soundcard input
-to Icecast and the network lags, there will be a glitch in the
-soundcard input -- a long enough lag will cause a disconnection.
-This might be undesirable, and is certainly disappointing if you
-are recording a backup of your precious soundcard input using
-`output.file`: by default it will suffer the same
-latencies and glitches, while in theory it could be perfect.
-To fix this you can explicitly separate Icecast (high latency,
-low quality acceptable) from the backup and soundcard input (low latency,
-high quality wanted):
-
-```liquidsoap
-input = input.oss()
-
-clock.assign_new(id="icecast",
-  [output.icecast(%mp3,mount="blah",mksafe(buffer(input)))])
-
-output.file(
-  %mp3,"record-%Y-%m-%d-%H-%M-%S.mp3",
-  input)
+```{.liquidsoap include="liq/clock-decoupling2.liq" from=1}
 ```
 
-Here, the soundcard input and file output end up in the OSS
-clock. The icecast output
-goes to the explicitly created `"icecast"` clock,
-and a buffer is used to
-connect it to the soundcard input. Small network lags will be
-absorbed by the buffer. Important lags and possible disconnections
-will result in an overflow of the buffer.
-In any case, the OSS input and file output won't be affected
-by those latencies, and the recording should be perfect.
-The Icecast quality is also better with that setup,
-since small lags are absorbed by the buffer and do not create
-a glitch in the OSS capture, so that Icecast listeners won't
-notice the lag at all.
+In this way, the timing problems of icecast will not affect the reading on the
+microphone and the backup file will contain the whole emission for later
+replace, even if the live transmission had problems. Note that we have to put a
+`buffer` operator between the two clocks, otherwise Liquidsoap with the usual
+error message.
+
+#### Encoding in parallel
+
+Each clock run in its own thread and, because of this, two operators running in
+two different clocks can be run in parallel and exploit multiple cores. This is
+particularly interesting for encoding, which is the most CPU-hungry part of the
+tasks: two outputs will different clocks will be able to encode simultaneously
+in two different cores of the CPU.
+
+In order to illustrate this consider the following script which performs two
+encodings of two different video files:
+
+```{.liquidsoap include="liq/clock-parallel-encodings.liq" from=1}
+```
+
+If we have a look at the CPU usage, we see that only one core is used at a given
+time:
+
+![Encoding with one clock](img/encoding1.png)\
+
+(the core we use changes over time in order to better distribute the
+heat). However, if we assign different clocks to the outputs with
+
+```{.liquidsoap include="liq/clock-parallel-encodings2.liq" from=1}
+```
+
+we see that we now often use two cores simultaneously, which makes the encoding
+twice as fast:
+
+![Encoding with multiple clocks](img/encoding2.png)\
+
+#### Offline processing
+
+
+\newpage
+
 
 #### Internal clocks: exploiting multiple cores
 
