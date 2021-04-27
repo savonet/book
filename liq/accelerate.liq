@@ -1,4 +1,4 @@
 #!./liquidsoap
 s = playlist("~/Music")
-s = skipper(every=3., s)
+s = accelerate(ratio=10, s)
 output(s)

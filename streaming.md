@@ -1081,6 +1081,122 @@ and that synchronization is taken care of by the CPU
 [clock.main:3] Delegating synchronisation to CPU clock
 ```
 
+#### TODO: old text to integrate.....
+
+Why multiple clocks
+
+The first reason is **external** to liquidsoap: there is simply
+not a unique notion of time in the real world.
+Your computer has an internal clock which indicates
+a slightly different time than your watch or another computer's clock.
+Moreover, when communicating with a remote computer, network
+latency causes extra time distortions.
+Even within a single computer there are several clocks: notably, each
+soundcard has its own clock, which will tick at a slightly different
+rate than the main clock of the computer.
+Since liquidsoap communicates with soundcards and remote computers,
+it has to take those mismatches into account.
+
+There are also some reasons that are purely **internal** to liquidsoap:
+in order to produce a stream at a given speed,
+a source might need to obtain data from another source at
+a different rate. This is obvious for an operator that speeds up or
+slows down audio (`stretch`). But it also holds more subtly
+for `cross`, `cross` as well as the
+derived operators: during the lapse of time where the operator combines
+data from an end of track with the beginning of the other other,
+the crossing operator needs twice as much stream data. After ten tracks,
+with a crossing duration of six seconds, one more minute will have
+passed for the source compared to the time of the crossing operator.
+
+In order to avoid inconsistencies caused by time differences,
+while maintaining a simple and efficient execution model for
+its sources, liquidsoap works under the restriction that
+one source belongs to a unique clock,
+fixed once for all when the source is created.
+
+The graph representation of streaming systems can be adapted
+into a good representation of what clocks mean.
+One simply needs to add boxes representing clocks:
+a source can belong to only one box,
+and all sources of a box produce streams at the same rate.
+For example, 
+
+```liquidsoap
+output.icecast(fallback([crossfade(playlist(...)),jingles]))
+```
+
+yields the following graph:
+
+![Graph representation with clocks](images/graph_clocks.png)
+
+Here, clock_2 was created specifically for the crossfading
+operator; the rate of that clock is controlled by that operator,
+which can hence accelerate it around track changes without any
+risk of inconsistency.
+The other clock is simply a wallclock, so that the main stream
+is produced following the ``real'' time rate.
+
+**Nested clocks**
+
+On the following example, liquidsoap will issue the fatal error
+`cannot unify two nested clocks`:
+
+```liquidsoap
+jingles = playlist("jingles.lst")
+music = rotate([1,10],[jingles,playlist("remote.lst")])
+safe = rotate([1,10],[jingles,single("local.ogg")])
+q = fallback([crossfade(music),safe])
+```
+
+Let's see what happened.
+The `rotate` operator, like most operators, operates
+within a single clock, which means that `jingles`
+and our two `playlist` instances must belong to the same clock.
+Similarly, `music` and `safe` must belong to that
+same clock.
+When we applied crossfading to `music`,
+the `crossfade` operator created its own internal clock,
+call it `cross_clock`,
+to signify that it needs the ability to accelerate at will the
+streaming of `music`.
+So, `music` is attached to `cross_clock`,
+and all sources built above come along.
+Finally, we build the fallback, which requires that all of its
+sources belong to the same clock.
+In other words, `crossfade(music)` must belong
+to `cross_clock` just like `safe`.
+The error message simply says that this is forbidden: the internal
+clock of our crossfade cannot be its external clock -- otherwise
+it would not have exclusive control over its internal flow of time.
+
+The same error also occurs on `add([crossfade(s),s])`,
+the simplest example of conflicting time flows, described above.
+However, you won't find yourself writing this obviously problematic
+piece of code. On the other hand, one would sometimes like to
+write things like our first example.
+
+The key to the error with our first example is that the same
+`jingles` source is used in combination with `music`
+and `safe`. As a result, liquidsoap sees a potentially
+nasty situation, which indeed could be turned into a real mess
+by adding just a little more complexity. To obtain the desired effect
+without requiring illegal clock assignments, it suffices to
+create two jingle sources, one for each clock:
+
+```liquidsoap
+music = rotate([1,10],[playlist("jingles.lst"),
+                       playlist("remote.lst")])
+safe  = rotate([1,10],[playlist("jingles.lst"),
+                       single("local.ogg")])
+q = fallback([crossfade(music),safe])
+```
+
+There is no problem anymore: `music` belongs to 
+`crossfade`'s internal clock, and `crossfade(music)`,
+`safe` and the `fallback` belong to another clock.
+
+
 #### Ensuring clock consistency
 
 At the initialization phase, Liquidsoap assigns a clock to each operator by
@@ -1277,7 +1393,7 @@ This can be tested with the `sleeper` operator, which can be used to simulate
 various audio delays. Namely, the following script simulates a source
 which takes roughly 1.1 second to generate 1 second of sound:
 
-```{.liquidsoap include="liq/sleeper.liq"}
+```{.liquidsoap include="liq/sleeper.liq" from=1}
 ```
 
 When playing it you should hear regular glitches and see messages such as
@@ -1314,30 +1430,6 @@ TODO: we briefly explain the principle of clocks here and give the practice in
 
 explain `source.time`, say that this is often used in conjunction with
 `source.on_frame` (for instance, `source.run`)
-
-### Methods for sources {#sec:source-methods}
-
-TODO: detail the methods present for every source....
-
-- `fallible`: Indicate if a source may fail, i.e. may not be ready to stream.
-- `id`: Identifier of the source.
-- `is_ready`: Indicate if a source is ready to stream, or currently streaming.
-- `is_up`: Check whether a source is up.
-- `on_metadata`: Call a given handler on metadata packets.
-- `on_shutdown`: Register a function to be called when source shuts down.
-- `on_track`: Call a given handler on new tracks.
-- `remaining`: Estimation of remaining time in the current track.
-- `seek`: Seek forward, in seconds (returns the amount of time effectively
-     seeked). Seeking is implement whenever possible. A `input.harbor` source,
-     for instance, cannot seek its data while a `playlist` source can. Also,
-     seeking to the exact request position might not be possible, instead
-     seeking to a nearby position. For these reasons, `source.seek` returns a
-     floating point number. If this number is negative, seeking failed.  If this
-     number is positive, it represents the position that was effectively seeked
-     to.
-- `shutdown`: Deactivate a source.
-- `skip`: Skip to the next track.
-- `time`: Get a source's time, based on its assigned clock.
 
 Requests
 --------

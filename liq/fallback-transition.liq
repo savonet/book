@@ -1,6 +1,6 @@
 #!./liquidsoap
 log.level.set(5); start = ref(time())
-live = source.available(sine(amplitude=0.5, duration=5.), {time() - !start >= 5.}) # wait for 5 seconds before being available
+live = source.available(sine(amplitude=0.5, duration=5.), {time.up() >= 5.}) # wait for 5 seconds before being available
 music = playlist("~/Music")
 def to_live(a, b)
   add(normalize=false, [

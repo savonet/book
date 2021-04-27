@@ -1173,7 +1173,7 @@ write something like
 ```{.liquidsoap include="liq/playlist-prefix.liq" from=1 to=-1}
 ```
 
-### Handling tracks
+### Handling tracks {#sec:on-metadata}
 
 Each source has a method `on_track` and a method `on_metadata` to execute a
 function when a track boundary or metadata occur in the stream. In both cases,
@@ -2362,6 +2362,9 @@ Plugins can be a bit difficult to understand if you have no idea what the plugin
 does, in which case the documentation on the author's websites can be useful.
 
 \TODO{explain that it takes startup time and that loading can be disabled}
+
+\TODO{mention FFmpeg plugins, and say that they are developed in video section,
+because they are typically used for this}
 
 #### Stereo Tool {#sec:stereo-tool}
 
@@ -5044,167 +5047,207 @@ is the case.
 
 #### Generating tracks
 
+We have seen above that we can generate short tracks by regularly skipping a
+source. Since this is quite useful to perform test (transitions, metadata
+handling, switching between sources, etc.), Liquidsoap provides various
+functions in order to do so.
 
-- `chopper`
-- `skipper`
-- `accelerate`
+- `skipper` takes a source and skips the track at regular intervals (specified
+  by the argument `every`):
+  
+  ```{.liquidsoap include="liq/skipper.liq" from=2 to=-1}
+  ```
+  
+  (its implementation is essentially given above),
 
-other (e.g. people randomly skipping)
+- `chop` takes a source and insert track boundaries at regular intervals
+  (specified by the argument `every`), with given metadata:
+  
+  ```{.liquidsoap include="liq/chop.liq" from=2 to=-1}
+  ```
 
+- `accelerate` plays a stream at faster speed by dropping or repeating frames,
+  the speeding factor is given by `radio` (i.e. how many times we should speed
+  up the stream)
+  
+  ```{.liquidsoap include="liq/accelerate.liq" from=2 to=-1}
+  ```
 
+<!--
 Full example (already presented, we only want to show the first part here)...:
 
 ```{.liquidsoap include="liq/jingles-metadata.liq"}
 ```
-
-It can also be useful to skip with `thread.run` or `source.run`
-
-```{.liquidsoap include="liq/jingles-metadata2.liq"}
-```
-
+-->
 
 #### Availability of sources
 
+We sometimes want to simulate sources which are not always available. For
+instance a live show which is only available when a client connects to some
+`input.habor`, or a microphone capture with `blank.strip(input.alsa())` which is
+only available when the microphone is switched on and someone is talking. Such a
+`live` source can be simulated using the `source.available` operator which makes
+a source available or not depending on a condition. For instance, in the script
 
-
-
-
-```{.liquidsoap include="liq/test-live.liq"}
+```{.liquidsoap include="liq/test-live.liq" from=1}
 ```
 
-TODO: also with a mod on time
+we have a live source `live` with a fallback to a playlist. We use a thread to
+make the `live` source available only 5 seconds every 10 seconds:
 
+![Switching availability](fig/test-live)\
 
-As another illustration, we can
+Another way to achieve this is as follows:
 
-In order to simulate external events,
-
-testing blank
-
-```{.liquidsoap include="liq/blank.skip.liq"}
+```{.liquidsoap include="liq/test-live2.liq" from=1}
 ```
 
-we can simulate a live source as in
+We use the `uptime` function, which counts the time in seconds since the
+beginning of the execution of the script, with the `mod 10.` operator which
+forces the counting to go back to 0 every 10 seconds: thus `time.up() mod 10.`
+is greater than 5 for 5 seconds every 10 seconds, as desired.
 
-```{.liquidsoap include="liq/fallback-transition.liq"}
+The same tricks can be used to make a source silent for 5 seconds every 10
+seconds, by amplifying with 1 or 0, in order to test `blank.strip` for instance:
+
+```{.liquidsoap include="liq/test-blank.strip.liq" from=1}
 ```
 
-or
+#### Simulating slow sources
 
-```{.liquidsoap include="liq/fallback.skip.liq"}
+In order to simulate sources which are slow to produce a stream (because of a
+high CPU load, because of a network lag, etc.), one can use the `sleeper`
+operator. It takes a `delay` operator which indicates how much times it takes to
+produce 1 second of audio. For instance, in the script
+
+```{.liquidsoap include="liq/sleeper.liq" from=1}
 ```
 
+we simulate a sine which takes 1.1 second to produce audio. Because the sound
+production is slower than realtime, you will soon hear glitches in the audio, as
+well as see log messages such as
 
+```
+2020/07/29 11:13:05 [clock.pulseaudio:2] We must catchup 0.86 seconds!
+```
 
-#### Other tests
+which indicate that the script is too slow to produce the stream.
 
-`sleeper`
+A typical way to address those issues is to perform buffering, with the `buffer`
+operator, which will compute parts of the stream in advance in order not to be
+affected by small slowdowns. Liquidsoap also offers the `buffer.adptative` which
+will buffer and read the buffered data at low or high speed in order to
+accommodate for delays. This can be clearly heard in the following example:
 
-TODO: test `buffer.adaptative`
+```{.liquidsoap include="liq/sleeper2.liq" from=1}
+```
 
-#### Logging
-
-- `sine` etc are of course useful to generate sound, also `metronome`
-- tracks can be generated with the `synth:` protocol
-  (`"synth:shape=sine,frequency=880,duration=1`", default values (shape is sine,
-  freq is 440, duration is 1))
-- `sleeper`
-- `skipper`
-- `accelerate`
-- what else?
-
-
+You can hear that there are no audio glitches anymore, and that the frequency of
+the sine lowers progressively, because the buffered sound is progressively read
+more slowly in order to counter-balance the slow production of the sound.
 
 ### Profiling
 
-`profiler.enable`, `profiler.stats.string`
+Liquidsoap features a builtin _profiler_, which records the time spent in all
+"pure Liquidsoap" functions (i.e. excluding encoding of audio and video). It can
+be enabled by calling `profiler.enable()` and then the profiling statistics can
+be retrieved at any time with `profiler.stats.string()`. This string is of the
+form
+
+```
+function     self              total             calls
+
+string_of    0.110127687454    0.406255722046    46   
++            0.108728647232    0.108728647232    52648
+>=           0.0311367511749   0.0311367511749   2994 
+float_of_int 0.0238244533539   0.0497438907623   41   
+==           0.00842308998108  0.0166900157928   3    
+>            0.00465655326843  0.0109760761261   1    
+print        0.00128579139709  0.407711744308    45   
+```
+
+and consists in a table, where each line corresponds to a function, and the
+columns indicate
+
+- `function`: the function name,
+- `self`: the time spent in the function, excluding the time spent in function
+  calls,
+- `total`: the time spent in the function,
+- `calls`: the number of time the function was called.
+
+For instance, in the script
+
+```{.liquidsoap include="liq/average-rms.liq" from=2 to=-1}
+```
+
+we want to compute the average rms of a source `s`. We thus store the current
+rms in a list `rmsl` every 0.01 second. Every second, we call a function
+`mean_rms` which computes the average of the list of `rmsl` and print the
+result. Every 10 seconds, we print the profiling statistics. You will see that,
+because the list `rmsl` grows over time, the script spends more and more time in
+the function `+` (in order to compute the average) and in the function `aux`
+(which is an internal function used to define `list.iter`).
 
 Going further
 -------------
 
-Read the source!! it can be done :) detail the stdlib
+A great way to learn more Liquidsoap tricks is to read the code of the standard
+library. For instance, we have already mentioned that even advanced functions
+are defined in there such as the `playlist` operator (in `playlist.liq`),
+interactive values (in `interactive.liq`) or the `normalize` operator (in
+`sound.liq`). In this section, we present some more advanced topics.
 
-### Daemonizing the script
+### Operations on sources {#sec:source-methods}
 
-If you need to run liquidsoap as daemon, we provide a package named
-`liquidsoap-daemon`.  See
-[savonet/liquidsoap-daemon](https://github.com/savonet/liquidsoap-daemon) for
-more information.
+If you have a look at the help of the function `sine`, you will notice that it
+has quite a number of methods. In fact, all the functions producing sources have
+those methods, some of which we have already seen, and we detail those
+here.
 
-The full installation of liquidsoap will typically install
-`/etc/liquidsoap`, `/etc/init.d/liquidsoap` and `/var/log/liquidsoap`.
-All these are meant for a particular usage of liquidsoap
-when running a stable radio.
+Some methods provide information about the source.
 
-Your production `.liq` files should go in `/etc/liquidsoap`.
-You'll then start/stop them using the init script, *e.g.*
-`/etc/init.d/liquidsoap start`.
-Your scripts don't need to have the `#!` line,
-and liquidsoap will automatically be ran on daemon mode (`-d` option) for them.
+- `fallible`: indicates whether a source may fail or not. For instance,
 
-You should not override the `log.file.path` setting because a
-logrotate configuration is also installed so that log files
-in the standard directory are truncated and compressed if they grow too big.
+  ```{.liquidsoap include="liq/fallible-sine.liq" from=1}
+  ```
+  
+  will always print `fallse` because the sine source will never fail, but
+    
+  ```{.liquidsoap include="liq/fallible-input.harbor.liq" from=1}
+  ```
+  
+  will print `true`, because a `input.harbor` source may fail (when nobody is
+  connected to it).
+- `id`: returns the identifier of the source.
+- `is_up`: indicates whether the source has been prepared to start streaming.
+- `is_ready`: indicates whether the source has something to stream (it should
+  always be true for infallible sources).
+- `remaining`: returns an estimation of remaining time in the current track.
+- `time`: returns the source's time, i.e. for how long it has played.
 
-It is not very convenient to detect errors when using the init script.
-We advise users to check their scripts after modification (use
-`liquidsoap --check /etc/liquidsoap/script.liq`)
-before effectively restarting the daemon.
+Some methods allow registering functions called on some events.
 
+- `on_metadata`: registers a function to be called on metadata (see
+  [there](#sec:on-metadata)).
+- `on_track`: registers a function to be called on new tracks (see
+  [there](#sec:on-metadata)).
+- `on_shutdown`: register a function to be called when the source shuts down.
 
-### Operations on sources {#sec:seek}
+Some methods allow performing actions on the source.
 
-`on_end`, `source.skip`, `source.on_shutdown`, `on_track`, etc.
+- `seek`: seek forward and returns the amount of time effectively seeked. The
+  argument is given in seconds relative to current position, so that negative
+  means seek backward. Seeking is not available on every source (e.g. we cannot
+  seek on an `input.http` source). For instance, the following script will loop
+  in the first 10 seconds of the source `s`:
 
-- `source.seek`
-- `source.time`
-- etc.
+  ```{.liquidsoap include="liq/seek.liq" from=1}
+  ```
+  
+  Namely, after 10 seconds of playing, we seek 10 seconds backwards.
 
-Starting with Liquidsoap `1.0.0-beta2`, it is now possible to seek within
-sources!  Not all sources support seeking though: currently, they are mostly
-file-based sources such as `request.queue`, `playlist`, `request.dynamic` etc..
-
-The basic function to seek within a source is `source.seek`. It has the
-following type:
-
-```
-(source('a),float)->float
-```
-
-The parameters are:
-
-* The source to seek.
-* The duration in seconds to seek from current position.
-
-The function returns the duration actually seeked.
-
-Please note that seeking is done to a position relative to the *current*
-position. For instance, `source.seek(s,3.)` will seek 3 seconds forward in
-source `s` and `source.seek(s,(-4.))` will seek 4 seconds backward.
-
-Since seeking is currently only supported by request-based sources, it is recommended
-to hook the function as close as possible to the original source. Here is an example
-that implements a server/telnet seek function:
-
-```liquidsoap
-# A playlist source
-s = playlist("/path/to/music")
-
-# The server seeking function
-def seek(t) =
-  t = float_of_string(default=0.,t)
-  log("Seeking #{t} sec")
-  ret = source.seek(s,t)
-  "Seeked #{ret} seconds."
-end
-
-# Register the function
-server.register(namespace=source.id(s),
-                description="Seek to a relative position \
-                             in source #{source.id(s)}",
-                usage="seek <duration>",
-                "seek",seek)
-```
+- `skip`: skip to the next track.
+- `shutdown`: deactivate a source.
 
 ### Clocks {#sec:clocks-ex}
 
@@ -5238,60 +5281,6 @@ regarding clocks.
 Finally, we describe how to explicitly use clocks,
 and show a few striking examples of what can be achieved that way.
 
-#### Why multiple clocks
-
-The first reason is **external** to liquidsoap: there is simply
-not a unique notion of time in the real world.
-Your computer has an internal clock which indicates
-a slightly different time than your watch or another computer's clock.
-Moreover, when communicating with a remote computer, network
-latency causes extra time distortions.
-Even within a single computer there are several clocks: notably, each
-soundcard has its own clock, which will tick at a slightly different
-rate than the main clock of the computer.
-Since liquidsoap communicates with soundcards and remote computers,
-it has to take those mismatches into account.
-
-There are also some reasons that are purely **internal** to liquidsoap:
-in order to produce a stream at a given speed,
-a source might need to obtain data from another source at
-a different rate. This is obvious for an operator that speeds up or
-slows down audio (`stretch`). But it also holds more subtly
-for `cross`, `cross` as well as the
-derived operators: during the lapse of time where the operator combines
-data from an end of track with the beginning of the other other,
-the crossing operator needs twice as much stream data. After ten tracks,
-with a crossing duration of six seconds, one more minute will have
-passed for the source compared to the time of the crossing operator.
-
-In order to avoid inconsistencies caused by time differences,
-while maintaining a simple and efficient execution model for
-its sources, liquidsoap works under the restriction that
-one source belongs to a unique clock,
-fixed once for all when the source is created.
-
-The graph representation of streaming systems can be adapted
-into a good representation of what clocks mean.
-One simply needs to add boxes representing clocks:
-a source can belong to only one box,
-and all sources of a box produce streams at the same rate.
-For example, 
-
-```liquidsoap
-output.icecast(fallback([crossfade(playlist(...)),jingles]))
-```
-
-yields the following graph:
-
-![Graph representation with clocks](images/graph_clocks.png)
-
-Here, clock_2 was created specifically for the crossfading
-operator; the rate of that clock is controlled by that operator,
-which can hence accelerate it around track changes without any
-risk of inconsistency.
-The other clock is simply a wallclock, so that the main stream
-is produced following the ``real'' time rate.
-
 #### Error messages
 Most of the time you won't have to do anything special about clocks:
 operators that have special requirements regarding clocks will do
@@ -5320,64 +5309,6 @@ The error expresses this conflict:
 `s` must belong at the same time to the ALSA clock
 and `crossfade`'s clock.
 
-#### Nested clocks
-
-On the following example, liquidsoap will issue the fatal error
-`cannot unify two nested clocks`:
-
-```liquidsoap
-jingles = playlist("jingles.lst")
-music = rotate([1,10],[jingles,playlist("remote.lst")])
-safe = rotate([1,10],[jingles,single("local.ogg")])
-q = fallback([crossfade(music),safe])
-```
-
-Let's see what happened.
-The `rotate` operator, like most operators, operates
-within a single clock, which means that `jingles`
-and our two `playlist` instances must belong to the same clock.
-Similarly, `music` and `safe` must belong to that
-same clock.
-When we applied crossfading to `music`,
-the `crossfade` operator created its own internal clock,
-call it `cross_clock`,
-to signify that it needs the ability to accelerate at will the
-streaming of `music`.
-So, `music` is attached to `cross_clock`,
-and all sources built above come along.
-Finally, we build the fallback, which requires that all of its
-sources belong to the same clock.
-In other words, `crossfade(music)` must belong
-to `cross_clock` just like `safe`.
-The error message simply says that this is forbidden: the internal
-clock of our crossfade cannot be its external clock -- otherwise
-it would not have exclusive control over its internal flow of time.
-
-The same error also occurs on `add([crossfade(s),s])`,
-the simplest example of conflicting time flows, described above.
-However, you won't find yourself writing this obviously problematic
-piece of code. On the other hand, one would sometimes like to
-write things like our first example.
-
-The key to the error with our first example is that the same
-`jingles` source is used in combination with `music`
-and `safe`. As a result, liquidsoap sees a potentially
-nasty situation, which indeed could be turned into a real mess
-by adding just a little more complexity. To obtain the desired effect
-without requiring illegal clock assignments, it suffices to
-create two jingle sources, one for each clock:
-
-```liquidsoap
-music = rotate([1,10],[playlist("jingles.lst"),
-                       playlist("remote.lst")])
-safe  = rotate([1,10],[playlist("jingles.lst"),
-                       single("local.ogg")])
-q = fallback([crossfade(music),safe])
-```
-
-There is no problem anymore: `music` belongs to 
-`crossfade`'s internal clock, and `crossfade(music)`,
-`safe` and the `fallback` belong to another clock.
 
 #### The clock API
 
@@ -5712,6 +5643,33 @@ server.register(namespace="dump",
                 "stop",
                 fun (s) -> begin stop_dump() "Done!" end)
 ```
+
+### Daemonizing the script
+
+If you need to run liquidsoap as daemon, we provide a package named
+`liquidsoap-daemon`.  See
+[savonet/liquidsoap-daemon](https://github.com/savonet/liquidsoap-daemon) for
+more information.
+
+The full installation of liquidsoap will typically install
+`/etc/liquidsoap`, `/etc/init.d/liquidsoap` and `/var/log/liquidsoap`.
+All these are meant for a particular usage of liquidsoap
+when running a stable radio.
+
+Your production `.liq` files should go in `/etc/liquidsoap`.
+You'll then start/stop them using the init script, *e.g.*
+`/etc/init.d/liquidsoap start`.
+Your scripts don't need to have the `#!` line,
+and liquidsoap will automatically be ran on daemon mode (`-d` option) for them.
+
+You should not override the `log.file.path` setting because a
+logrotate configuration is also installed so that log files
+in the standard directory are truncated and compressed if they grow too big.
+
+It is not very convenient to detect errors when using the init script.
+We advise users to check their scripts after modification (use
+`liquidsoap --check /etc/liquidsoap/script.liq`)
+before effectively restarting the daemon.
 
 ### Offline processing {#sec:offline-processing}
 
