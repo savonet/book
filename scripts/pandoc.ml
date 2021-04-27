@@ -37,7 +37,7 @@ and block =
   (* | Header of int * attr * inline list *)
   (* | OrderedList of list_attributes * block list list *)
   | Para of inline list
-  (* | Plain of inline list *)
+  | Plain of inline list
   | RawBlock of format * string
   | UnhandledBlock of Yojson.Basic.t
 
@@ -151,7 +151,7 @@ module JSON = struct
        (* let l = List.map (fun l -> List.map to_block (Util.to_list l)) l in *)
        (* `OrderedList (la, l) *)
     | "Para" -> Para (List.map to_inline (Util.to_list (element_contents e)))
-    (* | "Plain" -> `Plain (List.map to_inline (Util.to_list (element_contents e))) *)
+    | "Plain" -> Plain (List.map to_inline (Util.to_list (element_contents e)))
     | "RawBlock" ->
        let fmt, contents = to_pair (element_contents e) in
        RawBlock (Util.to_string fmt, Util.to_string contents)
@@ -174,6 +174,7 @@ module JSON = struct
     | BulletList l -> element "BulletList" (`List (List.map (fun l -> `List (List.map of_block l)) l))
     | CodeBlock (a, s) -> element "CodeBlock" (`List [of_attr a; `String s])
     | Para l -> element "Para" (`List (List.map of_inline l))
+    | Plain l -> element "Plain" (`List (List.map of_inline l))
     | RawBlock (f, c) -> element "RawBlock" (`List [`String f; `String c])
     | UnhandledBlock b -> b
   and of_inline = function
@@ -251,6 +252,7 @@ let map ?(block=(fun b -> None)) ?(inline=(fun i -> None)) p =
       match b with
       | BulletList l -> [BulletList (List.map (fun l -> map_blocks l) l)]
       | Para ii -> [Para (map_inlines ii)]
+      | Plain ii -> [Plain (map_inlines ii)]
       | b -> [b]
   and map_inline i =
     match inline i with

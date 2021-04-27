@@ -6,8 +6,7 @@ open Pandoc
 
 let begins_with prefix s =
   let l = String.length prefix in
-  String.length s >= l
-  && String.sub s 0 l = prefix
+  String.length s >= l && String.sub s 0 l = prefix
 
 let () =
   let p = Pandoc.of_json (Yojson.Basic.from_channel stdin) in
