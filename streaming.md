@@ -1485,6 +1485,8 @@ TODO: explain that requests must be deleted, see https://github.com/savonet/liqu
 
 TODO: explain how to trace requests
 
+`request.once`
+
 ### Decoding compressed data
 
 Example of a log of decoder

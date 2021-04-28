@@ -6,7 +6,7 @@ a webradio. It essentially follows [the introductory chapter](#chap:quickstart),
 but gives much more details about techniques and parameters one can use to
 achieve his goals.
 
-Inputs
+Inputs {#sec:inputs}
 ------
 
 ### Playlists
@@ -5566,6 +5566,14 @@ in the standard library to provide alternative implementation of basic
 Liquidsoap functions, you should have a look at the file `native.liq` in order
 to learn more about those.
 
+<!--
 ### Synthesizers
 
 TODO: midi, `synth.*`, etc.
+
+- `drop_midi`
+- `midi.chord`
+- `midi.merge_all`
+- `midi.remove`
+- `midimeter`
+-->
