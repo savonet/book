@@ -11,6 +11,8 @@ jobs:
       run: |
         git clone https://github.com/smimram/ocaml-pandoc
         cd ocaml-pandoc
+        dune build -p pandoc-crossref @install
+        dune build -p pandoc-include  @install
         dune install -p pandoc-crossref
         dune install -p pandoc-include
     - name: Build
