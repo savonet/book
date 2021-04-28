@@ -114,6 +114,16 @@ This means that the script
 
 will show a small image of 50×50 pixels.
 
+#### Cover art
+
+TODO ...............
+
+We can extract cover art, e.g.
+
+```{.liquidsoap include="liq/cover.liq"}
+```
+
+
 ### Adding videos
 
 Our beloved `add` operator also works with videos. For instance, we can add a
@@ -134,18 +144,10 @@ can be more concisely written
 ```{.liquidsoap include="liq/add-videos2.liq" from=1}
 ```
 
-The function `video.add_image` also has the advantage
+The function `video.add_image` moreover has the advantage of allowing getters
+for the parameters, so that we can program a moving logo as follows:
 
-
-TODO: explain the implementation of `video.add_image` (in particular,
-explain the parameters for the request)
-
-```{.liquidsoap include="liq/logo.liq"}
-```
-
-We can extract cover art, e.g.
-
-```{.liquidsoap include="liq/cover.liq"}
+```{.liquidsoap include="liq/add-videos3.liq" from=1}
 ```
 
 ### Size and superposition
