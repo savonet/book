@@ -5338,7 +5338,8 @@ assigns it to a source given in argument. It takes a parameter `sync` which
 indicates how the clocks synchronizes and can be either
 
 - `"cpu"`: the clock follows the one of the computer,
-- `"none"`: the clock goes as fast as possible,
+- `"none"`: the clock goes as fast as possible (this is generally used for
+  sources such as `input.alsa` which take care of synchronization on their own),
 - `"auto"`: the clock follows the one of a source taking care of the
   synchronization if there is one or to the one of the cpu by default (this is
   mostly useful with `clock.assign_new`, see below).
@@ -5409,48 +5410,111 @@ twice as fast:
 
 ![Encoding with multiple clocks](img/encoding2.png)\
 
-If the two sources
+Here, things are working well because the two encoders encode different
+sources. If they encode a common source, it can still be done by using a buffer
 
-```{.liquidsoap include="liq/clock-parallel-encodings2.liq" from=1}
+```{.liquidsoap include="liq/clock-parallel-encodings3.liq" from=1}
 ```
 
+with the risk that there is a glitch at some point because the speed of the
+clocks differ slightly, resulting in buffer under or overflow.
 
-#### Offline processing
+### Offline processing {#sec:offline-processing}
 
+Liquidsoap has some support for writing standalone scripts, for instance to
+automate some processing on audio files. Those will typically begin with
 
-\newpage
-
-
-#### Internal clocks: exploiting multiple cores
-
-Clocks can also be useful even when external factors are not an issue.
-Indeed, several clocks run in several threads, which creates an opportunity
-to exploit multiple CPU cores.
-The story is a bit complex because OCaml has some limitations on
-exploiting multiple cores, but in many situations most of the computing
-is done in C code (typically decoding and encoding) so it parallelizes
-quite well.
-
-Typically, if you run several outputs that do not share much (any) code,
-you can put each of them in a separate clock.
-For example the following script takes one file and encodes it as MP3
-twice. You should run it as `liquidsoap EXPR -- FILE`
-and observe that it fully exploits two cores:
-
-```liquidsoap
-def one()
-  clock.assign_new(sync=false,
-        [output.file(%mp3,"/dev/null",single(argv(1)))])
-end
-one()
-one()
+```
+#!/usr/bin/env -S liquidsoap -q
 ```
 
-TODO: explain the operators who need to be clocked for instance, we had the
-following question: Yamakaky [5:20 PM] Does `input.harbor` require the use of
-`clock` and `buffer`? It has an internal buffer so I would say no?
+which means that the rest of the script should be executed by the default
+command `liquidsoap`, with the `-q` argument passed in order to avoid printing
+the usual log messages. The arguments of the script can be obtained with the
+`argv` function which takes a number n and returns the nth argument. If you run
+your script with `liquidsoap`, the arguments in `argv` are those which are after
+the `--` argument. For instance, if we run
+
+```
+liquidsoap mylib.lib myscript.liq -- arg1 arg2
+```
+
+the arguments in `argv` are going to be `"arg1"` and `"arg2"`.
+
+Another trick to process files in script is to assign a clock to the output with
+`sync="none"` as parameter: this will make Liquidsoap assume that the operator
+is taking care of synchronization on its own, and thus produce the stream as
+fast as the CPU allows.
+
+For instance, we have used this in the following script `convert2wav`:
+
+```{.liquidsoap include="liq/convert2wav.liq"}
+```
+
+It can be used to convert any file to a wav file by running a command such as
+
+```
+convert2wav test.mp3
+```
+
+which will produce a file `test.wav`. As you can see, the script reads the file
+name as a commandline argument, plays it using `once(single(infile))` which is
+put in a clock without synchronization, and finally outputs it to a file,
+calling `shutdown` to stop the script when the whole file has been played and
+the source becomes unavailable.
+
+Of course, we could easily adapt this script in order to apply audio effects to
+files (compression, volume normalization, etc), to merge a playlist into one
+file, and so on. For instance, the following script will merge a playlist of mp3
+files into one mp3 file, without reencoding them:
+
+```{.liquidsoap include="liq/merge-playlist.liq"}
+```
+
+<!--
+### Daemonizing the script
+
+If you need to run liquidsoap as daemon, we provide a package named
+`liquidsoap-daemon`.  See
+[savonet/liquidsoap-daemon](https://github.com/savonet/liquidsoap-daemon) for
+more information.
+
+The full installation of liquidsoap will typically install
+`/etc/liquidsoap`, `/etc/init.d/liquidsoap` and `/var/log/liquidsoap`.
+All these are meant for a particular usage of liquidsoap
+when running a stable radio.
+
+Your production `.liq` files should go in `/etc/liquidsoap`.
+You'll then start/stop them using the init script, *e.g.*
+`/etc/init.d/liquidsoap start`.
+Your scripts don't need to have the `#!` line,
+and liquidsoap will automatically be ran on daemon mode (`-d` option) for them.
+
+You should not override the `log.file.path` setting because a
+logrotate configuration is also installed so that log files
+in the standard directory are truncated and compressed if they grow too big.
+
+It is not very convenient to detect errors when using the init script.
+We advise users to check their scripts after modification (use
+`liquidsoap --check /etc/liquidsoap/script.liq`)
+before effectively restarting the daemon.
+-->
 
 ### Dynamic sources
+
+Sources can be created dynamically in Liquidsoap, at any time of the execution
+of the script (including of course startup). For instance, the script
+
+```{.liquidsoap include="liq/play-lists.liq" from=1}
+```
+
+will look at all the files in the `playlists/` directory, which are supposed to
+be playlists, and, for each such file, will play it on a corresponding icecast
+mountpoint. The point here is that the number of source is not fixed in advance
+as in most scripts: there will be as many `playlist` and `output.icecast`
+operators as there are playlists!
+
+`source.shutdown`
 
 TODO: introduce `source.dynamic` and detail the code of `request.player`
 
@@ -5648,50 +5712,6 @@ server.register(namespace="dump",
                 "stop",
                 fun (s) -> begin stop_dump() "Done!" end)
 ```
-
-### Daemonizing the script
-
-If you need to run liquidsoap as daemon, we provide a package named
-`liquidsoap-daemon`.  See
-[savonet/liquidsoap-daemon](https://github.com/savonet/liquidsoap-daemon) for
-more information.
-
-The full installation of liquidsoap will typically install
-`/etc/liquidsoap`, `/etc/init.d/liquidsoap` and `/var/log/liquidsoap`.
-All these are meant for a particular usage of liquidsoap
-when running a stable radio.
-
-Your production `.liq` files should go in `/etc/liquidsoap`.
-You'll then start/stop them using the init script, *e.g.*
-`/etc/init.d/liquidsoap start`.
-Your scripts don't need to have the `#!` line,
-and liquidsoap will automatically be ran on daemon mode (`-d` option) for them.
-
-You should not override the `log.file.path` setting because a
-logrotate configuration is also installed so that log files
-in the standard directory are truncated and compressed if they grow too big.
-
-It is not very convenient to detect errors when using the init script.
-We advise users to check their scripts after modification (use
-`liquidsoap --check /etc/liquidsoap/script.liq`)
-before effectively restarting the daemon.
-
-### Offline processing {#sec:offline-processing}
-
-Explain how to use Liquidsoap to process files. For instance, converting to wav:
-
-```{.liquidsoap include="liq/convert2wav.liq"}
-```
-
-of course we could also use it to
-
-- apply audio effects (normalization, LADSPA, etc.)
-- merge a playlist into one file
-- cut the file `cue_cut`
-
-TODO: explain that if we run `liquidsoap mylib.liq myscript.liq -- a b` the
-`argv.(1)` is the first after the `--`, which is used to separate scripts from
-"real arguments"
 
 ### Synthesizers
 
