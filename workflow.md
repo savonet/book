@@ -5503,7 +5503,7 @@ before effectively restarting the daemon.
 ### Dynamic sources
 
 Sources can be created dynamically in Liquidsoap, at any time of the execution
-of the script (including of course startup). For instance, the script
+of the script. For instance, the script
 
 ```{.liquidsoap include="liq/play-lists.liq" from=1}
 ```
@@ -5515,204 +5515,56 @@ is that the number of source is not fixed in advance as in most scripts: there
 will be as many `playlist` and `output.icecast` operators as there are
 playlists!
 
-`source.shutdown`
+#### Creating sources during execution
 
-TODO: introduce `source.dynamic` and detail the code of `request.player`
+The creation of a source can be done at any point during the execution, not
+necessarily at startup. For instance, as a variant of the preceding script, we
+are going to register a telnet command `play p` which starts playing a given
+playlist and `stop p` which stops playing a given playlist (the playlist located
+at `playlists/p`):
 
-
-TODO: implementation of functions in `native.liq`
-
-Liquidsoap supports dynamic creation and destruction of sources 
-during the execution of a script. The following gives an example
-of this.
-
-First some outlines:
-
-- This example is meant to create a new source and outputs. It is not easy
-  currently to change a source being streamed
-- The idea is to create a new output using a telnet/server command.
-
-In this example, we will register a command that creates a playlist source using
-an uri passed as argument and outputs it to a fixed icecast output.
-
-With more work on parsing the argument passed to the telnet command, you may
-write more evolved options, such as the possibility to change the output
-parameters etc..
-
-Due to some limitations of the language, we have used some intricate (but
-classic) functional programming tricks. They are commented in order to help
-reading the code..
-
-New here's the code:
-
-```liquidsoap
-# First, we create a list referencing the dynamic sources:
-dyn_sources = ref []
-
-# This is our icecast output.
-# It is a partial application: the source needs to be given!
-out = output.icecast(%mp3,
-                     host="test",
-                     password="hackme",
-                     fallible=true)
-
-# Now we write a function to create 
-# a playlist source and output it.
-def create_playlist(uri) =
-  # The playlist source 
-  s = playlist(uri)
-
-  # The output
-  output = out(s)
-
-  # We register both source and output 
-  # in the list of sources
-  dyn_sources := 
-      list.append( [(uri,s),(uri,output)],
-                    !dyn_sources )
-  "Done!"
-end
-
-# And a function to destroy a dynamic source
-def destroy_playlist(uri) = 
-  # We need to find the source in the list,
-  # remove it and destroy it. Currently, the language
-  # lacks some nice operators for that so we do it
-  # the functional way
-
-  # This function is executed on every item in the list
-  # of dynamic sources
-  def parse_list(ret, current_element) = 
-    # ret is of the form: (matching_sources, remaining_sources)
-    # We extract those two:
-    matching_sources = fst(ret)
-    remaining_sources = snd(ret)
-
-    # current_element is of the form: ("uri", source) so 
-    # we check the first element
-    current_uri = fst(current_element)
-    if current_uri == uri then
-      # In this case, we add the source to the list of
-      # matched sources
-      (list.append( [snd(current_element)], 
-                     matching_sources),
-       remaining_sources)
-    else
-      # In this case, we put the element in the list of remaining
-      # sources
-      (matching_sources,
-       list.append([current_element], 
-                    remaining_sources))
-    end
-  end
-    
-  # Now we execute the function:
-  result = list.fold(parse_list, ([], []), !dyn_sources)
-  matching_sources = fst(result)
-  remaining_sources = snd(result)
-
-  # We store the remaining sources in dyn_sources
-  dyn_sources := remaining_sources
-
-  # If no source matched, we return an error
-  if list.length(matching_sources) == 0 then
-    "Error: no matching sources!"
-  else
-    # We stop all sources
-    list.iter(source.shutdown, matching_sources)
-    # And return
-    "Done!"
-  end
-end
-
-
-# Now we register the telnet commands:
-server.register(namespace="dynamic_playlist",
-                description="Start a new dynamic playlist.",
-                usage="start <uri>",
-                "start",
-                create_playlist)
-server.register(namespace="dynamic_playlist",
-                description="Stop a dynamic playlist.",
-                usage="stop <uri>",
-                "stop",
-                destroy_playlist)
+```{.liquidsoap include="liq/play-lists2.liq" from=1 to=-1}
 ```
 
-If you execute this code (add a `output.dummy(blank())` if you have
-no other output..), you have two new telnet commands:
+Here, we have two commands `play` and `stop` which are registered with
+`server.command`. We maintain a list `sources` which contains pairs consisting
+of the name of playing sources and the sources themselves: the `play` command,
+in addition to playing the requested playlist, add the pair `(pl, s)` to the
+list, where `pl` is the name of the playlist and `s` is the source we created to
+play it. The `stop` command finds the source to stop by looking for its name in
+the list with `list.assoc`, removes it from the list with `list.assoc.remove`
+and then stops the source by calling its `shutdown` method.
 
-- `dynamic_playlist.start <uri>`
-- `dynamic_playlist.stop <uri>`
+As a general rule, any dynamically created source which is not used anymore
+should be shut down using its `shutdown` method.
 
-which you can use to create/destroy dynamically your sources.
+#### Even more dynamic sources
 
-With more tweaking, you should be able to adapt these ideas to your
-precise needs.
+We have seen that we can dynamically create sources, but this cannot be used to
+dynamically change the contents of sources which are already playing. This can
+be achieved by using `source.dynamic`: this operator takes as argument a
+function which returns the source to play at any given time, and can thus be
+used to create a source which changes overtime.
 
-If you want to plug those sources into an existing output, you may
-want to use an `input.harbor` in the main output and change the
-`output.icecast` in the dynamic source creation to send everything to
-this `input.harbor`. You can use the `%wav` format in this case to avoid
-compressing/decompressing the data.
+For instance, the `add` operator takes a fixed list of sources, but suppose that
+the list of sources we want to add varies over time. We can program this with
+`source.dynamic` where the function returns an `add` applied to a list which
+varies over times. For instance, the following script maintains a list `sines`
+of sources, to which we add some `sine` sources with random parameters over time
+by calling the function `new`:
 
-TODO: another example
-
-```{.liquidsoap include="liq/source.dynamic.liq"}
+```{.liquidsoap include="liq/bells.liq" from=1}
 ```
 
-and
+Should you try it, you should hear music which sounds like random bells
+playing, sometimes interfering one with the other.
 
-```{.liquidsoap include="liq/source.dynamic-track.liq"}
-```
-
-#### Manually dump a stream
-You may want to dump the content of 
-a stream. The following code adds 
-two server/telnet commands, `dump.start <filename>`
-and `dump.stop` to dump the content of source s
-into the file given as argument
-
-```liquidsoap
-# A source to dump
-# s = (...) 
-
-# A function to stop the current dump source
-stop_f = ref (fun () -> ())
-# You should make sure you never do a start when another dump
-# is running.
-
-# Start to dump
-def start_dump(file_name) =
-  # We create a new file output source
-  s = output.file(%vorbis,
-            fallible=true,
-            on_start={log("Starting dump with file #{file_name}.ogg")},
-            reopen_on_metadata=false,
-            "#{file_name}",
-            s)
-  # We update the stop function
-  stop_f := fun () -> source.shutdown(s)
-end
-
-# Stop dump
-def stop_dump() =
-  f = !stop_f
-  f ()
-end
-
-# Some telnet/server command
-server.register(namespace="dump",
-                description="Start dumping.",
-                usage="dump.start <filename>",
-                "start",
-                fun (s) ->  begin start_dump(s) "Done!" end)
-server.register(namespace="dump",
-                description="Stop dumping.",
-                usage="dump.stop",
-                "stop",
-                fun (s) -> begin stop_dump() "Done!" end)
-```
+Of course, the above example is not something that you would usually have in a
+radio, but this is the same mechanism which is used to implement the
+`request.player` operator in the standard library. `source.dynamic` is also used
+in the standard library to provide alternative implementation of basic
+Liquidsoap functions, you should have a look at the file `native.liq` in order
+to learn more about those.
 
 ### Synthesizers
 
