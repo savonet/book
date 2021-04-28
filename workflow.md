@@ -5244,7 +5244,10 @@ Some methods allow performing actions on the source.
   ```{.liquidsoap include="liq/seek.liq" from=1}
   ```
   
-  Namely, after 10 seconds of playing, we seek 10 seconds backwards.
+  Namely, after 10 seconds of playing, we seek 10 seconds backwards. Here, we
+  are giving high priority to the mad library to decode mp3 files, because the
+  FFmpeg library, which is currently used by default, does not handle seeking
+  very well.
 
 - `skip`: skip to the next track.
 - `shutdown`: deactivate a source.
@@ -5295,8 +5298,8 @@ discrepancies between time flow between operators.
    unique identifier for each crossfade operator).
 
 If the speed of a source is not controlled by a particular library or operator,
-it is attached to the `cpu` clock, which is the default one, and animated by the
-computer's CPU.
+it is attached to the `main` clock, which is the default one, and animated by
+the computer's CPU.
 
 #### Buffers
 
@@ -5319,11 +5322,12 @@ Note that when executing it the ALSA output will be 1 second late compared to
 the Pulseaudio one: this is the price to pay to live in peace with clocks.
 
 A typical buffer can handle time discrepancies between clocks between 1 and 10
-seconds. It will not be able to handle more than this because the buffer will be
-either empty or full. Alternatively, you can use `buffer.adaptative` which tries
-to slow down the source if it is too fast or speed it up if it is too slow. This
-means that the pitch of the source will also be changed, but this is generally
-not audible if the time discrepancy evolves slowly.
+seconds. It will not be able to handle more than this, if one source is going
+really too slow or too fast, because the buffer will be either empty or
+full. Alternatively, you can use `buffer.adaptative` which tries to slow down
+the source if it is too fast or speed it up if it is too slow. This means that
+the pitch of the source will also be changed, but this is generally not audible
+if the time discrepancy evolves slowly.
 
 #### Dealing with clocks
 
@@ -5336,7 +5340,8 @@ indicates how the clocks synchronizes and can be either
 - `"cpu"`: the clock follows the one of the computer,
 - `"none"`: the clock goes as fast as possible,
 - `"auto"`: the clock follows the one of a source taking care of the
-  synchronization if there is one or to the one of the cpu by default.
+  synchronization if there is one or to the one of the cpu by default (this is
+  mostly useful with `clock.assign_new`, see below).
 
 Some other useful functions are
 
@@ -5356,12 +5361,13 @@ file for backup purposes and streamed to icecast:
 ```{.liquidsoap include="liq/clock-decoupling.liq" from=1}
 ```
 
-By default, all sources are animated by the same clock, which is the `alsa` one.
-If for some reason, the icecast output is slow (for instance, because of a
-network lag), it will slow down the `alsa` clock and thus all the operators will
-lag. This means that we might loose some of the microphone input, because we are
-not reading fast enough on it. In order to prevent from this happening, we can
-put the icecast output in its own clock:
+Here, all sources are animated by the same clock, which is the `alsa` one
+(because `input.alsa` is the only operator here which is able to take care of
+the synchronization of the sources). If for some reason, the icecast output is
+slow (for instance, because of a network lag), it will slow down the `alsa`
+clock and thus all the operators will lag. This means that we might loose some
+of the microphone input, because we are not reading fast enough on it. In order
+to prevent from this happening, we can put the icecast output in its own clock:
 
 ```{.liquidsoap include="liq/clock-decoupling2.liq" from=1}
 ```
@@ -5374,11 +5380,11 @@ error message.
 
 #### Encoding in parallel
 
-Each clock run in its own thread and, because of this, two operators running in
-two different clocks can be run in parallel and exploit multiple cores. This is
-particularly interesting for encoding, which is the most CPU-hungry part of the
-tasks: two outputs will different clocks will be able to encode simultaneously
-in two different cores of the CPU.
+Each clock runs in its own thread and, because of, this two operators running
+in two different clocks can be run in parallel and exploit multiple cores. This
+is particularly interesting for encoding, which is the most CPU-hungry part of
+the tasks: two outputs will different clocks will be able to encode
+simultaneously in two different cores of the CPU.
 
 In order to illustrate this consider the following script which performs two
 encodings of two different video files:
@@ -5391,8 +5397,9 @@ time:
 
 ![Encoding with one clock](img/encoding1.png)\
 
-(the core we use changes over time in order to better distribute the
-heat). However, if we assign different clocks to the outputs with
+(the kernel changes the core we use over time in order to better distribute the
+heat). However, if we assign different clocks to the outputs, by changing the
+clock of the second output which will not be the default one anymore, with
 
 ```{.liquidsoap include="liq/clock-parallel-encodings2.liq" from=1}
 ```
@@ -5401,6 +5408,12 @@ we see that we now often use two cores simultaneously, which makes the encoding
 twice as fast:
 
 ![Encoding with multiple clocks](img/encoding2.png)\
+
+If the two sources
+
+```{.liquidsoap include="liq/clock-parallel-encodings2.liq" from=1}
+```
+
 
 #### Offline processing
 

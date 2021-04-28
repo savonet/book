@@ -2,7 +2,7 @@ MD = $(wildcard *.md)
 LIQ = $(wildcard liq/*.liq)
 PANDOC = pandoc --bibliography=papers.bib --filter=pandoc-include --syntax-definition=liquidsoap.xml
 
-all: fig scripts book.pdf language.dtd
+all: fig book.pdf language.dtd
 
 clean:
 	rm -f book.pdf book.tex book.epub book.html *.aux *.idx *.ilg *.ind *.log *.out *.toc
@@ -35,15 +35,8 @@ language.dtd:
 fig:
 	@$(MAKE) -C fig
 
-scripts:
-	@$(MAKE) -C scripts
-
 check:
 	$(MAKE) -C liq $@
-
-test:
-	$(MAKE) -C scripts
-	pandoc --filter=pandoc-inspect --filter=pandoc-include -t LaTeX test.md
 
 docker-test:
 	docker build . -f .github/docker/Dockerfile.build
