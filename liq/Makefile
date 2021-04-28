@@ -18,7 +18,7 @@ test.mp3:
 	@echo "Generating a sine test mp3 file..."
 	ffmpeg -f lavfi -i "sine=frequency=440:duration=5" -ac 2 $@
 
-files: ad.mp3 jingle1.mp3 jingle2.mp3 jingle3.mp3
+files: ad.mp3 jingle1.mp3 jingle2.mp3 jingle3.mp3 video.mkv
 
 ad.mp3:
 	ffmpeg -f lavfi -i "sine=frequency=880:duration=1" -ac 2 $@
@@ -31,6 +31,9 @@ jingle2.mp3:
 
 jingle3.mp3:
 	ffmpeg -f lavfi -i "sine=frequency=880:duration=1" -ac 2 $@
+
+video.mkv:
+	ffmpeg -f lavfi -i testsrc=duration=5:size=1280x720:rate=25 $@
 
 youtube-key:
 	touch $@
