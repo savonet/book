@@ -6,7 +6,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install packages
-      run: sudo apt-get install pandoc pandoc-citeproc texlive texlive-fonts-extra ocaml-nox ocaml-findlib libyojson-ocaml-dev
+      run: sudo apt-get install pandoc pandoc-citeproc texlive texlive-fonts-extra ocaml-nox ocaml-findlib libyojson-ocaml-dev dune
+    - name: Build pandoc filters
+      run: |
+        git clone https://github.com/smimram/ocaml-pandoc
+        cd ocaml-pandoc
+        dune install -p pandoc-crossref
+        dune install -p pandoc-include
     - name: Build
       run: |
         make
