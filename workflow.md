@@ -5509,10 +5509,11 @@ of the script (including of course startup). For instance, the script
 ```
 
 will look at all the files in the `playlists/` directory, which are supposed to
-be playlists, and, for each such file, will play it on a corresponding icecast
-mountpoint. The point here is that the number of source is not fixed in advance
-as in most scripts: there will be as many `playlist` and `output.icecast`
-operators as there are playlists!
+be playlists, and, for each such file (we iterate over the list of files with
+`list.iter`), will play it on a corresponding icecast mountpoint. The point here
+is that the number of source is not fixed in advance as in most scripts: there
+will be as many `playlist` and `output.icecast` operators as there are
+playlists!
 
 `source.shutdown`
 
