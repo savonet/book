@@ -6,7 +6,7 @@ def metadata()
   jingle_now := not !jingle_now
   if !jingle_now then [("jingle","true")] else [] end
 end
-s = chop(duration=3., metadata=metadata, s)
+s = chop(every=3., metadata=metadata, s)
 
 q = request.queue()
 def insert_jingle(m)

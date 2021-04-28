@@ -7,7 +7,7 @@ def metadata()
   if !jingle_now then [("jingle","true")] else [] end
 end
 jingles = playlist("jingles")
-s = chop(duration=3., metadata=metadata, s)
+s = chop(every=3., metadata=metadata, s)
 
 def insert_jingle(m)
   log.info("Got metadata")
