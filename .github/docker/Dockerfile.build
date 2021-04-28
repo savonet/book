@@ -2,7 +2,7 @@ FROM savonet/liquidsoap:main
 
 USER root
 
-RUN apt-get -y install make
+RUN apt-get -y install make ffmpeg
 
 USER liquidsoap
 
@@ -17,5 +17,7 @@ USER root
 RUN chmod a+w to-play
 
 USER liquidsoap
+
+RUN make files
 
 RUN make test
