@@ -1,6 +1,6 @@
 MD = $(wildcard *.md)
 LIQ = $(wildcard liq/*.liq)
-PANDOC = pandoc --bibliography=papers.bib --filter=scripts/include --syntax-definition=liquidsoap.xml
+PANDOC = pandoc --bibliography=papers.bib --filter=pandoc-include --syntax-definition=liquidsoap.xml
 
 all: fig scripts book.pdf language.dtd
 
@@ -13,7 +13,7 @@ ci:
 
 book.tex: book.md style.sty $(MD) $(LIQ) liquidsoap.xml
 	@echo "Generating $@..."
-	@$(PANDOC) --template=template.latex -s --top-level-division=chapter --filter=scripts/crossref -V links-as-notes=true $< -o tmp.$@
+	@$(PANDOC) --template=template.latex -s --top-level-division=chapter --filter=pandoc-crossref -V links-as-notes=true $< -o tmp.$@
 	@cat tmp.$@ | sed 's/\\includegraphics\([^{]*\){\(.*\)}\\\\/\\begin{center}\\includegraphics\1{\2}\\end{center}/' > $@
 	@rm -f tmp.$@
 
@@ -43,7 +43,7 @@ check:
 
 test:
 	$(MAKE) -C scripts
-	pandoc --filter=scripts/inspect --filter=scripts/include -t LaTeX test.md
+	pandoc --filter=pandoc-inspect --filter=pandoc-include -t LaTeX test.md
 
 docker-test:
 	docker build . -f .github/docker/Dockerfile.build
@@ -55,6 +55,6 @@ docker-run:
 	$(PANDOC) -s $< -o $@
 
 %.tex %.pdf: %.md liquidsoap.xml
-	$(PANDOC) --filter=scripts/crossref -s $< -o $@
+	$(PANDOC) --filter=pandoc-crossref -s $< -o $@
 
 .PHONY: fig scripts
