@@ -1,4 +1,4 @@
-LIQ := $(filter-out convert2wav.liq merge-playlist.liq, $(sort $(wildcard *.liq)))
+LIQ := $(filter-out convert2wav.liq, $(sort $(wildcard *.liq)))
 CHECKS := $(foreach l, $(LIQ), check-$(basename $l))
 CHECKS := $(filter-out check-ladspa.fastlookaheadlimiter, $(CHECKS))
 
@@ -13,7 +13,6 @@ test: youtube-key check test-wav
 
 test-wav: test.mp3
 	$(LIQUIDSOAP) -q convert2wav.liq -- test.mp3
-	$(LIQUIDSOAP) -q merge-playlist.liq -- playlist
 
 test.mp3:
 	@echo "Generating a sine test mp3 file..."
