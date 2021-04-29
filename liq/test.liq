@@ -1,2 +1,11 @@
 #!./liquidsoap
-output.video((single("test1.png"):source(audio=none)))
+log.level.set(5)
+# a = merge_tracks(playlist("~/Music"))
+# a = blank()
+# v = (playlist(mode="normal", prefix="annotate:duration=5:", "image.playlist"):source(audio=none))
+# s = video.fade.out(s)
+# v = (single("annotate:duration=10:image.jpg"):source(audio=none()))
+# s = mux_audio(audio=blank(), v)
+s = single("test.mp4")
+s = cross(fun (_,_,_,_,a,b) -> add([a,b]), s)
+output.audio_video(s)

@@ -219,7 +219,7 @@ so that it is drawn on top of the other one.
 
 Because one often does this, Liquidsoap provides the function `video.add_image`,
 which allows adding an image on top of another source, and the previous script
-can be more concisely written
+can be more concisely written as
 
 ```{.liquidsoap include="liq/add-videos2.liq" from=1}
 ```
@@ -229,6 +229,30 @@ for the parameters, so that we can program a moving logo as follows:
 
 ```{.liquidsoap include="liq/add-videos3.liq" from=1}
 ```
+
+#### Picture in picture
+
+Instead of adding a small image on top of a big one, we can also add a small
+video on top of a big one. In order to reduce the size of a video, we can either use
+
+- `video.scale`: which scales a video according to a given factor `scale`,
+- `video.resize`: which resizes a video to a given size specified by its `width`
+  and `height`.
+
+Both functions also allow translating the video so that the upper-left corner is
+at a given position (`x`, `y`). 
+
+For instance, the following script adds a small webcam capture on top of the
+main video:
+
+```{.liquidsoap include="liq/add-scale.liq" from=1}
+```
+
+Here, the main source `s` is a playlist of videos and `w` is the capture of the
+webcam. Since it does not have audio (only video), we add to it a blank audio
+track so that it has the same type as the source `s` and can be added with
+it. We scale down the webcam image with `video.scale` and finally add it on top
+of the main video with `add`.
 
 ### Combining audio and video sources
 
@@ -250,16 +274,30 @@ playlist of image files with
 ```{.liquidsoap include="liq/audio-video-playlists.liq" from=1 to=-1}
 ```
 
+The "opposite" of the muxing functions are the functions `drop_audio` and
+`drop_video` which respectively remove the audio and video channels from a video
+track. For instance, if we have two sources `s1` and `s2` with both audio and
+video, we can create a source `s` with the audio from `s1` and the video from
+`s2` by
 
-TODO ...............
+```{.liquidsoap include="liq/mix-av.liq" from=3 to=-1}
+```
 
-Mux an image with a video
+### (Cross)fading
 
-### Size and superposition
+In order to have nice endings for video, one can use the `video.fade.out`
+operator which will fade out to black (or actually rather to transparent) the
+video. The time it takes to perform this is controlled by the `duration`
+parameter (3 seconds by default), the kind of transition can be controlled by
+the `transition` parameter whose values can be
 
-`add` `video.scale` `video.resize`
+- `fade`: perform a fade to blank,
+- `slide_left`, `slide_right`, `slide_up`, `slide_down`: make the video slide
+  left, right, up or down,
+- grow|disc|
+- `random`: randomly choose among the previous transitions.
 
-### Fading
+`video.fade.in`
 
 ### Text
 
