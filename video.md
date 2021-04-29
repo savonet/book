@@ -73,6 +73,10 @@ resolution to 960×540 or even 640×360 will degrade the quality of images, but
 can greatly improve the CPU consumption, in particular if your server is getting
 a bit old: a low resolution video is better than a laggy or jumpy one...
 
+For convenience the functions `video.frame.width`, `video.frame.height` and
+`video.frame.rate` are also defined and return the corresponding configuration
+parameters.
+
 ### Blank and colored frames
 
 The operator `blank` can generate video (in addition to audio): it will generate
@@ -294,20 +298,70 @@ the `transition` parameter whose values can be
 - `fade`: perform a fade to blank,
 - `slide_left`, `slide_right`, `slide_up`, `slide_down`: make the video slide
   left, right, up or down,
-- grow|disc|
+- `grow`: makes the image get smaller and smaller,
+- `disc`: have a black disc covering the image,
 - `random`: randomly choose among the previous transitions.
 
-`video.fade.in`
+Similarly, the operator `video.fade.in` add fade effects at the beginning of
+tracks:
+
+```{.liquidsoap include="liq/video.fade.in.liq" from=2 to=-1}
+```
+
+\TODO{crossfading with cross when it will work see bug 1603}
+
+### Test sources
+
+In case you do not have any video at hand to play, the sources
+`video.testsrc.ffmpeg` and `video.testsrc.gstreamer` can be used to generate
+test videos such as
+
+![Test video](img/testsrc.png)\
 
 ### Text
 
-`video.add_text`
+In order to add text on videos, we provide the `video.add_text` operator which,
+in addition to the text to print and the source on which it should add the text
+takes the following optional arguments:
 
-explain how to display the volume and bpm of the currently playing song.
+- `color`: color of the text, in the format `0xrrggbb` as explained above for
+  `video.fill`,
+- `font`: the path to the font file (usually in ttf format),
+- `metadata`: metadata on which the text should be changed,
+- `size`: the font size,
+- `speed`: the speed at which it should scroll horizontally to have a "news
+  flash" effect (in pixels per seconds, set to `0` to disable),
+- `x` and `y`: the position of the text.
 
-### Audio
+This function uses one of the various implementation we provide. You should try
+them in order to reach what you want, they have various quality and
+functionalities, and unfortunately we have not found the silver bullet yet. The
+implementations are:
 
-`mux_audio` / `mux_video`
+- `video.add_text.native`: the native implementation. It always works and does
+  not rely on any external library, but uses a hand-made, hard-coded, low-fi
+  font.
+- `video.add_text.sdl` / `video.add_text.gd` / `video.add_text.gstreamer` /
+  `video.add_text.ffmpeg`: synthesize the text using SDL, GD, GStreamer and
+  FFmpeg libraries.
+  
+For instance,
+
+```{.liquidsoap include="liq/video.add_text.liq" from=2 to=-1}
+```
+
+The text is a getter which means that it can vary over times. For instance, the
+following prints the current volume and BPM of a song:
+
+```{.liquidsoap include="liq/video.add_text-volume-bpm.liq" from=1}
+```
+
+and here is the output:
+
+![Volume and BPM](img/vol-bpm.png)\
+
+Other parameters are getters, so that the position of the text can also be
+customized over time...
 
 Encoders
 --------
@@ -354,6 +408,10 @@ from the settings `frame.video.height/width`.
 ### AVI
 
 TODO
+
+### Saving frames
+
+`video.still_frame`
 
 Streaming to youtube {#sec:youtube}
 --------------------
