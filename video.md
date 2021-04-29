@@ -161,10 +161,48 @@ annotate:duration=5:/path/toimage.jpg
 
 Alternatively, if the playlist contains only the paths to the images, the
 `duration` metadata can be added by using the `prefix` argument of the playlist
-operator:
+operator. For instance, the script
 
 ```{.liquidsoap include="liq/image-playlist.liq" from=1 to=-1}
 ```
+
+will display for 2 seconds the images of the playlist `image.playlist`.
+
+#### Changing images
+
+The `image` operator produces a source with a method `set` which takes as
+argument the new path to the image to stream. For instance, the following script
+shows a random image in the current directory every 2 seconds:
+
+```{.liquidsoap include="liq/image-set.liq" from=1 to=-1}
+```
+
+In more details, the `file.ls(".")` function returns a list of functions in the
+current directory. We then use `list.filter` to extract all the files which end
+with `.png` or `.jpg` (the `string.match` function looks at whether the strings
+match the regular expression `.*\\.png|.*\\.jpg` which means: "anything followed
+by `.png` or anything followed by `.jpg`). We define an `image` source `s` of
+which we change the image every 2 second using the `set` method, with
+`list.pick(files)` which picks a random element of the list `files`.
+
+This mechanism can also be used to change the displayed image depending on some
+metadata. For instance, consider the script
+
+```{.liquidsoap include="liq/image-metadata.liq" from=1 to=-1}
+```
+
+It creates a source `a` from a playlist `playlist-with-image` which contains
+audio songs with a metadata `image` indicating the image to display with the
+song. Typically, a line of this playlist would look like
+
+```
+annotate:image="myimage.png":mysong.mp3
+```
+
+(or the metadata `image` could also be hardcoded in the audio files). It also
+creates an `image` source `v`, whose image is set to the contents of the `image`
+metadata of each new track in `a`. Finally, we show the source `s` obtained by
+combining the audio source `a` and the video source `v`.
 
 ### Adding videos
 
@@ -192,7 +230,7 @@ for the parameters, so that we can program a moving logo as follows:
 ```{.liquidsoap include="liq/add-videos3.liq" from=1}
 ```
 
-### Combining sources
+### Combining audio and video sources
 
 Given an audio source `a` and a video source `v`, one can combine them in order
 to make a source `s` with both audio and video with the `mux_audio` and
@@ -206,22 +244,22 @@ or
 ```{.liquidsoap include="liq/mux_video.liq" from=2 to=-1}
 ```
 
-For instance, we can generate a stream from a playlist, with a static image 
+For instance, we can generate a stream from a playlist of audio files and a
+playlist of image files with
+
+```{.liquidsoap include="liq/audio-video-playlists.liq" from=1 to=-1}
+```
 
 
 TODO ...............
 
 Mux an image with a video
 
-TODO:
-
-- rotate the image
-- set the image depending on the video
-
-
 ### Size and superposition
 
 `add` `video.scale` `video.resize`
+
+### Fading
 
 ### Text
 

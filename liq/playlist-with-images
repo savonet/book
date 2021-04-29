@@ -1,0 +1,4 @@
+annotate:image="test1.png":test.mp3
+annotate:image="test2.png":test.mp3
+annotate:image="test3.png":test.mp3
+annotate:image="test4.png":test.mp3
