@@ -73,6 +73,21 @@ resolution to 960×540 or even 640×360 will degrade the quality of images, but
 can greatly improve the CPU consumption, in particular if your server is getting
 a bit old: a low resolution video is better than a laggy or jumpy one...
 
+### Blank and colored frames
+
+The operator `blank` can generate video (in addition to audio): it will generate
+a blank image (transparent). In order to generate a video of a given color, you
+can use the `video.fill` operator which fills the video of the source with the
+color specified in the `color` argument. For instance, the script
+
+```{.liquidsoap include="liq/video.fill.liq" from=1}
+```
+
+will play a red image. The color should be specified in hexadecimal, in the form
+`0xrrggbb` where `rr` specifies the red intensity, `gg` the green and `bb` the
+blue, each color ranges from `00` (color absent) to `ff` (color with maximum
+intensity).
+
 ### Images
 
 Images can be used as sources just as video video files: they are accepted by
@@ -101,6 +116,8 @@ source from an image:
 
 You are advised to use this operator when dealing with images.
 
+#### Specifying the dimensions
+
 Decoders also take in account the following metadata when decoding images:
 
 - `x`, `y`: offset of the decoded image (in pixels),
@@ -116,13 +133,38 @@ will show a small image of 50×50 pixels.
 
 #### Cover art
 
-TODO ...............
+Most recent audio formats (such as mp3 or ogg) allow embedding the cover of the
+album into metadata. Liquidsoap has support for extracting this and provides the
+`video.cover` operator in order to extract the cover from an audio stream and
+generate a video stream from it. The script
 
-We can extract cover art, e.g.
-
-```{.liquidsoap include="liq/cover.liq"}
+```{.liquidsoap include="liq/cover.liq" from=1 to=-1}
 ```
 
+generates a source `a` from our music library, generates a video track from its
+covers with `video.cover`, adds it to the sound track `a` (with `mux_video`,
+detailed below) and plays the result. It is important here that we use `mksafe`
+around `video.cover` in order to play black by default: the source will not be
+available when the track has no cover!
+
+#### Playlists
+
+If you want to rotate between images, you can use playlists containing
+images. However, remember that images have infinite duration by default, and
+therefore a `duration` metadata should be added for each image in order to
+specify how long it should last. The most simple way of performing this is to
+have entries of the form
+
+```
+annotate:duration=5:/path/toimage.jpg
+```
+
+Alternatively, if the playlist contains only the paths to the images, the
+`duration` metadata can be added by using the `prefix` argument of the playlist
+operator:
+
+```{.liquidsoap include="liq/image-playlist.liq" from=1 to=-1}
+```
 
 ### Adding videos
 
@@ -149,6 +191,33 @@ for the parameters, so that we can program a moving logo as follows:
 
 ```{.liquidsoap include="liq/add-videos3.liq" from=1}
 ```
+
+### Combining sources
+
+Given an audio source `a` and a video source `v`, one can combine them in order
+to make a source `s` with both audio and video with the `mux_audio` and
+`mux_video` operators, which respectively add audio and video to a source, by
+
+```{.liquidsoap include="liq/mux_audio.liq" from=2 to=-1}
+```
+
+or
+
+```{.liquidsoap include="liq/mux_video.liq" from=2 to=-1}
+```
+
+For instance, we can generate a stream from a playlist, with a static image 
+
+
+TODO ...............
+
+Mux an image with a video
+
+TODO:
+
+- rotate the image
+- set the image depending on the video
+
 
 ### Size and superposition
 

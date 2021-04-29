@@ -1,28 +1,5 @@
 #!./liquidsoap
-
-# TODO: we seem to be getting the cover for the previous song...
-
-s = mksafe(playlist("~/Music"))
-coverfile = "/tmp/cover.jpg"
-video = mksafe(mux_audio(audio=blank(), single(fallible=true, coverfile)))
-
-def f(m)
-  print("METADATA: #{m}")
-  filename = list.assoc(default="", "filename", m)
-  cover = file.cover(filename)
-  if cover != "" then
-    file.write(data=cover, coverfile)
-  end
-  video.skip()
-end
-
-s.on_metadata(f)
-
-output(s)
-output.video(video)
-
-def skip () =
-  print("Skipping!")
-  s.skip()
-end
-thread.run(every=2., skip)
+s = playlist("~/Music")
+s = mux_video(video=mksafe(video.cover(a)), a)
+output.audio_video(s)
+thread.run(every=5., a.skip)

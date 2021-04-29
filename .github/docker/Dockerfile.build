@@ -2,7 +2,7 @@ FROM savonet/liquidsoap:main
 
 USER root
 
-RUN apt-get -y install make ffmpeg
+RUN apt-get -y install make ffmpeg imagemagick
 
 USER liquidsoap
 
