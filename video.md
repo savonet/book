@@ -258,6 +258,26 @@ track so that it has the same type as the source `s` and can be added with
 it. We scale down the webcam image with `video.scale` and finally add it on top
 of the main video with `add`.
 
+#### Alpha channels
+
+A defining feature of video in Liquidsoap is that _alpha channels_ are supported
+for video: this means that images in videos can have more or less transparent
+regions, which allows to see the "video behind" whenever adding videos. The
+overall opacity of a video can be changed with the `video.opacity` operator,
+which takes a coefficient between 0 (transparent) and 1 (fully opaque) in
+addition to the source. For instance, with
+
+```{.liquidsoap include="liq/video.opacity.liq" from=3}
+```
+
+we are adding the source `s1` with the source `s2` made opaque at 75%: this
+means that we are going to see 75% of `s2`, and the remaining 25% are from `s1`
+behind.
+
+Transparent regions are also supported from usual picture formats such as
+png. This means that when you add a logo to a video stream, it does not have to
+be a square!
+
 ### Combining audio and video sources
 
 Given an audio source `a` and a video source `v`, one can combine them in order
@@ -363,12 +383,162 @@ and here is the output:
 Other parameters are getters, so that the position of the text can also be
 customized over time...
 
+Filters and effects
+-------------------
+
+In order to change the appearance of your videos Liquidsoap offers video
+effects. These are not as well developed as for audio processing, but this is
+expected to improve in a near future.
+
+### Builtin filters
+
+By default, Liquidsoap only offers some very basic builtin video filters such as
+
+- `video.greyscale`: convert the video to black and white,
+- `video.opacity`: change the opacity of the video,
+- `video.fill`: fill the video with given color,
+- `video.scale` / `video.resize`: change the size of the video.
+
+### Frei0r
+
+Liquidsoap has native support for [frei0r plugins](https://frei0r.dyne.org/)
+which is an API for video effects. When those are installed on your system, they
+are automatically detected and corresponding operators are added in the
+language. Those have names of the form `frei0r.*` where `*` is the name of the
+plugin. For instance, the following adds a "plasma effect" to the video:
+
+```{.liquidsoap include="liq/frei0r.liq" from=2 to=-1}
+```
+
+Each operator of course generally has specific parameters which allow modifying
+its effect, you are advised to have a look at their documentation, as usual!
+
+### FFmpeg filters {#sec:ffmpeg-filters}
+
+Another great provider of video effects is FFmpeg. Its filters are a bit more
+involved to use because FFmpeg expects that you create a _graph_ of filters (by
+formally connecting multiple filters one to each other) before being able to use
+this graph for processing data, and because it operates on data in FFmpeg's
+internal format. FFmpeg has the ability of processing both audio and video data,
+we present it here because it is more likely to be used for video processing.
+
+https://ffmpeg.org/ffmpeg-filters.html#Video-Filters
+
+TODO...............................................
+
+```{.liquidsoap include="liq/ffmpeg-effect.liq" from=2 to=-1}
+```
+
+
 Encoders
 --------
 
+The usual outputs described in [there](#sec:outputs) support streams with video,
+this includes
+
+- `output.file`: for recording in a file,
+- `output.icecast`: for streaming using Icecast,
+- `output.hls`: for generating HLS playlists streams,
+- `output.dummy`: for discarding a source.
+
+We do not explain them here again: the only difference with audio is the choice
+of the encoder which indicates that we want to use sources with video.
+
 ### FFmpeg {#sec:ffmpeg-video}
 
-TODO: explain the specificities of video
+The encoder of choice for video is FFmpeg, that we have already seen in
+[here](#sec:ffmpeg-encoder). The general syntax is
+
+```liquisoap
+%ffmpeg(format="...", %audio(...), %video(...))
+```
+
+where the omitted parameters specify the format of the container, the audio
+codec and the video codec.
+
+#### Formats
+
+The full list of supported formats can be obtained by running `ffmpeg
+-formats`. Popular formats for
+
+- encoding in files:
+  - `mp4` is the most widely supported (its main drawback is that index tables
+    are located at the end of the file, so that partially downloaded files
+    cannot reliably be played),
+  - `matroska` corresponds to `.mkv` files, supports slightly more codecs than
+  mp4 and it license-free, but is less widely supported,
+  - `webm` is well supported by modern browsers (in combination with the VP9
+    codec),
+  - `avi` is getting old and should be avoided,
+- streaming:
+  - `mpegts` is the standard container for streaming, this is the one you should
+    use for HLS for instance,
+  - `flv` is used by some old streaming protocols such as RTMP, still widely in
+    use to stream video to platforms such as Youtube.
+
+Many [other formats](https://ffmpeg.org/ffmpeg-formats.html) are also
+supported.
+
+#### Codecs
+
+The codec can be set by passing the `codec` argument to `%video`. You generally
+also want to set the bitrate by passing the `b` argument
+(e.g. `b="2000k"`). Typical bitrates for streaming, depending on the codec and
+the resolution, at 25 frames per second, are
+
+Resolution H.264 VP9
+---------- ----- -----
+640×360    1000k 300k
+1280×720   3000k 1000k
+1080×720   5000k 2000k
+
+Here the values are given for two most popular codecs H.264 and VP9, that we now
+present in details, but there are [many other
+ones](https://ffmpeg.org/ffmpeg-codecs.html).
+
+#### H.264
+
+The most widely used codec for encoding video is `libx264` which encodes in
+H.264, and has hardware support in many devices such as smartphones (for
+decoding). The most important parameter is `preset`, which controls how fast the
+encoder is, and whose possible values are
+
+> `ultrafast`, `superfast`, `veryfast`, `faster`, `fast`, `medium`, `slow`,
+> `slower`, `veryslow`
+
+with the obvious meaning. Of course, the faster the setting is the lower the
+quality of the video will be, so that you have to find a balance between CPU
+consumption and quality.
+
+Instead of imposing a bitrate, one can also chose to encode in order to reach a
+target quality, which is measured in _CRF_ (for Constant Rate Factor) and can be
+passed in the `crf` parameter. It is an integer ranging from 0 (best quality) to
+51 (worse quality). In order to give you ideas,
+
+- 0 is lossless,
+- 17 is with nearly unnoticeable compression,
+- 23 is the default value,
+- 28 is the worse acceptable value.
+
+Additional parameters can be passed in the `x264-params` parameter, e.g.
+
+```
+"x264-params"="scenecut=0:open_gop=0:min-keyint=150:keyint=150"
+```
+
+use this if you need very fine tuning for your encoding.
+
+A typical setting for 
+
+
+```{.liquidsoap include="liq/encoder-ffmpeg-video-file.liq" from=2 to=-1}
+```
+
+
+
+
+
+https://obsproject.com/blog/streaming-with-x264
 
 * **AC3 audio and H264 video encapsulated in a MPEG-TS stream**
 ```liquidsoap
@@ -388,6 +558,7 @@ TODO: explain the specificities of video
                    preset="ultrafast"))
 ```
 
+VP9: https://developers.google.com/media/vp9/live-encoding
 
 ### Ogg/theora
 
@@ -409,36 +580,7 @@ from the settings `frame.video.height/width`.
 
 TODO
 
-### Saving frames
-
-`video.still_frame`
-
-Streaming to youtube {#sec:youtube}
---------------------
-
-(this is apparently the thing everybody wants to do)
-
-Got to the url <https://www.youtube.com/live_dashboard>
-
-RTMP: <https://github.com/savonet/liquidsoap/issues/1008>
-
-explain the implementation with `output.url`
-
-parameters can be found here: <https://gist.github.com/olasd/9841772>
-
-Video filters
--------------
-
-### Builtin filters
-
-### Fades
-
-### Frei0r
-
-### FFmpeg filters
-
-GStreamer
----------
+### GStreamer
 
 RTMP input (see #1020)
 
@@ -450,3 +592,21 @@ output.graphics(s)
 out(s)
 ```
 
+Specific inputs and outputs
+---------------------------
+
+### Streaming to youtube {#sec:youtube}
+
+(this is apparently the thing everybody wants to do)
+
+Got to the url <https://www.youtube.com/live_dashboard>
+
+RTMP: <https://github.com/savonet/liquidsoap/issues/1008>
+
+explain the implementation with `output.url`
+
+parameters can be found here: <https://gist.github.com/olasd/9841772>
+
+### Saving frames
+
+`video.still_frame`

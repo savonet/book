@@ -2364,7 +2364,7 @@ does, in which case the documentation on the author's websites can be useful.
 \TODO{explain that it takes startup time and that loading can be disabled}
 
 \TODO{mention FFmpeg plugins, and say that they are developed in video section,
-because they are typically used for this}
+see sec:ffmpeg-filters, because they are typically used for this}
 
 #### Stereo Tool {#sec:stereo-tool}
 
@@ -2696,7 +2696,7 @@ Here, `s` is the original source and `s2` is the source with the compressor
 effect applied. By varying the interactive variable `wet`, we can hear how
 compression affects the source.
 
-Outputs
+Outputs {#sec:outputs}
 -------
 
 Now that we have the sound we were dreaming of for our radio, we are ready to
@@ -5545,6 +5545,8 @@ dynamically change the contents of sources which are already playing. This can
 be achieved by using `source.dynamic`: this operator takes as argument a
 function which returns the source to play at any given time, and can thus be
 used to create a source which changes overtime.
+
+\TODO{rather use a set approach for the dynamic source than the functional one}
 
 For instance, the `add` operator takes a fixed list of sources, but suppose that
 the list of sources we want to add varies over time. We can program this with
