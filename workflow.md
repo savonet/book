@@ -3070,11 +3070,13 @@ The encoding formats are specified by expressions of the form `%encoder` or
 `%encoder(parameters...)` if we need to specify parameters. For instance, the
 encoding format for mp3 with default parameters is `%mp3` and the format for mp3
 at 192 kbps in joint stereo is
-`%mp3(bitrate=192,stereo_mode="joint_stereo")`. This means that if we want to
+`%mp3(bitrate=192, stereo_mode="joint_stereo")`. This means that if we want to
 use this for an harbor output, we will write
 
 ```{.liquidsoap include="liq/output.harbor4.liq" from=2}
 ```
+
+\TODO{we can add "" around parameter names when they contain dashes}
 
 ### MP3
 
@@ -3532,6 +3534,8 @@ is adapted for encoding at low bitrates. Here is a list of profiles you can use
 - `aac_he`: bitrates between 48 kpbs and 128 kbps,
 - `aac_low`: the default profile (_low complexity_), adapted for bitrates above
   128 kbps.
+  
+\TODO{also mention the "aac" encoder}
 
 We can encode in AAC in variable bitrate with
 
@@ -3558,6 +3562,7 @@ with 160 kbps average bitrate with
 ```{.liquidsoap include="liq/encoder-ffmpeg-mp3-3.liq" from=2 to=-1}
 ```
 
+\TODO{encode in opus: warnings 44100 is not a valid samplerate + encoder is libopus not opus (which is for standalone)}
 
 Some encoding formats, such as mp4,\TODO{peut-on avoir une liste ? est-ce que
 c'est le cas pour wav ?} require rewinding their stream and write a header after

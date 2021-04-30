@@ -35,8 +35,11 @@ jingle3.mp3:
 test%.png test%.jpg:
 	convert -pointsize 100 -size 500x500 caption:$@ $@
 
-video.mkv:
-	ffmpeg -f lavfi -i testsrc=duration=5:size=1280x720:rate=25 $@
+video.mkv testsrc.mp4 testsrc.avi testsrc.ogv testsrc.mkv:
+	ffmpeg -f lavfi -i testsrc=duration=5:size=1280x720:rate=25 -f lavfi -i sine=f=440:d=5 -c:v libx264 $@
+
+testsrc.webm:
+	ffmpeg -f lavfi -i testsrc=duration=5:size=1280x720:rate=25 -f lavfi -i sine=f=440:d=5 -c:a libopus -c:v vp9 -b:a 128k -b:v 2500k $@
 
 youtube-key:
 	touch $@

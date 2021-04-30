@@ -69,9 +69,10 @@ _Full HD_) format with
 ```
 
 Remember that processing video data in real time is very costly. Reducing the
-resolution to 960×540 or even 640×360 will degrade the quality of images, but
-can greatly improve the CPU consumption, in particular if your server is getting
-a bit old: a low resolution video is better than a laggy or jumpy one...
+resolution to 854×480 (called 480p) or even 640×360 (called 360p) will degrade
+the quality of images, but can greatly improve the CPU consumption, in
+particular if your server is getting a bit old: a low resolution video is better
+than a laggy or jumpy one...
 
 For convenience the functions `video.frame.width`, `video.frame.height` and
 `video.frame.rate` are also defined and return the corresponding configuration
@@ -382,6 +383,7 @@ and here is the output:
 
 Other parameters are getters, so that the position of the text can also be
 customized over time...
+\TODO{example of text moving}
 
 Filters and effects
 -------------------
@@ -404,14 +406,15 @@ By default, Liquidsoap only offers some very basic builtin video filters such as
 Liquidsoap has native support for [frei0r plugins](https://frei0r.dyne.org/)
 which is an API for video effects. When those are installed on your system, they
 are automatically detected and corresponding operators are added in the
-language. Those have names of the form `frei0r.*` where `*` is the name of the
+language. Those have names of the form `video.frei0r.*` where `*` is the name of the
 plugin. For instance, the following adds a "plasma effect" to the video:
 
 ```{.liquidsoap include="liq/frei0r.liq" from=2 to=-1}
 ```
 
-Each operator of course generally has specific parameters which allow modifying
-its effect, you are advised to have a look at their documentation, as usual!
+Each operator (there are currently 129) of course has specific parameters which
+allow modifying its effect, you are advised to have a look at their
+documentation, as usual!
 
 ### FFmpeg filters {#sec:ffmpeg-filters}
 
@@ -482,19 +485,24 @@ supported.
 #### Codecs
 
 The codec can be set by passing the `codec` argument to `%video`. You generally
-also want to set the bitrate by passing the `b` argument
-(e.g. `b="2000k"`). Typical bitrates for streaming, depending on the codec and
-the resolution, at 25 frames per second, are
+also want to set the bitrate by passing the `b` argument in bits per second
+(e.g. `b="2000k"`). Typical bitrates for streaming, depending on the the
+resolution, at 25 frames per second, are
 
-Resolution H.264 VP9
----------- ----- -----
-640×360    1000k 300k
-1280×720   3000k 1000k
-1080×720   5000k 2000k
+Resolution Bitrate
+---------- -------
+640×360    700k
+1280×720   2500k
+1080×720   4000k
 
-Here the values are given for two most popular codecs H.264 and VP9, that we now
-present in details, but there are [many other
-ones](https://ffmpeg.org/ffmpeg-codecs.html).
+Another useful parameter is the GOP (group of picture) which can be set by
+passing the argument `g` and controls how often (in frames) keyframes are
+inserted. A typical default value is 12, which allows easy seeking in videos,
+but for video streams this value can be increased (to, say, 75) in order to
+decrease the size of the video.
+
+We now detail the two most popular codecs H.264 and VP9, but there are [many
+other ones](https://ffmpeg.org/ffmpeg-codecs.html).
 
 #### H.264
 
@@ -528,85 +536,157 @@ Additional parameters can be passed in the `x264-params` parameter, e.g.
 
 use this if you need very fine tuning for your encoding.
 
-A typical setting for 
+A typical setting for encoding in a file for backup would be
 
-
-```{.liquidsoap include="liq/encoder-ffmpeg-video-file.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-h264-file.liq" from=2 to=-1}
 ```
 
+and for streaming in HLS it would be
 
-
-
-
-https://obsproject.com/blog/streaming-with-x264
-
-* **AC3 audio and H264 video encapsulated in a MPEG-TS stream**
-```liquidsoap
-%ffmpeg(format="mpegts",
-        %audio(codec="ac3",channel_coupling=0),
-        %video(codec="libx264",b="2600k",
-               "x264-params"="scenecut=0:open_gop=0:min-keyint=150:keyint=150",
-               preset="ultrafast"))
+```{.liquidsoap include="liq/encoder-ffmpeg-h264-streaming.liq" from=2 to=-1}
 ```
 
-* **AC3 audio and H264 video encapsulated in a MPEG-TS stream using ffmpeg raw frames**
-```liquidsoap
-%ffmpeg(format="mpegts",
-        %audio.raw(codec="ac3",channel_coupling=0),
-        %video.raw(codec="libx264",b="2600k",
-                   "x264-params"="scenecut=0:open_gop=0:min-keyint=150:keyint=150",
-                   preset="ultrafast"))
+<!-- See: https://obsproject.com/blog/streaming-with-x264 -->
+
+The successor of H.264 is called H.265 (how imaginative) or HEVC and is
+available through FFmpeg codec `libx265`. The parameters are roughly the same as
+those for `libx264` described above.
+
+#### VP9 and AV1
+
+VP9 is a recently developed codec, which is generally more efficient than H.264
+and can achieve lower bitrates at comparable quality, and is royalty-free. It is
+supported by most modern browsers and is for instance the used by the Youtube
+streaming platform. It is generally encapsulated in the WebM container although
+it is supported by most modern containers. The successor of VP9 is AV1, which is
+under heavy development and diffusion.
+
+The encoder in FFmpeg is called `libvpx-vp9`, some of its [useful
+parameters](https://developers.google.com/media/vp9) are
+
+- `quality` can be `good` (the decent default), `best` (takes much time) or
+  `mealtime` (which should be used in your scripts since we usually want fast
+  encoding),
+- `speed` goes from -8 (very slow and high quality) to 8 (fast but low quality),
+  for realtime encoding you typically want to set this to 5 or 6,
+- `crf` controls quality-based encoding, as for H.264.
+
+A typical WebM encoding would look like this:
+
+```{.liquidsoap include="liq/encoder-ffmpeg-vp9-file.liq" from=2 to=-1}
 ```
 
-VP9: https://developers.google.com/media/vp9/live-encoding
+and if you are on budget with respect to CPU and bandwidth:
+
+```{.liquidsoap include="liq/encoder-ffmpeg-vp9-streaming.liq" from=2 to=-1}
+```
 
 ### Ogg/theora
 
-```liquidsoap
-%theora(quality=40,width=640,height=480,
-        picture_width=255,picture_height=255,
-        picture_x=0, picture_y=0,
-        aspect_numerator=1, aspect_denominator=1,
-        keyframe_frequency=64, vp3_compatible=false,
-        soft_target=false, buffer_delay=5,
-        speed=0)
-```
+We have support for the Theora video codec encapsulated in ogg container,
+already presented in [there](#sec:ogg). The encoder is named `%theora` whose
+main parameters are
 
-You can also pass `bitrate=x` explicitly instead of a quality.
-The default dimensions are liquidsoap's default,
-from the settings `frame.video.height/width`.
+- `bitrate`: bitrate of the video (for fixed bitrate encoding, in bits per second),
+- `quality`: quality of the encoding (for quality-based encoding, between 0 and 63),
+- `width` / `height`: dimensions of the image,
+- `speed`: speed of the encoder,
+- `keyframe_frequency`: how often keyframes should be inserted.
+
+For instance, we can encode a video in ogg with opus for the audio and theora
+for the video with
+
+```{.liquidsoap include="liq/encoder-theora.liq" from=2 to=-1}
+```
 
 ### AVI
 
-TODO
+Liquidsoap has native (without any external library) builtin support for
+generating AVI files with the `%avi` encoder. The resulting files contain raw
+data (no encoding is performed) and this format should thus be favored for
+machines which are tight on CPU but not on hard disk, for backup purposes:
 
-### GStreamer
-
-RTMP input (see #1020)
-
-```liquidsoap
-uri = "rtmp://fms.105.net/live/rmc1"
-s = input.gstreamer.audio_video(pipeline="rtmpsrc location=#{uri} ! tee name=t", audio_pipeline="t. ! queue", video_pipeline="t. ! queue")
-s = mksafe(s)
-output.graphics(s)
-out(s)
+```{.liquidsoap include="liq/encoder-avi.liq" from=2}
 ```
+
+You can expect the resulting files to be huge and you will typically want to
+re-encode the resulting files afterward.
+
+If you want to generate AVI files with usual codecs, you should use the FFmpeg
+encoder presented above.
 
 Specific inputs and outputs
 ---------------------------
 
-### Streaming to youtube {#sec:youtube}
+### Standard streaming methods
 
-(this is apparently the thing everybody wants to do)
+The two standard methods for streaming have already been presented for audio in
+[there](#sec:outputs): they are Icecast (with `output.icecast`) and HLS (with
+`output.hls`). The only difference is that the encoder should be one which has
+support for video.
 
-Got to the url <https://www.youtube.com/live_dashboard>
+### Streaming platforms
 
-RTMP: <https://github.com/savonet/liquidsoap/issues/1008>
+Another very popular way of streaming video is by going through streaming
+platforms such as Youtube, Twitch or Facebook. All the three basically use the
+same method for streaming. You first need to obtain a secret key associated to
+your account on the website. Then you should send your video, using the RTMP
+protocol, to some standard url followed by your secret key, using the
+`output.url` operator, and that's it. Because of limitations of the RTMP
+protocol, videos should be encoded using the FLV container with H.264 for video
+and mp3 or aac for audio.
 
-explain the implementation with `output.url`
+#### Youtube {#sec:youtube}
 
-parameters can be found here: <https://gist.github.com/olasd/9841772>
+The streaming key can be obtained from the [Youtube streaming
+platform](https://www.youtube.com/live_dashboard) and the url to stream to is
+
+```
+rtmp://a.rtmp.youtube.com/live2/<secret key>
+```
+
+If we suppose that we have stored our key in the file `youtube-key`, we can
+stream a video source `s` to Youtube by
+
+```{.liquidsoap include="liq/video-youtube.liq" from=2 to=-1}
+```
+
+These settings are for quite low quality encoding. You should try to increase
+them depending on how powerful your computer and internet connection are.
+
+#### Twitch
+
+The streaming key can be obtained from the [Twitch
+dashboard](https://dashboard.twitch.tv/settings/stream) and a [list of
+_ingesting servers_](https://stream.twitch.tv/ingests/) is provided (the url you
+should send your stream to is obtained by appending your key to one of those
+servers). For instance:
+
+```{.liquidsoap include="liq/video-twitch.liq" from=2 to=-1}
+```
+
+#### Facebook
+
+<!-- https://www.facebook.com/help/1534561009906955 -->
+
+The url and streaming key can be obtained from the [Facebook Live
+Producer](https://www.facebook.com/live/producer/). Your video resolution should
+not exceed 1280×720 at 30 frames per second, video should be encoded in H.264 at
+at most 4000 kbps and audio in AAC in 96 or 128 kbps. Keyframes should be sent
+at most every two second (the `g` parameter of the video codec should be at most
+twice the framerate). For instance,
+
+```{.liquidsoap include="liq/video-facebook.liq" from=1}
+```
 
 ### Saving frames
 
-`video.still_frame`
+In case you need it, it is possible to save frames of the video with the
+`video.still_frame` operator: this operator adds to a source a method `save`
+which, when called with a filename as argument, saves the current image of the
+video stream to the file. Currently, only bitmap files are supported and the
+filename should have a `.bmp` extension. For instance, the following script will
+save a "screenshot" of the source `s` every 10 seconds:
+
+```{.liquidsoap include="liq/screenshot.liq" from=1}
+```
