@@ -43,7 +43,7 @@ toc: true
 
 <!-- !include "reference.md" -->
 
-!include "conclusion.md"
+<!-- !include "conclusion.md" -->
 
 !include "bibliography.md"
 

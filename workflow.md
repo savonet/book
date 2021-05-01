@@ -3192,7 +3192,7 @@ first, by default its length is set to the maximun possible value. If you know
 the expected duration of the encoded data and you actually care about the wav
 length header then you should use the `duration` parameter.
 
-### Ogg
+### Ogg {#sec:ogg}
 
 Liquidsoap has native support for ogg which is a _container_: it is a file
 format which can contain multiple streams (typically, audio and/or video). The

@@ -418,12 +418,14 @@ documentation, as usual!
 
 ### FFmpeg filters {#sec:ffmpeg-filters}
 
-Another great provider of video effects is FFmpeg. Its filters are a bit more
-involved to use because FFmpeg expects that you create a _graph_ of filters (by
-formally connecting multiple filters one to each other) before being able to use
-this graph for processing data, and because it operates on data in FFmpeg's
-internal format. FFmpeg has the ability of processing both audio and video data,
-we present it here because it is more likely to be used for video processing.
+Another great provider of video effects is FFmpeg (we currently have access to
+447 of those). Its filters are a bit more involved to use because FFmpeg expects
+that you create a _graph_ of filters (by formally connecting multiple filters
+one to each other) before being able to use this graph for processing data, and
+because it operates on data in FFmpeg's internal format. Those filters can
+process both audio and video data, we chose to present it here and not in
+[previous chapter](#chap:workflow) because it is more likely to be used for
+video processing.
 
 https://ffmpeg.org/ffmpeg-filters.html#Video-Filters
 
@@ -484,22 +486,46 @@ supported.
 
 #### Codecs
 
-The codec can be set by passing the `codec` argument to `%video`. You generally
-also want to set the bitrate by passing the `b` argument in bits per second
-(e.g. `b="2000k"`). Typical bitrates for streaming, depending on the the
-resolution, at 25 frames per second, are
+The codec can be set by passing the `codec` argument to `%video`.
+The codecs all take `width` and `height` parameters, which allow setting the
+dimensions of the encoded video. Remember that smaller images have lower
+quality, but require smaller bitrates and encode faster. Common resolutions for
+16:9 aspect ratio are
 
-Resolution Bitrate
----------- -------
-640×360    700k
-1280×720   2500k
-1080×720   4000k
+ 360p     480p    720p     1080p
+-------  ------- -------- ---------
+640×360  854x480 1280×720 1920×1080
+
+the "default reasonable value" being 720p nowadays. By default, the videos are
+encoded at the dimensions of internal frames in Liquidsoap, which can be set via
+`video.frame.width` and `video.frame.heigth`. If you only need to encode a video
+to "small" dimensions, it is a better idea to lower these values than specifying
+the codec parameters, in order to avoid computing large images which will be
+encoded to small ones.
+
+You generally also want to set the bitrate by passing the `b` argument in bits
+per second (e.g. `b="2000k"`). Typical bitrates for streaming, depending on the
+the resolution, at 25 frames per second, are
+
+ Resolution   Bitrate
+-----------  --------
+640×360       700k
+1280×720      2500k
+1920×1080     4000k
+
+Alternatively, many encoders allow specifying a "quality" parameter instead of a
+bitrate: in this case, it tries to reach a target quality instead of bitrate, by
+increasing the bitrate on complex scenes. This is not advised for videos
+intended for streaming since it can lead to unexpected bandwidth problems on
+those scenes.
 
 Another useful parameter is the GOP (group of picture) which can be set by
 passing the argument `g` and controls how often (in frames) keyframes are
 inserted. A typical default value is 12, which allows easy seeking in videos,
-but for video streams this value can be increased (to, say, 75) in order to
-decrease the size of the video.
+but for video streams this value can be increased in order to decrease the size
+of the video. The habit for streaming is to have a keyframe every 2 minutes or
+less, which means setting `g=50` at most for the default framerate of 25 images
+per second.
 
 We now detail the two most popular codecs H.264 and VP9, but there are [many
 other ones](https://ffmpeg.org/ffmpeg-codecs.html).
@@ -534,7 +560,8 @@ Additional parameters can be passed in the `x264-params` parameter, e.g.
 "x264-params"="scenecut=0:open_gop=0:min-keyint=150:keyint=150"
 ```
 
-use this if you need very fine tuning for your encoding.
+use this if you need very fine tuning for your encoding (you need to put quotes
+around the parameter name `x264-params` because it contains a dash).
 
 A typical setting for encoding in a file for backup would be
 
@@ -558,8 +585,7 @@ VP9 is a recently developed codec, which is generally more efficient than H.264
 and can achieve lower bitrates at comparable quality, and is royalty-free. It is
 supported by most modern browsers and is for instance the used by the Youtube
 streaming platform. It is generally encapsulated in the WebM container although
-it is supported by most modern containers. The successor of VP9 is AV1, which is
-under heavy development and diffusion.
+it is supported by most modern containers.
 
 The encoder in FFmpeg is called `libvpx-vp9`, some of its [useful
 parameters](https://developers.google.com/media/vp9) are
@@ -580,6 +606,10 @@ and if you are on budget with respect to CPU and bandwidth:
 
 ```{.liquidsoap include="liq/encoder-ffmpeg-vp9-streaming.liq" from=2 to=-1}
 ```
+
+The successor of VP9 is AV1 and is under heavy development and diffusion. It can
+be used through the FFmpeg codec `libaom-av1` which essentially takes the same
+parameters as `libvpx-vp9`.
 
 ### Ogg/theora
 
@@ -603,8 +633,10 @@ for the video with
 
 Liquidsoap has native (without any external library) builtin support for
 generating AVI files with the `%avi` encoder. The resulting files contain raw
-data (no encoding is performed) and this format should thus be favored for
-machines which are tight on CPU but not on hard disk, for backup purposes:
+data (no encoding is performed on frames), which means that we need to compute
+almost nothing but also that it will not be compressed: this format should thus
+be favored for machines which are tight on CPU but not on hard disk, for backup
+purposes:
 
 ```{.liquidsoap include="liq/encoder-avi.liq" from=2}
 ```
@@ -613,7 +645,7 @@ You can expect the resulting files to be huge and you will typically want to
 re-encode the resulting files afterward.
 
 If you want to generate AVI files with usual codecs, you should use the FFmpeg
-encoder presented above.
+encoder presented above.\TODO{give an example}
 
 Specific inputs and outputs
 ---------------------------
