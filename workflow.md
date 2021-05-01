@@ -1778,7 +1778,7 @@ value via the `override` parameter.
 see also: <https://github.com/savonet/liquidsoap/issues/1541>
 -->
 
-Signal processing
+Signal processing {#sec:signal-processing}
 -----------------
 
 Now that we have seen the ways of generating sound, we should see ways to shape
@@ -1831,7 +1831,7 @@ changed with the `override` parameter `amplify`). This value can either be
 specified as a float coefficient (such as `0.7`) or in decibels (such as `-3.10
 dB`).
 
-#### ReplayGain
+#### ReplayGain {#sec:replaygain}
 
 In particular, `amplify` is quite useful if you want to have all your audio
 files playing at the same loudness, without having to re-encode them: we can

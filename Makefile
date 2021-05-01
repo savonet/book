@@ -14,7 +14,10 @@ ci:
 book.tex: book.md style.sty $(MD) $(LIQ) liquidsoap.xml
 	@echo "Generating $@..."
 	@$(PANDOC) --template=template.latex -s --top-level-division=chapter --filter=pandoc-crossref -V links-as-notes=true $< -o tmp.$@
-	@cat tmp.$@ | sed 's/\\includegraphics\([^{]*\){\(.*\)}\\\\/\\begin{center}\\includegraphics\1{\2}\\end{center}/' > $@
+	@cat tmp.$@ \
+		| sed 's/\\includegraphics\([^{]*\){\(.*\)}\\\\/\\begin{center}\\includegraphics\1{\2}\\end{center}/' \
+		| sed 's/\\DeclareRobustCommand{\\href}\[2\]{#2\\footnote{\\url{#1}}}/\\DeclareRobustCommand{\\href}[2]{#2\\footnote{\\texttt{\\url{#1}}}}/' \
+		> $@
 	@rm -f tmp.$@
 
 book.pdf: book.tex

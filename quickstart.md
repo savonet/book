@@ -349,15 +349,15 @@ radio = normalize(radio)
 
 In practice, it is better to precompute the gain of each audio track in advance
 and change the volume according to this information (often called _replaygain_),
-see\TODO{reference}. There are also various traditional sound effects that can
-be used in order to improve the overall color and personality of the sound. A
-somewhat reasonable default is provided by the `nrj` operator:
+see [there](#sec:replaygain). There are also various traditional sound effects
+that can be used in order to improve the overall color and personality of the
+sound. A somewhat reasonable default is provided by the `nrj` operator:
 
 ```liquidsoap
 radio = nrj(radio)
 ```
 
-see\TODO{reference} for details on sound processing.
+see [there](#sec:signal-processing) for details on sound processing.
 
 ### Icecast output {#sec:icecast-setup}
 
@@ -456,7 +456,12 @@ sudo opam depext fdkaac
 sudo opam install fdkaac
 ```
 
-### Going further
+### Summing up
+
+The typical radio script we arrived at is the following:
+
+```{.liquidsoap include="liq/radio.liq"}
+```
 
 That's it for now, we will provide many more details in [this
 chapter](#chap:workflow).

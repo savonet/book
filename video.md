@@ -418,22 +418,75 @@ documentation, as usual!
 
 ### FFmpeg filters {#sec:ffmpeg-filters}
 
-Another great provider of video effects is FFmpeg (we currently have access to
-447 of those). Its filters are a bit more involved to use because FFmpeg expects
-that you create a _graph_ of filters (by formally connecting multiple filters
-one to each other) before being able to use this graph for processing data, and
-because it operates on data in FFmpeg's internal format. Those filters can
-process both audio and video data, we chose to present it here and not in
-[previous chapter](#chap:workflow) because it is more likely to be used for
-video processing.
+Another great provider of video (and audio) effects is FFmpeg: at the time of
+writing, we currently have access to [447 of
+those](https://ffmpeg.org/ffmpeg-filters.html)!  Its filters are a bit more
+involved to use because FFmpeg expects that you create a _graph_ of filters (by
+formally connecting multiple filters one to each other) before being able to use
+this graph for processing data, and because it operates on data in FFmpeg's
+internal format. Those filters can process both audio and video data, we chose
+to present it here and not in [previous chapter](#chap:workflow) because it is
+more likely to be used for video processing.
 
-https://ffmpeg.org/ffmpeg-filters.html#Video-Filters
+The basic function we are going to use for creating filters is
+`ffmpeg.filter.create`. Its argument is a function `mkfilter` which takes as
+argument the graph of filters we are going to build, attaches filters to it, and
+returns the resulting stream. Usually this function
 
-TODO...............................................
+- uses the operators
 
-```{.liquidsoap include="liq/ffmpeg-effect.liq" from=2 to=-1}
+  > `ffmpeg.filter.audio.input` or `ffmpeg.filter.video.input`
+
+  to input from some stream,
+- processes the stream using one or more `ffmpeg.filter.*` functions,
+- outputs the result using the operators
+
+  > `ffmpeg.filter.audio.output` or `ffmpeg.filter.video.output`.
+
+In this way, we can define the following function `myfilter` which flips the
+image horizontally and applies a "vintage" color scheme to the video:\TODO{could
+be simplified with audio + video output, see bug 1612}
+
+```{.liquidsoap include="liq/ffmpeg-effect.liq"}
 ```
 
+The story is not over yet however. If you look at the type of the function
+`myfilter`, you will see that it is
+
+```
+(source(audio='a, video=ffmpeg.video.raw('b), midi='c)) -> source(audio=none, video=ffmpeg.video.raw('d), midi=none)
+```
+
+The first problem is that the resulting source has no audio, because the filter
+is only processing video. It is easy to preserve the audio of the original
+source by changing the penultimate line
+
+```liquidsoap
+ffmpeg.filter.create(mkfilter)
+```
+
+to
+
+<!-- ffmpeg-effect2.liq -->
+```liquidsoap
+mux_audio(audio=drop_video(s), ffmpeg.filter.create(mkfilter))
+```
+
+which adds back the audio of the source `s` to the result. The other "problem"
+is that the type for video is `ffmpeg.video.raw`, which means that the video
+needs to be in FFmpeg's internal format and not in Liquidsoap's internal
+format. We can decode the video from the first to the second with the function
+`ffmpeg.raw.decode.video`. Conversely we can encode from our internal format to
+FFmpeg's one with `ffmpeg.raw.encode.video`: this function takes an encoder
+because we can manipulate encoded data, but here we want to pass raw video in
+order to avoid uselessly performing compression, which can be achieved with the
+`rawvideo` format.
+
+..........................................
+
+
+```{.liquidsoap include="liq/ffmpeg-effect3.liq"}
+```
 
 Encoders
 --------
@@ -645,7 +698,10 @@ You can expect the resulting files to be huge and you will typically want to
 re-encode the resulting files afterward.
 
 If you want to generate AVI files with usual codecs, you should use the FFmpeg
-encoder presented above.\TODO{give an example}
+encoder presented above. For instance,
+
+```{.liquidsoap include="liq/encoder-ffmpeg-avi.liq" from=2 to=-1}
+```
 
 Specific inputs and outputs
 ---------------------------
