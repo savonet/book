@@ -337,7 +337,7 @@ In case you do not have any video at hand to play, the sources
 `video.testsrc.ffmpeg` and `video.testsrc.gstreamer` can be used to generate
 test videos such as
 
-![Test video](img/testsrc.png)\
+![Test video](img/testsrc.png){width=300px} \
 
 ### Text
 
@@ -379,11 +379,14 @@ following prints the current volume and BPM of a song:
 
 and here is the output:
 
-![Volume and BPM](img/vol-bpm.png)\
+![Volume and BPM](img/vol-bpm.png){width=300px} \
 
-Other parameters are getters, so that the position of the text can also be
-customized over time...
-\TODO{example of text moving}
+The position parameters are also getters, so that the position of the text can
+also be customized over time. For instance, the following will add a text moving
+along the diagonal at the speed of 10 pixels per second in each direction:
+
+```{.liquidsoap include="liq/video.add_text2.liq" from=2 to=-1}
+```
 
 Filters and effects
 -------------------
@@ -476,7 +479,14 @@ which adds back the audio of the source `s` to the result. The other "problem"
 is that the type for video is `ffmpeg.video.raw`, which means that the video
 needs to be in FFmpeg's internal format and not in Liquidsoap's internal
 format. We can decode the video from the first to the second with the function
-`ffmpeg.raw.decode.video`. Conversely we can encode from our internal format to
+`ffmpeg.raw.decode.video`. \TODO{explain that sources can decode like this and that we can encode from raw}
+
+TODO: fix example
+
+```{.liquidsoap include="liq/ffmpeg-effect3.liq"}
+```
+
+Conversely we can encode from our internal format to
 FFmpeg's one with `ffmpeg.raw.encode.video`: this function takes an encoder
 because we can manipulate encoded data, but here we want to pass raw video in
 order to avoid uselessly performing compression, which can be achieved with the
@@ -485,7 +495,7 @@ order to avoid uselessly performing compression, which can be achieved with the
 ..........................................
 
 
-```{.liquidsoap include="liq/ffmpeg-effect3.liq"}
+```{.liquidsoap include="liq/ffmpeg-effect4.liq"}
 ```
 
 Encoders
