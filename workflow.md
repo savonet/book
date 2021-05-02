@@ -5259,10 +5259,11 @@ Some methods allow performing actions on the source.
 
 ### Clocks {#sec:clocks-ex}
 
-In order to avoid synchronization issues, Liquidsoap maintains _clocks_, which
-handle how the time is flowing for operators. Their behavior and usefulness is
-detailed in [there](#sec:clocks), let us simply mention the two main causes of
-discrepancies between time flow between operators.
+In order to avoid synchronization issues, Liquidsoap maintains
+_clocks_\index{clock}, which handle how the time is flowing for operators. Their
+behavior and usefulness is detailed in [there](#sec:clocks), let us simply
+mention the two main causes of discrepancies between time flow between
+operators.
 
 1. When performing an output (e.g. with `output.alsa`, `output.pulseaudio`,
    etc.) the speed at which the stream is generated is handled by the underlying
@@ -5283,7 +5284,7 @@ discrepancies between time flow between operators.
    which that you are trying to animate the source `s` with both the `alsa`
    clock and the `pulseaudio` clock, which is forbidden.
 2. Some operators need to change the time at which the source flows. This is for
-   instance the case of the `soundtouch` operator which changes the speed at
+   instance the case of the `stretch` operator which changes the speed at
    which a source is played or of the `crossfade` operator, which performs
    transitions between tracks, and thus needs to compute the next track in
    advance together with the end of a track. Such operators thus have their own
@@ -5317,7 +5318,7 @@ arguments:
 - `buffer`: how much time to buffer in advance (1 second by default),
 - `max`: how much time to buffer at most (10 seconds by default).
 
-Typically, we can make the first script above work by adding a buffer as
+For instance, we can make the first script above work by adding a buffer as
 follows:
 
 ```{.liquidsoap include="liq/clock-alsa-pulseaudio2.liq" from=1}

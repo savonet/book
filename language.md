@@ -1,4 +1,4 @@
-A programming language
+A programming language {#chap:language}
 ======================
 
 Before getting into the more advanced radio setups which can be achieved with

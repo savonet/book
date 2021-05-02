@@ -1,19 +1,20 @@
 A streaming language {#chap:streaming}
 ====================
 
-The previous chapter should have convinced you that Liquidsoap is a pretty
-decent general-purpose scripting language. But what makes it unique is the
-features dedicated to streaming. In this chapter, we present the general
-concepts behind those, they will be put in use in subsequent chapters.
-
-The main purpose of Liquidsoap is to manipulate functions which will generate
-streams and are called _sources_ in Liquidsoap. Typically, the `playlist`
-operator is a source, which generates streams by sequentially reading files. The
-way sources generate audio or video data is handled abstractly: you almost never
-get down to the point where you need to understand how or in what format this
-data is actually generated, you usually simply combine sources in order to get
-elaborate ones. It is however useful to have a general idea of how Liquidsoap
-works internally. Beware, this chapter is a bit more technical than others.
+After reading [this chapter](#chap:language), you should have been convinced you
+that Liquidsoap is a pretty decent general-purpose scripting language. But what
+makes it unique is the features dedicated to streaming, which were put to use in
+previous chapters. We now present the general concepts behind the streaming
+features of the language, for those who want to understanding how the streaming
+parts of the language work. The main purpose of Liquidsoap is to manipulate
+functions which will generate streams and are called _sources_ in
+Liquidsoap. Typically, the `playlist` operator is a source, which generates
+streams by sequentially reading files. The way sources generate audio or video
+data is handled abstractly: you almost never get down to the point where you
+need to understand how or in what format this data is actually generated, you
+usually simply combine sources in order to get elaborate ones. It is however
+useful to have a general idea of how Liquidsoap works internally. Beware, this
+chapter is a bit more technical than previous ones.
 
 Sources and content types {#sec:source-type}
 -------------------------
@@ -557,7 +558,7 @@ handled "under the hood", even though you should never have to explicitly deal
 with this in practice. After parsing a script, liquidsoap starts one or more
 streaming loop. Each streaming loop is responsible for creating audio data from
 the inputs, pass it through the various operators and, finally, send it to the
-outputs. Each loop is attached to a _clock_, which is in charge of controlling
+outputs. Each operator is attached to a _clock_, which is in charge of controlling
 the latency during the streaming (in most cases, the clock follows the
 computer's CPU clock, in order to stream data in real time to your
 listeners). This way of functioning is detailed below.
@@ -1012,24 +1013,69 @@ source unavailable after some fixed amount of time.
 
 ### Clocks {#sec:clocks}
 
-To every source is attached a _clock_ which is responsible for determining when
-the next frame should be computed. Namely, we have said that a frame lasts for
-0.04 seconds by default, which means that a new frame should be computed every
-0.04 seconds, or 25 times per second. The clock is responsible for measuring the
-time so that this happens at the right rate. In a script, a clock is assigned to
-each source, in such a way that an operator has the same clock as the sources it
-uses.
+Every source is attached to a particular a _clock_, which is fixed during the
+whole execution of the script, and is responsible for determining when the next
+frame should be computed: at regular intervals, the clock will ask active
+sources it controls to generate frames. We have said that a frame lasts for 0.04
+seconds by default, which means that a new frame should be computed every 0.04
+seconds, or 25 times per second. The clock is responsible for measuring the time
+so that this happens at the right rate.
 
+#### Multiple clocks
+
+The first reason why there can be multiple clocks is _external_: there is simply
+no such thing as a canonical notion of time in the real world. Your computer has
+an internal clock which indicates a slightly different time than your watch or
+another computer's clock. Moreover, when communicating with a remote computer,
+network latency causes extra time distortions. Even within a single computer
+there are several clocks: notably, each soundcard has its own clock, which will
+tick at a slightly different rate than the main clock of the computer, and each
+sound library makes a different use of the soundcard. For applications such as
+radios, which are supposed to run for a very long time, this is a problem. A
+discrepancy of 1 millisecond every second will accumulate to a difference of 43
+minutes after a month: this means that at some point in the month we will have
+to insert 43 minutes of silence or cut 43 minutes of music in order to
+synchronize back the two clocks! The uses of clocks allows Liquidsoap to detect
+such situations and require the user to deal with them. In practice, this means
+that each library (ALSA, Pulseaudio, etc.) has to be in its own clock, as well
+as network libraries taking care of synchronization by themselves (SRT).
+
+There are also some reasons that are purely _internal_ to Liquidsoap: in order
+to produce a stream at a given rate, a source might need to obtain data from
+another source at a different rate. This is obvious for an operator that speeds
+up or slows down audio, such as `stretch`. But it also holds more subtly for
+operators such as `cross`, which is responsible for crossfading successive
+tracks in a source: during the lapse of time where the operator combines data
+from an end of track with the beginning of the other other, the crossing
+operator needs twice as much stream data. After ten tracks, with a crossing
+duration of six seconds, one more minute will have passed for the source
+compared to the time of the crossing operator.
+
+The use of clocks in Liquidsoap ensures that a given source will not be pulled
+at two different rates by two operators. This guarantees that each source will
+only have to sequentially produce data and never simultaneously produce data for
+two different logical instants, which would be a nightmare to implement
+correctly.
+
+<!--
 Some operators impose the use of a particular clock, because they have their own
-way of synchronizing: for instance, for most soundcard-related inputs and
+way of synchronizing or use time. For instance, for most soundcard-related inputs and
 outputs the synchronization is taken care of directly by the soundcard (which
 has its own physical clock and buffers, and is able to signal us when a data
-refill is needed). When such an operator is present its clock will be used,
-otherwise the "default" clock based on CPU time is used. It is perfectly
-possible that two distinct parts of the script use different clocks, although
-each operator should have one unambiguously assigned clock.
+refill is needed). Also, some operators need to play source at a different
+timing than global time: this is the case for the `stretch` operator which
+changes the speed at which a source is played, or of the `crossfade` operator
+which needs to compute the next track in advance in order to be able to perform
+transitions between tracks. When such an operator is present its clock will be
+used, otherwise the "default" clock based on CPU time is used (this clock is
+called `main`). It is perfectly possible that two distinct parts of the script
+use different clocks, although each operator should have one unambiguously
+assigned clock.
+-->
 
-For instance, consider the following script:
+#### Observing clocks
+
+Consider the following script:
 
 ```{.liquidsoap include="liq/clock-alsa-file.liq" from=2}
 ```
@@ -1081,121 +1127,81 @@ and that synchronization is taken care of by the CPU
 [clock.main:3] Delegating synchronisation to CPU clock
 ```
 
-#### TODO: old text to integrate.....
+#### Graphical representation
 
-Why multiple clocks
-
-The first reason is **external** to liquidsoap: there is simply
-not a unique notion of time in the real world.
-Your computer has an internal clock which indicates
-a slightly different time than your watch or another computer's clock.
-Moreover, when communicating with a remote computer, network
-latency causes extra time distortions.
-Even within a single computer there are several clocks: notably, each
-soundcard has its own clock, which will tick at a slightly different
-rate than the main clock of the computer.
-Since liquidsoap communicates with soundcards and remote computers,
-it has to take those mismatches into account.
-
-There are also some reasons that are purely **internal** to liquidsoap:
-in order to produce a stream at a given speed,
-a source might need to obtain data from another source at
-a different rate. This is obvious for an operator that speeds up or
-slows down audio (`stretch`). But it also holds more subtly
-for `cross`, `cross` as well as the
-derived operators: during the lapse of time where the operator combines
-data from an end of track with the beginning of the other other,
-the crossing operator needs twice as much stream data. After ten tracks,
-with a crossing duration of six seconds, one more minute will have
-passed for the source compared to the time of the crossing operator.
-
-In order to avoid inconsistencies caused by time differences,
-while maintaining a simple and efficient execution model for
-its sources, liquidsoap works under the restriction that
-one source belongs to a unique clock,
-fixed once for all when the source is created.
-
-The graph representation of streaming systems can be adapted
-into a good representation of what clocks mean.
-One simply needs to add boxes representing clocks:
-a source can belong to only one box,
-and all sources of a box produce streams at the same rate.
-For example, 
+In case it helps visualizing clocks, a script can be drawn as some sort of graph
+whose vertices are the operators and there is an arrow from a vertex `op` to a
+vertex `op'` when the operator `op'` uses the stream produced by the operator
+`op`. For instance, a script such as
 
 ```liquidsoap
-output.icecast(fallback([crossfade(playlist(...)),jingles]))
+output(fallback([crossfade(playlist(...)), jingles]))
 ```
 
-yields the following graph:
+can be represented as the following graph:
 
-![Graph representation with clocks](images/graph_clocks.png)
+![Two clocks](fig/two-clocks)\
 
-Here, clock_2 was created specifically for the crossfading
-operator; the rate of that clock is controlled by that operator,
-which can hence accelerate it around track changes without any
-risk of inconsistency.
-The other clock is simply a wallclock, so that the main stream
-is produced following the ``real'' time rate.
+The dotted boxes on this graph represent clocks: all the nodes in a box are
+operators which belong to the same clock. Here, we see that the `playlist`
+operator has to be in its own clock `clock₂` (because it can be manipulated in a
+non-linear way by the `crossfade` operator in order to compute transitions)
+whereas all other operators belong the same clock `clock₁` and will produce
+their stream at the same rate.
 
-**Nested clocks**
+#### Errors with clocks
 
-On the following example, liquidsoap will issue the fatal error
-`cannot unify two nested clocks`:
+At startup Liquidsoap assigns a clock to each operator by applying the three
+following rules:
 
-```liquidsoap
-jingles = playlist("jingles.lst")
-music = rotate([1,10],[jingles,playlist("remote.lst")])
-safe = rotate([1,10],[jingles,single("local.ogg")])
-q = fallback([crossfade(music),safe])
+1. we should follow the clock imposed by some operators:
+   - `input.alsa` and `output.alsa` have to be in the `alsa` clock,
+     `input.pulseaudio` and `output.pulseaudio` have to be in the `pulseaudio`
+     clock, etc.,
+   - the sources used by `stretch`, `cross` and few other "time-sensitive"
+     operators have their own clock,
+   - the operator `clock` generates a new clock,
+2. each operator should have the same clock as the sources it is using (unless
+   for special operators such as `cross` or `buffer`),
+3. if the two above rules do not impose a clock to an operator, it is assigned to
+   the default clock which based on CPU and called `main`.
+
+It should always be the case that a given operator belongs to exactly one
+clock. If, by applying the above rules, we discover that an operator should
+belong to two (or more) clocks, we raise an error. For instance, the script
+
+```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=2}
 ```
 
-Let's see what happened.
-The `rotate` operator, like most operators, operates
-within a single clock, which means that `jingles`
-and our two `playlist` instances must belong to the same clock.
-Similarly, `music` and `safe` must belong to that
-same clock.
-When we applied crossfading to `music`,
-the `crossfade` operator created its own internal clock,
-call it `cross_clock`,
-to signify that it needs the ability to accelerate at will the
-streaming of `music`.
-So, `music` is attached to `cross_clock`,
-and all sources built above come along.
-Finally, we build the fallback, which requires that all of its
-sources belong to the same clock.
-In other words, `crossfade(music)` must belong
-to `cross_clock` just like `safe`.
-The error message simply says that this is forbidden: the internal
-clock of our crossfade cannot be its external clock -- otherwise
-it would not have exclusive control over its internal flow of time.
+will raise the error
 
-The same error also occurs on `add([crossfade(s),s])`,
-the simplest example of conflicting time flows, described above.
-However, you won't find yourself writing this obviously problematic
-piece of code. On the other hand, one would sometimes like to
-write things like our first example.
-
-The key to the error with our first example is that the same
-`jingles` source is used in combination with `music`
-and `safe`. As a result, liquidsoap sees a potentially
-nasty situation, which indeed could be turned into a real mess
-by adding just a little more complexity. To obtain the desired effect
-without requiring illegal clock assignments, it suffices to
-create two jingle sources, one for each clock:
-
-```liquidsoap
-music = rotate([1,10],[playlist("jingles.lst"),
-                       playlist("remote.lst")])
-safe  = rotate([1,10],[playlist("jingles.lst"),
-                       single("local.ogg")])
-q = fallback([crossfade(music),safe])
+```
+A source cannot belong to two clocks (alsa[], pulseaudio[]).
 ```
 
-There is no problem anymore: `music` belongs to 
-`crossfade`'s internal clock, and `crossfade(music)`,
-`safe` and the `fallback` belong to another clock.
+at startup because the source `s` should be both in the `alsa` and in the
+`pulseaudio` clock, which is forbidden. This is for a good reason: the ALSA and
+the Pulseaudio libraries each have their own way of synchronizing streams and
+might lead to the source `s` being pulled at two different rates. Similarly, the
+script
 
+```{.liquidsoap include="liq/bad/clock-add-stretch.liq" from=2 to=-1}
+```
+
+will raise the error
+
+```
+Cannot unify two nested clocks (resample_65223[], ?(3f894ac2d35c:0)[resample_65223[]]).
+```
+
+because the source `s` should belong to the clock used by `stretch` and the
+clock of `stretch`. When we thing about it the reason is clear: we are trying to
+add the source `s` played at normal speed and at a speed slowed down twice. This
+means that in order to compute the stream `o` at a given time _t_, we need to
+know the stream `s` both at time _t_ and at time _t/2_, which is forbidden
+because we only want to compute a source at one logical instant.
+
+<!--
 
 #### Ensuring clock consistency
 
@@ -1236,6 +1242,8 @@ after a month: this means that at some point in the month we will have to insert
 the two clocks! This is clearly that we do not want to be silently handled, so
 that, when it detects that it might be the case Liquidsoap simply refuses to
 start.
+
+-->
 
 <!--
 
@@ -1369,13 +1377,32 @@ adaptative resampler. One such example is The VLC player.
 
 #### Mediating between clocks: buffers
 
-TODO: this is more for [there](#sec:clock-ex)
+As we have seen in [there](#sec:clock-ex), the usual way to handle clock
+problems is to use buffer operators (either `buffer` of `buffer.adaptative`):
+they record some of their input source before outputting it (1 second by
+default), so that it can easily cope with small time discrepancies. Because of
+this, we allow that the clock of their argument and their clocks are different.
 
-In order to use two operators in different clocks, one has to 
+We have seen that the script
 
-`buffer`
+```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=2}
+```
 
-`buffer.adaptative`
+is now allowed because it would require `s` to belong to two distinct
+clocks. Graphically,
+
+![Alsa vs pulseaudio clocks](fig/clock-alsa-pulseaudio)\
+
+The easy way to solve this is to insert a `buffer` operator before one of the
+two outputs, say `output.alsa`:
+
+```{.liquidsoap include="liq/clock-alsa-pulseaudio2.liq" from=2}
+```
+
+which allows having two distinct clocks at the input and the output of `buffer`
+and thus two distinct clocks for the whole script:
+
+![Alsa vs pulseaudio clocks](fig/clock-alsa-pulseaudio2)\
 
 #### Catching up
 
@@ -1406,11 +1433,10 @@ This means Liquidsoap took _n_+0.86 seconds to produce _n_ seconds of audio, and
 is thus "late". In such a situation, it will try to produce audio faster than
 realtime in order to "catch up" the delay.
 
-How can we cope with this kind of situations? As explained above, buffers are a
-solution to handle temporary disturbances in production of streams for
-sources. You can explicitly add some in you script by using the `buffer`
-operator: for instance, in the above script, we would add before the output, the
-line
+How can we cope with this kind of situations? Again, buffers are a solution to
+handle temporary disturbances in production of streams for sources. You can
+explicitly add some in you script by using the `buffer` operator: for instance,
+in the above script, we would add before the output, the line
 
 ```liquidsoap
 s = buffer(s)
@@ -1419,6 +1445,7 @@ s = buffer(s)
 which make the source store 1 second of audio (this duration can be configured
 with the `buffer` parameter) and thus bear with delays of less than 1 second.
 
+<!--
 #### The `clock` operator
 
 TODO: the `clock` operator
@@ -1430,11 +1457,57 @@ TODO: we briefly explain the principle of clocks here and give the practice in
 
 explain `source.time`, say that this is often used in conjunction with
 `source.on_frame` (for instance, `source.run`)
+-->
 
 Requests
 --------
 
+When passing something to play to an operator, such as `test.mp3` to the
+operator `single`,
+
+```liquidsoap
+s = single("file.mp3")
+```
+
+it seems that the operator can simply open the file and play it on the
+go. However, things are a bit more complicated in practice. Firstly, we have to
+actually get the file:
+
+- the file might be a distant file (e.g. `http://some.server/file.mp3` or
+  `ftp://some.server/file.mp3`), in which case we want to download it beforehand
+  in order to ensure that we have a valid file and that we will not be affected
+  by the network,
+- the "file" might actually be more a recipe to produce the file (for instance
+  `say:Hello you`, means that we should take some text-to-speech program to
+  generate a sound file with the text `Hello you`).
+
+Secondly, we have to find a way to decode the file
+
+- we have guess what format it is, based on the header of the file and its
+  extension,
+- we have to make sure that the file is valid and find a _decoder_, i.e. some
+  library that we support which is able to decode it.
+
+Finally, we have to perform some cleanup after the file has been played:
+
+- the decoder should be cleanly stopped,
+- temporary files (such as downloaded files) have to be removed.
+
+Also note that the decoder depends on the kind of source we want to produce: for
+instance, an mp3 file will not be acceptable if we are trying to generate video.
+
+For those reason, most operators (such as `single`, `playlist`, etc.) do not
+directly deal files, but rather with _requests_. Namely, a request is an
+abstraction which allows manipulating files but also performing the above
+operations.
+
 ### Requests {#sec:requests}
+
+A _request_ is something from which we can eventually produce a file. It starts
+with an URI, such as
+
+
+annotate
 
 TODO: explain the _status_ of requests: idle / resolving / ready / playing / destroyed
 
@@ -1486,6 +1559,8 @@ TODO: explain that requests must be deleted, see https://github.com/savonet/liqu
 TODO: explain how to trace requests
 
 `request.once`
+
+TODO: mention custom protocols
 
 ### Decoding compressed data
 
