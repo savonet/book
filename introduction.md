@@ -242,7 +242,7 @@ understand what we can do in this language, and this is the purpose of [this
 chapter](#chap:language). We give all the means to generate a webradio ([in
 there](#chap:workflow) and a video stream ([in there](#chap:video)). Finally,
 for interested readers, we give details about the internals of the language and
-the production of streams [there](#chap:streaming).
+the production of streams [there](#chap:streaming).\TODO{mention the FAQ chapter}
 
 ### How to get help
 

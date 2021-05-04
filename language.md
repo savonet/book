@@ -375,8 +375,7 @@ useful string-related function are
 - `string.contains`: test whether a string contains (or begins or ends with) a
   particular substring,
 - `string.match`: test whether a string matches a regular expression,\TODO{give
-  an example and explain basics of regexps, or maybe simply a reference to the
-  corresponding section}
+  an example and explain basics of regexps}
 - `string.replace`: replace substrings matching a regular
   expression,
 - `string.quote`: escape shell special characters (you should always use this

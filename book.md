@@ -41,11 +41,7 @@ toc: true
 
 !include "streaming.md"
 
-<!-- !include "faq.md" -->
-
-<!-- !include "reference.md" -->
-
-<!-- !include "conclusion.md" -->
+!include "faq.md"
 
 !include "bibliography.md"
 
