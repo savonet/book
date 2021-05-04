@@ -237,18 +237,24 @@ give examples of such below.
 
 A typical radio starts with one or more _playlists_, which are lists of audio
 files. These can be stored in various places: they can either be on a local hard
-drive, or on some distant server, in which case they have to be downloaded
-beforehand, in order to make sure that we will not suffer from disturbances in
-the network.\SM{say what an uri "Uniform Resource Identifier" is} There is a
-slight difference between the two: in the case of local files, we have pretty
-good confidence that they will always be available (or at least we can check
-that this is the case), whereas for distant files the server might be
-unavailable, or just very slow, so that we have to take care of downloading the
-file in advance enough and be prepared to have fallback option in case the file
-is not ready in time. Finally, audio files can be in various formats (as
-described in [the above section](#sec:audio-streams)) and have to be decoded,
-which is why Liquidsoap depends on many libraries, in order to support as many
-formats as possible.
+drive or on some distant server, and are identified using an URI (for _Uniform
+Resource Identifier_) which can be a path to a local file or something of the
+form `http://some/server/file.mp3` which indicates that the file should be
+accessed using the http protocol (some other protocols should also be
+supported).
+<!--
+In the case of distant files, they have to be downloaded beforehand, in order to
+make sure that we will not suffer from disturbances in the network.
+-->
+There is a slight difference between local and distant files: in the case of
+local files, we have pretty good confidence that they will always be available
+(or at least we can check that this is the case), whereas for distant files the
+server might be unavailable, or just very slow, so that we have to take care of
+downloading the file in advance enough and be prepared to have fallback option
+in case the file is not ready in time. Finally, audio files can be in various
+formats (as described in [the above section](#sec:audio-streams)) and have to be
+decoded, which is why Liquidsoap depends on many libraries, in order to support
+as many formats as possible.
 
 Even in the case of local files, the playlist might be _dynamic_: instead of
 knowing in advance the list of all the files, the playlist can consist of a
