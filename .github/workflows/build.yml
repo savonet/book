@@ -21,7 +21,7 @@ jobs:
     - name: Build cover
       run: |
         make -C cover
-        cp cover.pdf .
+        cp cover/cover.pdf .
     - uses: actions/upload-artifact@v2
       with:
         name: book
