@@ -1,0 +1,96 @@
+\documentclass[
+coverwidth=6in,
+coverheight=9in,
+spinewidth=1.340in, % .95
+bleedwidth=.125in,
+12pt,
+% marklength=0in,
+]{bookcover}
+\usepackage[T1]{fontenc}
+\usepackage{setspace}
+\usepackage{moresize}
+\usepackage{style}
+
+\definecolor{Purple}{HTML}{8A2BE2}
+
+\begin{document}
+\begin{bookcover}
+  \bookcovercomponent{color}{bg whole}{color=Purple!10}
+  % \bookcovercomponent{color}{spine}{color=white}
+  \bookcovercomponent{normal}{front}{
+    \definecolor{Purple}{HTML}{8A2BE2}
+    \pagecolor{Purple!10}
+
+\thispagestyle{empty}
+\begin{center}
+  \phantom{x}
+  % \vfill
+  \vspace{20ex}
+
+  {\HUGE The Liquidsoap book}
+
+  \vfill
+
+  \includegraphics{logo.pdf}
+
+  \vfill
+
+  {\Large Romain Beauxis and Samuel Mimram}
+
+  \vspace{10mm}
+\end{center}
+  }
+    
+  \bookcovercomponent{center}{spine}{
+    \rotatebox[origin=c]{-90}{
+      \hspace{3cm}
+      \begin{tabular}{l}
+        Romain Beauxis\\Samuel Mimram
+      \end{tabular}
+      \hspace{70mm}
+      {\huge The Liquidsoap book}
+      \hspace{3cm}
+    }
+  }
+
+  \bookcovercomponent{normal}{back}{
+    \vspace{1cm}
+    \begin{minipage}[t]{\coverwidth}
+      \begin{center}
+        \vspace{5mm}
+        
+        {\LARGE The Liquidsoap book}
+        
+        \vspace{5mm}
+        \begin{minipage}{.83\textwidth}
+          \rule{\textwidth}{.5pt}
+
+          \vspace{5mm}
+
+          \setstretch{1.5}
+          {\large\input{abstract}}
+
+          \vspace{60mm}
+
+        \end{minipage}
+      \end{center}
+    \end{minipage}
+    \vfill
+    % \begin{minipage}{\coverwidth}
+      % \hspace{.075\textwidth}
+      % \begin{minipage}{.45\textwidth}
+        % {\small
+          % \textbf{Samuel Mimram} is professor at École Polytechnique in France
+          % and researcher in computer science at the LIX laboratory since
+          % 2014. Prior to that, he was researcher at the LIST laboratory of
+          % Commissariat à l'Énergie Atomique. He obtained his PhD in 2009 from
+          % Université Paris Diderot and passed his habilitation à diriger des
+          % recherches in 2016. His topics of interest include semantics of
+          % programming languages, category theory, rewriting and type theory.
+        % }
+      % \end{minipage}
+    % \end{minipage}
+    \vspace{1cm}
+  }
+\end{bookcover}
+\end{document}
