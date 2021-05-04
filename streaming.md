@@ -1932,10 +1932,49 @@ Custom metadata decoders can be added with the function `add_metadata_resolver`.
 Reading the source code
 -----------------------
 
-- frames are defined in `stream/frame.ml`
-- requests are defined in `request.ml`
-- the main class for sources is `source.ml`
-- clocks are in `clock.ml`
-- various file for the language: `lang/lang_types.ml` (typing),
-  `lang/lang_values.ml` (expressions of the language), `lang/lang.ml`
-  (high-level operations on the languages)
+As indicated in [there](#sec:further-workflow), a great way of learning about
+Liquidsoap and adding features to it is to read (and modify) the standard
+library, which is written in the Liquidsoap language detailed in [the dedicated
+chapter](#chap:language). In case you need to modify the internal behavior of
+Liquidsoap or chase an intricate bug you might have to read (and modify) the
+code of Liquidsoap itself, which is written in the [OCaml
+language](https://ocaml.org/). This can be a bit intimidating at first, but it
+is perfectly doable with some motivation, and it might be reassuring to learn
+that some other people have gone through this before you!
+
+In order to guide you through the source, let us briefly describe the main
+folders and files. All the files referred to here are in the `src` directory of
+the source, where all the code lies. The main folders are
+
+- language:
+  - `lang/`: the definition of language and all the builtin operators,
+  - `stream/`: internal representation and manipulation of streams using frames,
+- operators:
+  - `operators/`: where most operators such as sound processing are,
+  - `conversions/`: conversion operators such as `mean`, `drop_audio`,
+  `mux_audio`, etc.
+- inputs and outputs:
+  - `io/`: libraries performing both input and output such as
+  alsa,
+  - `sources/`: input sources
+  - `outputs/`,
+- file formats:
+  - `decoder/`, `encoder_formats/` and `encoder/`: decoders and
+  encoders using various libraries for various formats and codecs,
+  - `converters`: audio samplerate and image formats converters,
+  - `lang_encoders`: support in the language for various encoders,
+- protocols: `protocols/`.
+
+The most important files are the following ones:
+
+File | Description
+-----|------------
+`lang/lang_types.ml` | Types of the language
+`lang/lang_values.ml` | Expressions of the language
+`lang/lang.ml` | High-level operations on the language
+`stream/frame.ml` | Definition of frames for streams
+`sources.ml` | Definition of sources
+`clock.ml` | Definition of clocks
+`request.ml` | Definition of requests
+
+Happy hacking, and remember you can get help by the usual means!

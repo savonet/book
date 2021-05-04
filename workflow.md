@@ -3077,6 +3077,8 @@ use this for an harbor output, we will write
 ```
 
 \TODO{we can add "" around parameter names when they contain dashes}
+\TODO{we have support for most formats:}
+<https://www.liquidsoap.info/doc-dev/encoding_formats.html>
 
 ### MP3
 
@@ -5193,7 +5195,7 @@ because the list `rmsl` grows over time, the script spends more and more time in
 the function `+` (in order to compute the average) and in the function `aux`
 (which is an internal function used to define `list.iter`).
 
-Going further
+Going further {#sec:further-workflow}
 -------------
 
 A great way to learn more Liquidsoap tricks is to read the code of the standard

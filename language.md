@@ -2204,45 +2204,92 @@ record. For instance, we can print the current date with
 Streams in Liquidsoap
 ---------------------
 
-TODO: sources are detailed in [a later chapter](#chap:streaming), give the main
-ideas here
+Apart from the general-purpose constructions of the language described above,
+Liquidsoap also has constructions dedicated to building streams (after all this
+is what we are all here for). Those are put to practice in [the next
+chapter](#chap:workflow) and described in details in [the chapter
+after](#chap:streaming). We however quickly present useful concepts here.
 
 ### Sources
 
-The type of sources is of the form
+An operator producing a stream is called a _source_ and has a type of the form
 
 ```
 source(audio=..., video=..., midi=...)
 ```
 
-where the "`...`" indicate the _contents_ that the source can generate, i.e. the
+where the "`...`" indicate the _contents_ that the source can generate, i.e. the
 number of channels, and their nature, for audio, video and midi data, that the
-source can generate.
+source can generate. For instance, the `playlist` operator has (simplified) type
 
-TODO: source functions take an `id` parameter which is mostly useful for the
-logs and the telnet
-
-availability (`source.available` / `delay` / `max_duration`)
-
-```{.liquidsoap include="liq/available.liq"}
 ```
+(?id : string, string) -> source(audio='a, video='b, midi='c)
+```
+
+we see that it takes as parameters an optional string labeled `id` (most
+operators take such an argument which indicates its name, and is used in the
+logs or the telnet) as well as a string (the playlist to play) and returns a
+source (which plays the playlist...).
+
+Some sources are _fallible_, which means that they are not always available. For
+instance, the sound input from a DJ over the internet is only available when the
+DJ connects.\TODO{mksafe, fallible =true}
 
 ### Encoders
 
-### Requests
+Some outputs need to send data encoded in some format. For instance, the
+operator which records a stream into a file, `output.file`, needs to know in
+which format we want to store the file in. This is specified by passing special
+parameters called _encoders_. For instance, the (simplified) type of
+`output.file` is
 
-`request.create`, `request.uri`, `request.metadata`
-
-```{.liquidsoap include="liq/request.metadata.liq"}
+```
+(?id : string, format('a), string, source('a)) -> unit
 ```
 
-explain protocols (`say:...`)
+We see that it takes the `id` parameter, an encoder (the type of encoders is
+`format(...)`), a string (the file where we should save data) and a source. This
+means that we can play our playlist and record it into an mp3 file as follows:
+
+```{.liquidsoap include="liq/output.file.liq" from=1}
+```
+
+Here, `%mp3` is an encoder specifying that we want to encode into the mp3
+formats. Encoders for most usual formats are available (`%wav` for wav,
+`%fdkaac` for aac, `%opus` for opus, etc.)
+
+### Requests
+
+Internally, Liquidsoap does not directly deal with files, but with an
+abstraction of it called a _request_. The reason is that some files require some
+processing before being accessible. For instance, we cannot directly access a
+distant mp3 file: we first need to download it and make sure that it has the
+right format.
+
+This is the reason why most low-level operators do not deal with files, but
+rather with requests. The main thing you need to know in practice is that you
+can create a request from a file location, using the `request.create`
+function. For instance, in the following example, we create a request queue `q`,
+on which we can add requests to play in it using `q.push`. We define a function
+`play`, which adds the file on the queue, by first creating a request from
+it. We then use `list.iter` to apply this function `play` on all the mp3 files
+of the current directory. The following script will thus play all the mp3 files
+in the current directory:
+
+```{.liquidsoap include="liq/request.queue-ls.liq" from=1}
+```
 
 ### Main functions
 
-- `playlist`
-- `fallback`
-- `switch`
-- `rotate`
-- `request.queue`
-- `crossfade`
+The main functions in order to create and manipulate audio streams are
+
+- `playlist`: plays a playlist,
+- `fallback`: plays the first available source in a list,
+- `switch`: plays a source depending on a condition,
+- `crossfade`: fade successive tracks,
+- `output.icecast`, `output.hls`, `output.file`: output on Icecast, an HLS
+  playlist, or in a file,
+- `request.queue`: create a queue that can be dynamically be fed with user's
+  requests.
+
+We will of course detail their use in due time.
