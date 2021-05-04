@@ -210,18 +210,39 @@ We expect that the computer knowledge can vary much between Liquidsoap users,
 who can range between music enthusiasts and experienced programmers, and we try
 to accommodate with all those backgrounds. Nevertheless, we have to suppose that
 the reader of this book is familiar with some basic concepts and tools. In
-particular, this book does not cover the basics of text file editing and unix
+particular, this book does not cover the basics of text file editing and Unix
 shell scripting (how to use the command line, how to run a program and so
 on). Some knowledge in signal processing, streaming and programming can also be
 useful.
 
+### Liquidsoap version
+
+The language has gone through some major changes since its beginning and
+maintaining full backward-compatibility was impossible. In this book, we assume
+that you have a version of Liquidsoap which is at least 2.0. Most, examples can
+be adapted to work with earlier versions though, at the cost of making minor
+changes.
+
 ### How to read the book
 
-TODO: explain that this is not a 500+ pages reference manual, but a way to
-really learn Liquidsoap, without necessarily giving all the details about the
-functions, which can be found in the online documentation
+This book is intended mostly sequentially, excepting perhaps [this
+chapter](#chap:language), where we present the whole language in details, which
+can be skimmed trough first. This book is meant as a way of learning Liquidsoap,
+not as a 500+ pages references manual: should you need details about the
+arguments of a particular operator, you are advised to have a look at the online
+documentation.
 
-TODO: plan of the book
+We explain the technological challenges that we have face in order to produce
+multimedia streams in [this chapter](#chap:technology) and are addressed by
+Liquidsoap. The means of installing the software are described in [this
+chapter](#chap:installation). We then describe in [this
+chapter](#chap:quickstart) what everybody wants to start with: setting up a
+simple webradio station. Before, going to more advanced uses, we first need to
+understand what we can do in this language, and this is the purpose of [this
+chapter](#chap:language). We give all the means to generate a webradio ([in
+there](#chap:workflow) and a video stream ([in there](#chap:video)). Finally,
+for interested readers, we give details about the internals of the language and
+the production of streams [there](#chap:streaming).
 
 ### How to get help
 
@@ -235,17 +256,24 @@ touch with the community and obtain help to get your problem solved:
 3. the [Liquidsoap mailing-list](savonet-users@lists.sf.net) is there if you
   would rather discuss by mail (how old are you?),
 4. the [Liquidsoap github page](https://github.com/savonet/liquidsoap/issues) is
-  the place to report bugs and get some help.
+  the place to report bugs,
+5. there is also a starting [Liquidsoap discussion
+   board](https://github.com/savonet/liquidsoap/discussions).
 
 Please remember to be kind, most of the people there are doing this on their
 free time!
 
-\TODO{explain how to report bugs about this book}
-
 ### How to improve the book
 
-TODO: explain where to report bugs, that we are open to suggestions (in
-particular for signal processing)
+We did our best to provide a progressive and illustrated introduction to
+Liquidsoap, which covers almost all of the language, including the most advanced
+features. However, we are open to suggestions: if you find some error, some
+unclear explanation, or some missing topic, please tell us! The best way is by
+opening an issue on [the dedicated
+bugtracker](https://github.com/savonet/book/issues), but you can also reach us
+by mail at `sam@liquidsoap.info` and `romain@liquidsoap.info`. Please include
+page numbers and text excerpts if your comment applies to a particular point in
+the book.
 
 ### The authors
 
@@ -262,10 +290,11 @@ and category theory.
 ### Thanks
 
 The advent of Liquidsoap and this book could not have been possible without the
-numerous contributors over the years among whom David Baelde who stood at the
-starting point, the students of the MIM1 (big up to Florent Bouchez, Julien
-Cristau, Stéphane Gimenez and Sattisvar Tandabany), Gilles Pietri, Clément
-Renard and Vincent Tabard (who also designed the logo). Many thanks also to the
-many people who helped improving the language by reporting bugs or suggesting
-ideas, and to the Radio France team who where enthusiastic about the project and
-motivated some new developments (hello Maxime Bugeia, Youenn Piolet and others).
+numerous contributors over the years, the first of them being David Baelde who
+was a leading creator and designer of the language, but also the students of the
+MIM1 (big up to Florent Bouchez, Julien Cristau, Stéphane Gimenez and Sattisvar
+Tandabany), Gilles Pietri, Clément Renard and Vincent Tabard (who also designed
+the logo). Many thanks also to the many people who helped improving the language
+by reporting bugs or suggesting ideas, and to the Radio France team who where
+enthusiastic about the project and motivated some new developments (hello Maxime
+Bugeia, Youenn Piolet and others).

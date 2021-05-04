@@ -17,7 +17,9 @@ subparagraph: yes
 header-includes: |
   \usepackage{style}
   \usepackage{cleveref}
-  \usepackage{makeidx}\makeindex
+  \usepackage{imakeidx}\makeindex[intoc]
+  \usepackage{titlepic}
+  \titlepic{\vspace{6cm}\includegraphics[width=3cm]{img/logo.pdf}}
 numbersections: true
 secnumdepth: 1
 toc-depth: 1
