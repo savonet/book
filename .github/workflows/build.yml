@@ -14,13 +14,18 @@ jobs:
         dune build @install
         sudo dune install -p pandoc-crossref
         sudo dune install -p pandoc-include
-    - name: Build
+    - name: Build book
       run: |
         make
         pdflatex book.tex
+    - name: Build cover
+      run: |
+        make -C cover
     - uses: actions/upload-artifact@v2
       with:
         name: book
-        path: book.pdf
+        path: |
+          book.pdf
+          cover/cover.pdf
     - name: Test scripts
       run: docker build . -f .github/docker/Dockerfile.build
