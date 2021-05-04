@@ -765,14 +765,13 @@ servers). For instance:
 
 #### Facebook
 
-<!-- https://www.facebook.com/help/1534561009906955 -->
-
 The url and streaming key can be obtained from the [Facebook Live
-Producer](https://www.facebook.com/live/producer/). Your video resolution should
-not exceed 1280×720 at 30 frames per second, video should be encoded in H.264 at
-at most 4000 kbps and audio in AAC in 96 or 128 kbps. Keyframes should be sent
-at most every two second (the `g` parameter of the video codec should be at most
-twice the framerate). For instance,
+Producer](https://www.facebook.com/live/producer/). According to
+[recommendations](https://www.facebook.com/help/1534561009906955), Your video
+resolution should not exceed 1280×720 at 30 frames per second, video should be
+encoded in H.264 at at most 4000 kbps and audio in AAC in 96 or
+128 kbps. Keyframes should be sent at most every two second (the `g` parameter
+of the video codec should be at most twice the framerate). For instance,
 
 ```{.liquidsoap include="liq/video-facebook.liq" from=1}
 ```

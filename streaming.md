@@ -1486,7 +1486,9 @@ Secondly, we have to find a way to decode the file
 - we have guess what format it is, based on the header of the file and its
   extension,
 - we have to make sure that the file is valid and find a _decoder_, i.e. some
-  library that we support which is able to decode it.
+  library that we support which is able to decode it,
+- we have to read the metadata of the file,
+- we have to compute an estimation of the duration of the file when possible.
 
 Finally, we have to perform some cleanup after the file has been played:
 
@@ -1503,116 +1505,429 @@ operations.
 
 ### Requests {#sec:requests}
 
-A _request_ is something from which we can eventually produce a file. It starts
-with an URI, such as
+A _request_ is something from which we can eventually produce a file.
 
+#### URIs
 
-annotate
+It starts with an URI (_Uniform Resource Identifier_), such as
 
-TODO: explain the _status_ of requests: idle / resolving / ready / playing / destroyed
+- `/path/to/file.mp3`
+- `http://some.server/file.mp3`
+- `annotate:title="My song",artist="The artist":~/myfile.mp3`
+- `replaygain:/some/file.mp3`
+- `say:This is my song`
+- `synth:shape=sine,frequency=440.,duration=10.`
+- ...
 
-TODO: explain that there is voluntarily a small number of available rids and
-that we can have a message if we use too many of those, explain how to change
-this number
-
-explain that we need to resolve requests, which is why queues take request in account, we want to be able to play them immediately
-
-persistent or not
-
-main functions:
-
-- `request.create`
-- `request.resolve`
-- `request.duration`
-- `request.filename` and `request.uri`
-- `request.metadata`
-
-TODO: what are _indicators_ (used as parameters for create for instance)?
-
-The purpose of a request is to get a valid file. The file can contain media in
-which case validity implies finding a working decoder, or can be something
-arbitrary, like a playlist. This file is fetched using protocols. For example
-the fetching can involve querying a mysql database, receiving a list of new
-URIS, using http to download the first URI, check it, fail, using smb to
-download the second, success, have the file played, finish the request, erase
-the temporary downloaded file. This process involve a tree of URIs, represented
-by a list of lists.  Metadata is attached to every file in the tree, and the
-view of the metadata from outside is the merging of all the metadata on the path
-from the current active URI to the root.  At the end of the previous example,
-the tree looks like:
+As you can see the URI is far from always being the path to a file. The part
+before the first colons (`:`) is the _protocol_ and is used to determine how to
+fetch or produce the file. A local file is assumed when no protocol is
+specified. Some protocols such as `annotate` or `replaygain` operate on URIs,
+which means that they allow chaining of protocols:
 
 ```
-[ [ "/tmp/localfile_from_smb" ] ;
-  [
-    (* Some http://something was there but was removed without producing
-     * anything. *)
-    "smb://something" ; (* The successfully downloaded URI *)
-    "ftp://another/uri" ;
-    (* maybe some more URIs are here, ready in case of more failures *)
-  ] ;
-  [ "mydb://myrequest" ] (* And this is the initial URI *)
-]
+replaygain:annotate:title="Welcome":say:Hello everybody!
 ```
 
-TODO: explain that requests must be deleted, see https://github.com/savonet/liquidsoap/issues/309
+#### The status of a request
 
-TODO: explain how to trace requests
+When a request is created it is assigned a _RID_, for _request identifier_,
+which is a number which uniquely identifies it (in practice the first request
+has RID 0, the second one RID 1, and so on). Each request also has a _status_
+which indicate where it is in its lifecycle:
 
-`request.once`
+1. _idle_: this is the initial status of a request which was just created,
+2. _resolving_: we are generating an actual file for the request,
+3. _read_: the request is ready to be played,
+4. _playing_: the request is currently being played by an operator,
+5. _destroyed_: the request has been played and destroyed (it should not be used
+   anymore).
 
-TODO: mention custom protocols
+#### Resolution
 
-### Decoding compressed data
+The process of generating a file from a request is called _resolving_ the
+request. The _protocol_ specifies the details of this process, which is done in
+two steps:
 
-Example of a log of decoder
+1. some computations are performed (e.g. sound in produced by a text-to-speech
+   library for `say`),
+2. a list of URIs, called _indicators_, is returned.
 
-TODO: `Unable to decode ``file'' as {audio=2;video=0;midi=0}!`
+Generally, only one URI is returned: for instance, the `say` protocol generates
+audio in a temporary file and returns the path to the file it produced. When
+multiple URIs are returned, Liquidsoap is free to pick any of them and will
+actually pick the first working one. Typically, a "database" protocol could
+return multiple locations of a given file on multiple servers for increased
+resiliency.
 
-explain configuration options
+When a request is indicated as _persistent_ is can be played multiple times
+(this is typically the case for local files). Otherwise a request should only be
+used once. Internally, with every indicator is also associated the information
+of whether it is _temporary_ or not. If it is, the file is removed when the
+request is destroyed. For instance, the `say` protocol generates the text in a
+temporary file, which we do not need after it has been played.
+
+When resolving the request, after a file has been generated, Liquidsoap also
+ensures basic checks on data and computes associated information:
+
+- we read the metadata in the file,
+- we compute its duration if possible,
+- we find a library to decode the file (a decoder).
+
+The resolution of a request may _fail_ if the protocol did not manage to
+successfully generate a file (for instance, a database protocol used with a
+query which did not return any result) or if no decoder could be found (either
+the data is invalid or the format is not supported).
+
+#### Manipulating requests
+
+Requests can be manipulated within the language with the following functions.
+
+- `request.create` creates a request from an URI. It can be specified to be
+  persistent or temporary with the associated arguments. Beware that temporary
+  files are removed after they have been played so that you should use this with
+  care.
+- `request.resolve` forces the resolution of a request. This function returns a
+  boolean indicating whether the resolution succeeded or not. The `timeout`
+  argument specifies how much time we should wait before aborting (resolution
+  can take long, for instance when downloading a large file from a distant
+  server). The `content_type` argument indicates a source with the same content
+  type (number and kind of audio and video channels) as the source for which we
+  would like to play the request: the resolution depends on it (for instance, we
+  cannot decode an mp3 file to produce video...). Resolving twice does not hurt:
+  resolution will simply not do anything the second time.
+- `request.destroy` indicates that the request will not be used anymore and
+  associated resources can be freed (typically, we remove temporary files).
+- `request.id` returns the identifier (RID) of the request.
+- `request.status` returns the current status of a request and `request.ready`
+  indicates whether a request is ready to play.
+- `request.uri` returns the initial URI which was used to create the request and
+  `request.filename` returns the file to which the request resolved.
+- `request.duration` returns the (estimated) duration of the request in seconds.
+- `request.metadata` returns the metadata associated to request. Those metadata
+  are automatically read when resolving the file with a specified content
+  type. The function `request.read_metadata` can be used to force reading the
+  metadata in the case we have a local file.
+- `request.log` returns the log associated to a particular request. It is useful
+  in order to understand why a request failed to resolve and can also be
+  obtained by using the `request.trace` telnet command.
+
+Requests can be played using operators such as
+
+- `request.queue` which plays a dynamic queue of requests,
+- `request.dynamic` which plays a sequence of dynamically generated requests,
+- `request.once` which plays a request once.
+
+Those operator take care of resolving the requests before using them and
+destroying afterward, so that you are only going to need `request.create` in
+practice in the above list of functions, although other are used in the standard
+library to implement advanced operators.
+
+#### Metadata
+
+When resolving requests, Liquidsoap inserts metadata in addition to the metadata
+already contained in the files. This can be observed with the following script:
+
+```{.liquidsoap include="liq/request-metadata.liq" from=1}
+```
+
+Here, we are creating a request from a file path `test.mp3`. Since we did not
+resolve the request, the metadata of the file have not been read yet. However,
+the request still contains metadata indicating information about it. Namely, the
+script prints:
 
 ```
-set("decoder.decoders",["WAV","AIFF","PCM/BASIC","MIDI","IMAGE","RAW AUDIO","FFMPEG","FLAC","AAC","MP4","OGG","MAD","GSTREAMER"])
+[("filename", "test.mp3"), ("temporary", "false"),
+ ("initial_uri", "test.mp3"), ("status", "idle"), ("rid", "0")]
 ```
 
-```
-set("decoder.external.ffmpeg.path","ffmpeg")
-```
+The meaning of the metadata should be obvious:
+
+- `rid` is the identifier of the request,
+- `status` is the status of the request,
+- `initial_uri` is the uri we used to create the request,
+- `filename` is the file the request resolved to (here, already had a local file
+  so that it does not change)
+- `temporary` indicates whether the file is temporary or not.
+
+#### Protocols
+
+The list of protocols available in Liquidsoap for resolving requests can be
+obtained by typing the command
 
 ```
-set("decoder.file_extensions.ffmpeg",["mp1","mp2","mp3","m4a","m4b","m4p","m4v","m4r","mov","3gp","mp4","wav","flac","ogv","oga","ogx","ogg","opus","wma","webm","wmv","avi","mkv","aac","osb"])
+liquidsoap --list-protocols-md
 ```
 
-```
-set("decoder.mime_types.ffmpeg",["audio/vnd.wave","audio/wav","audio/wave","audio/x-wav","audio/aac","audio/aacp","audio/x-hx-aac-adts","audio/flac","audio/x-flac","audio/mpeg","audio/MPA","video/x-ms-asf","
-video/x-msvideo","audio/mp4","audio/webm","application/mp4","video/mp4","video/3gpp","video/webm","video/x-matroska","video/mp2t","video/MP2T","application/ogg","application/x-ogg","audio/x-ogg","audio/ogg","vid
-eo/ogg","video/webm","application/ffmpeg"])
-```
+on [on the website](https://www.liquidsoap.info/doc-dev/protocols.html). The
+documentation also indicates which protocol are _static_: for those, the same
+URI should always produce the same result, and Liquidsoap can use this
+information in order to optimize the resolution.
+
+Some of those protocols are built in the language such as
+
+- `http` and `https` to download distant files over HTTP,
+- `annotate` to add metadata.
+
+Some other are defined in the standard library (in the file `protocols.liq`)
+using the `add_protocol` function which registers a new protocol. This function
+takes as argument a function `proto` of type
 
 ```
-set("decoder.priorities.ffmpeg",10)
+(rlog : ((string) -> unit), maxtime : float, string) -> [string]
 ```
 
-MIME is used to guess
+which indicates how to perform the resolution: this function takes as arguments
 
-We also have metadata resolvers
+- `rlog` a function to write in the request's log,
+- `maxtime` the maximal duration resolution should take,
+- the URI to resolve,
 
-Explain samplerate conversion, channel layout conversion, pixel format
-conversion (gavl), etc.
+and returns a list of URIs it resolves to. Additionally, the function
+`add_protocol` takes arguments to document the function (`syntax` describes the
+URIs accepted by this protocol and `doc` is freeform description of the
+protocol) as well as indicate whether the protocol is `static` or not and
+whether the files it produces are `temporary` or not.
 
+#### Request leaks
+
+At any time, a given script should only have a few requests alive. For instance,
+a `playlist` operator has a request for the currently playing file and perhaps
+for a few files in advance, but certainly not for the whole playlist: if the
+playlist contained distant files, this would mean that we would have to download
+them all before starting to play. Because of this, Liquidsoap warns you when
+there are hundreds of requests alive: this either mean that you are constantly
+creating requests, or that they are not properly destroyed (what we call a
+_request leak_). For instance, the following script creates 150 requests at
+once:
+
+```{.liquidsoap include="liq/request-loop.liq" from=1 to=-1}
+```
+
+Consequently, you will therefore see in the logs messages such as
+
+```
+2021/05/04 12:22:18 [request:2] There are currently 100 RIDs, possible request leak! Please check that you don't have a loop on empty/unavailable requests, or creating requests without destroying them. Decreasing request.grace_time can also help.
+2021/05/04 12:22:18 [request:2] There are currently 200 RIDs, possible request leak! Please check that you don't have a loop on empty/unavailable requests, or creating requests without destroying them. Decreasing request.grace_time can also help.
+```
+
+<!-- https://github.com/savonet/liquidsoap/issues/309 -->
+
+### Decoders
+
+As mentioned above, the process of resolving requests involves finding an
+appropriate decoder.
+
+#### Configuration
+
+The list of available decoders can be obtained with the script
+
+```{.liquidsoap include="liq/decoders.liq" from=1}
+```
+
+which prints here
+
+```
+["WAV", "AIFF", "PCM/BASIC", "MIDI", "IMAGE", "RAW AUDIO", "FFMPEG", "FLAC", "AAC", "MP4", "OGG", "MAD", "GSTREAMER"]
+```
+
+indicating the available decoders. The choice of the decoder is performed on the
+MIME type (i.e. the detected type for the file) and the file extension. For each
+of the decoders the configuration key
+
+- `decoder.mime_types.*` specifies the list of MIME types the decoder accepts,
+- `decoder.file_extension.*` specifies the list of file extensions the decoder
+  accepts.
+
+For instance, for the mad decoder (mad is a library to decode mp3 files) we have
+
+```liquidsoap
+set("decoder.mime_types.mad", ["audio/mpeg","audio/MPA"])
+set("decoder.file_extensions.mad", ["mp3","mp2","mp1"])
+```
+
+Finally, the configuration key `decoder.priorities.*` specify the priority of
+the decoder. For instance,
+
+```liquidsoap
+set("decoder.priorities.mad", 1)
+```
+
+The decoders with higher priorities are tried first, and the first decoder which
+accepts a file is chosen. For mp3 files, this means that the FFmpeg decoder is
+very likely to be used over mad because it also accepts mp3 files and has
+priority 10 by default.
+
+#### Custom decoders
+
+It is possible to add your custom decoders using the `add_decoder` function,
+which registers an external program to decode some audio files: this program
+should read the data on standard input and write decoded audio in wav format on
+its standard output.
+
+#### Log a resolution
+
+The choice of a decoder can be observed when setting log level to debug. For
+instance, consider the simple script
+
+```{.liquidsoap include="liq/decoder-accept.liq" from=1}
+```
+
+We see the following steps in the logs:
+
+- the source `single` decides to resolve the request `test.mp3`:
+
+  ```
+  [single_65193:3] "test.mp3" is static, resolving once for all...
+  [single_65193:5] Content kind: {audio=pcm,video=any,midi=any}, content type: {audio=pcm(stereo),video=none,midi=none}
+  [request:5] Resolving request [[test.mp3]].
+  ```
+  
+- some decoders are discarded because the extension or the MIME are not among
+  those they support:
+
+  ```
+  [decoder.ogg:4] Invalid file extension for "test.mp3"!
+  [decoder.ogg:4] Invalid MIME type for "test.mp3": audio/mpeg!
+  [decoder.mp4:4] Invalid file extension for "test.mp3"!
+  [decoder.mp4:4] Invalid MIME type for "test.mp3": audio/mpeg!
+  [decoder.aac:4] Invalid file extension for "test.mp3"!
+  [decoder.aac:4] Invalid MIME type for "test.mp3": audio/mpeg!
+  [decoder.flac:4] Invalid file extension for "test.mp3"!
+  [decoder.flac:4] Invalid MIME type for "test.mp3": audio/mpeg!
+  [decoder.aiff:4] Invalid file extension for "test.mp3"!
+  [decoder.aiff:4] Invalid MIME type for "test.mp3": audio/mpeg!
+  [decoder.wav:4] Invalid file extension for "test.mp3"!
+  [decoder.wav:4] Invalid MIME type for "test.mp3": audio/mpeg!
+  ```
+
+- two possible decoders are found, ffmpeg and mad, the first one having priority
+  10 and the second one priority 1
+
+  ```
+  [decoder:4] Available decoders: FFMPEG (priority: 10), MAD (priority: 1)
+  ```
+  
+- the one with highest priority is tried first, accepts the file and is thus
+  selected:
+
+  ```
+  [decoder.ffmpeg:4] ffmpeg recognizes "test.mp3" as: audio: {codec: mp3, 48000Hz, 2 channel(s)} and content-type: {audio=pcm(stereo),video=none,midi=none}.
+  [decoder:4] Selected decoder FFMPEG for file "test.mp3" with expected kind {audio=pcm(stereo),video=none,midi=none} and detected content {audio=pcm(stereo),video=none,midi=none}
+  ```
+
+- the resolution process is over:
+
+  ```
+  [request:5] Resolved to [[test.mp3]].
+  ```
+
+#### Log of a failed resolution
+
+For comparison, consider the following variant of the script
+
+```{.liquidsoap include="liq/bad/decoder-reject.liq" from=1}
+```
+
+Here, the resolution will fail because we are trying to play the source with
+`output.audio_video`: this implies that the source should have video, which an
+mp3 does not. The logs of the resolution process are as follows:
+
+- the source `single` initiates the resolution of `test.mp3`:
+
+  ```
+  [single_65193:3] "test.mp3" is static, resolving once for all...
+  [single_65193:5] Content kind: {audio=any,video=yuva420p,midi=any}, content type: {audio=pcm(stereo),video=yuva420p,midi=none}
+  [request:5] Resolving request [[test.mp3]].
+  ```
+  
+  You can observe that the content type has `audio=pcm(stereo)`, which means
+  that we want stereo audio and `video=yuva420p` which means that we want video,
+
+- some decoders are discarded because the extension or MIME is not supported:
+
+  ```
+  [decoder.ogg:4] Invalid file extension for "test.mp3"!
+  [decoder.ogg:4] Invalid MIME type for "test.mp3": audio/mpeg!
+  ```
+
+- the ffmpeg decoder is tried (mad is not considered because it cannot produce video):
+
+  ```
+  [decoder:4] Available decoders: FFMPEG (priority: 10)
+  [decoder.ffmpeg:4] ffmpeg recognizes "test.mp3" as: audio: {codec: mp3, 48000Hz, 2 channel(s)} and content-type: {audio=pcm(stereo),video=none,midi=none}.
+  [decoder:4] Cannot decode file "test.mp3" with decoder FFMPEG. Detected content: {audio=pcm(stereo),video=none,midi=none}
+  ```
+  
+  we see that the decoder detects that the contents of the file is stereo audio
+  and no audio, consequently it refuses to decode the file because we are
+  requesting video,
+
+- not decoder was found for the file at the given content type and the
+  resolution process fails (an empty list of indicators is returned):
+
+  ```
+  [decoder:3] Available decoders cannot decode "test.mp3" as {audio=pcm(stereo),video=yuva420p,midi=none}
+  [request:5] Resolved to [].
+  ```
+  
+- the `single` operator raises a fatal exception because it could not resolved
+  the URI we asked for:
+
+  ```
+  [clock.main:4] Error when starting graphics: Request_simple.Invalid_URI("test.mp3")!
+  ```
+
+#### Other libraries involved in decoding files
+
+Apart from decoders the following additional libraries are involved when
+resolving and decoding requests.
+
+- _Metadata decoders_: some decoders are dedicated to decoding the metadata of
+  the files.
+- _Duration decoders_: some decoders are dedicated to computing the duration of
+  the files. those are not enabled by default and can be by setting the
+  dedicated configuration key
+  
+  ```liquidsoap
+  set("request.metadata_decoders.duration", true)
+  ```
+  
+  The reason they are not enabled is that they can take quite some time to
+  compute the duration of a file. If you need the duration of files, it is
+  rather advised to precompute it and store the result in the `duration`
+  metadata.
+- _Samplerate converters_: those are libraries used to change the samplerate of
+  audio files when needed (e.g. converting files sampled at 48 kHz to default
+  44.1 kHz). The following configuration key sets the list of converters:
+  
+  ```liquidsoap
+  set("audio.converter.samplerate.converters", 
+      ["ffmpeg","libsamplerate","native"])
+  ```
+  
+  The first supported one is chosen. The `native` converter is fast and always
+  available, but its quality it not very good (correctly resampling audio is a
+  quite involved process), so that we recommend that you compile Liquidsoap with
+  FFmpeg or libsamplerate support.
+- _Channel layout converters_: those convert between the supported audio channel
+  layouts (currently supported are mono, stereo and 5.1). Their order can be
+  changed with the `audio.converter.channel_layout.converters` configuration
+  key.
+- _Video converters_: those convert between various video formats. The converter
+  to use can be changed by setting the `video.converter.preferred` configuration
+  key.
+
+<!--
 Sometimes it will fail, for instance if test.mp3 is stereo, the following script will output an error
 
 ```{.liquidsoap include="liq/surround.liq"}
 ```
 
 because we cannot implicitly convert a stereo file into 5.1
+-->
 
-### Custom decoders
-
-`add_decoder`, `add_oblivious_decoder`
-
-### Metadata decoders
-
-`add_metadata_decoder`
+Custom metadata decoders can be added with the function `add_metadata_resolver`.
 
 Reading the source code
 -----------------------
