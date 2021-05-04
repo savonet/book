@@ -21,11 +21,12 @@ jobs:
     - name: Build cover
       run: |
         make -C cover
+        cp cover.pdf .
     - uses: actions/upload-artifact@v2
       with:
         name: book
         path: |
           book.pdf
-          cover/cover.pdf
+          cover.pdf
     - name: Test scripts
       run: docker build . -f .github/docker/Dockerfile.build
