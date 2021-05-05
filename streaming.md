@@ -1112,7 +1112,7 @@ indicated by the message:
 If we now consider a script where there is no source which enforces
 synchronization such as
 
-```{.liquidsoap include="liq/clock-alsa-file.liq" from=2}
+```{.liquidsoap include="liq/clock-sine-file.liq" from=2}
 ```
 
 we can see in the logs that the CPU clock, which is called `main`, is used
