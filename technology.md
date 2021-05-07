@@ -166,10 +166,10 @@ operational.
 
 Another reason is that this is a quite technical task. In order to be
 transported, the streams have to be split in small packets in such a way that a
-listener can easily start listening to a stream in the middle and can cope with
-the loss of some of them. Moreover, the time the data takes from the server to
-the client can vary over time (depending on the load of the network or the route
-taken): in order to cope with this the clients, do not play the received data
+listener can easily start listening to a stream in the middle and can bear the
+loss of some of them. Moreover, the time the data takes from the server to the
+client can vary over time (depending on the load of the network or the route
+taken): in order to cope with this, the clients do not play the received data
 immediately, but store some of it in advance, so that they still have something
 to play if next part of the stream comes late, this is called
 _buffering_. Finally, one machine is never enough to face the whole internet, so
@@ -201,8 +201,9 @@ you frequently change networks or switch between wifi and 4G and the connection
 cannot be held during such events. In this case, the client has to make a new
 connection to the Icecast server, which in practice induces blanks and glitches
 in the audio for the listener. Another issue is that the data cannot be cached
-as it is done for web traffic, because each connection can induce a different
-response, where it helps lowering the latencies and bandwidth-related costs.
+as it is done for web traffic, where it helps lowering latencies and
+bandwidth-related costs, because each connection can induce a different
+response.
 
 For these reasons, new standards such as HLS (for _HTTP Live Stream_) or
 MPEG-DASH (for _Dynamic Adaptive Streaming over HTTP_) have emerged, where the
@@ -210,7 +211,7 @@ stream is provided as a rolling playlist of small files called segments: a
 playlist typically contains the last minute of audio split into segments of 2
 seconds. Moreover, the playlist can indicate multiple versions of the stream
 with various formats and encoding qualities, so that the client can switch to a
-lower bitrate if the connection becomes bad and back to higher bitrates when it
+lower bitrate if the connection becomes bad, and back to higher bitrates when it
 is better again, without interrupting the stream: this is called _adaptative_
 streaming. Here, the files are downloaded one by one, and are served by an usual
 HTTP server. This means that we can reuse all the technology developed for those
@@ -244,21 +245,16 @@ files. These can be stored in various places: they can either be on a local hard
 drive or on some distant server, and are identified using an URI (for _Uniform
 Resource Identifier_) which can be a path to a local file or something of the
 form `http://some/server/file.mp3` which indicates that the file should be
-accessed using the http protocol (some other protocols should also be
-supported).
-<!--
-In the case of distant files, they have to be downloaded beforehand, in order to
-make sure that we will not suffer from disturbances in the network.
--->
-There is a slight difference between local and distant files: in the case of
-local files, we have pretty good confidence that they will always be available
-(or at least we can check that this is the case), whereas for distant files the
-server might be unavailable, or just very slow, so that we have to take care of
-downloading the file in advance enough and be prepared to have fallback option
-in case the file is not ready in time. Finally, audio files can be in various
-formats (as described in [the above section](#sec:audio-streams)) and have to be
-decoded, which is why Liquidsoap depends on many libraries, in order to support
-as many formats as possible.
+accessed using the HTTP protocol (some other protocols should also be
+supported). There is a slight difference between local and distant files: in
+the case of local files, we have pretty good confidence that they will always be
+available (or at least we can check that this is the case), whereas for distant
+files the server might be unavailable, or just very slow, so that we have to
+take care of downloading the file in advance enough and be prepared to have
+fallback option in case the file is not ready in time. Finally, audio files can
+be in various formats (as described in [the above section](#sec:audio-streams))
+and have to be decoded, which is why Liquidsoap depends on many libraries, in
+order to support as many formats as possible.
 
 Even in the case of local files, the playlist might be _dynamic_: instead of
 knowing in advance the list of all the files, the playlist can consist of a
@@ -270,33 +266,34 @@ whichever parameters (for instance taking in account votes on a website).
 
 A radio often features live shows. As in the old days, the speaker can be in the
 same room as in the server, in which case the sound is directly captured by a
-sound card. But now, live shows are made more and more from home, where the
-speaker will stream its voice to the radio itself, which should be able to
+soundcard. But nowadays, live shows are made more and more from home, where the
+speaker will stream its voice to the radio by himself, and the radio will
 interrupt its contents and relay the stream. More generally, a radio should be
 able to relay other streams along with their metadata (e.g. when a program is
 shared between multiple radios) or other sources (e.g. a live youtube channel).
 
 As for distant files, we should be able to cleanly handle failures due to
-network. Another issue specific to live streams is that we do not have control
-over time: this is an issue for operations such as crossfading (see below) which
-requires shifting time and thus cannot be performed on realtime sources.
+network. Another issue specific to live streams (as opposed to playlists) is
+that we do not have control over time: this is an issue for operations such as
+crossfading (see below) which requires shifting time and thus cannot be
+performed on realtime sources.
 
 ### Synchronization
 
-In order to provide samples at a regular pace a source has an _internal clock_
-which will tick regularly: each soundcard has a clock, your computer has a
-clock, the live streams are generated by things which have clocks. Now, suppose
-that you have two soundcards generating sound at 44100 Hz, meaning that their
-internal clocks both tick at 44100 Hz. Those are not infinitely precise and it
-might be the case that there is a slight difference if 1 Hz between the two
-(maybe one it ticking at 44099.6 Hz and the other one at 44100.6 Hz in
-reality). Usually, this is not a problem, but on the long run it is: this 1 Hz
-difference means that one will be 1 second in advance to the other after a
-month. For a radio which is supposed to be running for years (say that you
-update it once a year), this will be an issue and the stream generator has to
-take care of that, typically by using buffers. This is not a theoretical issue:
-first versions of Liquidsoap did not carefully handle this and we did experience
-quite a few problems related to it.
+In order to provide samples at a regular pace, a source of sound has an
+_internal clock_ which will tick regularly: each soundcard has a clock, your
+computer has a clock, the live streams are generated by things which have
+clocks. Now, suppose that you have two soundcards generating sound at 44100 Hz,
+meaning that their internal clocks both tick at 44100 Hz. Those are not
+infinitely precise and it might be the case that there is a slight difference if
+1 Hz between the two (maybe one it ticking at 44099.6 Hz and the other one at
+44100.6 Hz in reality). Usually, this is not a problem, but on the long run it
+will become one: this 1 Hz difference means that one will be 2 seconds in
+advance compared to the other after a day. For a radio which is supposed to be
+running for months (say that you update it once a year), this will be an issue
+and the stream generator has to take care of that, typically by using
+buffers. This is not a theoretical issue: first versions of Liquidsoap did not
+carefully handle this and we did experience quite a few problems related to it.
 
 Audio processing {#sec:audio-processing}
 ----------------
