@@ -27,7 +27,7 @@ book.pdf: book.tex
 
 book.epub: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
 	@echo "Generating $@..."
-	@$(PANDOC) --toc --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
+	@$(PANDOC) --filter=pandoc-pdf2png --toc --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
 
 liquidsoap.xml:
 	wget https://raw.githubusercontent.com/savonet/liquidsoap/master/scripts/liquidsoap.xml

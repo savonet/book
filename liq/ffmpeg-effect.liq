@@ -1,9 +1,0 @@
-def myfilter(s) =
-  def mkfilter(graph) =
-    s = ffmpeg.filter.video.input(graph, s)
-    s = ffmpeg.filter.hflip(graph, s)
-    s = ffmpeg.filter.curves(preset=10, graph, s)
-    ffmpeg.filter.video.output(graph, s)
-  end
-  ffmpeg.filter.create(mkfilter)
-end

@@ -1,11 +1,12 @@
 \documentclass[
 coverwidth=6in,
 coverheight=9in,
-spinewidth=1.340in, % .95
+spinewidth=0.5765in, % pages * 0.002252in
 bleedwidth=.125in,
 12pt,
-% marklength=0in,
+marklength=0in,
 ]{bookcover}
+% see https://kdp.amazon.com/en_US/help/topic/G201857950
 \usepackage[T1]{fontenc}
 \usepackage{setspace}
 \usepackage{moresize}
@@ -35,7 +36,7 @@ bleedwidth=.125in,
 
   \vfill
 
-  {\Large Romain Beauxis and Samuel Mimram}
+  {\Large Samuel Mimram and Romain Beauxis}
 
   \vspace{10mm}
 \end{center}
@@ -43,13 +44,17 @@ bleedwidth=.125in,
     
   \bookcovercomponent{center}{spine}{
     \rotatebox[origin=c]{-90}{
-      \hspace{3cm}
+      % \hspace{3cm}
       \begin{tabular}{l}
-        Romain Beauxis\\Samuel Mimram
+        Samuel Mimram\\
+        Romain Beauxis
       \end{tabular}
-      \hspace{70mm}
-      {\huge The Liquidsoap book}
-      \hspace{3cm}
+      \hspace{50mm}
+      \begin{tabular}{l}
+        \\[-2mm]
+        {\huge The Liquidsoap book}
+      \end{tabular}
+      \hspace{50mm}
     }
   }
 
@@ -67,8 +72,9 @@ bleedwidth=.125in,
 
           \vspace{5mm}
 
-          \setstretch{1.5}
-          {\large\input{abstract}}
+          \begin{onehalfspace}
+            \input{abstract}
+          \end{onehalfspace}
 
           \vspace{60mm}
 

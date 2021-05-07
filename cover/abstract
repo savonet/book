@@ -1,3 +1,12 @@
 Liquidsoap is a programming language dedicated to programming rock-solid
-webradios and videostreams. This book covers from the basics to advanced
-usecases.
+webradios and videostreams, already used by many radios over the world,
+including major ones. It is able to create streams from local and distant media,
+as well as live inputs, generate cross-faded transitions between tracks, perform
+signal processing such as normalization and copression, broadcast to the world
+using Icecast, HLS or Youtube, and much more. Moreover, the unique advantage of
+having a full-fledged programming language is that we can cope with all kinds of
+interactive situations such as serving as a backend for a website with user
+requests, or dynamically generating the contents of the radio. This book covers
+the Liquidsoap language, in version 2.0, with a view to stream generation, from
+the basics to advanced usecases. No prior knowledge of programming or signal
+processing is assumed.

@@ -44,6 +44,8 @@ Generally, the video will be generated form a playlist using the `playlist`
 operator or from user's request using `request.queue` operator. Those were
 already presented in [there](#sec:inputs), nothing changes for video.
 
+\TODO{videos from youtube ex https://www.youtube.com/watch?v=VT6TEjJzWoY}
+
 #### The webcam
 
 Under Linux, it is possible to use our webcam as a source with the `input.v4l2`
@@ -438,27 +440,47 @@ returns the resulting stream. Usually this function
 
 - uses the operators
 
-  > `ffmpeg.filter.audio.input` or `ffmpeg.filter.video.input`
+  - `ffmpeg.filter.audio.input`
+  - `ffmpeg.filter.video.input`
 
   to input from some stream,
 - processes the stream using one or more `ffmpeg.filter.*` functions,
-- outputs the result using the operators
+- outputs the result using one of the operators
 
-  > `ffmpeg.filter.audio.output` or `ffmpeg.filter.video.output`.
+  - `ffmpeg.filter.audio.output`
+  - `ffmpeg.filter.video.output`
+  - `ffmpeg.filter.audio_video.output`
 
-In this way, we can define the following function `myfilter` which flips the
-image horizontally and applies a "vintage" color scheme to the video:\TODO{could
-be simplified with audio + video output, see bug 1612}
+In this way, we can define the following function `myfilter` which adds a
+flanger effect on the audio track, flips the images horizontally and inverts the
+colors of the video:
 
-```{.liquidsoap include="liq/ffmpeg-effect.liq"}
+<!-- \TODO{could be simplified with audio + video output, see bug 1612} -->
+
+```{.liquidsoap include="liq/ffmpeg-effect3.liq"}
 ```
 
-The story is not over yet however. If you look at the type of the function
-`myfilter`, you will see that it is
+The function can then be used on a source `s` as follows:
+
+```{.liquidsoap include="liq/ffmpeg-effect4.liq" from=2}
+```
+
+If you look at the type of the function `myfilter`, you will see that it is
 
 ```
-(source(audio='a, video=ffmpeg.video.raw('b), midi='c)) -> source(audio=none, video=ffmpeg.video.raw('d), midi=none)
+(source(audio=ffmpeg.audio.raw('a), video=ffmpeg.video.raw('b), midi=none)) -> source(audio=ffmpeg.audio.raw('d), video=ffmpeg.video.raw('e), midi=none)
 ```
+
+which means that it operates on streams where both audio and video are in
+FFmpeg's internal raw format. In the above example this is working well because
+
+- sources which decode audio from files such as `single` (or `playlist`) can
+  generate streams in most formats including FFmpeg's raw,
+- the encoder we have chosen operates directly on streams in FFmpeg's raw format
+  (because we use an `%ffmpeg` encoder with `%audio.raw` and `%video.raw`
+  streams).
+
+<!--
 
 The first problem is that the resulting source has no audio, because the filter
 is only processing video. It is easy to preserve the audio of the original
@@ -470,32 +492,39 @@ ffmpeg.filter.create(mkfilter)
 
 to
 
-<!-- ffmpeg-effect2.liq -->
+NOTE: this is ffmpeg-effect2.liq
 ```liquidsoap
 mux_audio(audio=drop_video(s), ffmpeg.filter.create(mkfilter))
 ```
 
-which adds back the audio of the source `s` to the result. The other "problem"
-is that the type for video is `ffmpeg.video.raw`, which means that the video
-needs to be in FFmpeg's internal format and not in Liquidsoap's internal
-format. We can decode the video from the first to the second with the function
-`ffmpeg.raw.decode.video`. \TODO{explain that sources can decode like this and that we can encode from raw}
+which adds back the audio of the source `s` to the result.
 
-TODO: fix example
+TODO: this is bad because it involves unnecessary encoding of audio
+
+Alternatively, we can process both audio and video in the filter by performing
+both audio and video input in the filtered and use
+`ffmpeg.filter.audio_video.output` to output both:
 
 ```{.liquidsoap include="liq/ffmpeg-effect3.liq"}
 ```
+-->
+<!--
+This is fine if your effect applies on a decoding
+source (such as `single` or `playlist`) because those know how to decode directly in FFmpeg's internal format.
+-->
 
-Conversely we can encode from our internal format to
-FFmpeg's one with `ffmpeg.raw.encode.video`: this function takes an encoder
-because we can manipulate encoded data, but here we want to pass raw video in
-order to avoid uselessly performing compression, which can be achieved with the
-`rawvideo` format.
+If you want to operate on a source `s` which is in the usual Liquidsoap's
+internal format, you can use
 
-..........................................
+- `ffmpeg.raw.encode.audio_video` to convert from Liquidsoap's internal to
+  FFmpeg's raw format,
+- `ffmpeg.raw.decode.audio_video` to decode FFmpeg's raw format into
+  Liquidsoap's internal format.
 
+For instance, from the above `myfilter` function, we can define a function
+`myfilter'` which operates on usual streams as follows:
 
-```{.liquidsoap include="liq/ffmpeg-effect4.liq"}
+```{.liquidsoap include="liq/ffmpeg-effect5.liq" from=2}
 ```
 
 Encoders

@@ -1140,7 +1140,7 @@ output(fallback([crossfade(playlist(...)), jingles]))
 
 can be represented as the following graph:
 
-![Two clocks](fig/two-clocks)\
+![Two clocks](fig/two-clocks.pdf)\
 
 The dotted boxes on this graph represent clocks: all the nodes in a box are
 operators which belong to the same clock. Here, we see that the `playlist`
@@ -1391,7 +1391,7 @@ We have seen that the script
 is now allowed because it would require `s` to belong to two distinct
 clocks. Graphically,
 
-![Alsa vs pulseaudio clocks](fig/clock-alsa-pulseaudio)\
+![Alsa vs pulseaudio clocks](fig/clock-alsa-pulseaudio.pdf)\
 
 The easy way to solve this is to insert a `buffer` operator before one of the
 two outputs, say `output.alsa`:
@@ -1402,7 +1402,7 @@ two outputs, say `output.alsa`:
 which allows having two distinct clocks at the input and the output of `buffer`
 and thus two distinct clocks for the whole script:
 
-![Alsa vs pulseaudio clocks](fig/clock-alsa-pulseaudio2)\
+![Alsa vs pulseaudio clocks](fig/clock-alsa-pulseaudio2.pdf)\
 
 #### Catching up
 

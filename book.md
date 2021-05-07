@@ -1,8 +1,8 @@
 ---
 title: The Liquidsoap book
 author:
-- Romain Beauxis
 - Samuel Mimram
+- Romain Beauxis
 lang: en-US
 documentclass: book
 geometry:
@@ -10,7 +10,6 @@ geometry:
 - paperheight=9in
 - margin=20mm
 - marginparwidth=15mm
-default-image-extension: ".pdf"
 fontfamily: libertine
 implicit_figures: no
 subparagraph: yes
@@ -19,7 +18,7 @@ header-includes: |
   \usepackage{cleveref}
   \usepackage{imakeidx}\makeindex[intoc]
   \usepackage{titlepic}
-  \titlepic{\vspace{6cm}\includegraphics[width=3cm]{img/logo.pdf}}
+  \titlepic{\vspace{3cm}\includegraphics[width=3cm]{img/logo.pdf}\vspace{-3cm}}
 numbersections: true
 secnumdepth: 1
 toc-depth: 1

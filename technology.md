@@ -6,15 +6,15 @@ toolchain involved in a webradio, in case the reader is not familiar with it. It
 typically consists of the following three elements.
 
 The _stream generator_ is a program which generates an audio stream, generally
-in compressed form such as mp3 or aac, be it from playlists, live sources,
-etc. Liquidsoap is one of those and we will be most exclusively concerned with
-it, but there are other competitors ranging from
+in compressed form such as mp3 or aac, be it from playlists, live sources, and
+so on. Liquidsoap is one of those and we will be most exclusively concerned with
+it, but there are other friendly competitors ranging from
 [Ezstream](http://icecast.org/ezstream/), [IceS](http://icecast.org/ices/) or
 [DarkIce](http://www.darkice.org/) which are simple command-line free software
-that can stream a live input or a playlist to an Icecast server (see below), to
+that can stream a live input or a playlist to an Icecast server, to
 [Rivendell](http://www.rivendellaudio.org/) or [SAM
-Broadcaster](https://spacial.com/) which are graphical interfaces to describe
-the scheduling of your radio. Nowadays, websites are also proposing to do this
+Broadcaster](https://spacial.com/) which are graphical interfaces to handle the
+scheduling of your radio. Nowadays, websites are also proposing to do this
 online on the cloud; these include [AzuraCast](https://www.azuracast.com/),
 [Centova](https://centova.com/) and [Radionomy](https://www.radionomy.com/)
 which are all powered by Liquidsoap!
@@ -22,13 +22,13 @@ which are all powered by Liquidsoap!
 A _streaming media system_, which is generally
 [Icecast](http://www.icecast.org/). Its role is to relay the stream from the
 generator to the listeners, of which there can be thousands. With the advent of
-HLS (see below), it tends to be more and more replaced by a traditional web
-server.
+HLS, it tends to be more and more replaced by a traditional web server.
 
 A _media player_, which connects to the server and plays the stream for the
-client, it can either be a software (such as iTunes), an Android application, or
-a website.
+client, it can either be a software (such as iTunes), an Android
+application, or a website.
 
+<!--
 After general considerations about compressed audio streams ([this
 section](#sec:audio-streams)), we detail the technical challenges and tools at
 our disposal for streaming media systems ([this section](#sec:audio-streaming))
@@ -38,6 +38,10 @@ particular, we will see in later chapters that all the desirable features
 described here for stream generators can be achieved with Liquidsoap. Finally,
 in [the last section](#sec:video-streams), we discuss the generation of video
 streams.
+-->
+
+Since we are mostly concerned with stream generation, we shall begin by
+describing the main technological challenges behind it.
 
 Audio streams {#sec:audio-streams}
 -------------
@@ -45,7 +49,7 @@ Audio streams {#sec:audio-streams}
 ### Digital audio
 
 Sound consists in regular vibrations of the ambient air, going back and forth,
-which you perceive through the displacements of the tympanic membrane they
+which you perceive through the displacements of the tympanic membrane that they
 induce in your ear. In order to be represented in a computer, such a sound is
 usually captured by a microphone, which also has a membrane, and is represented
 by samples, corresponding to the successive positions of the membrane of the
@@ -56,7 +60,7 @@ and 1. In the figure below, the position of the membrane is represented by the
 continuous black curve and the successive samples correspond to the grayed
 rectangles:
 
-![Sampling](fig/sampling)\
+![Sampling](fig/sampling.pdf)\
 
 The way this data is represented is a matter of convention and many of those can
 be found in "nature":
@@ -86,34 +90,34 @@ which you can send CD quality audio to roughly 70 listeners only.
 
 One way to compress audio consists in using the standard tools from coding and
 information theory: if something occurs often then encode it with a small
-sequence of bytes (this is how formats such as zip work for instance). The
-_flac_ format uses this principle and generally achieves compression to around
-65% of the original size. This compression format is _lossless_, which means
-that if you compress and then decompress an audio file, you will get back to the
-exact same file you started with.
+sequence of bytes (this is how compression formats such as zip work for
+instance). The _flac_ format uses this principle and generally achieves
+compression to around 65% of the original size. This compression format is
+_lossless_, which means that if you compress and then decompress an audio file,
+you will get back to the exact same file you started with.
 
 In order to achieve more compression, we should be prepared to loose some data
-in the compression process. Most compressed audio formats are based, in addition
-to the previous ideas, on psychoacoustic models which take in account the way
-sound is perceived by the human hear and processed by the human brain. For
-instance, the ears are much more sensitive in the 1 to 5 kHz range so that we
-can be more rough outside this range, some low intensity signals can be masked
-by high intensity signals (i.e., we do not hear them anymore in presence of
-other loud sound sources), they do not generally perceive phase difference under
-a certain frequency so that all audio data below that threshold can be encoded
-in mono, and so on. Most compression formats are _destructive_: they remove some
-information in the original signal in order for it to be smaller. The most
-well-known are mp3, opus and aac: the one you want to use is a matter of taste
-and support on the user-end. For instance, mp3 is the most widespread, opus has
-the advantage of being open-source, patent-free, has a good quality/bandwidth
-radio and is reasonably supported by modern browsers although hardware support
-is almost nonexistent, aac is proprietary so that good free encoders are more
-difficult to find (because they are subject to licensing fees) but achieves good
-sounding at high compression rates and is quite well supported, etc. A typical
-mp3 is encoded at a bitrate of 128 kbps (kilobits per second, although rates of
-192 kbps and higher are recommended if you favor sound quality), meaning that 1
-minute will weight roughly 1 MB, which is 10% of the original sound in CD
-quality.
+present in the original file. Most compressed audio formats are based, in
+addition to the previous ideas, on psychoacoustic models which take in account
+the way sound is perceived by the human hear and processed by the human
+brain. For instance, the ears are much more sensitive in the 1 to 5 kHz range so
+that we can be more rough outside this range, some low intensity signals can be
+masked by high intensity signals (i.e., we do not hear them anymore in presence
+of other loud sound sources), they do not generally perceive phase difference
+under a certain frequency so that all audio data below that threshold can be
+encoded in mono, and so on. Most compression formats are _destructive_: they
+remove some information in the original signal in order for it to be
+smaller. The most well-known are mp3, opus and aac: the one you want to use is a
+matter of taste and support on the user-end. The mp3 format is the most
+widespread, the opus format has the advantage of being open-source and
+patent-free, has a good quality/bandwidth radio and is reasonably supported by
+modern browsers but hardware support is almost nonexistent, the aac format is
+proprietary so that good free encoders are more difficult to find (because they
+are subject to licensing fees) but achieves good sounding at high compression
+rates and is quite well supported, etc. A typical mp3 is encoded at a bitrate of
+128 kbps (kilobits per second, although rates of 192 kbps and higher are
+recommended if you favor sound quality), meaning that 1 minute will weight
+roughly 1 MB, which is 10% of the original sound in CD quality.
 
 Most of these formats also support _variable bitrates_ meaning that the bitrate
 can be adapted within the file: complex parts of the audio will be encoded at
@@ -122,15 +126,15 @@ will heavily depend on the actual audio and is thus more difficult to predict,
 by the perceived quality is higher.
 
 As a side note, we were a bit imprecise above when speaking of a "file format"
-and we should distinguish between two things: the _codec_ is the algorithm we
-used to compress the audio data, and the _container_ is the file format used to
-store the compressed data. This is why one generally speaks of ogg/opus: ogg is
-the container and opus is the codec. A container can usually embed streams
-encoded with various codecs (e.g. ogg can also contain flac or vorbis streams),
-and a given codec can be embedded in various containers (e.g. flac and vorbis
-streams can also be embedded into Matroska containers). In particular, for video
-streams, the container typically contains multiple streams (one for video and
-one for audio), each encoded with a different codec, as well as other
+and we should distinguish between two things: the _codec_ which is the algorithm
+we used to compress the audio data, and the _container_ which is the file format
+used to store the compressed data. This is why one generally speaks of ogg/opus:
+ogg is the container and opus is the codec. A container can usually embed
+streams encoded with various codecs (e.g. ogg can also contain flac or vorbis
+streams), and a given codec can be embedded in various containers (e.g. flac and
+vorbis streams can also be embedded into Matroska containers). In particular,
+for video streams, the container typically contains multiple streams (one for
+video and one for audio), each encoded with a different codec, as well as other
 information (metadata, subtitles, etc.).
 
 ### Metadata
@@ -139,7 +143,7 @@ Most audio streams are equipped with _metadata_ which are textual information
 describing the contents of the audio. A typical music file will contain, as
 metadata, the title, the artist, the album name, the year of recording, and so
 on. Custom metadata are also useful to indicate the loudness of the file, the
-desired cue points, and so on (see below).
+desired cue points, and so on.
 
 Streaming {#sec:audio-streaming}
 ---------
@@ -406,7 +410,7 @@ processed audio stream), the second phase is empty and if the encoding format is
 the same as the source format there is no need to decode and then reencode in
 the same format, and we can directly stream the original encoded files. By
 default, Liquidsoap will always reencode files but this can be avoided since
-recent versions (see [there](#sec:...)).
+recent versions, see [there](#sec:encoded-streams).
 
 Interaction {#sec:audio-interaction}
 -----------

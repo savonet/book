@@ -5,5 +5,5 @@ def myfilter(s) =
     v = ffmpeg.filter.curves(preset=10, graph, v)
     ffmpeg.filter.video.output(graph, v)
   end
-   mux_audio(audio=drop_video(s), ffmpeg.filter.create(mkfilter))
+  ffmpeg.filter.create(mkfilter)
 end

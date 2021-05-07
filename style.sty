@@ -2,6 +2,15 @@
 % \usepackage{ebgaramond}
 \usepackage[varqu,scaled=.9]{inconsolata}
 \usepackage[Bjornstrup]{fncychap}
+\usepackage{fancyhdr}
+% Right position of page number from chapter pages
+\fancypagestyle{plain}{
+  \fancyhead{}
+  \fancyhead[LE,RO]{\thepage}
+  \renewcommand*{\headrule}{}
+  \fancyfoot{}
+}
+\usepackage[bottom]{footmisc}
 \usepackage{fvextra}
 \RecustomVerbatimEnvironment{verbatim}{Verbatim}{breaklines}
 \usepackage{titlesec}
