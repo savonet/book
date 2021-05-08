@@ -3,10 +3,10 @@ Installation {#chap:installation}
 
 In order to install Liquidsoap you should either download compiled binaries for
 your environment, or compile it by yourself. The latest is slightly more
-involved (although it is now a mostly automated process), but allows you to
-easily obtain a cutting-edge version and take part of the development
-process. These instructions are for the latest released version at the time of
-the writing, you are encouraged to consult the online documentation.
+involved (although it is a mostly automated process), but it allows to easily
+obtain a cutting-edge version and take part of the development process. These
+instructions are for the latest released version at the time of the writing, you
+are encouraged to consult the online documentation.
 
 Automated building using opam {#sec:opam}
 -----------------------------
@@ -36,9 +36,9 @@ sudo apt-get install opam
 ```
 
 or by downloading the binaries from [the opam
-website](http://opam.ocaml.org/doc/Install.html). In any case, ensure that you
-have at least the version 2.0.0 of opam (the version number can be obtained by
-running `opam --version`).
+website](http://opam.ocaml.org/doc/Install.html). In any case, you should ensure
+that you have at least the version 2.0.0 of opam: the version number can be
+obtained by running `opam --version`.
 
 If you are installing opam for the first time, you should initialize the list of
 opam packages
@@ -49,23 +49,23 @@ opam init
 
 You can answer yes to all the questions it asks (if it complains about the
 absence of `bwrap`, either install it or add the flag `--disable-sandboxing` to
-the above command line). Next you should install a recent version of the OCaml
-compiler
+the above command line). Next thing, you should install a recent version of the
+OCaml compiler by running
 
 ```
-opam switch create 4.11.1
+opam switch create 4.13.0
 ```
 
-It does take some minutes, because it compiles OCaml, so get prepared to have a
+It does take a few minutes, because it compiles OCaml, so get prepared to have a
 coffee.
 
 ### Installing Liquidsoap
 
 Once this is done, a typical installation of Liquidsoap with support for mp3
-encoding/decoding and icecast is done by executing:
+encoding/decoding and Icecast is done by executing:
 
 ```
-opam depext taglib mad lame cry samplerate liquidsoap
+opam depext  taglib mad lame cry samplerate liquidsoap
 opam install taglib mad lame cry samplerate liquidsoap
 ```
 
@@ -73,7 +73,7 @@ The first line (`opam depext ...`) takes care of installing the required
 external dependencies, i.e., the libraries we are relying on, but did not
 develop by ourselves. Here, we want to install the dependencies required by
 `taglib` (the library to read tags in audio files), `mad` (to decode mp3),
-`lame` (to encode mp3), `cry` (to stream to icecast), `samplerate` (to resample
+`lame` (to encode mp3), `cry` (to stream to Icecast), `samplerate` (to resample
 audio) and finally `liquidsoap`. The second line (`opam install ...`) actually
 install the libraries and programs. Again, compilation takes some time (around a
 minute on a recent computer).
@@ -83,7 +83,7 @@ instance, if you want to enable ogg/vorbis encoding and decoding after you've al
 installed Liquidsoap, you should install the `vorbis` library by executing:
 
 ```
-opam depext vorbis
+opam depext  vorbis
 opam install vorbis
 ```
 
@@ -266,7 +266,12 @@ make install
 You may need to be root to run the above command in order to have the right to
 install in the usual directories for libraries and binaries.
 
+Docker image
+------------
+
 \TODO{Docker image}
+
+`savonet/liquidsoap:main`
 
 Libraries used by Liquidsoap
 ----------------------------

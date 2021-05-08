@@ -686,6 +686,21 @@ means that each pixel is now encoded by 2.5 bytes (1 for Y, ¼ for U, ¼ for V a
 1 for alpha) and 1 second of typical video is down to a more reasonable 54 Mb
 per second.
 
+\TODO{merge the following old paragraph with the above}
+
+TODO: As a side note, in practice, video pixels are not represented by red, green and
+blue channels as we learn in school, but in another base often called _YUV_
+consisting of one _luma_ channel Y (roughly, the black and white component of
+the image) and two _chroma_ channels U and V (roughly, the color part of the
+image represented as blueness and redness). Moreover, because the eye is much
+more sensitive to the variations in luma than in chroma components, we can use
+one Y byte for each pixel and one U byte and one V byte for every four pixels,
+thus using 1.5 byte per pixel instead of 3 for traditional RGB
+representation. The conversion between YUV and RGB is not entirely trivial and
+costs in terms of computations, so it is generally better to code video
+manipulations directly on the YUV representation.
+
+
 #### MIDI
 
 MIDI stands for _Musical Instrument Digital Interface_ and is a (or, rather,

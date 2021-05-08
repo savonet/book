@@ -1,6 +1,6 @@
 MD = $(wildcard *.md)
 LIQ = $(wildcard liq/*.liq)
-PANDOC = pandoc --bibliography=papers.bib --filter=pandoc-include --syntax-definition=liquidsoap.xml
+PANDOC = pandoc --bibliography=papers.bib --filter=pandoc-include --filter=pandoc-replace --syntax-definition=liquidsoap.xml
 
 all: fig book.pdf language.dtd
 

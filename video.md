@@ -335,6 +335,8 @@ tracks:
 
 ### Test sources
 
+\TODO{See bug 1604, we should rename ffmpeg to video.testsrc, test it for sync and detail various test patterns}
+
 In case you do not have any video at hand to play, the sources
 `video.testsrc.ffmpeg` and `video.testsrc.gstreamer` can be used to generate
 test videos such as

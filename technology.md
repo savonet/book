@@ -288,12 +288,12 @@ meaning that their internal clocks both tick at 44100 Hz. Those are not
 infinitely precise and it might be the case that there is a slight difference if
 1 Hz between the two (maybe one it ticking at 44099.6 Hz and the other one at
 44100.6 Hz in reality). Usually, this is not a problem, but on the long run it
-will become one: this 1 Hz difference means that one will be 2 seconds in
-advance compared to the other after a day. For a radio which is supposed to be
-running for months (say that you update it once a year), this will be an issue
-and the stream generator has to take care of that, typically by using
-buffers. This is not a theoretical issue: first versions of Liquidsoap did not
-carefully handle this and we did experience quite a few problems related to it.
+will become one: this 1 Hz difference means that, after a day, one will be 2
+seconds in advance compared to the other. For a radio which is supposed to be
+running for months, this will be an issue and the stream generator has to take
+care of that, typically by using buffers. This is not a theoretical issue: first
+versions of Liquidsoap did not carefully handle this and we did experience quite
+a few problems related to it.
 
 Audio processing {#sec:audio-processing}
 ----------------
@@ -303,48 +303,52 @@ Audio processing {#sec:audio-processing}
 As explained in [the above section](#sec:audio-streams), various files have
 various sampling rates. For instance, suppose that your radio is streaming at 48
 kHz and that you want to play a file at 44.1 kHz. You will have to _resample_
-your file (change its sampling rate) which, in the present case, means that you
-will have to come up with new samples. There are various simple strategies for
-this such as copying the sample closest to a missing one, or doing a linear
+your file, i.e. change its sampling rate, which, in the present case, means that
+you will have to come up with new samples. There are various simple strategies
+for this such as copying the sample closest to a missing one, or doing a linear
 interpolation between the two closest. This is what Liquidsoap is doing if you
-don't have the libsamplerate library enabled and, believe it or not (or better try
+don't have the right libraries enabled and, believe it or not (or better try
 it!), it sounds quite bad. Resampling is a complicated task to get right, and
-can be costly in terms of CPU if you want to achieve good quality.
+can be costly in terms of CPU if you want to achieve good quality. Whenever
+possible Liquidsoap uses `libsamplerate` library to achieve this task, which
+provides much better results than the naive implementation.
 
 ### Normalization
 
 The next thing you want to do is to _normalize_ the sound, meaning that you want
-to have roughly the same audio loudness between tracks. If they come from
-different sources (such as two different albums by two different artists) this
-is generally not the case.
+to adjust its volume in order to have roughly the same audio loudness between
+tracks: if they come from different sources (such as two different albums by two
+different artists) this is generally not the case.
 
 A strategy to fix that is to use _automatic gain control_: the program can
 regularly measure the current audio loudness based, say, on the previous second
-of sound, and increase or decrease the volume depending on how it is with
-respect to a target volume. This has the advantage of being easy to set up and
-providing an homogeneous sound. It is quite efficient when having voice over the
-radio, but is quite unnatural for music: if a song has a quiet introduction for
-instance, its volume will be pushed up and the song as a whole will not sound as
-usual.
+of sound, and increase or decrease the volume depending on the value of the
+current level compared to the target one. This has the advantage of being easy
+to set up and providing an homogeneous sound. However, while it is quite
+efficient when having voice over the radio, it is quite unnatural for music: if
+a song has a quiet introduction for instance, its volume will be pushed up and
+the song as a whole will not sound as usual.
 
 Another strategy for music consists in pre-computing the loudness of each
-file. It can be performed each time a song is about to be played, but the most
-efficient way of proceeding consists in computing this in advance and store it
-as a metadata; the stream generator can then adjust the volume on a per-song
-basis. The standard for this is _ReplayGain_ and there are a few efficient tools
-to achieve this task. It is also more natural than basic gain control, because
-it takes in account the way our ears perceive sound in order to compute
-loudness.
+file. It can be performed each time a song is about to be played, but it is much
+more efficient to compute this in advance and store it as a metadata: the stream
+generator can then adjust the volume on a per-song basis based on this
+information. The standard for this way of proceeding is _ReplayGain_ and there
+are a few efficient tools to achieve this task. It is also more natural than
+basic gain control, because it takes in account the way our ears perceive sound
+in order to compute loudness.
 
 At this point, we should also indicate that there is a subtlety in the way we
-measure amplification. They are either measured _linearly_, i.e. we indicate the
-amplification coefficient by which we should multiply the sound, or in
-_decibels_. The relationship between linear _l_ and decibel _d_ measurements is
-not easy, the formulas relating the two are _d_=20 log~10~(_l_) and
+measure volume (and loundness). It can either be measured _linearly_, i.e. we
+indicate the amplification coefficient by which we should multiply the sound, or
+in _decibels_. The reason for having the two is that the first is more
+mathematically pleasant, whereas the second is closer to the way we perceive the
+sound. The relationship between linear _l_ and decibel _d_ measurements is not
+easy, the formulas relating the two are _d_=20 log~10~(_l_) and
 _l_=10^_d_/20^. If your math classes are too far away, you should only remember
 that 0 dB means no amplification (we multiply by the amplification coefficient
-1), adding 6 dB corresponds to multiplying by 2, and removing 6dB corresponds to
-dividing by 2:
+1), adding 6 dB corresponds to multiplying by 2, and removing 6 dB corresponds
+to dividing by 2:
 
 ------------- ---- --- -- -- -- --
 decibels      -12  -6  0  6  12 18
@@ -354,38 +358,39 @@ amplification 0.25 0.5 1  2  4  8
 This means that an amplification of -12 dB corresponds to multiplying all the
 samples of the sound by 0.25, which amounts to dividing them by 4.
 
-### Fading
+### Transitions between songs
 
-In order to ease the transition between songs, one generally uses _crossfading_
-which consists in fading out one song while fading in the next one. A simple
-approach can be to crossfade for say 3 seconds between the end of a song and a
-beginning of the next one, but serious people want to have _cue points_, which
-are metadata indicating where to start a song (not necessarily right at the
-beginning of the file), where to end it, the length and type of fading to apply
-and so on.
-
-Another approach to mark the transitions between the tracks consists in adding
-_jingles_ between songs: those are short audio tracks generally saying the name
-of the radio and perhaps the current show. In any way, people avoid simply
-playing one track after another (unless it is an album) because it sounds
-awkward to the listener: it does not feel like a proper radio, but rather like a
-simple playlist.
+In order to ease the transition between songs, one generally uses _crossfading_,
+which consists in fading out one song (progressively lowering its volume to 0)
+while fading in the next one (progressively increasing its volume from 0). A
+simple approach can be to crossfade for, say, 3 seconds between the end of a
+song and a beginning of the next one, but serious people want to be able to
+chose the length and type of fading to apply depending on the song. And they
+also want to have _cue points_, which are metadata indicating where to start a
+song and where to end it: a long intro of a song might not be suitable for radio
+broadcasting and we might want to skip it. Another common practice when
+performing transitions between the tracks consists in adding _jingles_: those
+are short audio tracks generally saying the name of the radio or of the current
+show. In any way, people avoid simply playing one track after another (unless it
+is an album) because it sounds awkward to the listener: it does not feel like a
+proper radio, but rather like a simple playlist.
 
 ### Equalization
 
 The final thing you want to do is to give your radio an appreciable and
 recognizable sound. This can be achieved by applying a series of sound effects
-such as a
+such as
 
-- _compressor_: gives a more uniform sound by amplifying quiet sounds,
-- _equalizer_: gives a signature to your radio by amplifying differently
+- a _compressor_ which gives a more uniform sound by amplifying quiet sounds,
+- an _equalizer_ which gives a signature to your radio by amplifying differently
   different frequency ranges (typically, simplifying a bit, you want to insist
   on bass if you play mostly lounge music in order to have a warm sound, or on
   treble if you have voices in order for them to be easy to understand),
-- _limiter_: lowers the sound when there are high-intensity peaks (we want to
-  avoid clipping),
-- _gate_: reduce very low level sound in order for silence to be really silence
-  and not low noise (in particular if you capture a microphone).
+- a _limiter_ which lowers the sound when there are high-intensity peaks (we
+  want to avoid clipping),
+- a _gate_ which reduce very low level sound in order for silence to be really
+  silence and not low noise (in particular if you capture a microphone),
+- and so on.
 
 These descriptions are very rough and we urge the reader not accustomed with
 those basic components of signal processing to learn more about them. You will
@@ -403,35 +408,35 @@ typical processing loop will consist in
 
 If for some reason we do not want to perform any audio processing (for instance,
 if this processing was done offline, or if we are relaying some already
-processed audio stream), the second phase is empty and if the encoding format is
-the same as the source format there is no need to decode and then reencode in
-the same format, and we can directly stream the original encoded files. By
-default, Liquidsoap will always reencode files but this can be avoided since
-recent versions, see [there](#sec:encoded-streams).
+processed audio stream) and if the encoding format is the same as the source
+format, there is no need to decode and then reencode the sound: we can directly
+stream the original encoded files. By default, Liquidsoap will always reencode
+files but this can be avoided if we want, see [there](#sec:encoded-streams).
 
 Interaction {#sec:audio-interaction}
 -----------
 
 What we have described so far is more or less the direct adaptation of
 traditional radio techniques to the digital world. But with new tools come new
-usages, and a webradio generally requires more than the above features. In
-particular, we should be able to interact with other programs and services.
+usages, and a typical webradio generally requires more than the above
+features. In particular, we should be able to interact with other programs and
+services.
 
 ### Interacting with other programs
 
 Whichever tool you are going to use in order to generate your webradio, it is
 never going to support all the features that a user will require. At some point,
-the use of an obscure hardware interface, database, or whatsoever will be
-required by a client, which will not be supported out of the shelf by the
-tool. Or maybe you simply want to be able to reuse parts of the scripts that you
-spent years to write in your favorite language.
+the use of an obscure hardware interface, a particular database, or a specific
+web framework will be required by a client, which will not be supported out of
+the shelf by the tool. Or maybe you simply want to be able to reuse parts of the
+scripts that you spent years to write in your favorite language.
 
 For this reason, a stream generator should be able to interact with other tools,
 by calling external programs or scripts, written in whichever language. For
 instance, we should be able handle _dynamic playlists_, which are playlists
-where the list of songs is not determined in advance, but the next song to play
-is rather determined each time the previous one has ended. In order to obtain
-the name of the next song, we should be able to call an external script.
+where the list of songs is not determined in advance, but rather generated on
+the fly: each time a song ends a function of the generator or an external
+program computes the next song to be played.
 
 We should also be able to easily import data generated by other programs, the
 usual mechanism being by reading the standard plain text output of the executed
@@ -450,8 +455,8 @@ The above way of interacting works in _pull mode_: the stream generators asks an
 external program for information, such as the next song to be played. Another
 desirable workflow is in _push mode_, where the program adds information
 whenever it feels like. This is typically the case for _request queues_ which
-are, again, a variant of playlists, where an external programs can add songs
-whenever it feels like: those will be played one, in the order where they where
+are a variant of playlists, where an external programs can add songs whenever it
+feels like: those will be played one, in the order where they where
 inserted. This is typically used for interactive websites: whenever a user asks
 for a song, it gets added to the request queue.
 
@@ -466,50 +471,40 @@ Control_).
 Video streams {#sec:video-streams}
 -------------
 
-The workflow for generating video streams is not fundamentally different to what
-we have described above, so that one can expect that an audio stream generator
-can also be used to generate video. In practice, this is rarely the case because
-manipulating video is an order of magnitude harder to implement. Since the main
-focus of this book is for audio streams, we only briefly explain the main
-technological issues related to video.
+The workflow for generating video streams is not fundamentally different from
+the one that we have described above, so that it is natural to expect that an
+audio stream generator can also be used to generate video streams. In practice,
+this is rarely the case, because manipulating video is an order of magnitude
+harder to implement. However, the advanced architecture of Liquidsoap allows it
+to handle both audio and video. The main focus of this book will be audio
+streams, but [this chapter](#chap:video) is dedicated to handling video.
 
 ### Video data
 
-The first thing to notice is that if processing and transmitting audio requires
+The first thing to remark is that if processing and transmitting audio requires
 handling large amounts of data, video requires processing *huge* amounts of
 data. A video in a decent resolution has 25 images per second at a resolution of
 720p, which means 1280×720 pixels, each pixels consisting of three channels
 (generally, red, green and blue, or _RGB_ for short) each of which is usually
 coded on one byte. This means that one second of uncompressed video data weights
-65 MB (which is worth more than 6 minutes of CD audio)! And these are only the
-minimal requirements for a video to be called HD (_High Definition_), which is
-the kind of video which is being watched everyday on the internet: in practice,
-even low-end devices can produce much higher resolutions than this.
+65 MB, the equivalent of more than 6 minutes of uncompressed audio in CD
+quality! And these are only the minimal requirements for a video to be called HD
+(_High Definition_), which is the kind of video which is being watched everyday
+on the internet: in practice, even low-end devices can produce much higher
+resolutions than this.
 
 This volume of data means that manipulation of video, such as combining videos
 or applying effects, should be coded very efficiently (by which we mean down to
 fine-tuning the assembly code for some parts), otherwise the stream generator
 will not be able to apply them in realtime on a standard recent computer. It
-also means that even copying of data should be avoided, the speed of memory is
-also a problem at such rates.
+also means that even copying of data should be avoided, the speed of memory
+accesses is also a problem at such rates.
 
 An usual video actually consists of two streams: one for the video and one for
 the audio. We want to be able to handle them separately, so that we can apply
 all the operations specific to audio described in previous sections to videos,
 but the video and audio stream should be kept in perfect sync (even a very small
 delay between audio is video can be noticed).
-
-As a side note, in practice, video pixels are not represented by red, green and
-blue channels as we learn in school, but in another base often called _YUV_
-consisting of one _luma_ channel Y (roughly, the black and white component of
-the image) and two _chroma_ channels U and V (roughly, the color part of the
-image represented as blueness and redness). Moreover, because the eye is much
-more sensitive to the variations in luma than in chroma components, we can use
-one Y byte for each pixel and one U byte and one V byte for every four pixels,
-thus using 1.5 byte per pixel instead of 3 for traditional RGB
-representation. The conversion between YUV and RGB is not entirely trivial and
-costs in terms of computations, so it is generally better to code video
-manipulations directly on the YUV representation.
 
 ### File formats
 
