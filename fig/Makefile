@@ -2,7 +2,9 @@ TEX = $(wildcard *.tex)
 PDF = $(TEX:.tex=.pdf)
 PNG = $(TEX:.tex=.png)
 
-all: $(PDF) $(PNG)
+all: $(PDF)
+
+png: $(PNG)
 
 clean:
 	rm -f *.aux *.log $(PDF) $(PNG)

@@ -26,6 +26,7 @@ book.pdf: book.tex
 	makeindex book.idx
 
 book.epub: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
+	@$(MAKE) -C fig png
 	@echo "Generating $@..."
 	@$(PANDOC) --filter=pandoc-pdf2png --toc --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
 
