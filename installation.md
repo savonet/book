@@ -87,10 +87,15 @@ opam depext  vorbis
 opam install vorbis
 ```
 
-opam will automatically detect that it can be used by Liquidsoap and will
+Opam will automatically detect that it can be used by Liquidsoap and will
 recompile it. The list of all optional dependencies that you may enable in
-Liquidsoap can be obtained by typing `opam info liquidsoap`, and is detailed
-below.
+Liquidsoap can be obtained by typing
+
+```
+opam info liquidsoap
+```
+
+and is detailed below.
 
 ### Installing the cutting-edge version
 
@@ -124,10 +129,10 @@ git pull
 opam upgrade liquidsoap
 ```
 
+\TODO{binaries have been removed, right?}
+
 Using binaries
 --------------
-
-\TODO{this is apparently not maintained anymore}
 
 If you want to avoid compiling Liquidsoap, or if opam is not working on your
 platform, the easiest way is to use precompiled binaries of Liquidsoap, if
@@ -149,6 +154,9 @@ installing `liquidsoap-plugin-flac` will add support for the flac lossless audio
 format or `liquidsoap-plugin-all` will install all available plugins (which
 might be a good idea if you are not sure about which you are going to need).
 
+\TODO{apparently, cutting edge packages are not maintained anymore}
+
+<!--
 On Ubuntu and Debian, you can also have access to the packages which are
 automatically built for the latest version. This allows for quick testing of the
 latest features, but we do not recommend them for production purposes. In order
@@ -186,15 +194,18 @@ and _branch_ are used to develop features (the default branch being named
 ```
 sudo apt install liquidsoap-master
 ```
+-->
 
 ### MacOS
 
-No binaries are provided for MacOS, the preferred method is opam (see above).
+No binaries are provided for MacOS, the preferred method is opam, see above.
 
 ### Windows
 
 Pre-built binaries are provided on the [releases
-pages](https://github.com/savonet/liquidsoap/releases).
+pages](https://github.com/savonet/liquidsoap/releases) in a file with a name of
+the form `liquidsoap-vN.N.N-win64.zip`.
+
 
 Building from source
 --------------------
