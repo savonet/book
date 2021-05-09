@@ -1,6 +1,6 @@
 LIQ := $(filter-out convert2wav.liq, $(sort $(wildcard *.liq)))
 CHECKS := $(foreach l, $(LIQ), check-$(basename $l))
-CHECKS := $(filter-out check-ladspa.fastlookaheadlimiter, $(CHECKS))
+CHECKS := $(filter-out check-add-scale check-ladspa.fastlookaheadlimiter, $(CHECKS))
 
 LIQUIDSOAP = ./liquidsoap
 
