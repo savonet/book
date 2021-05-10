@@ -12,6 +12,7 @@ geometry:
 - marginparwidth=15mm
 fontfamily: libertine
 implicit_figures: no
+replace-headers: no
 subparagraph: yes
 header-includes: |
   \usepackage{style}

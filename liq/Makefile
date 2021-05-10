@@ -53,3 +53,9 @@ check-%: %.liq
 	@echo -n "Checking $(basename $<)..."
 	@LIQ_LILV=false LIQ_LADSPA=false LIQ_DSSI=false $(LIQUIDSOAP) --check $< || exit 1
 	@echo " ok."
+
+docker-shell:
+	docker run -it --entrypoint /bin/bash savonet/liquidsoap:main
+
+docker-sine:
+	docker run -it -v /dev/snd:/dev/snd --privileged savonet/liquidsoap:main liquidsoap 'output.alsa(sine())'

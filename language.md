@@ -2079,8 +2079,8 @@ and so on.
 
 ### HTTP
 
-Distant files can be retrieved over http and secure http, respectively using
-`http.get` and `https.get`. For instance:\TODO{https was removed!}
+Distant files can be retrieved over http using `http.get`. For instance, the
+following script will fetch and display the list of changes in Liquidsoap:
 
 ```{.liquidsoap include="liq/https.get.liq" from=1}
 ```
@@ -2094,7 +2094,7 @@ Other useful functions are
 Liquidsoap also features an internal web server called _harbor_, which allows to
 serve web pages directly from Liquidsoap, which can be handy to present some
 data related to your script or implement some form of advanced interaction. This
-is described on details in [this section](#sec:...).\TODO{fill me in}
+is described on details in [there](#sec:harbor).
 
 ### System
 

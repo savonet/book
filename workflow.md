@@ -4402,7 +4402,7 @@ server.execute("title", "My new title")
 
 if you want to separate the command from the argument.
 
-### Web-based interactions
+### Web-based interactions {#sec:harbor}
 
 A more and more common way of interacting with other programs and services
 nowadays is through the web, and Liquidsoap has support for this. Not only can
