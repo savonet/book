@@ -18,7 +18,7 @@ test.mp3:
 	@echo "Generating a sine test mp3 file..."
 	ffmpeg -f lavfi -i "sine=frequency=440:duration=5" -ac 2 $@
 
-files: ad.mp3 jingle1.mp3 jingle2.mp3 jingle3.mp3 video.mkv test1.png test2.png test3.png test4.png fallback.mp3 lf.mp4
+files: ad.mp3 jingle1.mp3 jingle2.mp3 jingle3.mp3 video.mkv test1.png test2.png test3.png test4.png fallback.mp3 lf.mp4 test.avi
 
 ad.mp3:
 	ffmpeg -f lavfi -i "sine=frequency=880:duration=1" -ac 2 $@
@@ -38,7 +38,7 @@ fallback.mp3:
 test%.png test%.jpg:
 	convert -pointsize 100 -size 500x500 caption:$@ $@
 
-video.mkv testsrc.mp4 testsrc.avi testsrc.ogv testsrc.mkv lf.mp4:
+video.mkv testsrc.mp4 testsrc.avi testsrc.ogv testsrc.mkv lf.mp4 test.avi:
 	ffmpeg -f lavfi -i testsrc=duration=5:size=1280x720:rate=25 -f lavfi -i sine=f=440:d=5 -c:v libx264 $@
 
 testsrc.webm:
