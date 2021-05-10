@@ -144,7 +144,7 @@ pollute the logs: in this case, it is perhaps better to inverse the paradigm and
 use the `input.harbor` operator described below, which allows the distant stream
 to connect to Liquidsoap. If the stream is using secure http protocol (if the
 uri starts with `https://...`), the operator `input.https` should be used
-instead.
+instead.\TODO{input.https or http?}
 
 Streams in HLS format are quite different from the above (they consist of a
 rolling playlist of short audio segments, see [there](#sec:HLS)) and are
@@ -4423,7 +4423,7 @@ radio = playlist("http://www.some-server.com/playlist")
 and the playlist can itself consist in a list of urls of files to be played.
 
 It might also happen that you need to retrieve some distant file over http and
-https. This can be achieved with the functions `http.get` (or `https.get`) which
+https. This can be achieved with the functions `http.get` (or `https.get`\TODO{https.get was removed}) which
 takes a url as argument and returns the contents of the file as a string. For
 instance, you can display the changelog for Liquidsoap with
 
@@ -4452,8 +4452,8 @@ to the request and the parameter `timeout` controls how long we can take at most
 in order to fetch the page (default is 10 seconds).
 
 The http protocol actually defines two main ways of retrieving webpages: GET,
-which is handled by the functions `http.get` and `https.get` presented above,
-and POST, which is handled by the functions `http.post` and `https.post`. The
+which is handled by the functions `http.get` and `https.get`\TODO{no https anymore} presented above,
+and POST, which is handled by the functions `http.post` and `https.post`\TODO{no https anymore}. The
 POST method is generally used for forms and takes an argument named `data`,
 which contains the data we want to pass as the contents of the form. The way
 this data is encoded is application-dependent and should be specified using the
@@ -4470,7 +4470,7 @@ in JSON as data.
 Additional useful http functions are `http.head` to only retrieve the headers of
 the corresponding GET request, `http.put` and `http.delete` which respectively
 perform PUT and DELETE http requests in order to upload or delete a distant
-file. All those functions have an `https` variant as well.
+file. All those functions have an `https` variant as well.\TODO{no https anymore}
 
 #### Serving webpages and services
 

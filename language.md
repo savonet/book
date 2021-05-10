@@ -2080,9 +2080,9 @@ and so on.
 ### HTTP
 
 Distant files can be retrieved over http and secure http, respectively using
-`http.get` and `https.get`. For instance:
+`http.get` and `https.get`. For instance:\TODO{https was removed!}
 
-```{.liquidsoap include="liq/https.get.liq"}
+```{.liquidsoap include="liq/https.get.liq" from=1}
 ```
 
 Other useful functions are

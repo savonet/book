@@ -16,6 +16,15 @@ USER root
 
 RUN chmod a+w to-play
 
+RUN export LIQLIB=`liquidsoap --check "print(configure.libdir)"` && \
+    echo "let output.graphics = output.dummy" >> $LIQLIB/io.liq && \
+    echo "let input.v4l2 = blank" >> $LIBLIQ/ffmpeg.liq
+
+# Workaround until 927b1bad4fc9b8957e04b146c2a35d43be62d906 is propagated
+RUN export LIQLIB=`liquidsoap --check "print(configure.libdir)"` && \
+    echo "let output.video = output.dummy(fallible=true)" >> $LIQLIB/io.liq && \
+    echo "let output.audio_video = output.dummy(fallible=true)" >> $LIQLIB/io.liq
+
 USER liquidsoap
 
 RUN make files
