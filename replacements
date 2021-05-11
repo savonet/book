@@ -1,11 +1,15 @@
 mp3 [mp3]{.smallcaps}
 MP3 [mp3]{.smallcaps}
 aac [aac]{.smallcaps}
+AAC [aac]{.smallcaps}
+AAC+ [aac+]{.smallcaps}
 IRC [irc]{.smallcaps}
 icecast Icecast
 liquidsoap Liquidsoap
 http [http]{.smallcaps}
 HTTP [http]{.smallcaps}
+https [https]{.smallcaps}
+HTTPS [https]{.smallcaps}
 opus Opus
 linux Linux
 flac [flac]{.smallcaps}
@@ -19,3 +23,10 @@ CD [cd]{.smallcaps}
 OSC [osc]{.smallcaps}
 MIDI [midi]{.smallcaps}
 ALSA [alsa]{.smallcaps}
+MIME [mime]{.smallcaps}
+SSL [ssl]{.smallcaps}
+AO [ao]{.smallcaps}
+Jack [jack]{.smallcaps}
+JACK [jack]{.smallcaps}
+SRT [srt]{.smallcaps}
+XML [xml]{.smallcaps}

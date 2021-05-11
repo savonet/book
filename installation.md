@@ -354,45 +354,49 @@ sudo opam depext  something
 sudo opam install something
 ```
 
-which will automatically trigger a rebuild of Liquidsoap, see [above](#sec:opam).
+which will automatically trigger a rebuild of Liquidsoap, as explained in [the
+above section](#sec:opam).
 
 ### General
 
 Those libraries add support for various things:
 
 - `camomile`: charset recoding in metadata (those are generally encoded in UTF-8
-  which support all characters, but older files used various encodings for
+  which can represent all characters, but older files used various encodings for
   characters which can be converted),
-- `ocaml-inotify`: getting notified of file changes (e.g. for reloading a
+- `ocaml-inotify`: getting notified when a file changes (e.g. for reloading a
   playlist when it has been updated),
 - `ocaml-magic`: file type detection (e.g. this is useful for detecting that a
   file is an MP3 even if it does not have the `.mp3` extension),
 - `ocaml-lo`: OSC (Open Sound Control) support for controlling the radio
   (changing the volume, switching between sources) via external interfaces
   (e.g. an application on your phone),
-- `ocaml-ssl`: SSL/https support for connecting to secured websites,
-- `osx-secure-transport`: SSL/https support via OSX's SecureTransport,
+- `ocaml-ssl`: SSL support for connecting to secured websites (using the https
+  protocol),
+- `osx-secure-transport`: SSL support via OSX's SecureTransport,
 - `yojson`: parsing JSON data (useful to exchange data with other applications).
 
 ### Input / output
 
-Those libraries add support for using soundcard for output and input:
+Those libraries add support for using soundcards for playing and recording sound:
 
 - `ocaml-alsa`: soundcard input and output with ALSA,
 - `ocaml-ao`: soundcard output using AO,
-- `ocaml-gstreamer`: input and output over various devices (including virtual
-  ones such as Icecast or HLS),
+- `ocaml-ffmpeg`: input and output over various devices,
+- `ocaml-gstreamer`: input and output over various devices,
 - `ocaml-portaudio`: soundcard input and output,
 - `ocaml-pulseaudio`: soundcard input and output.
 
 Among those, ALSA is very low level and is probably the one you want to use in
-order to minimize latencies. Other are support a wider variety of soundcards.
+order to minimize latencies. Other support a wider variety of soundcards and
+usages.
 
 Other outputs:
 
 - `ocaml-cry`: output to icecast servers,
 - `ocaml-bjack`: Jack support,
-- `ocaml-lastfm`: Lastfm scrobbling,
+- `ocaml-lastfm`: Last.fm scrobbling (this website basically records the songs
+  you have listened),
 - `ocaml-srt`: transport over network using SRT protocol.
 
 ### Sound processing
