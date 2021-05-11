@@ -337,6 +337,10 @@ computer inside the image. For instance, you can play a sine by running:
 docker run -it -v /dev/snd:/dev/snd --privileged savonet/liquidsoap:main liquidsoap 'output.alsa(sine())'
 ```
 
+This single line should work on any computer on which Docker is installed: no
+need to install opam, various libraries, or Liquidsoap, it will automatically
+download for you an image where all this is pre-installed.
+
 Libraries used by Liquidsoap
 ----------------------------
 
