@@ -394,7 +394,7 @@ usages.
 Other outputs:
 
 - `ocaml-cry`: output to icecast servers,
-- `ocaml-bjack`: Jack support,
+- `ocaml-bjack`: Jack support for virtually connecting audio programs,
 - `ocaml-lastfm`: Last.fm scrobbling (this website basically records the songs
   you have listened),
 - `ocaml-srt`: transport over network using SRT protocol.
