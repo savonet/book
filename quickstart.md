@@ -195,23 +195,32 @@ directory, we can play it with
 As usual, the operator `playlist` has a number of interesting optional
 parameters which can be discovered with `liquidsoap -h playlist`. For instance, by
 default, the files are played in a random order, but if we want to play them as
-indicated we should pass the argument `mode="normal"`{.liquidsoap} to
+indicated in the list we should pass the argument `mode="normal"`{.liquidsoap} to
 `playlist`. Similarly, if we want to reload the playlist whenever it is changed,
 the argument `reload_mode="watch"`{.liquidsoap} should be passed.
 
-A playlist can contain distant files (e.g. urls of the form
-`http://.../file.mp3`) in which case they are going to be downloaded
-beforehand. If you want to use a live stream, the operator `input.http` should
-be used instead:
+A playlist can refer to distant files (e.g. urls of the form
+`http://path/to/file.mp3`) in which case they are going to be downloaded
+beforehand. If you want to use a live stream, which can be very long or even infinite,
+the operator `input.http` should be used instead:
 
 ```{.liquidsoap include="liq/input.http.liq" from=1}
 ```
 
-\TODO{also mention files "say:bla bla bla", see liq/say.liq}
+The playlist can also mention special sort of files, using particular
+_protocols_ which are proper to Liquidsoap: those do not refer to actual files,
+but rather describe how to produce files. For instance, a line of the form
+
+```
+say:Hello everybody!
+```
+
+in a playlist will instruct Liquidsoap to use a text-to-speech program in order
+to generate a file in which "Hello everybody!" is pronounced.
 
 Finally, there are other types of inputs. For instance, the operator
 `input.alsa` can be used to capture the sound of a microphone on a soundcard,
-with the ALSA library. You should be able to hear your voice with
+with the ALSA library. This means that you should be able to hear your voice with
 
 ```{.liquidsoap include="liq/mic.liq" from=1}
 ```
@@ -226,21 +235,28 @@ Some sources are not always available, and we say that such a source is _fallibl
 typical example is a source obtained by `input.http`: at some point the stream
 might stop (e.g. if it is only available during daytime), or be subject to
 technical difficulties (e.g. it gets disconnected from the internet for a short
-period of time). In this case, we generally want to fallback to another source
-(typically an emergency playlist consisting of local files which we are sure are
-going to be available). This can be achieved by using the `fallback` operator
-which plays the first source available in a list of sources:
+period of time). In this case, we generally want to fallback to another source,
+typically an emergency playlist consisting of local files which we are sure are
+going to be available. This can be achieved by using the `fallback` operator
+which plays the first available source in a list of sources:
 
 ```{.liquidsoap include="liq/fallback.liq" from=1}
 ```
 
-In fact, Liquidsoap automatically detects that a source is fallible and issues
-an error if this is not handled (typically by a `fallback`). We did not see this
-up to now because `output` is an advanced operator which automatically uses silence
-as fallback. However, if we use the primitive functions for outputting audio, we
-will see this behavior. For instance, if we try use the operator
-`output.pulseaudio` (which plays a source on a soundcard using the pulseaudio
-library)
+This means that `s` will have the same contents as `stream` if it is available,
+and as `emergency` otherwise.
+
+#### Fallibility detection
+
+Liquidsoap automatically detects that a source is fallible and issues an error
+if this is not handled, by a `fallback` for instance, in order to make sure that
+we will not unexpectedly have nothing to stream at some point. We did not see
+this up to now because `output` is an advanced operator which automatically uses
+silence as fallback, because it is primarily intended for quick and dirty
+checking of the stream.  However, if we use the primitive functions for
+outputting audio, we will be able to observe this behavior this behavior. For
+instance, if we try use the operator `output.pulseaudio`, which plays a source
+on a soundcard using the pulseaudio library,
 
 ```{.liquidsoap include="liq/bad/fallible1.liq" from=1}
 ```
@@ -252,7 +268,7 @@ At line 1, char 5-27:
 Error 7: Invalid value: That source is fallible
 ```
 
-which means that Liquidsoap has detected that the source declared at line 1 from
+This means that Liquidsoap has detected that the source declared at line 1 from
 character 5 to character 27 (i.e., the `input.http`) is fallible. We could
 simply ignore this warning, by passing the parameter `fallible=true`{.liquidsoap} to the
 `output.pulseaudio`{.liquidsoap} operator, but the proper way to fix this consists in having
@@ -265,12 +281,16 @@ Note that we are using `single` here instead of `playlist`: this operator plays
 a single file and ensures that the file is available before running the script
 so that we know it will not fail. The argument
 `track_sensitive=false`{.liquidsoap} means that we want to get back to the live
-stream as soon as it is available again (otherwise it would wait the end of the
-track for switching back from emergency playlist to the main radio). Also remark
+stream as soon as it is available again, otherwise it would wait the end of the
+track for switching back from emergency playlist to the main radio. Also remark
 that we are defining `s` twice: this is not a problem at all, whenever we
-reference `s`, the last definition is used (otherwise said the second definition
-replaces the first). Another option would be to fallback to silence, which in
-Liquidsoap can be generated with the operator `blank`:
+reference `s`, the last definition is used, otherwise said the second definition
+replaces the first.
+
+#### Falling back to blank
+
+Another option to make the stream infallible would be to fallback to silence,
+which in Liquidsoap can be generated with the operator `blank`:
 
 ```{.liquidsoap include="liq/fallible3.liq"}
 ```
@@ -286,24 +306,27 @@ function which does exactly that:
 A typical radio will do some scheduling, typically by having different playlists
 at different times of the day. In Liquidsoap, this is achieved by using the
 `switch` operator: this operators takes a list of pairs consisting of a
-predicate (a function returning a boolean) and a source, and plays the first
-source for which the predicate is true. For time, there is a special syntax: `{
-8h-20h }` is a predicate which is true when the current time is between 8h and
-20h (or 8 am and 8 pm if you like this better). Now, if we have two playlists,
-one for the day and one for the night, and want a live show between 19h and 20h,
-we can set this up with
+predicate (a function returning a boolean `true` or `false`) and a source, and
+plays the first source for which the predicate is true. For time, there is a
+special syntax:
 
-<!-- {.liquidsoap include="liq/radio.liq"} -->
-```liquidsoap
-day   = playlist("/radio/day.pls")   # Day music
-night = playlist("/radio/night.pls") # Night music
-mic   = buffer(input.alsa())         # Microphone
-radio = switch([({8h-19h}, day), ({19h-20h}, mic), ({20h-8h}, night)])
+```
+{ 8h-20h }
+
+```
+
+is a predicate which is true when the current time is between 8h and 20h (or 8
+am and 8 pm if you like this better). This means that if we have two playlists,
+one for the day and one for the night, and want a live show between 19h and 20h,
+we can set this up as follows:
+
+```{.liquidsoap include="liq/radio.liq" from=2 to=5}
 ```
 
 By default, the `switch` operator will wait for the end of the track of a source
 before switching to the next one, but immediate switching can be achieved by
-adding the argument `track_sensitive=false`{.liquidsoap}.
+adding the argument `track_sensitive=false`{.liquidsoap}, as for the
+`fallback` operator.
 
 ### Jingles
 
@@ -322,9 +345,9 @@ track has to be played (here this list contains the jingles playlist and the
 radio defined above). The `weight` argument says how many tracks of each source
 should be taken in average: here we want to take 1 jingle for 4 radio
 tracks. The selection is randomized however and it might happen that two jingles
-are played one after the other (although this should be rare). If we want to
-make sure that we play 1 jingle and then exactly 4 radio songs, we should use
-the `rotate` operator instead:
+are played one after the other, although this should be rare. If we want to make
+sure that we play 1 jingle and then exactly 4 radio songs, we should use the
+`rotate` operator instead:
 
 ```liquidsoap
 radio = rotate(weights=[1, 4], [jingles, radio])
@@ -333,9 +356,9 @@ radio = rotate(weights=[1, 4], [jingles, radio])
 ### Crossfading
 
 Now that we have our basic sound production setup, we should try to make things
-sound nicer. A first thing we notice is that the transition between song is
+sound nicer. A first thing we notice is that the transition between songs is
 quite abrupt whereas we would rather have a smooth chaining between two
-consecutive tracks. This can be achieved using the `crossfade` operator which
+consecutive tracks. This can be addressed using the `crossfade` operator which
 will take care of this for us. If we insert the following line
 
 ```liquidsoap
@@ -357,16 +380,17 @@ radio = normalize(radio)
 ```
 
 In practice, it is better to precompute the gain of each audio track in advance
-and change the volume according to this information (often called _replaygain_),
+and change the volume according to this information, often called _replaygain_,
 see [there](#sec:replaygain). There are also various traditional sound effects
 that can be used in order to improve the overall color and personality of the
-sound. A somewhat reasonable default is provided by the `nrj` operator:
+sound. A somewhat reasonable starting point is provided by the `nrj` operator:
 
 ```liquidsoap
 radio = nrj(radio)
 ```
 
-see [there](#sec:signal-processing) for details on sound processing.
+Many more details about sound processing are given in
+[there](#sec:signal-processing).
 
 ### Icecast output {#sec:icecast-setup}
 
@@ -376,29 +400,32 @@ Now that we have set up our radio, we could play it locally by adding
 output(radio)
 ```
 
-at the end of the script, but we would rather stream it to the world.
+at the end of the script, but we would rather stream it to the world instead of
+having it only on our speakers.
 
-In order to do so we need an Icecast server which will relay the stream to users
-which connect on it. The way you should proceed with its installation depends on
-your distribution, for instance on Ubuntu you can type
+#### Installing Icecast
+
+In order to do so, we first need to setup an Icecast server which will relay the
+stream to users connecting to it. The way you should proceed with its
+installation depends on your distribution, for instance on Ubuntu you can type
 
 ```
-sudo apt-get install icecast2
+sudo apt install icecast2
 ```
 
-The first thing you should do next is to modify the configuration which is
-generally located in the file `/etc/icecast2/icecast.xml`. In particular, you
-should modify the lines
+The next thing we should do is to modify the configuration which is generally
+located in the file `/etc/icecast2/icecast.xml`. In particular, we should
+modify the lines
 
 ```
 <source-password>hackme</source-password>
-<relay-password>hackme</relay-password>
-<admin-password>hackme</admin-password>
+ <relay-password>hackme</relay-password>
+ <admin-password>hackme</admin-password>
 ```
 
-which are the passwords for sources (i.e. the one Liquidsoap is going to use in
-order to send its stream to Icecast), for relays (when relaying a stream, you
-are not going to use this one but still want to change the password) and for the
+which are the passwords for sources (e.g. the one Liquidsoap is going to use in
+order to send its stream to Icecast), for relays (used when relaying a stream, you
+are not going to use this one now but still want to change the password) and for the
 administrative interface. By default all three are `hackme`, and we will use
 that in our examples, but, again, you should change them in order not to be
 hacked. Have a look at other parameters though, they are interesting too!
@@ -409,8 +436,8 @@ sudo /etc/init.d/icecast2 restart
 ```
 
 If you are on a system such as Ubuntu, the default configuration prevents
-Icecast from running (because people want to ensure that you have properly
-configured it). In order to enable it, before restarting, you should set
+Icecast from running, because they want to ensure that you have properly
+configured it. In order to enable it, before restarting, you should set
 
 ```
 ENABLE=true
@@ -418,6 +445,8 @@ ENABLE=true
 
 at the end of the file `/etc/default/icecast2`. More information about setting
 up Icecast can be found on [its website](http://www.icecast.org).
+
+#### Icecast output
 
 Once this is set up, you should add the following line to your script in
 order to instruct Liquidsoap to send the stream to Icecast:
@@ -431,20 +460,33 @@ The parameters of the operator `output.icecast` we used here are
 - the parameters of your Icecast server: hostname, port (8000 is the default
   port) and password for sources,
 - the mount point: this will determine the url of your stream,
-- and finally, the source we want to send to Icecast.
+- and finally, the source we want to send to Icecast, `radio` in our case.
 
 If everything goes on well, you should be able to listen to your radio by
-listening to the url `http://localhost:8000/my-radio.mp3` with any modern player
-or browser. If you want to see the number of listeners of your stream and other
-useful information, you should have a look at the stats of Icecast, which are
-available at `http://localhost:8000/admin/stats.xsl`, with the login for
-administrators (`admin` / `hackme` by default).
+going to the url
 
-The first argument, which controls the format, can be passed some arguments in
-order to fine tune the encoding. For instance, if we want our mp3 to have a 256k
-bitrate, we should pass `%mp3(bitrate=256)`. It is perfectly possible to have
-multiple streams with different formats for a single radio: if we want to also
-have an aac stream we can add the line
+```
+http://localhost:8000/my-radio.mp3
+```
+
+with any modern player or browser. If you want to see the number of listeners of
+your stream and other useful information, you should have a look at the stats of
+Icecast, which are available at
+
+```
+http://localhost:8000/admin/stats.xsl
+```
+
+with the login for administrators (`admin` / `hackme` by default).
+
+#### The encoder
+
+The first argument `%mp3`, which controls the format, is called an _encoder_ and
+can itself be passed some arguments in order to fine tune the encoding. For instance,
+if we want our mp3 to have a 256k bitrate, we should pass
+`%mp3(bitrate=256)`. It is perfectly possible to have multiple streams with
+different formats for a single radio: if we want to also have an aac stream we
+can add the line
 
 ```{.liquidsoap include="liq/output.icecast2.liq" from=2}
 ```
@@ -461,13 +503,13 @@ this means that you did not enable it. In order to do so in an opam
 installation, you should type
 
 ```
-sudo opam depext fdkaac
-sudo opam install fdkaac
+opam depext  fdkaac
+opam install fdkaac
 ```
 
 ### Summing up
 
-The typical radio script we arrived at is the following:
+The typical radio script we arrived at is the following one:
 
 ```{.liquidsoap include="liq/radio.liq"}
 ```

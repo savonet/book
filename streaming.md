@@ -1522,7 +1522,7 @@ operations.
 
 A _request_ is something from which we can eventually produce a file.
 
-#### URIs
+#### URI
 
 It starts with an URI (_Uniform Resource Identifier_), such as
 
@@ -1537,7 +1537,7 @@ It starts with an URI (_Uniform Resource Identifier_), such as
 As you can see the URI is far from always being the path to a file. The part
 before the first colons (`:`) is the _protocol_ and is used to determine how to
 fetch or produce the file. A local file is assumed when no protocol is
-specified. Some protocols such as `annotate` or `replaygain` operate on URIs,
+specified. Some protocols such as `annotate` or `replaygain` operate on URI,
 which means that they allow chaining of protocols:
 
 ```
@@ -1566,11 +1566,11 @@ two steps:
 
 1. some computations are performed (e.g. sound in produced by a text-to-speech
    library for `say`),
-2. a list of URIs, called _indicators_, is returned.
+2. a list of URI, called _indicators_, is returned.
 
 Generally, only one URI is returned: for instance, the `say` protocol generates
 audio in a temporary file and returns the path to the file it produced. When
-multiple URIs are returned, Liquidsoap is free to pick any of them and will
+multiple URI are returned, Liquidsoap is free to pick any of them and will
 actually pick the first working one. Typically, a "database" protocol could
 return multiple locations of a given file on multiple servers for increased
 resiliency.
@@ -1698,9 +1698,9 @@ which indicates how to perform the resolution: this function takes as arguments
 - `maxtime` the maximal duration resolution should take,
 - the URI to resolve,
 
-and returns a list of URIs it resolves to. Additionally, the function
+and returns a list of URI it resolves to. Additionally, the function
 `add_protocol` takes arguments to document the function (`syntax` describes the
-URIs accepted by this protocol and `doc` is freeform description of the
+URI accepted by this protocol and `doc` is freeform description of the
 protocol) as well as indicate whether the protocol is `static` or not and
 whether the files it produces are `temporary` or not.
 

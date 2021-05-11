@@ -34,3 +34,7 @@ XML [xml]{.smallcaps}
 wav [wav]{.smallcaps}
 speex Speex
 ogg Ogg
+uri [uri]{.smallcaps}
+URI [uri]{.smallcaps}
+pulseaudio PulseAudio
+replaygain ReplayGain
