@@ -797,7 +797,7 @@ used a `fallback` operator:
 ```{.liquidsoap include="liq/switch2-fallback.liq" from=4 to=-1}
 ```
 
-#### Time predicates
+#### Time predicates {#sec:time-predicates}
 
 In the above examples `{0h-7h}` is a _time predicate_: it is something which is
 `true` or `false` depending on the current time. Some other examples of time

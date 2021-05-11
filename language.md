@@ -2,45 +2,44 @@ A programming language {#chap:language}
 ======================
 
 Before getting into the more advanced radio setups which can be achieved with
-Liquidsoap, we need to detail the language and the general concepts behind
-it. If you are eager to start your radio, it might be a good idea to skim though
-it quickly at a first reading, and come back later to it when a deeper knowledge
-about a specific point is required.
-
-\TODO{give an example of a type error (and explain the localization)}
+Liquidsoap, we need to understand the language and the general concepts behind
+it. If you are eager to start your radio, it might be a good idea to at least
+skim though this chapter quickly at a first reading, and come back later to it
+when a deeper knowledge about a specific point is required.
 
 General features
 ----------------
 
 Liquidsoap is a novel language which was designed from scratch. We present the
-main generic constructions, feature specifically related to streaming are
-presented in [next chapter](#chap:streaming).
+generic constructions, feature specifically related to streaming are illustrated
+in [next chapter](#chap:workflow) and further detailed in [this
+chapter](#chap:streaming).
 
 ### Typing
 
 One of the main features of the language is that it is _typed_. This means that
 every expression belongs to some type which indicates what it is. For instance,
-`"hello"` is a string whereas `23` is an integer, and, when presenting a
+`"hello"` is a _string_ whereas `23` is an _integer_, and, when presenting a
 construction of the language, we will always indicate the associated
 type. Liquidsoap implements a _typechecking_ algorithm which ensures that
-whenever a string is expected a string will actually be given (and similarly for
-other types). This is done without running the program, so that it does not depend
-on some tests, but is rather enforced by theoretical considerations. Another
-distinguishing feature of this algorithm is that it also performs _type
-inference_: you never actually have to write a type, those are guessed
-automatically by Liquidsoap. This makes the language very safe, while remaining
-very easy to use. For curious people reading French, the algorithm and the
-associated theory are described in [@baelde2008webradio].
+whenever a string is expected a string will actually be given, and similarly for
+other types. This is done without running the program, so that it does not
+depend on some dynamic tests, but is rather enforced by theoretical
+considerations. Another distinguishing feature of this algorithm is that it also
+performs _type inference_: you never actually have to write a type, those are
+guessed automatically by Liquidsoap. This makes the language very safe, while
+remaining very easy to use. For curious people reading French, the algorithm and
+the associated theory are described in a publication [@baelde2008webradio].
 
 Incidentally, apart from the usual type information which can be found in many
 languages, Liquidsoap also uses typing to check the coherence of parameters
 which are specific to streaming. For instance, the number of audio channels of
-streams is also present in their type, and it is ensured that operators always
-get the right number of channels.
+streams is also present in their type, and it ensures that operators always get
+the right number of channels.
 
 ### Functional programming
 
-The language is _functional_, which means that you can define very easily
+The language is _functional_, which means that you can very easily define
 functions, and that functions can be passed as arguments of other
 functions. This might look like a crazy thing at first, but it is actually quite
 common in some language communities (such as OCaml). It also might look quite
@@ -54,7 +53,7 @@ function which describes the shape we want for the transition) and so on.
 
 The unique feature of Liquidsoap is that it allows the manipulation of _sources_
 which are functions which will generate streams. These streams typically consist
-of stereo audio data, but is not restricted to this: they can contain audio with
+of stereo audio data, but we do restrict to this: they can contain audio with
 arbitrary number of channels, they can also contain an arbitrary number of video
 channels, and also MIDI channels (there is limited support for sound synthesis).
 
@@ -70,24 +69,24 @@ When running a Liquidsoap program, the compiler goes through these four phases:
    the stream (a _stream generator_),
 4. _instantiation_: the sources are created and checked to be infallible where
    required,
-5. _execution_ of the stream generator to actually produce audio.
+5. _execution_: we run the stream generator to actually produce audio.
 
 The two last phases can be resumed by the following fact: Liquidsoap is a
-_stream generator generator_, it generates stream generators.
+_stream generator generator_, it generates stream generators (sic).
 
 In order to illustrate this fact, consider the following script (don't worry if
-you don't understand all the details for now, it uses concepts which are
+you don't understand all the details for now, it uses concepts which will be
 detailed below):
 
 ```{.liquidsoap include="liq/chord.liq" from=1}
 ```
 
-This script should be thought of as a way to describe how to generate a stream
-generator. Namely, in order to construct the stream generator, Liquidsoap will
-execute the function `list.map`{.liquidsoap} which will produce the list
-obtained by applying the function `note`{.liquidsoap} on each elements of the
-list and, in turn, this function will be replaced by its definition, which
-consists of a `sine` generator. The execution of the script will act as if
+Let us explain how this script should be thought of as a way of describing how
+to generate a stream generator. In order to construct the stream generator,
+Liquidsoap will execute the function `list.map`{.liquidsoap} which will produce
+the list obtained by applying the function `note`{.liquidsoap} on each elements
+of the list and, in turn, this function will be replaced by its definition,
+which consists of a `sine` generator. The execution of the script will act as if
 Liquidsoap successively replaced the second line by
 
 ```{.liquidsoap}
@@ -108,30 +107,34 @@ and finally by
 s = add([sine(440.), sine(523.25), sine(659.26)])
 ```
 
-which is the actual stream generator: running the script has generated the three
-`sine` stream generators!
+which is the actual stream generator. We see that running the script has
+generated the three `sine` stream generators!
 
 ### Standard library
 
 Although the core of Liquidsoap is written in OCaml, many of the functions of
 Liquidsoap are written in the Liquidsoap language itself. Those are defined in
 the `pervasives.liq` script, which is loaded by default and includes all the
-libraries. You should not be frightened to have a look at it, it is often useful
-to better grasp the language and learn design patterns and tricks.
+libraries. You should not be frightened to have a look at the standard library,
+it is often useful to better grasp the language, learn design patterns and
+tricks, and add functionalities.
 
 Writing scripts
 ---------------
 
+### Choosing an editor
+
 Scripts in Liquidsoap can be written in any editor, although Emacs is the
-preferred editor, as being the only editor with specific Liquidsoap support (syntax
-coloration, indentation). Some other tools, described below, can also be useful
-in order to learn Liquidsoap or elaborate scripts.
+preferred editor, as being the only editor with specific Liquidsoap support
+(syntax coloration and indentation). Some other tools, described below, can also
+be useful in order to learn Liquidsoap or elaborate scripts.
 
 ### Documentation of operators
 
-We recall from [earlier](#sec:sound-sine) that the
+When writing scripts you will often need details about a particular operator and
+its arguments. We recall from [earlier](#sec:sound-sine) that the
 documentation\index{documentation} of an operator `operator`, including its type
-and a description of its parameters, can be obtained by typing
+and a description of its arguments, can be obtained by typing
 
 ```
 liquidsoap -h operator
@@ -230,7 +233,7 @@ We begin by describing the values one usually manipulates in Liquidsoap.
 
 ### Integers and floats
 
-The integers\index{integer}, such as `3`, are of type
+The _integers_\index{integer}, such as `3` or `42`, are of type
 `int`\index{int@\texttt{int}}. Depending on the current architecture of the
 computer on which we are executing the script (32 or 64 bits, the later being
 the most common nowadays) they are stored on 31 or 63 bits. The minimal
@@ -239,12 +242,13 @@ the most common nowadays) they are stored on 31 or 63 bits. The minimal
 (resp. `max_int`)\index{max\_int@\texttt{max\_int}}; typically, on a 64 bits
 architecture, they range from -4611686018427387904 to 4611686018427387903.
 
-The floating point numbers\index{float}, such as `2.45`, are of type
-`float`\index{float@\texttt{float}}, and are in double precision (always stored
-on 64 bits). They always have a decimal point in them, so that `3` and `3.` are
-not the same thing: the former is an integer and the later is a float. This is a
-source of errors for beginners, but is necessary for typing to work well. For
-instance, if we try to execute a program containing the instruction
+The _floating point numbers_\index{float}, such as `2.45`, are of type
+`float`\index{float@\texttt{float}}, and are in double precision, meaning that
+they are always stored on 64 bits. We always write the a decimal point in them,
+so that `3` and `3.` are not the same thing: the former is an integer and the
+later is a float. This is a source of errors for beginners, but is necessary for
+typing to work well. For instance, if we try to execute a program containing the
+instruction
 
 ```{.liquidsoap include="liq/bad/sine.liq" from=0 to=0}
 ```
@@ -289,13 +293,12 @@ will display `5`, as expected. In practice, one rarely does use this functions,
 which displays on the standard output, but rather the logging functions
 `log.critical`, `log.severe`, `log.important`, `log.info` and `log.debug` which
 write strings of various importance in the logs, so that it is easier to keep
-track of them (they are timestamped, stored in files, etc.).
+track of them: they are timestamped, they can easily be stored in files, etc.
 
 In order to write the character "`"`" in a string, one cannot simply type "`"`"
 since this is already used to indicate the boundaries of a string: this
 character should be _escaped_\index{escaping}\index{string!escaping}, which
-means that the character "`\`" should be typed first so that\TODO{improve the
-coloration of strings}
+means that the character "`\`" should be typed first so that
 
 ```{.liquidsoap include="liq/string1.liq"}
 ```
@@ -308,7 +311,7 @@ as
 ```{.liquidsoap include="liq/string2.liq"}
 ```
 
-This is most often used when testing JSON data which contain many quotes or for
+This is most often used when testing JSON data which can contain many quotes or for
 command line arguments when calling external scripts. The character "`\`" can also
 be used at the end of the string to break long strings in scripts without
 actually inserting newlines in the strings. For instance, the script
@@ -374,16 +377,37 @@ useful string-related function are
   ```
 - `string.contains`: test whether a string contains (or begins or ends with) a
   particular substring,
-- `string.match`: test whether a string matches a regular expression,\TODO{give
-  an example and explain basics of regexps}
-- `string.replace`: replace substrings matching a regular
-  expression,
 - `string.quote`: escape shell special characters (you should always use this
   when passing strings to external programs).
 
+Finally, some functions operate on _regular expressions_, which describe some
+shapes for strings:
+
+- `string.match`: test whether a string matches a regular expression,
+- `string.replace`: replace substrings matching a regular expression.
+
+A regular expression `R` or `S` is itself a string where some characters have a
+particular meaning:
+
+- `.` means "any character",
+- `R*` means "any number of times something of the form `R`",
+- `R|S` means "something of the form `R` or of the for `S`",
+
+other characters represent themselves (and special characters such as `.`, `*`
+or `.` have to be escaped, which means that `\.` represents the character
+`.`). An example is worth a thousand words: we can test whether a string `fname`
+corresponds to the name of an image file with
+
+```{.liquidsoap include="liq/string.match.liq" from=2 to=-1}
+```
+
+Namely, this function will test if `fname` matches the regular expression
+`.*\.png|.*\.jpg` which means "any number of any character followed by `.png` or
+any number of any character followed by `.jpg`".
+
 ### Booleans
 
-The booleans\index{boolean} are either `true`{.liquidsoap}\index{true} or
+The _booleans_\index{boolean} are either `true`{.liquidsoap}\index{true} or
 `false`{.liquidsoap}\index{false} and are of type `bool`. They can be combined
 using the usual boolean operations
 
@@ -391,7 +415,7 @@ using the usual boolean operations
 - `or`: disjunction,
 - `not`: negation.
 
-Booleans typically orgininate from comparison operators, which take two values
+Booleans typically originate from comparison operators, which take two values
 and return booleans:
 
 - `==`: compares for equality,
@@ -437,8 +461,9 @@ but it should be a subtype of (...) -> int
 ```
 
 meaning that `"A"` is a string but is expected to be an integer because the
-second branch returns an integer. The `else` branch is optional, in which case
-the `then` branch should be of type `unit`:
+second branch returns an integer, and the two should be of same nature. The
+`else` branch is optional, in which case the `then` branch should be of type
+`unit`:
 
 ```liquidsoap
 if x == "admin" then print("Welcome admin") end
@@ -528,10 +553,10 @@ are separated by commas. For instance, the list
 [1, 4, 5]
 ```
 
-is a list of three integers (1, 4 and 5), and its type is `[int]` (and the type
-of `["A", "B"]`{.liquidsoap} would obviously be `[string]`). Note that a list
-can be empty: `[]`. The function `list.hd` returns the head of the list, that is
-its first element:
+is a list of three integers (1, 4 and 5), and its type is `[int]`, and the type
+of `["A", "B"]`{.liquidsoap} would obviously be `[string]`. Note that a list can
+be empty: `[]`. The function `list.hd` returns the head of the list, that is its
+first element:
 
 ```
 # list.hd([1, 4, 5]);;
@@ -539,7 +564,7 @@ its first element:
 ```
 
 This function also takes an optional argument `default` which is the value which
-is returned on the empty list (which does not have a first element!):
+is returned on the empty list, which does not have a first element:
 
 ```
 # list.hd(default=0, []);;
@@ -668,20 +693,20 @@ metadata, and the second its value. For instance, a metadata would be the
 association list
 
 ```liquidsoap
-m = [("artist", "Sinatra"), ("title", "Fly me")]
+m = [("artist", "Frank Sinatra"), ("title", "Fly me to the moon")]
 ```
 
-indicating that the artist of the song is "Sinatra" and so on. For such an
-association lists, on can obtain the value associated to a given key using the
-`list.assoc` function:
+indicating that the artist of the song is "Frank Sinatra" and the title is "Fly
+me to the moon". For such an association list, one can obtain the value
+associated to a given key using the `list.assoc` function:
 
 ```liquidsoap
 list.assoc("title", m)
 ```
 
-will return `"Fly me"`, i.e. the value associated to `"title"`. Since this is so
-useful, we have a special notation for the above function, and it is equivalent
-to write
+will return `"Fly me to the moon"`, i.e. the value associated to
+`"title"`. Since this is so useful, we have a special notation for the above
+function, and it is equivalent to write
 
 ```liquidsoap
 m["title"]
@@ -689,11 +714,11 @@ m["title"]
 
 to obtain the `"title"` metadata. Other useful functions are
 
-- `list.mem_assoc`: determine whether there is an entry with a given key,
-- `list.remove_assoc`: remove all entries with given key.
+- `list.assoc.mem`: determine whether there is an entry with a given key,
+- `list.assoc.remove`: remove all entries with given key.
 
-Apart from metadata, those lists are also used to store http headers (e.g. in
-`http.get`).
+Apart from metadata, association lists are also used to store http headers
+(e.g. in `http.get`).
 
 In passing, you should note the importance of parenthesis when defining
 pairs. For instance
@@ -715,8 +740,7 @@ Programming primitives
 
 ### Variables
 
-We have already seen many examples of uses of _variables_, so that we should be
-quick: we use
+We have already seen many examples of uses of _variables_: we use
 
 ```liquidsoap
 x = e
@@ -763,7 +787,7 @@ will print `5`: outside the definition of `x`, the definition of `y` one on the
 first line is not affected by the local redefinition.
 
 
-When we define a variable it is generally to use its value: otherwise, why
+When we define a variable, it is generally to use its value: otherwise, why
 bothering defining it? For this reason, Liquidsoap issues a warning when an
 unused variable is found, since it is likely to be a bug. For instance, on
 
@@ -793,11 +817,11 @@ _ = 2 + 2
 
 ### References
 
-As indicated above, by default, the value of variables cannot be
+As indicated above, by default, the value of a variable cannot be
 changed. However, one can use a _reference_ in order to be able to do this.
-Those can be seen as memory cells, containing values of a given fixed type, and
-are created with the `ref` keyword with, as argument the initial value of the
-cell. For instance,
+Those can be seen as memory cells, containing values of a given fixed type,
+which can be modified during the execution of the program. They are created with
+the `ref` keyword, with the initial value of the cell as argument. For instance,
 
 ```{.liquidsoap include="liq/ref1.liq" to=0}
 ```
@@ -895,13 +919,11 @@ Functions {#sec:functions}
 ---------
 
 Liquidsoap is built around the notion of function: most operations are performed
-by those. Many functions are builtin and interface code written in OCaml
-(e.g. `output.icecast`), in which case we like to call them _operators_, but
-users can also define their own functions within the language. In fact,
-Liquidsoap also includes a standard library which consists of functions defined
-in the Liquidsoap language, including fairly complex ones such as
-`playlist` which plays a playlist or `crossfade` which takes care of
-fading between songs.
+by those. For some reason, we sometimes call _operators_ the functions acting on
+sources. Liquidsoap includes a standard library which consists of functions
+defined in the Liquidsoap language, including fairly complex operators such as
+`playlist` which plays a playlist or `crossfade` which takes care of fading
+between songs.
 
 ### Basics
 
@@ -957,49 +979,50 @@ the variable `y` is not available after the definition.
 
 A typical use of functions in Liquidsoap is for _handlers_, which are functions
 to be called when a particular event occurs, specifying the actions to be taken
-when it occurs. For instance, the `on_metadata`\TODO{this operator is now
-depreacted, give on blank as example} operator allows registering a handler when
-metadata occurs in a stream. Its type is
+when it occurs. For instance, the `source.on_metadata` operator allows
+registering a handler when metadata occurs in a stream. Its type is
 
 ```
-((([string * string]) -> unit), source(audio='a, video='b, midi='c) -> source(audio='a, video='b, midi='c)
+(source('a), (([string * string]) -> unit)) -> unit
 ```
 
 and it thus takes two arguments:
- 
-- the handler, which is a function which takes as argument an association list
-  (of type `[string * string]`) encoding the metadata and returns nothing
-  meaningful (`unit`),
-- the source (of type `source(audio='a, video='b, midi='c)`, see
-  [below](#sec:source-type)) whose metadata are to be watched.
+
+- the source, of type `source('a)`, see [below](#sec:source-type), whose
+  metadata are to be watched,
+- the handler, which is a function of type
+
+  ```
+  ([string * string]) -> unit
+  ```
+
+  which takes as argument an association list (of type `[string * string]`)
+  encoding the metadata and returns nothing meaningful (`unit`).
 
 When some metadata occur in the source, the handler is called with the metadata
 as argument. For instance, we can print the title of every song being played on
 our radio (a source named `radio`) with
 
-```{.liquidsoap include="liq/on_meta1.liq" from=1}
+```{.liquidsoap include="liq/on_meta1.liq" from=2 to=-1}
 ```
 
 The handler is here the function `handle_metadata`, which prints the field
-associated to `"title"` in the association list given in the argument `m` (the
-notation `radio.on_metadata` will be explained in [next section](#sec:records)).
+associated to `"title"` in the association list given in the argument `m`.
 
 Other useful operators allow the registration of handlers for the following
 situations:
 
-- `on_blank`: when a source is streaming blank (no sound has been
+- `blank.detect`: when a source is streaming blank (no sound has been
   streamed for some period of time),
-- `on_track`: when a new track is played,
-- `on_end`: when a track is about to end,
+- `source.on_track`: when a new track is played,
+- `source.on_end`: when a track is about to end,
 - `on_start` and `on_shutdown`: when Liquidsoap is starting or stopping.
 
 Many other operators also take more specific handlers as arguments. For
 instance, the operator `input.harbor`, which allows users to connect to a
-Liquidsoap instance and send streams has `on_connect` and `on_disconnect`
+Liquidsoap instance and send streams, has `on_connect` and `on_disconnect`
 arguments which allow the registration of handlers for the connection and
 disconnection of users.
-
-<!-- \TODO{also mention the `crossfade` operator} -->
 
 ### Anonymous functions
 
@@ -1014,7 +1037,7 @@ This is called an _anonymous function_, and it is typically used in order to
 specify short handlers in arguments. For instance, the above example for
 printing the title in metadatas could equivalently be rewritten as
 
-```{.liquidsoap include="liq/on_meta2.liq" from=1 to=-1}
+```{.liquidsoap include="liq/on_meta2.liq" from=2 to=-1}
 ```
 
 where we define the function directly in the argument.
@@ -1033,16 +1056,20 @@ could equivalently be written
 f = fun (x) -> ...
 ```
 
+<!--
 Also, of course, the `fun`{.liquidsoap} syntax also supports labeled arguments
 and default values as expected.
+-->
 
 When using this syntax, on the right hand of `->` Liquidsoap expects exactly one
 expression. If you intend to use multiple ones (for instance, in order to
 perform a sequence of actions), you can use the `begin ... end`{.liquidsoap}
 syntax, which allows grouping multiple expressions as one. For instance,
 
-```{.liquidsoap include="liq/on_meta3.liq" from=1 to=-1}
+```{.liquidsoap include="liq/on_meta3.liq" from=2 to=-1}
 ```
+
+#### Anonymous function with no arguments
 
 You will see that it is quite common to use anonymous functions with no
 arguments. For this reason, we have introduced a special convenient syntax for
@@ -1076,10 +1103,11 @@ which is of type
 
 For instance, if you have 110250 samples over 2.5 seconds the samplerate will be
 `samplerate(110250., 2.5)`{.liquidsoap} which is 44100. However, if you mix the
-order of the arguments and type `samplerate(2.5, 110250.)`{.liquidsoap} you will
-get quite a different result (2.27×10^-5^) and this will not be detected by the
-typing system because both arguments have the same type. Fortunately, we can
-give _labels_ to arguments in Liquidsoap by prefixing the arguments with a tilde
+order of the arguments and type `samplerate(2.5, 110250.)`{.liquidsoap}, you
+will get quite a different result (2.27×10^-5^) and this will not be detected by
+the typing system because both arguments have the same type. Fortunately, we can
+give _labels_ to arguments in order to prevent this, which forces explicitly
+naming the arguments. This is indicated by prefixing the arguments with a tilde
 "`~`":
 
 ```{.liquidsoap include="liq/samplerate2.liq" from=0 to=0}
@@ -1105,7 +1133,7 @@ following will give the same result:
 ```liquidsoap
 samplerate(duration=2.5, samples=110250.)
 ```
-Of course a function, can have both labeled and non-labeled arguments.
+Of course, a function can have both labeled and non-labeled arguments.
 
 ### Optional arguments
 
@@ -1142,7 +1170,7 @@ corresponding label with "`?`", so that the type of the above function is
 
 <!--- \TODO{explain that non-optional arguments can have default values too} -->
 
-### Actual examples
+#### Actual examples
 
 As a more concrete example of labeled arguments, we can see that the
 type of the operator `output.youtube.live`, which outputs a video stream to
@@ -1183,9 +1211,9 @@ coded as an association list, and there are quite few handlers (`on_connect`,
 
 ### Polymorphism
 
-Some functions can operate on value of many possible types. For instance, the function
-`list.tl`, which returns the tail of the list (i.e., the list without its first
-element), works on lists of integers so that it can have the type
+Some functions can operate on values of many possible types. For instance, the
+function `list.tl`, which returns the tail of the list (the list without its
+first element), works on lists of integers so that it can have the type
 
 ```
 ([int]) -> [int]
@@ -1213,18 +1241,20 @@ valid list of whatever type. More interestingly, the function `fst` which return
 first element of a pair has the type
 
 ```
-(('a * 'b)) -> 'a
+('a * 'b) -> 'a
 ```
 
 which means that it takes as argument a pair of a something (`'a`) and a
 something else (`'b`) and returns a something (`'a`). For instance, the type
 
 ```
-((string * int)) -> string
+(string * int) -> string
 ```
 
 is valid for `fst`. In general, a type can involve an arbitrary number of type
 variables which are labeled `'a`, `'b`, `'c` and so on.
+
+#### Constraints
 
 In Liquidsoap, some type variables can also be constrained so that they cannot
 be replaced by any type, but only specific types. A typical example is the
@@ -1276,7 +1306,7 @@ its type to be
 (float, source('a)) -> source('a)
 ```
 
-sot that we can use to have a radio consisting of a microphone input amplified
+so that we can use it to have a radio consisting of a microphone input amplified
 by a factor 1.2 by
 
 ```liquidsoap
@@ -1286,9 +1316,9 @@ radio = amplify(1.2, mic)
 
 In the above example, the volume 1.2 was supposedly chosen because the sound
 delivered by the microphone is not loud enough, but this loudness can vary from
-time to time (depending on the speaker for instance) and we would like to be
+time to time, depending on the speaker for instance, and we would like to be
 able to dynamically update it. The problem with the current operator is that the
-volume is of type `float` and a float cannot change over time, it has a fixed
+volume is of type `float` and a float cannot change over time: it has a fixed
 value.
 
 In order for the volume to have the possibility to vary over time, instead of
@@ -1337,6 +1367,8 @@ which is somewhat heavy, we have introduced the alternative syntax
 
 for it.
 
+#### Variations on a volume
+
 The type of `amplify` is thus actually
 
 ```
@@ -1345,7 +1377,7 @@ The type of `amplify` is thus actually
 
 and the operator will regularly call the volume function in order to have the
 current value for the volume before applying it. To be precise, it is actually
-called before each frame, which means roughly every 0.04 second by default. Let's see how
+called before each frame, which means roughly every 0.04 second. Let's see how
 we can use this in scripts. We can, of course, still apply a constant factor
 with
 
@@ -1379,9 +1411,9 @@ too.
 In practice, float getters are often created using `interactive.float` which
 creates a float value which can be modified on the telnet server (this is an
 internal server provided by Liquidsoap on which other applications can connect
-to interact with it), or `osc.float` which reads a float value from an external
-controller using the OSC library, as detailed in [a later
-section](#sec:telnet). For instance, with the script
+to interact with it, as detailed in [a later section](#sec:telnet)), or
+`osc.float` which reads a float value from an external controller using the OSC
+library. For instance, with the script
 
 ```{.liquidsoap include="liq/interactive-float1.liq" from=1 to=-1}
 ```
@@ -1445,7 +1477,7 @@ You can see that it create a reference `x`, which contains the current value,
 and registers a handler for metadata, which updates the value when the metadata
 is present, i.e. `m[metadata]` is different from the empty string `""`, which is
 the default value. Given a `radio` source which contains metadata labeled
-"liq_amplify", we can actually change the volume of the source according to the
+"`liq_amplify`", we can actually change the volume of the source according to the
 metadata with
 
 ```{.liquidsoap include="liq/metadata-getter-ex.liq" from=2 to=-1}
@@ -1458,6 +1490,8 @@ metadata can be changed with the optional parameter `override` that we have not
 mentioned up to now).
 -->
 
+#### Constant or function
+
 Finally, in order to simplify things a bit, you will see that the type of
 amplify is actually
 
@@ -1466,13 +1500,21 @@ amplify is actually
 ```
 
 where the type `{float}` means that both `float` and `() -> float` are accepted,
-so that you can still write constant floats where float getters are expected.
+so that you can still write constant floats where float getters are
+expected. What we actually call a _getter_ is generally an element of such a
+type, which is either a constant or a function with no argument.
 
-\TODO{give the functions: getter / getter.get / getter.function}
+In order to work with such types, the standard library often uses the following
+functions:
+
+- `getter`, of type `({'a}) -> {'a}`, creates a getter,
+- `getter.get`, of type `({'a}) -> 'a`, retrieves the current value of a getter,
+- `getter.function`, of type `({'a}) -> () -> 'a`, creates a function from a
+  getter.
 
 ### Recursive functions
 
-Liquidsoap supports functions which are _recursive_, i.e., that call
+Liquidsoap supports functions which are _recursive_, i.e., that can call
 themselves. For instance, in mathematics, the factorial function on natural
 numbers is defined as fact(n)=1×2×3×...×n, but it can also be defined
 recursively as the function such that fact(0)=1 and fact(n)=n×fact(n-1) when
@@ -1540,10 +1582,10 @@ might take some time for you to get accustomed to those.
 
 ### Partial evaluation
 
-The final thing to know about functions in Liquidsoap is that it supports _partial evaluation_ of
-functions. This means that if you call a function, but do not provide all the
-arguments, it will return a new function expecting only the remaining
-arguments. For instance, consider the multiplication function
+The final thing to know about functions in Liquidsoap is that they support
+_partial evaluation_ of functions. This means that if you call a function, but
+do not provide all the arguments, it will return a new function expecting only
+the remaining arguments. For instance, consider the multiplication function
 
 ```{.liquidsoap include="liq/mul.liq"}
 ```
@@ -1593,8 +1635,8 @@ Here, the function `print` is of type
 (?newline : bool, 'a) -> unit
 ```
 
-and we only provide one argument (the optional one labeled `newline`) out of
-two. Without partial evaluation, we would have had to write
+and we only provide one argument (the one labeled `newline`) out of two. Without
+partial evaluation, we would have had to write
 
 ```{.liquidsoap include="liq/list-print2.liq"}
 ```
@@ -1648,9 +1690,9 @@ fields in record. For instance, the definition
 ```
 
 adds, in the module `list`, a new field named `last`, which is a function which
-computes the last elements of a list. Another shorter syntax to perform shorter
+computes the last element of a list. Another shorter syntax to perform
 definitions consists in using the `let` keyword which allows assigning a value
-to a field, so that the previous example can be rewritten
+to a field, so that the previous example can be rewritten as
 
 ```{.liquidsoap include="liq/list.last2.liq"}
 ```
@@ -1665,7 +1707,7 @@ in the following example
 the `open list` directive allows directly using the functions in this module: we
 can simply write `nth` and `length` instead of `list.nth` and `list.length`.
 
-\TODO{def replaces....}
+<!-- \TODO{def replaces....} -->
 
 ### Values with fields
 
@@ -1725,14 +1767,14 @@ When the return type of a function has methods, the help of Liquidsoap displays
 them in a dedicated section. For instance, every function returning a source,
 also returns methods associated to this source, such as the `skip` function
 which allows skipping the current track (those methods are detailed in [a later
-section](#sec:source-methods)). If was ask for help about the `playlist`
+section](#sec:source-methods)). If we ask for help about the `playlist`
 operator by typing
 
 ```
 $ liquidsoap -h playlist
 ```
 
-we can observe this, since the help displays, among other,
+we can observe this: the help displays, among other,
 
 ```
 Methods:

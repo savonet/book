@@ -1,6 +1,7 @@
-radio = blank()
+#!./liquidsoap
+radio = playlist("~/Music")
 def handle_metadata(m) =
   print(m["title"])
 end
-radio.on_metadata(handle_metadata)
+source.on_metadata(radio, handle_metadata)
 output(radio)

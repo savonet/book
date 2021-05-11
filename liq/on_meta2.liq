@@ -1,3 +1,4 @@
-radio = blank()
-radio.on_metadata(fun (m) -> print(m["title"]))
+#!./liquidsoap
+radio = playlist("~/Music")
+source.on_metadata(radio, fun (m) -> print(m["title"]))
 output(radio)
