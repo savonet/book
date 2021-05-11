@@ -13,6 +13,7 @@ HTTPS [https]{.smallcaps}
 opus Opus
 linux Linux
 flac [flac]{.smallcaps}
+FLAC [flac]{.smallcaps}
 HLS [hls]{.smallcaps}
 MPEG-DASH [mpeg-dash]{.smallcaps}
 RTMP [rtmp]{.smallcaps}
@@ -30,3 +31,6 @@ Jack [jack]{.smallcaps}
 JACK [jack]{.smallcaps}
 SRT [srt]{.smallcaps}
 XML [xml]{.smallcaps}
+wav [wav]{.smallcaps}
+speex Speex
+ogg Ogg

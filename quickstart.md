@@ -4,7 +4,7 @@ Setting up a simple radio station {#chap:quickstart}
 The sound of a sine wave {#sec:sound-sine}
 ------------------------
 
-### A first sound
+### Our first sound
 
 In order to test your installation, you can try the following in a console:
 
@@ -12,12 +12,17 @@ In order to test your installation, you can try the following in a console:
 liquidsoap 'output(sine())'
 ```
 
-This instructs Liquidsoap to run the program `output(sine())`{.liquidsoap} which
-plays a sine wave at 440 Hertz. The operator `sine`{.liquidsoap} is called a
-_source_: it generates audio (here, a sine wave) and `output`{.liquidsoap} is an
-operator which takes a source as parameter and plays it on the sound card. When
-running this program, you should hear the expected sound and see lots of lines
-looking like this:
+This instructs Liquidsoap to run the program
+
+```{.liquidsoap}
+output(sine())
+```
+
+which plays a sine wave at 440 Hertz. The operator `sine`{.liquidsoap} is called
+a _source_: it generates audio (here, a sine wave) and `output`{.liquidsoap} is
+an operator which takes a source as parameter and plays it on the
+soundcard. When running this program, you should hear the expected well-known
+sound and see lots of lines looking like this:
 
 ```
 2021/02/18 15:20:44 >>> LOG START
@@ -26,9 +31,9 @@ looking like this:
 ```
 
 These are the _logs_ for Liquidsoap, which are messages describing what each
-operator is doing. These are often useful to follow what the script is doing and
+operator is doing. These are often useful to follow what the script is doing, and
 contain important information in order to understand what is going wrong if it
-is the case. Each of these lines begin with the date and the hour the message
+is the case. Each of these lines begins with the date and the hour the message
 was issued, followed by who emitted the message (i.e. which operator), its
 importance, and the actual message. For instance, `[main:3]` means that the main
 process of Liquidsoap emitted the message and that its importance is `3`. The
@@ -40,10 +45,10 @@ default, only messages with importance up to `3` are displayed.
 
 ### Scripts
 
-You will soon find out that a typical radio takes a few lines of code, and it is
-not practical to write them directly in the command line. For this reason, the
+You will soon find out that a typical radio takes more than one line of code, and it is
+not practical to write everything on the command line. For this reason, the
 code for describing your webradio can also be put in a _script_, which is a file
-containing all the code for your radio. For instance, for our sine example, you
+containing all the code for your radio. For instance, for our sine example, we
 can put the following code in a file `radio.liq`:
 
 ```{.liquidsoap include="liq/sine1.liq"}
@@ -51,16 +56,16 @@ can put the following code in a file `radio.liq`:
 
 The first line says that the script should be executed by Liquidsoap. It begins
 by `#!` and then says that `/usr/bin/env` should be used in order to find the
-path for the `liquidsoap` executable. If you know its path
-(e.g. `/usr/bin/liquidsoap`) then you could also directly put it:
+path for the `liquidsoap` executable. If you know its complete path
+(e.g. `/usr/bin/liquidsoap`) you could also directly put it:
 
 ```liquidsoap
 #!/usr/bin/liquidsoap
 ```
 
 In the rest of the book, we will generally omit this first line, since it is
-always the same. The second line of `radio.liq`, is a comment: you can put
-whatever you want here as long as the line begins with `#`, it will not be taken
+always the same. The second line of `radio.liq`, is a comment. You can put
+whatever you want here: as long as the line begins with `#`, it will not be taken
 in account. The last line is the actual program we already saw above.
 
 In order to execute the script, you should ensure that the program is executable
@@ -97,16 +102,14 @@ then play it. The above code is thus equivalent to
 ### Parameters
 
 In order to investigate further the possible variations on our example, let us
-investigate all the parameters of the `sine` operator. In order to obtained
-detailed help about this operator, type in a console
+explore the parameters of the `sine` operator. In order to obtain
+detailed help about this operator, we can type, in a console,
 
 ```
 liquidsoap -h sine
 ```
 
-(you can also have this information in [the online
-documentation](https://www.liquidsoap.info/doc-dev/reference.html)), which will
-output
+which will output
 
 ```
 Generate a sine wave.
@@ -127,14 +130,19 @@ Parameters:
      Frequency of the sine.
 ```
 
+(this information is also present in [the online
+documentation](https://www.liquidsoap.info/doc-dev/reference.html)).
+
 It begins with a description of the operator, followed by its type, category and
 parameters (there is also a section for methods, which is not shown above, but
 we simply ignore it for now, it will be detailed in [a subsequent
-section](#sec:records)). Here, the type indicates that it is a function taking
-three arguments and returning a source with any number of audio, video and midi
-channels (the precise meaning of `source` and its argument is detailed in [this
-section](#sec:source-type)). The three arguments are indicated in the type and
-detailed after:
+section](#sec:records)). Here, we see in the type that it is a function, because
+of the presence of the arrow "`->`": the type of the arguments is indicated on
+the left of the arrow and the type of the output is indicated on the right. More
+precisely, we see that it takes three arguments and returns a source with any
+number of audio, video and midi channels (the precise meaning of `source`
+is detailed in [this section](#sec:source-type)). The three
+arguments are indicated in the type and detailed in the following `Parameters` section:
 
 - the first argument is a string labeled `id`: this is the name which will be
   displayed in the logs,
@@ -144,10 +152,11 @@ detailed after:
 
 All three arguments are optional, which means that a default value is provided
 and will be used if it is not specified. This is indicated in the type by the
-question mark "`?`" before each argument, and the default value is detailed below
-(e.g. the default amplitude is `1.0` and the default frequency is `440.` Hz).
+question mark "`?`" before each argument, and the default value is indicated in
+`Parameters` (e.g. the default amplitude is `1.0` and the default frequency is
+`440.` Hz).
 
-If we want generate a sine wave of 2600 Hz with an amplitude 0.8, we can thus
+If we want generate a sine wave of 2600 Hz with an amplitude of 0.8, we can thus
 write
 
 ```{.liquidsoap include="liq/sine3.liq" from=1}
@@ -163,16 +172,16 @@ Finally, just for fun, we can hear an A minor chord by adding three sines:
 ```
 
 We generates three sines at frequencies 440 Hz, 440×2^3/12^ Hz and
-440×2^7/12^ Hz, add them, and play the result. Note that the operator `add` is
-taking as argument a _list_ of sources (delimited by square brackets), which
-could contain any number of elements.
+440×2^7/12^ Hz, adds them, and plays the result. The operator `add` is taking as
+argument a _list_ of sources, delimited by square brackets, which could contain
+any number of elements.
 
 A radio
 -------
 
 ### Playlists and more
 
-Since we are not here to make synthesizers but radios, we should start playing actual music
+Since we are likely to be here not to make synthesizers but rather radios, we should start playing actual music
 instead of sines. In order to do so, we have the `playlist` operator which takes
 as argument a _playlist_: it can be a file containing paths to audio
 files (wav, mp3, etc.), one per line, or a playlist in a standard format (pls,
@@ -184,8 +193,8 @@ directory, we can play it with
 ```
 
 As usual, the operator `playlist` has a number of interesting optional
-parameters which can be obtained with `liquidsoap -h playlist`. For instance, by
-default the files are played in a random order, but if we want to play them as
+parameters which can be discovered with `liquidsoap -h playlist`. For instance, by
+default, the files are played in a random order, but if we want to play them as
 indicated we should pass the argument `mode="normal"`{.liquidsoap} to
 `playlist`. Similarly, if we want to reload the playlist whenever it is changed,
 the argument `reload_mode="watch"`{.liquidsoap} should be passed.

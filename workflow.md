@@ -3199,8 +3199,8 @@ length header then you should use the `duration` parameter.
 Liquidsoap has native support for ogg which is a _container_: it is a file
 format which can contain multiple streams (typically, audio and/or video). The
 syntax for encoding in ogg is `%ogg(...)`, where the `...` is a list of
-streams. The currently supported encoders for the streams them selves are opus,
-vorbis, speex and flac for audio, and theora for video. For instance, we can
+streams. The currently supported encoders for the streams them selves are Opus,
+Vorbis, Speex and FLAC for audio, and theora for video. For instance, we can
 encode an opus stream in an ogg container with the encoder
 
 ```{.liquidsoap include="liq/encoder-ogg-1.liq" from=2 to=-1}
@@ -3221,14 +3221,14 @@ contiguously. For instance,
 
 The usual value is between 4 kB and 8 kB.
 
-#### Ogg/opus
+#### Ogg/Opus
 
 The opus codec is an open-source codec intended as a modern replacement of both
-standard codecs (mp3, vorbis) and highly compressed codecs (aac, speex). This is
+standard codecs (MP3, Vorbis) and highly compressed codecs (AAC, Speex). This is
 the one you should use by default for sound encapsulated in ogg, unless you have
 specific needs. It has the same or better quality than equivalent codecs and is
 free (both as in beer and as in speech). The only drawback is that it is
-slightly less supported on user-end than, say, mp3 and aac, although this tends
+slightly less supported on user-end than, say, MP3 and AAC, although this tends
 to be less and less the case.
 
 The encoder is named `%opus` and its parameters are
@@ -3271,7 +3271,7 @@ documentation](http://www.opus-codec.org/docs/). A typical encoder would be
 ```{.liquidsoap include="liq/encoder-opus.liq" from=2 to=-1}
 ```
 
-#### Ogg/vorbis
+#### Ogg/Vorbis
 
 Vorbis is an audio codec which was developed as an open-source replacement for
 mp3. It is now largely considered as superseded by opus. There are three
@@ -3317,9 +3317,9 @@ and a constant bitrate encoding with
 ```{.liquidsoap include="liq/encoder-vorbis-cbr.liq" from=2 to=-1}
 ```
 
-#### Ogg/speex
+#### Ogg/Speex
 
-The speex codec is dedicated to encoding at low bitrates, targeting applications
+The Speex codec is dedicated to encoding at low bitrates, targeting applications
 such as the transmission of voice over the internet, where having uninterrupted
 transmission of the stream, with low latency, is considered more important than
 having high-quality sound. It is now considered as superseded by the opus codec.
@@ -3340,9 +3340,9 @@ The encoder is named `%speex` and its parameters are
   silence/background noise,
 - `dtx`: when set to `true` further reduce the bitrate during silence.
 
-#### Ogg/flac
+#### Ogg/FLAC
 
-The last audio codec supported in the ogg container is flac. Contrary to other
+The last audio codec supported in the Ogg container is FLAC. Contrary to other
 codecs, it is a _lossless_ one, which means that after decoding you get the
 exact same signal you encoded, but the signal still takes less space than raw
 data, as found for instance in the wav format. By opposition, most other codecs
@@ -3353,7 +3353,7 @@ The flac encoding format comes in two flavors:
 
 - `%flac` is the native flac format, useful for file output but not for
   streaming purpose,
-- `%ogg(%flac)` is the ogg/flac format, which can be used to broadcast data with
+- `%ogg(%flac)` is the Ogg/[FLAC]{.smallcaps} format, which can be used to broadcast data with
   icecast.
   
 Note that contrarily to most other codecs, the two are not exactly the same.
@@ -3458,7 +3458,7 @@ is performed with
 ```{.liquidsoap include="liq/encoder-gstreamer-4.liq" from=2 to=-1}
 ```
 
-and in ogg/vorbis+theora with
+and in Ogg/Vorbis+Theora with
 
 ```{.liquidsoap include="liq/encoder-gstreamer-5.liq" from=2 to=-1}
 ```

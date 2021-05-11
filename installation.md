@@ -331,7 +331,8 @@ docker run -it --entrypoint /bin/bash savonet/liquidsoap:main
 By default, the docker image does not have access to the soundcard of the local
 computer (but it can still be useful to stream over the internet for
 instance). It is however possible to bind the ALSA soundcard of the host
-computer inside the image. For instance, you can play a sine by running:
+computer inside the image. For instance, you can play a sine (see
+[there](#sec:sound-sine)) by running:
 
 ```
 docker run -it -v /dev/snd:/dev/snd --privileged savonet/liquidsoap:main liquidsoap 'output.alsa(sine())'
@@ -373,6 +374,7 @@ Those libraries add support for various things:
   (e.g. an application on your phone),
 - `ocaml-ssl`: SSL support for connecting to secured websites (using the https
   protocol),
+- `ocurl`: downloading files over http,
 - `osx-secure-transport`: SSL support via OSX's SecureTransport,
 - `yojson`: parsing JSON data (useful to exchange data with other applications).
 
@@ -401,7 +403,7 @@ Other outputs:
 
 ### Sound processing
 
-Those add support for manipulate sound:
+Those add support for sound manipulation:
 
 - `ocaml-dssi`: sound synthesis plugins,
 - `ocaml-ladspa`: sound effect plugins,
@@ -427,7 +429,7 @@ Those add support for manipulate sound:
 
 ### Playlists
 
-- `ocaml-xmlplaylist`: support for XML-based playlist formats.
+- `ocaml-xmlplaylist`: support for playlist formats based on XML.
 
 ### Video
 
