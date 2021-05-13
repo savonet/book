@@ -1,6 +1,6 @@
 MD = $(wildcard *.md)
 LIQ = $(wildcard liq/*.liq)
-PANDOC = pandoc --bibliography=papers.bib --filter=pandoc-include --filter=pandoc-replace --syntax-definition=liquidsoap.xml
+PANDOC = pandoc --bibliography=papers.bib --filter=pandoc-include --filter=pandoc-replace
 
 all: fig book.pdf language.dtd
 
@@ -13,7 +13,7 @@ ci:
 
 book.tex: book.md style.sty $(MD) $(LIQ) liquidsoap.xml replacements
 	@echo "Generating $@..."
-	@$(PANDOC) --template=template.latex -s --top-level-division=chapter --filter=pandoc-crossref -V links-as-notes=true $< -o tmp.$@
+	@$(PANDOC) --template=template.latex -s --syntax-definition=liquidsoap.xml --top-level-division=chapter --filter=pandoc-crossref -V links-as-notes=true $< -o tmp.$@
 	@cat tmp.$@ \
 		| sed 's/\\includegraphics\([^{]*\){\(.*\)}\\\\/\\begin{center}\\includegraphics\1{\2}\\end{center}/' \
 		| sed 's/\\DeclareRobustCommand{\\href}\[2\]{#2\\footnote{\\url{#1}}}/\\DeclareRobustCommand{\\href}[2]{#2\\footnote{\\texttt{\\url{#1}}}}/' \
@@ -25,10 +25,18 @@ book.pdf: book.tex
 	pdflatex $<
 	makeindex book.idx
 
+web.tex: book.md style.sty $(MD) $(LIQ) liquidsoap.xml replacements Makefile
+	@echo "Generating $@..."
+	@$(PANDOC) -s --syntax-definition=liquidsoap.xml --top-level-division=chapter -V geometry:"" -V papersize:a4 -V geometry:"margin=4cm" -V colorlinks:true $< -o $@
+web.pdf: web.tex
+	@echo "Generating $@..."
+	pdflatex web.tex
+	makeindex web.idx
+
 book.epub: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
 	@$(MAKE) -C fig png
 	@echo "Generating $@..."
-	@$(PANDOC) --filter=pandoc-pdf2png --toc --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
+	@$(PANDOC) --syntax-definition=liquidsoap.xml --filter=pandoc-pdf2png --toc --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
 
 liquidsoap.xml:
 	wget https://raw.githubusercontent.com/savonet/liquidsoap/master/scripts/liquidsoap.xml

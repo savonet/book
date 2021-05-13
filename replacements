@@ -22,6 +22,7 @@ uri [uri]{.smallcaps}
 JSON [json]{.smallcaps}
 CD [cd]{.smallcaps}
 OSC [osc]{.smallcaps}
+midi [midi]{.smallcaps}
 MIDI [midi]{.smallcaps}
 ALSA [alsa]{.smallcaps}
 MIME [mime]{.smallcaps}
@@ -40,3 +41,6 @@ pulseaudio PulseAudio
 replaygain ReplayGain
 rms [rms]{.smallcaps}
 RMS [rms]{.smallcaps}
+DJ [dj]{.smallcaps}
+rss [rss]{.smallcaps}
+RSS [rss]{.smallcaps}

@@ -176,7 +176,7 @@ We generates three sines at frequencies 440 Hz, 440×2^3/12^ Hz and
 argument a _list_ of sources, delimited by square brackets, which could contain
 any number of elements.
 
-A radio
+A radio {#sec:radio}
 -------
 
 ### Playlists and more
@@ -229,16 +229,16 @@ We need to use `buffer` here to avoid synchronization issues, this should be
 detailed in [a later section](#sec:clocks-ex), and you can hear that there is a
 slight delay between your voice and the output due to the buffering.
 
-### Fallible sources and fallbacks
+### Fallible sources and fallbacks {#sec:fallible}
 
-Some sources are not always available, and we say that such a source is _fallible_. A
-typical example is a source obtained by `input.http`: at some point the stream
-might stop (e.g. if it is only available during daytime), or be subject to
-technical difficulties (e.g. it gets disconnected from the internet for a short
-period of time). In this case, we generally want to fallback to another source,
-typically an emergency playlist consisting of local files which we are sure are
-going to be available. This can be achieved by using the `fallback` operator
-which plays the first available source in a list of sources:
+Some sources are not always available, and we say that such a source is
+_fallible_. A typical example is a source obtained by `input.http`: at some
+point the stream might stop (e.g. if it is only available during daytime), or be
+subject to technical difficulties (e.g. it gets disconnected from the internet
+for a short period of time). In this case, we generally want to fallback to
+another source, typically an emergency playlist consisting of local files which
+we are sure are going to be available. This can be achieved by using the
+`fallback` operator which plays the first available source in a list of sources:
 
 ```{.liquidsoap include="liq/fallback.liq" from=1}
 ```

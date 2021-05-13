@@ -2,7 +2,7 @@ Full workflow of a radio station {#chap:workflow}
 ================================
 
 This chapter explains in details the main tools and techniques in order to setup
-a webradio. It essentially follows [the introductory chapter](#chap:quickstart),
+a webradio. It essentially follows [the introductory chapter](#sec:radio),
 but gives much more details about techniques and parameters one can use to
 achieve his goals.
 
@@ -11,22 +11,23 @@ Inputs {#sec:inputs}
 
 ### Playlists
 
-A radio generally starts with a playlist, which is simply a file listing files
-to be played. The `playlist`\index{playlist@\texttt{playlist}} operator does
-that: it takes as a playlist argument and plays it. For instance, the script
+A radio generally starts with a _playlist_, which is simply a file containing a
+list of files to be played. The `playlist`\index{playlist@\texttt{playlist}}
+operator does that: it takes as a playlist as argument and sequentially plays
+the files it contains. For instance, the script
 
 ```{.liquidsoap include="liq/playlist2.liq" from=1}
 ```
 
 will play all the files listed in the `my_playlist` playlist. The operator also
 accepts a directory as argument, in which case the playlist will consist of all
-the file in the directory: the script
+the files in the directory: the script
 
 ```{.liquidsoap include="liq/playlist.liq" from=1}
 ```
 
-will play all the files in the `Music` directory. The format of the playlists
-generally consist in listing files, with one file per line, such as
+will play all the files in the `Music` directory. The format of a playlist is
+generally consists in a list of files, with one file per line, such as
 
 ```
 /data/mp3/file1.mp3
@@ -40,40 +41,48 @@ but other more advanced playlist formats are also supported: pls, m3u, asx,
 smil, xspf, rss podcasts, etc. Those are generally created by using dedicated
 software.
 
+#### Playlist arguments
+
 By default, the files are played in a random order but this can be changed with
 the `mode` parameter of `playlist` which can either be
 
-- `"normal"`: play files in order,
+- `"normal"`: play files in the order indicated in the playlist,
 - `"randomize"`: play files in a random order chosen for the whole playlist at
   each round (default mode),
 - `"random"`: pick a random file each time in the playlist (there could thus be
   repetitions in files).
 
-\TODO{explain the loop argument}
-  
-By default, the playlist is never reloaded, but this can be changed by using the
-parameters `reload` and `reload_mode`, for instance:
+In the first two modes, the `loop` argument indicates, when we have played all
+the files, whether we should start playing them again or not. By default, the
+playlist is never reloaded, i.e. changes brought to it are not taken in account,
+but this can be modified with the parameters `reload_mode` (which indicates when
+we should reload the playlist) and `reload` (which indicates how often we should
+reload the playlist). For instance:
 
 - reload the playlist every hour (1 hour being 3600 seconds):
   
-  ```liquidsoap
-  s = playlist(reload=3600, reload_mode="seconds", "playlist")
+  ```{.liquidsoap include="liq/playlist-reload1.liq" from=1 to=-1}
   ```
 
 - reload the playlist after each round (when the whole playlist has been played):
 
-  ```liquidsoap
-  s = playlist(reload=1, reload_mode="rounds", "playlist")
+  ```{.liquidsoap include="liq/playlist-reload2.liq" from=1 to=-1}
   ```
   
-- reload the playlist whenever it changes (this requires Liquidsoap being
-  compiled with support for the inotify library):
+- reload the playlist whenever it is modified:
 
-  ```liquidsoap
-  s = playlist(reload_mode="watch", "playlist")
+  ```{.liquidsoap include="liq/playlist-reload3.liq" from=1 to=-1}
   ```
-  
-\TODO{also present the reload method}
+
+Playlists can also be reloaded from within the scripts by calling the `reload`
+method of a source produced by the `playlist` operator. For instance, reloading
+every hour can also be performed with
+
+```{.liquidsoap include="liq/playlist-reload4.liq" from=1 to=-1}
+```
+
+The `reload` method take an optional argument labeled `uri` in case you want to
+specify a new playlist to load.
 
 Another useful option is `check_next`, to specify a function which will
 determine whether a file should be played or not in the playlist: this function
@@ -94,32 +103,66 @@ as follows:
 
 Here, we obtain the metadata with `request.metadata`, and declare that we should
 play a file only if its genre is "Rock" (remember that the metadata are encoded
-as an association list as explained in [there](#sec:association-list)).
+as an association list, as explained in [there](#sec:association-list)).
 
-\TODO{do the same with playlist.list which has the advantage of being predictable and more efficient, but takes time at startup...}
+#### Playing lists of files
+
+One inconvenient of the `check` function is that it is called whenever the
+`playlist` operator needs to prepare a new song, presumably because the current
+one is about to end. This means that if too many songs are rejected in a row, we
+might fail to produce a valid next file in time. Another approach could consist
+in filtering the files we want at startup: this takes longer at the beginning,
+but it is more predictable and efficient on the long run. This approach is taken
+in the following script to play dance music songs:
 
 ```{.liquidsoap include="liq/playlist-check3.liq" from=1 to=-1}
 ```
+
+We use `playlist.files` to obtain the list of files contained in our playlist of
+interest, then we use `list.filter` to only keep in this list the files which
+are validated by the function `check`, and finally we use the `playlist.list`
+operator to play the resulting list of files (`playlist.list` is a variant of
+`playlist` which takes a list of files to play instead of a playlist). The
+`check` function uses `file.metadata` in order to obtain the metadata for each
+file `f`: this can take quite some time if we have many files, but will be done
+only at the startup of the script.
+
+#### Avoiding repetitions
+
+A common problem with playlist in randomized order is that, when the playlist is
+reloaded, it might happen that a song which was played not so long ago is
+scheduled again. In order to avoid that, it is convenient to use the `playlog`
+operator which can indicate when a song was last played. When called, it returns
+a record with two functions:
+
+- `add` which records that a song with given metadata has just be played,
+- `last` which returns when a song with given metadata was last played (in
+  seconds).
+
+We can use this to reject, in a playlist, all the songs which have been played
+less than 1 hour (= 3600 seconds) ago as follows:
+
+```{.liquidsoap include="liq/playlist-check4.liq" from=2}
+```
+
+and thus avoid repetitions when reloading.
+
+#### Single files
 
 If you only need to play one file, you can avoid creating a playlist with this
 file only, by using the operator `single` which loops on one file. This operator
 is also more efficient in the case the file is distant because it is downloaded
 once for all:
 
-```liquidsoap
-s = single("http://server/file.mp3")
+```{.liquidsoap include="liq/single.liq" from=1 to=-1}
 ```
 
 By the way, if you do not want to loop over and over the file, and only play it
-once, you can use the operator `once` which takes a source as argument and plays
-one song of this source (it becomes unavailable after that).
+once, you can use the operator `once` which takes a source as argument, plays
+one song of this source, and becomes unavailable after that.
 
-```liquidsoap
-s = once(single("http://server/file.mp3"))
+```{.liquidsoap include="liq/single-once.liq" from=1 to=-1}
 ```
-
-\TODO{when reloading a playlist, there is no guarantee that we will not play a
-recently played song, see bugs 333 and 1530}
 
 ### Distant streams
 
@@ -3849,7 +3892,7 @@ amplify a source `s` with
 (of course, using the builtin `amplify` operator is a much better idea if you
 simply want to change the volume).
 
-### Running external programs
+### Running external programs {#sec:run-external}
 
 We also have the possibility of executing external programs for performing
 various actions, by using the `process.run` function. For instance, suppose that

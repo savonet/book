@@ -117,7 +117,12 @@ Liquidsoap are written in the Liquidsoap language itself. Those are defined in
 the `pervasives.liq` script, which is loaded by default and includes all the
 libraries. You should not be frightened to have a look at the standard library,
 it is often useful to better grasp the language, learn design patterns and
-tricks, and add functionalities.
+tricks, and add functionalities. Its location on your system is indicated in the
+variable `configure.libdir` and can be obtained by typing
+
+```bash
+liquidsoap --check "print(configure.libdir)"
+```
 
 Writing scripts
 ---------------
@@ -1735,8 +1740,23 @@ but we can also invoke its methods like a record or a module:
 ```{.liquidsoap include="liq/meth-song.liq" from=2 to=2}
 ```
 
-Typically, the `http.get` function which retrieves a webpage over http has the
-type:
+The construction `def replaces`{.liquidsoap} allows changing the main value
+while keeping the methods unchanged, so that
+
+```{.liquidsoap include="liq/meth-song.liq" from=3 to=4}
+```
+
+will print
+
+```
+"newfile.mp3".{duration = 123., bpm = 120.}
+```
+
+(note that the string is modified but not the fields `duration` and `bpm`).
+
+#### Examples
+
+The `http.get` function, which retrieves a webpage over http, has the type:
 
 ```
 (?headers : [string * string], ?timeout : float, string) ->
@@ -1766,8 +1786,8 @@ follows (functions concerning files and threads are explained in
 When the return type of a function has methods, the help of Liquidsoap displays
 them in a dedicated section. For instance, every function returning a source,
 also returns methods associated to this source, such as the `skip` function
-which allows skipping the current track (those methods are detailed in [a later
-section](#sec:source-methods)). If we ask for help about the `playlist`
+which allows skipping the current track (those methods are detailed in [a
+section below](#sec:source-methods)). If we ask for help about the `playlist`
 operator by typing
 
 ```
@@ -1890,7 +1910,7 @@ error to register:
 ### Nullable values
 
 It is sometimes useful to have a default value for a type. In Liquidsoap, there
-is a special value for this which is called `null`. Given a type `t`, we write
+is a special value for this, which is called `null`. Given a type `t`, we write
 `t?` for the type of values which can be either of type `t` or be `null`: such a
 value is said to be _nullable_. For instance, we could redefine the `list.hd`
 function in order to return null (instead of raising an error) when the list is
@@ -1962,7 +1982,7 @@ Configuration and preprocessor
 
 Liquidsoap has a number of features (such as its preprocessor) which allow
 useful operations on the scripts, but cannot really be considered as part of the
-core language itself.
+core language itself. Those are presented below.
 
 ### Configuration {#sec:configuration}
 
@@ -1970,8 +1990,8 @@ The main configuration options can be set by using the `set` function, which
 takes as arguments the name of the name of the setting (a string) and the value
 for this setting, whose type depends on the setting. These settings affect the
 overall behavior of Liquidsoap. For instance, we can have Liquidsoap use a 48kHz
-samplerate (the default being 44.1kHz) by adding the following command at the
-beginning of our script:
+samplerate for audio (the default being 44.1kHz) by adding the following command
+at the beginning of our script:
 
 ```{.liquidsoap include="liq/set.liq" from=1}
 ```
@@ -1981,9 +2001,9 @@ or we can increase the verbosity of the log messages with
 ```{.liquidsoap include="liq/set2.liq" from=1}
 ```
 
-which sets the maximum level of shown log messages, the default being 3 (we
+which sets the maximum level of shown log messages to 4, the default being 3. We
 recall that the log levels are 1 for critical messages, 2 for severe issues, 3
-for important messages, 4 for information and 5 for debug messages).
+for important messages, 4 for information and 5 for debug messages.
 
 Dually, we can obtain the value of an argument with the `get` function, e.g.
 
@@ -1993,21 +2013,39 @@ Dually, we can obtain the value of an argument with the `get` function, e.g.
 As you can see, in addition to the name of the setting, this function takes a
 parameter labeled `default` which is the value which is to be returned if the
 setting does not exist. You can obtain the list of all available settings, as
-well as their default value with the command\TODO{also mention conf-descr-key}
+well as their default value with the command
 
 ```bash
 liquidsoap --conf-descr
 ```
 
-and the main settings are described in [this section](#sec:settings).
+and help on a particular setting can be obtained with `--conf-descr-key`: for
+instance,
 
+```bash
+liquidsoap --conf-descr-key frame.duration
+```
+
+will print
+
+```
+# Tentative frame duration in seconds
+
+Audio samplerate and video frame rate constrain the possible frame
+durations. This setting is used as a hint for the duration, when
+`frame.audio.size` is not provided.
+
+    set("frame.duration", 0.04)
+```
+
+The value `0.04` at the bottom indicates the default value.
 
 ### Including other files
 
-It is often useful to split your scripts over multiple files, either because
-your script has become quite large, or because you want to be able to reuse
-common functions between different scripts. You can include a file `file.liq` in
-a script by writing
+It is often useful to split your script over multiple files, either because it
+has become quite large, or because you want to be able to reuse common functions
+between different scripts. You can include a file `file.liq` in a script by
+writing
 
 ```liquidsoap
 %include "file.liq"
@@ -2017,7 +2055,7 @@ which will be evaluated as if you had pasted the contents of the file in place
 of the command.
 
 For instance, this is useful in order to store passwords out of the main file, in
-order to avoid risking leaking those when handing the scripts to some other
+order to avoid risking leaking those when handing the script to some other
 people. Typically, one would have a file `passwords.liq` defining the passwords
 in variables, e.g.
 
@@ -2035,6 +2073,8 @@ output.icecast(%mp3, host="localhost", port=8000,
                password=radio_pass, mount="my-radio.mp3", radio)
 ```
 
+so that passwords are not shown in the main script.
+
 ### Conditional execution
 
 Liquidsoap embeds a preprocessor which allows to include or not part of the code
@@ -2045,33 +2085,33 @@ something only if the function `input.alsa` is defined:
 ```
 
 This is useful in order to have some code being executed depending on the
-compilation options of Liquidsoap (e.g. the above code will be run only when
-Liquidsoap has the support for the ALSA library). The command `%ifndef` can
-similarly be used to execute code when a function is not defined. Similarly, we
-can execute a portion of code whenever an encoder is present using `%ifencoder`
-(or `%ifnencoder`), the end of the code in question being delimited with
-`%endif` as above. For instance, suppose that we want to encode a file in mp3,
-if Liquidsoap was compiled with support for it, and otherwise default to
-wave. This can be achieved with
+compilation options of Liquidsoap (the above code will be run only when
+Liquidsoap has the support for the ALSA library) and is used intensively in the
+standard library. The command `%ifndef` can similarly be used to execute code
+when a function is not defined. We can also execute a portion of code whenever
+an encoder is present using `%ifencoder` (or `%ifnencoder` when an encoder is
+not present), the end of the code in question being delimited with `%endif` as
+above. For instance, suppose that we want to encode a file in mp3, if Liquidsoap
+was compiled with support for it, and otherwise default to wave. This can be
+achieved with
 
 ```{.liquidsoap include="liq/ifencoder.liq" from=2}
 ```
-
-Encoders are detailed in [there](#sec:encoders).
 
 Standard functions {#sec:stdlib}
 ------------------
 
 In this section, we detail some of the most useful general purpose functions
 present in the standard library. The functions related to sound and streaming
-are mentioned here and will be detailed in subsequent chapters.
+are mentioned in [next section](#sec:quick-streams) and detailed in subsequent
+chapters.
 
 ### Type conversion
 
 The string representation of any value can be obtained with the `string_of`
 function:
 
-```
+```liquidsoap
 print(string_of([1,2,3]))
 ```
 
@@ -2079,7 +2119,7 @@ Most expected type conversion function are implemented with names of the form
 `A_of_B`. For instance, we can convert a string to an integer with
 `int_of_string`:
 
-```
+```liquidsoap
 print(1 + int_of_string("2"))
 ```
 
@@ -2110,9 +2150,11 @@ Other useful functions are
 - `file.remove`: remove a file,
 - `file.ls`: list the files present in a directory.
 
-Also, convenient functions for working on paths are present in the `path`
-record:
+Also, convenient functions for working on paths are present in the `file` and `path`
+module:
 
+- `file.extension`: get the extension of a file,
+- `file.temp`: generate a fresh temporary filename,
 - `path.dirname`: get the directory of a path,
 - `path.basename`: get the file name without the directory from a path,
 - `path.home`: home directory of user,
@@ -2145,15 +2187,24 @@ using the `argv` function. Its use is illustrated in
 [there](#sec:offline-processing).
 
 The current script can be stopped using the `shutdown` function which cleanly
-stops all the sources, and so on. In case of emergency, the application can be immediately
-stopped with the `exit` function, which moreover allows returning an exit
-code. The current script can also be restarted using `restart`.
+stops all the sources, and so on. In case of emergency, the application can be
+immediately stopped with the `exit` function, which allows specifying an exit
+code (the convention is that a non-zero code means that an error occurred). The
+current script can also be restarted using `restart`.
 
 In order to execute other programs from Liquidsoap, you can use the function
 `process.read` which executes a command and returns the text it wrote in the
-standard output. For instance,
+standard output. For instance, in the script
 
 ```{.liquidsoap include="liq/process.read.liq" from=1}
+```
+
+we use the `find` command to find files in the `~/Music` directory and pipe it
+through `wc -l` which will count the number of printed lines, and thus the
+number of files. In passing, in practice you would do this in pure Liquidsoap
+with
+
+```{.liquidsoap include="liq/process.read2.liq" from=1 to=1}
 ```
 
 There is also the quite useful variant called `process.read.lines`, which
@@ -2165,45 +2216,64 @@ of files:
 ```{.liquidsoap include="liq/process.read.lines.liq" from=1}
 ```
 
-The more elaborate
-variant `process.run` allows retrieving the return code of the program, set a
-maximal time for the execution of the program and _sandbox_ its execution,
-i.e. restrict the directories it has access to in order to improve security
-(remember that executing programs is dangerous, especially if some
-user-contributed data is used).
+The more elaborate variant `process.run` allows retrieving the return code of
+the program, set a maximal time for the execution of the program and _sandbox_
+its execution, i.e. restrict the directories it has access to in order to
+improve security (remember that executing programs is dangerous, especially if
+some user-contributed data is used). This is further detailed in
+[there](#sec:run-external).
 
 ### Threads
 
-The function `thread.run` can be used to run a function asynchronously. The
-optional arguments `delay` and `every` specify after how many seconds the
-function should be run, and how often the function should be run (a negative
-value means that the function is only run once). For instance, we can simulate
-the sound of a hanged phone by playing a sine and switching the volume on and
-off every second. This can easily be achieved as follows:
+The function `thread.run` can be used to run a function asynchronously, meaning
+that the function will be executed in parallel to the main program and will not
+block other computations if it takes time. It takes two optional arguments:
+
+- `delay`: if specified, the function will not be run immediately, but after the
+specified number of seconds,
+- `every`: if specified, the function will be run regularly, every given number
+of seconds.
+
+#### Phone ring
+
+For instance, we can simulate the sound of a hanged phone by playing a sine and
+switching the volume on and off every second. This is easily achieved as
+follows:
 
 ```{.liquidsoap include="liq/hanged-phone.liq" from=1}
 ```
 
-Here, we amplify the sine by the contents of a variable `volume` whose value is
-changed between `0.` and `1.` every second by the function `change`. A perhaps
-more useful variant of this is _auto-gain control_: we want to adjust the volume
-so that the output volume is always roughly -14 LUFS (a standard sound loudness
-measure), one way to do this is to regularly check its value and increase or
-lower the volume depending whether we are below or above the threshold:
+Here, we amplify the sine by the contents of a reference `volume` (or, more
+precisely, by a getter which returns the value of the reference). Its value is
+switched between `0.` and `1.` every second by the function `change`.
+
+#### Auto-gain control
+
+A perhaps more useful variant of this is _auto-gain control_. We want to adjust
+the volume so that the output volume is always roughly -14 LUFS, which is a
+standard sound loudness measure. One way to do this is to regularly check its
+value and increase or lower the volume depending whether we are below or above
+the threshold:
 
 ```{.liquidsoap include="liq/agc.liq" from=1}
 ```
 
-Here, we have a source `pre` which we amplify by the value `volume` to get a
-source `post`, on both of which the `lufs` function instructs that we should
-measure the LUFS. Regularly (10 times per second), we run the function `adjust`
-which multiplies the volume by the coefficient needed to reach -14 LUFS (to be
+Here, we have a source `pre` which we amplify by the value of the reference
+`volume` in order to define a source `post`. On both sources, the `lufs`
+function instructs that we should measure the LUFS, which value can be obtained
+by calling the `lufs` and `lufs_momentary` methods attached to the
+sources. Regularly (10 times per second), we run the function `adjust` which
+multiplies the volume by the coefficient needed to reach -14 LUFS (to be
 precise, we actually divide the distance to -14 by 20 in order not to change the
 volume too abruptly, and we constrain the volume in the interval [0.01,10] in
-order to keep sane values). In practice, you do not need to implement this by
-hand (the operator `normalize` does this for you, and more efficiently than the
-above), but it is nice to see that you could if you needed (to experiment with
-new strategies for managing the gain for instance).
+order to keep sane values).
+
+Of course, in practice, you do not need to implement this by hand: the operator
+`normalize` does this for you, and more efficiently than in the above
+example. But it is nice to see that you could if you needed, to experiment with
+new strategies for managing the gain for instance.
+
+#### Conditional execution
 
 Another useful function is `thread.when`, which executes a function when a
 predicate (a boolean getter, of type `{bool}`) becomes true. By default, the
@@ -2222,9 +2292,16 @@ can push new songs (those are detailed in [there](#sec:request.queue)) and
 contents of `song` changes) in order to detect changes in `song` and, when this
 is the case, actually push the song on the request queue.
 
+<!--
+#### Mutexes
+
+In the case where two concurrent threads access a common resource at the same
+time (for instance, if they modify the same reference).
+
 \TODO{speak about mutexes}
 
-<!-- `thread.mutexify` -->
+`thread.mutexify`
+-->
 
 ### Time
 
@@ -2240,16 +2317,18 @@ record. For instance, we can print the current date with
 ```{.liquidsoap include="liq/time.liq"}
 ```
 
-\TODO{time.up}
+As a useful variant, the function `time.up` returns the _uptime_ of the script,
+i.e. the number of seconds since its execution has begun.
 
-Streams in Liquidsoap
+Streams in Liquidsoap {#sec:quick-streams}
 ---------------------
 
 Apart from the general-purpose constructions of the language described above,
-Liquidsoap also has constructions dedicated to building streams (after all this
-is what we are all here for). Those are put to practice in [the next
+Liquidsoap also has constructions dedicated to building streams: after all this
+is what we are all here for. Those are put to practice in [the next
 chapter](#chap:workflow) and described in details in [the chapter
-after](#chap:streaming). We however quickly present useful concepts here.
+after](#chap:streaming). We however quickly recap here the main concepts and
+operators.
 
 ### Sources
 
@@ -2274,48 +2353,52 @@ source (which plays the playlist...).
 
 Some sources are _fallible_, which means that they are not always available. For
 instance, the sound input from a DJ over the internet is only available when the
-DJ connects.\TODO{mksafe, fallible =true}
+DJ connects. We recall from [there](#sec:fallible) that a source can be made
+infallible with the `mksafe` operator or by using a fallback to an infallible
+source.
 
 ### Encoders
 
-Some outputs need to send data encoded in some format. For instance, the
-operator which records a stream into a file, `output.file`, needs to know in
-which format we want to store the file in. This is specified by passing special
-parameters called _encoders_. For instance, the (simplified) type of
-`output.file` is
+Some outputs need to send data encoded in some particular format. For instance,
+the operator which records a stream into a file, `output.file`, needs to know in
+which format we want to store the file in, such MP3, AAC, etc. This is
+specified by passing special parameters called _encoders_. For instance, the
+(simplified) type of `output.file` is
 
 ```
 (?id : string, format('a), string, source('a)) -> unit
 ```
 
-We see that it takes the `id` parameter, an encoder (the type of encoders is
-`format(...)`), a string (the file where we should save data) and a source. This
-means that we can play our playlist and record it into an mp3 file as follows:
+We see that it takes the `id` parameter (a string identifying the operator), an
+encoder (the type of encoders is `format(...)`), a string (the file where we
+should save data) and a source. This means that we can play our playlist and
+record it into an mp3 file as follows:
 
 ```{.liquidsoap include="liq/output.file.liq" from=1}
 ```
 
 Here, `%mp3` is an encoder specifying that we want to encode into the mp3
 formats. Encoders for most usual formats are available (`%wav` for wav,
-`%fdkaac` for aac, `%opus` for opus, etc.)
+`%fdkaac` for aac, `%opus` for opus, etc.) and are detailed [later
+on](#sec:encoders).
 
 ### Requests
 
-Internally, Liquidsoap does not directly deal with files, but with an
+Internally, Liquidsoap does not directly deal with a file, but rather with an
 abstraction of it called a _request_. The reason is that some files require some
 processing before being accessible. For instance, we cannot directly access a
 distant mp3 file: we first need to download it and make sure that it has the
 right format.
 
-This is the reason why most low-level operators do not deal with files, but
-rather with requests. The main thing you need to know in practice is that you
-can create a request from a file location, using the `request.create`
-function. For instance, in the following example, we create a request queue `q`,
-on which we can add requests to play in it using `q.push`. We define a function
-`play`, which adds the file on the queue, by first creating a request from
-it. We then use `list.iter` to apply this function `play` on all the mp3 files
-of the current directory. The following script will thus play all the mp3 files
-in the current directory:
+This is the reason why most low-level operators do not take files as arguments,
+but requests. The main thing you need to know in practice is that you can create
+a request from a file location, using the `request.create` function. For
+instance, in the following example, we create a request queue `q`, on which we
+can add requests to play in it using `q.push`. We define a function `play`,
+which adds the file on the queue, by first creating a request from it. We then
+use `list.iter` to apply this function `play` on all the mp3 files of the
+current directory. The following script will thus play all the mp3 files in the
+current directory:
 
 ```{.liquidsoap include="liq/request.queue-ls.liq" from=1}
 ```
@@ -2331,6 +2414,6 @@ The main functions in order to create and manipulate audio streams are
 - `output.icecast`, `output.hls`, `output.file`: output on Icecast, an HLS
   playlist, or in a file,
 - `request.queue`: create a queue that can be dynamically be fed with user's
-  requests.
+  requests and will play them in the order they were received.
 
-We will of course detail their use in due time.
+Their use is detailed in next chapter.
