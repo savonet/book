@@ -166,15 +166,15 @@ one song of this source, and becomes unavailable after that.
 
 ### Distant streams
 
-The operators `playlist` or `single` make sure in advance that the file to be
-played is available: in particular, they download distant files so that we are
+The operators `playlist` or `single` make sure in advance that the files to be
+played are available: in particular, they download distant files so that we are
 sure that they are ready when we need them. Because of this, they are not
-suitable in order to play continuous streams (which are very long, or even
-infinite), because Liquidsoap would try to download them entirely before reading
-them.
+suitable in order to play continuous streams (which are very long, or can even
+be infinite), because Liquidsoap would try to download them entirely before
+reading them.
 
-This is the reason why the `input.http` operator should be used in order to play
-a stream:
+This is the reason why the `input.http` operator should be used instead in order
+to play a stream:
 
 ```{.liquidsoap include="liq/input.http.liq" from=1 to=-1}
 ```
@@ -187,11 +187,12 @@ pollute the logs: in this case, it is perhaps better to inverse the paradigm and
 use the `input.harbor` operator described below, which allows the distant stream
 to connect to Liquidsoap. If the stream is using secure http protocol (if the
 uri starts with `https://...`), the operator `input.https` should be used
-instead.\TODO{input.https or http?}
+instead.
 
-Streams in HLS format are quite different from the above (they consist of a
-rolling playlist of short audio segments, see [there](#sec:HLS)) and are
-therefore handled by a different operator, `input.hls`:
+Streams in HLS format are quite different from the above ones: they consist of a
+rolling playlist of short audio segments, as explained in
+[there](#sec:HLS). This is the reason why they are handled by a different
+operator, `input.hls`:
 
 ```{.liquidsoap include="liq/input.hls.liq" from=1 to=-1}
 ```
@@ -215,13 +216,13 @@ TODO: the format is optional and usually well detected, the list of supported fo
 Instead of having a static playlist, you might want to use you own script to
 generate the song which should be played next (e.g. you might fetch requests
 from users from the web or a database, or you might have a neural network
-deciding for you which song is the best to be played next). In this case you
-should use `request.dynamic`, which takes as argument a function returning the
-next song to be played. This function has type `() -> request('a)`, meaning that
-it takes no argument and returns a request. For instance, suppose that we have a
-script called `next-song`, which echoes the next song to be played on the
-standard output. A degenerate example of such a script, using the shell, could
-be
+deciding for you which song is the best to be played next). In order to proceed
+in this way, you should use the `request.dynamic` operator, which takes as
+argument a function returning the next song to be played: this function has type
+`() -> request('a)`, meaning that it takes no argument and returns a
+request. For instance, suppose that we have a script called `next-song`, which
+echoes on the standard output the next song to be played on the standard
+output. A degenerate example of such a script, using the shell, could be
 
 ```{.bash include="liq/next-song"}
 ```
@@ -235,22 +236,23 @@ song as follows:
 ```
 
 Here, our `next` function executes the above script `next-song`, using the
-function `get_process_lines` which returns the list of lines returns by the
-script. We then take the first line with `list.hd` and return a request from
-created from it using `request.create`. As a variant, suppose that the next song
-to be played is present in a file named `song`. We can play it as follows:
+function `get_process_lines` which returns the list of lines returned by the
+script. We then take the first line with `list.hd` and create a request from
+from it using `request.create`. As a variant, suppose that the next song to be
+played is present in a file named `song`. We can play it as follows:
 
 ```{.liquidsoap include="liq/request.dynamic2.liq" from=1 to=-1}
 ```
 
 The `check` function now reads the contents of the file `song` and creates a
-request from it. In the case were the file is empty there is no song to play,
-and in this case we return the value `null` to indicate it. The `retry_delay`
-parameter of `request.dynamic` indicates that, in this last case, we should wait
-for 1 second before trying again. This example is not perfect: there is a chance
-that a given song will be played multiple times if we don't update the file
-`song` timely enough: we see a better way of achieving this kind of behavior in
-next section.
+request from it. In the case were the file is empty, there is no song to play,
+and we return the value `null` to indicate it. The `retry_delay` parameter of
+`request.dynamic` indicates that, in such an event, we should wait for 1 second
+before trying again. This example is not perfect: there is a chance that a given
+song will be played multiple times if we don't update the file `song` timely
+enough: we see a better way of achieving this kind of behavior in next section.
+
+#### The playlist operator
 
 We should mention here that our beloved `playlist` operator is actually
 implemented in Liquidsoap, in the standard library, using
@@ -271,8 +273,8 @@ of the playlist when it becomes empty.
 
 In an interactive playlist, the operator asks for the next song. But in some
 situations, instead of this passive way of proceeding (you are asked for songs),
-you would rather have an active way of proceeding (you inform the operator of
-new files when you have some). Typically, if you have a website where users can
+you would rather have an active way of proceeding (you inform the operator of the
+new files to play when you have some). Typically, if you have a website where users can
 request songs, you would like to be able to put the requested song in a playlist
 at the moment the user requests it. This is precisely the role of the
 `request.queue` operator, which maintains a list of songs to be played in a
@@ -283,57 +285,57 @@ involving this operator would be the following:
 ```
 
 We have both a playlist and a queue, and the radio is defined by using the
-`fallback` operator which tries to fetch the stream from the queue and if none
-is available defaults to the playlist. The `track_sensitive=false` instructs
-that we should play the stream from the queue as soon as it is available: by
-default, `switch` will wait for the end of the current track before switching to
-the queue.
+`fallback` operator which tries to fetch the stream from the queue and defaults
+to the playlist if the queue is empty. The `track_sensitive=false` argument
+instructs that we should play the stream generated by the queue as soon as it is
+available: by default, `switch` will wait for the end of the current track
+before switching to the queue.
 
 #### Pushing songs in a queue
 
 You might wonder then: how do we add new songs in the queue?  The role of the
-first line is to instruct Liquidsoap to start a server, which is listening by
-default on port 1234, on which commands can be sent; we refer the reader to
-[this section](#sec:telnet) for details about this telnet server. The queue will
-register a new command on this server so that if you connect to it and write
-`queue.push` followed by an uri, it will be pushed into the queue. In practice
-this can be done with commands such as
+first line is to instruct Liquidsoap to start a "telnet" server, which is
+listening by default on port 1234, on which commands can be sent. The queue will
+register a new command on this server, so that if you connect to it and write
+`queue.push` followed by an uri, it will be pushed into the queue where it will
+wait for its turn to be played. In practice this can be done with commands such
+as
 
 ```
-echo "queue.push test.mp3" | nc localhost 1234
+echo "queue.push test.mp3" | telnet localhost 1234
 ```
 
-which uses the standard unix tool `nc` to connect to the server on supposed to
-be running on the local host on port 1234, and write the command `queue.push
-test.mp3` on this server, to which it will react by adding the song "`test.mp3`"
-on the queue.
+which uses the standard unix tool `telnet` to connect to the server supposed to
+be running on the local host and listening on port 1234, and write the command
+"`queue.push test.mp3`" on this server, to which it will react by adding the
+song "`test.mp3`" in the queue. We refer the reader to [this
+section](#sec:telnet) for more details about the telnet server.
 
-If you have multiple queues in your script, you can specify their names by
-specifying the `id` parameter of `request.queue`, which can be any string you
-want, so that the command will be `id.push` (where `id` is replaced by the id
-you specified) and you know in which queue you are pushing. For instance, in the
-script
+If you have multiple queues in your script, you give them names by specifying
+the `id` parameter of `request.queue`, which can be any string you want. In this
+case, the pushing command will be `ID.push` (where `ID` should be replaced by
+the actual identifier you specified), which clearly indicates in which queue you
+want to push. For instance, in the script
 
 ```{.liquidsoap include="liq/request.queues.liq" from=1}
 ```
 
 the two queues are respectively called `q1` and `q2`, so that we can push a song
-on the second queue by issuing the telnet command `q2.push file.mp3`.
+on the second queue by issuing the telnet command "`q2.push file.mp3`".
 
-It is also possible to push a request into the queue directly from Liquidsoap by
-using the method `push` of a source defined by `request.queue` to push a request
-on it, or the method `push.uri` to push an uri. For instance, consider the
-following script
+It is also possible to push a request into a queue directly from Liquidsoap by
+using the method `push` of a source defined by `request.queue`, or the method
+`push.uri` to push an uri. For instance, consider the following script
 
 ```{.liquidsoap include="liq/request.queue-push.liq" from=1}
 ```
 
-It uses an auxiliary queue `q`, and uses the function `thread.run` to execute
+It sets up an auxiliary queue `q`, and uses the function `thread.run` to execute
 every minute a function which pushes in to the queue the uri `"say:Another
 minute has passed!"`. Because it begins by "`say:`" Liquidsoap will use a speech
-synthesis software to turn the text into audio, as detailed below, and we will
-hear "Another minute has passed" every minute, over the playlist (the `add`
-operator plays simultaneously all the sources in its input list).
+synthesis software to turn the text into audio, and we will hear "Another minute
+has passed" every minute, over the playlist (the `add` operator plays
+simultaneously all the sources in its input list).
 
 #### Implementation of queues
 
@@ -345,17 +347,15 @@ version of it:
 ```
 
 Internally, it maintains a reference on a list called `queue`. The `next`
-function pops the first element of the list and returns it (or `null` if the
-queue is empty) and the `push` function adds a new request at the end of the
+function pops the first element of the list and returns it, or `null` if the
+queue is empty, and the `push` function adds a new request at the end of the
 list. Finally, the source is created by `request.dynamic` with `next` as
-function returning the next request; note that we use the labeled argument
-`available` which is a boolean getter indicating whether or not the function
-`next` has a meaningful next request to answer (it does not when the list is
-empty). Finally, the source is returned, decorated with the method `push`.
+function returning the next request. Finally, the source is returned, decorated
+with the method `push`.
 
 ### Protocols
 
-We have seen that playlists can either contain files which are local or distant,
+We have seen that playlists can contain files which are either local or distant,
 the latter beginning by prefixes such as "`http:`" or "`ftp:`". A _protocol_ is
 a way of turning such a prefixed uri into an actual file. Most of the time it
 will consist in downloading the file in the appropriate way, but not
@@ -397,7 +397,9 @@ files beginning with `annotate:`), to specify the usual information such as
 artist and title (although those are generally already present in files), but
 also internal information such as cue in and cue out time.
 
- More powerful, the `process` protocol allows to launch any command in order to
+#### The process protocol
+
+More powerful, the `process` protocol allows to launch any command in order to
 process files. The syntax is
 
 ```
@@ -887,13 +889,13 @@ value of the boolean named `r1` to `true`. Therefore, we can switch to radio 1
 by typing the command
 
 ```
-echo "var.set r1 = true" | nc localhost 1234
+echo "var.set r1 = true" | telnet localhost 1234
 ```
 
 and back to radio 2 with
 
 ```
-echo "var.set r1 = false" | nc localhost 1234
+echo "var.set r1 = false" | telnet localhost 1234
 ```
 
 (or directly connecting to the telnet server and issuing the commands).

@@ -15,7 +15,7 @@ def request.queue(~id="", ~queue=[])
     log.info(label=id, "Pushing request #{r} on the queue.")
     queue := list.append(!queue, [r])
   end
-  s = request.dynamic(available={not list.is_empty(!queue)}, next)
-  s.{ push=push }
+  s = request.dynamic(next)
+  s.{push=push}
 end
 output(request.queue(queue=[request.create("test.mp3")]))
