@@ -599,7 +599,8 @@ after having started the above script, you can run the second script
 ```
 
 which will stream connect to the harbor Icecast server and stream our music
-library in mp3 format.
+library in mp3 format. Of course, `localhost` should be changed by the name (or
+IP) of the server if you are not running the client on the same machine.
 
 Another possibility would be to use the `shout` program which can be used to
 directly send music files to Icecast. For instance,
@@ -695,10 +696,35 @@ For interventions by external collaborators, it can be problematic to have them
 perform a "complex setup" such as installing Liquidsoap or run `darkice`. For
 this reason, we have developed a protocol which allows streaming sound directly
 from the browser, be it from music files or the microphone, without having to
-install anything: this protocol is called
-[`webcast`](https://github.com/webcast/webcast.js).
+install anything: this protocol is called `webcast` and we provide a [JavaScript
+implementation `webcast.js`](https://github.com/webcast/webcast.js), which
+should be easy to integrate in your own website. Of course, `input.harbor` has
+support for it and will accept clients using the webcast protocol in addition to
+the traditional Icecast protocol.
 
-TODO
+A full-fledged website based on this library, called _Webcaster_, [is
+available](https://webcast.github.io/webcaster/). It provides a web interface which
+looks like this:
+
+![Webcaster](img/webcaster.png)\
+
+As you can see, it allows performing simple DJ interventions, by mixing between
+two playlists and the microphone input. And should you need more, [the source
+code is available](https://github.com/webcast/webcaster). On the lower-left
+corner is the URI we should connect to, in the following form:
+
+```
+ws://username:password@host:port/mountpoint
+```
+
+For instance, with the above harbor input example, we should thus use the URI
+
+```
+ws://user:hackme@localhost:8000/live
+```
+
+(the username is not taken in account when using the basic password
+authentication).
 
 ### External inputs
 
@@ -1740,17 +1766,18 @@ the source whose tracks should be crossfaded. The type of the transition
 function is
 
 ```
-(float, float, [string * string], [string * string], source, source) -> source
+({metadata : [string * string], db_level : float, source : source},
+ {metadata : [string * string], db_level : float, source : source})
+-> source
 ```
 
-It takes as arguments
+It takes two arguments, respectively corresponding to the end of the old track
+and the beginning of the new track, which consist in records providing, for
+both of them,
 
-- the loudness in dB of the old track,
-- the loudness in dB of the new track,
-- the metadata of the old track,
-- the metadata of the new track,
-- a source playing the end of the old track,
-- a source play the end of the new track,
+- the metadata,
+- the loudness in dB,
+- the source corresponding to the track,
 
 and returns a source corresponding to the crossfading of the two tracks. For
 instance, the usual fading can be achieved with
@@ -1758,11 +1785,11 @@ instance, the usual fading can be achieved with
 ```{.liquidsoap include="liq/cross.liq" from=3 to=-1}
 ```
 
-The transition function `f` simply adds the old source with a fade out together
-with the new source with a fade in. It is important that We set here the
-`normalize` argument of the `add` to `false`: otherwise the overall volume will
-be divided by two (because there are two sources) and we will hear a volume jump
-once the transition is over.
+The transition function `f` simply adds the source of the ending track, which is
+faded out, together with the source of the beginning track, which is faded
+in. It is important that We set here the `normalize` argument of the `add` to
+`false`: otherwise the overall volume will be divided by two (because there are
+two sources) and we will hear a volume jump once the transition is over.
 
 Let us give some other examples of transition functions. If we want to have no
 transition, we can use the `sequence` operator to play the end of the old source
@@ -1804,15 +1831,15 @@ metadata `jingle` of the new track is set to `true`. This can be achieved with:
 ```{.liquidsoap include="liq/cross5.liq" from=3 to=-2}
 ```
 
-Namely, we recall that the arguments `ma` and `mb` respectively contain the
-metadata of the old track and of the new track.
+Here, we make use of the field `metadata` of `b` which contains the metadata for
+the starting track.
 
-Finally, in the case where the current track end unexpectedly, we might not have
-enough time to perform the transition (basically, when we skip the current track
-of a source, we immediately go to the next track). The `minimum` parameter of
-`cross` controls how much time in advance we should have to perform the
-transition: if the remaining time of the current track is below this value, we
-simply don't apply any transition.
+Finally, in the case where the current track ends unexpectedly, we might not
+have enough time to perform the transition. For instance, when we skip the
+current track of a source, we immediately go to the next track. The `minimum`
+parameter of `cross` controls how much time in advance we should have to perform
+the transition: if the remaining time of the current track is below this value,
+we simply don't apply any transition.
 
 ### Transitions between different sources
 
