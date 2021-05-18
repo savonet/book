@@ -935,20 +935,27 @@ track insensitive fallback operator, but it will also skip the current track of
 the `music` source after switching to the `live` source, so that we will begin
 on a fresh track when switching back again to `music`.
 
-\TODO{fill me in!!!}
+For didactic purposes, let us provide another way of implementing this. The
+`on_leave` method of a source allows registering a function which is to be
+called when the source is not used anymore. We can use this to enforce skipping
+the `music` source when we switch the `live` source, and the following script
+will behave like the above one:
 
-TODO: with `s.on_leave`, see <https://github.com/savonet/liquidsoap/pull/1560>
+```{.liquidsoap include="liq/fallback.skip-on_leave.liq" from=5 to=-1}
+```
 
 ### Switching and time predicates
 
-Another way of selecting between sources is the `switch` operator which takes as
-argument a list, whose elements are pairs consisting of a predicate and a
-source. Here, each _predicate_ is function taking no argument an returning a
-boolean (it is of type `() -> bool`) indicating whether the corresponding source
-should be played or not. The `switch` operator will then select the first source
-whose predicate returns `true`. For instance, supposing that we have two
-different playlists for night and day, we could alternate between those
-depending on the hour with
+Another way of selecting a source among multiple ones is the `switch`
+operator. It takes as argument a list, whose elements are pairs consisting of a
+predicate and a source. Here, each _predicate_ is function taking no argument an
+returning a boolean (it is of type `() -> bool`) indicating whether the
+corresponding source should be played or not: a typical predicate is `{8h-10h}`
+which is true when the current time is between 8h and 10h. The `switch` operator
+will select and play the first source whose predicate returns `true`.
+
+For instance, supposing that we have two different playlists for night and day,
+we could alternate between those depending on the hour with
 
 ```{.liquidsoap include="liq/switch.liq" from=3 to=-1}
 ```
@@ -964,16 +971,16 @@ instance,
 ```{.liquidsoap include="liq/switch2.liq" from=4 to=-1}
 ```
 
-will have two special programs on morning and evening, and will default to the
-`music` playlist at other times. We thus obtain the same behavior as if we had
-used a `fallback` operator:
+will have two special programs on the morning and the evening, and will default
+to the `music` playlist at other times. We thus obtain the same behavior as if
+we had used a `fallback` operator:
 
 ```{.liquidsoap include="liq/switch2-fallback.liq" from=4 to=-1}
 ```
 
 #### Time predicates {#sec:time-predicates}
 
-In the above examples `{0h-7h}` is a _time predicate_: it is something which is
+In the above examples, `{0h-7h}` is a _time predicate_: it is something which is
 `true` or `false` depending on the current time. Some other examples of time
 predicates are
 
@@ -993,8 +1000,8 @@ both 0 and 7.
 #### Other predicates
 
 We could also use this operator to manually switch between sources. As an
-illustration, suppose that we have two radio streams named `radio1` and `radio2`
-then we could use a script such as
+illustration, supposing that we have two radio streams named `radio1` and `radio2`,
+we could use a script such as
 
 ```{.liquidsoap include="liq/switch3.liq" from=6 to=6}
 ```
@@ -1027,14 +1034,15 @@ and back to radio 2 with
 echo "var.set r1 = false" | telnet localhost 1234
 ```
 
-(or directly connecting to the telnet server and issuing the commands).
+(or directly connecting to the telnet server and issuing the commands, see
+[there](#sec:telnet)).
 
 ### Adding
 
-Instead of switching between two sources, we can play them together with the
-`add` operator, which takes a list of sources whose sound are to be added. For
-instance, if we want to make a radio consisting of a microphone input together
-with background music (which is often called a "bed"), we can define
+Instead of switching between two sources, we can play them at the same time with
+the `add` operator, which takes a list of sources whose sound are to be
+added. For instance, if we want to make a radio consisting of a microphone input
+together with background music (which is often called a "bed"), we can define
 
 ```{.liquidsoap include="liq/add.liq" from=3 to=-1}
 ```
@@ -1048,11 +1056,24 @@ sources, you should set the `normalize` parameter to `false`:
 ```
 
 but beware that this might result into some clipping if the two sources are
-loud, which is never nice to hear\TODO{some more explanations about this in section... below}. The operator also offers the possibility of
-weighting the sources: if we want to hear the microphone twice as loud as the
-bed, we should give the microphone twice the weight of the bed. The weight of
-each source can be specified in a list passed in the `weights` arguments. For
-instance,
+loud, which is never nice to hear, see also [there](#sec:clipping).
+
+As a side note, the operator `add` only adds the sources which are ready. This
+means that if `mic` is taken from an harbor input such as
+
+```{.liquidsoap include="liq/add.liq" from=1 to=1}
+```
+
+and the client did not connect or was disconnected, we will hear only the bed,
+as expected.
+
+#### Weights
+
+The `add` operator also offers the possibility of weighting the sources,
+i.e. specifying their relative volume: if we want to hear the microphone twice
+as loud as the bed, we should give the microphone twice the weight of the
+bed. The weight of each source can be specified in a list passed in the
+`weights` arguments. For instance,
 
 ```{.liquidsoap include="liq/add3.liq" from=3 to=-1}
 ```
@@ -1065,15 +1086,6 @@ amplifying each of the sources with the corresponding factor, i.e.
 
 but more efficient and natural.
 
-As a side note, the operator `add` only adds the sources which are ready. This
-means that if `mic` is taken from an harbor input such as
-
-```{.liquidsoap include="liq/add.liq" from=1 to=1}
-```
-
-and the client did not connect or was disconnected, we will hear only the bed,
-as expected.
-
 ### Sequencing
 
 The `sequence` operator allows a behavior which sometimes useful: it takes as
@@ -1084,16 +1096,16 @@ finally keeps on playing tracks from the last source. This means that
 s = sequence([s1, s2, s3])
 ```
 
-will play one track from `s1`, one track from `s2` and will then keep on playing
-`s3`. We will for instance use this in [section below](#sec:transitions) in
-order to insert jingles during transitions.
+will play one track from `s1`, one track from `s2` and will then keep on
+playing `s3`. We will for instance use this in [section below](#sec:transitions)
+in order to insert jingles during transitions.
 
 ### Jingles and ads
 
 Jingles are short announcements, generally indicating the name of the radio or
 the current show. They are quite important in order for the listener to remember
 the brand of your radio and create some familiarity with the radio (the music
-changes but the jingles generally remain the same). Technically, jingles are not
+changes but the jingles remain the same). Technically, jingles are not
 different from any other music source, but we give here the usual ways of
 inserting those, presenting tricks which might be useful in other situations too
 (in particular, ads follow basically the same techniques). We suppose here that
@@ -1105,11 +1117,69 @@ plays jingles: typically, it will be defined as
 
 where `jingles` is a playlist containing all our jingles.
 
-#### Playing only one track with `switch`
+#### Rotating tracks
 
-Let us begin with a quite common but tricky feature. Suppose that we want to
-play a jingle at the beginning of each hour, without interrupting the current
-track. One would typically write a script such as
+The most basic strategy consists in inserting one jingle every _n_ tracks, which
+is easily achieved thanks to the `rotate` operator. It takes a list of sources
+and a list of weights associated to each source (in the argument labeled
+`weight`), and selects tracks from the sources according to the weights. For
+instance, in the following script
+
+```{.liquidsoap include="liq/jingles-rotate.liq" from=3 to=-1}
+```
+
+we play `jingles` with weight `1` and `music` with weight `4`: this means that
+we are going to play one jingle, then four music tracks, then one jingle, then
+four music tracks, and so on.
+
+If you want something less regular, the `random` operator can be used instead of
+`rotate`:
+
+```{.liquidsoap include="liq/jingles-random.liq" from=3 to=-1}
+```
+
+It is basically a randomized version of the previous source, which will randomly
+chose tracks from `jingles` and `music`, the probability of choosing a track
+from the later being four times the probability of choosing a track from the
+former.
+
+The `rotate` and `random` operators can also be used to vary the contents of a
+source. For instance, if we wanted our `jingles` sources to play alternatively a
+jingle, a commercial and an announcement for a show, we could have defined
+
+```{.liquidsoap include="liq/jingles-rotate2.liq" from=1 to=-1}
+```
+
+#### Playing jingles regularly
+
+Another approach for jingles consists in playing them at regular time
+intervals. This is easily achieved with the `delay` operator function which
+prevents a source from being available before some time. For instance, we can
+play a jingle roughly every 30 minutes with
+
+```{.liquidsoap include="liq/jingles-delay.liq" from=3 to=-1}
+```
+
+Above, the function `delay` above enforces that, after playing a track, the
+`jingles` source will not be available again before 1800 seconds, which is 30
+minutes. Therefore, every time the current music track ends and more than 30
+minutes has passed since the last jingle, a new one will be inserted. As a
+variant, we can add the jingle on top of the currently playing music with
+
+```{.liquidsoap include="liq/jingles-delay2.liq" from=3 to=-1}
+```
+
+<!--
+\TODO{this is useful for non-track-sensitive switches to play one track, but
+ensuring that is won't last longer, see https://github.com/savonet/liquidsoap/issues/1544 }
+-->
+
+#### Jingles at fixed time
+
+Instead of inserting jingles regularly, you might want to insert them at fixed
+time. This is quite a common approach, but a bit tricky to achieve. Suppose
+that we want to play a jingle at the beginning of each hour, without
+interrupting the current track. One would typically write a script such as
 
 ```{.liquidsoap include="liq/jingles-once.liq" from=3 to=-1}
 ```
@@ -1120,8 +1190,7 @@ source starts at 11h58 and ends at 12h01 then no ad will be played around
 noon. In order to accommodate for this, we are tempted to widen the time
 predicate and replace the second line with
 
-```liquidsoap
-    ({00m-15m}, jingles),
+```{.liquidsoap include="liq/jingles-once2.liq" from=4 to=4}
 ```
 
 Well, this is not good either: if a track of the music source ends at 12h01, we
@@ -1129,36 +1198,55 @@ now hear a jingle as expected, but we actually continuously hear jingles for 14
 minutes instead of hearing only one. In order to fix this, we are tempted to use
 the `once` operator and change the line to
 
-```liquidsoap
-    ({00m-15m}, once(jingles)),
+```{.liquidsoap include="liq/jingles-once3.liq" from=4 to=4}
 ```
 
 This is not good either: `once(jingles)` plays only one track from `jingles`,
 but during the whole execution of the script. This means that our script will
 only work as expected on the first hour, where we will correctly hear one
 jingle, but on the following hours we will hear no jingle because one has
-already been played.
+already been played. An acceptable solution consists in using `delay` to ensure
+that we should wait at least 30 minutes before playing another jingle and
+replace the second line by
 
-The right solution, consist in using the `predicate.once` function: it takes a
-predicate `p` as argument, and returns a predicate which is true only once each
-time `p` is continuously true. In case it helps, we have illustrated in the
-following figure an example of a predicate `p` over time (below) and the
-resulting predicate `predicate.once(p)` over time (above):
+```{.liquidsoap include="liq/jingles-once4.liq" from=4 to=4}
+```
+
+it says that we should play a jingle in the first quarter of every hour and not
+more often than once every half hour, and achieves precisely what we want. Note
+that anything from `900.` (15 minutes) to `2700.` (45 minutes) would be
+acceptable as argument for the `delay`.
+
+As a last remark, if we want to play the jingle exactly at the top of the hour,
+and interrupt the currently playing song if necessary, it is enough to add
+`track_sensitive=false` to the `switch` operator:
+
+```{.liquidsoap include="liq/jingles-once6.liq" from=3 to=-1}
+```
+
+#### Jingles at fixed time: alternative approach
+
+In the previous example, an alternative approach instead of using the `delay`
+operator, consists in using the `predicate.once` function. It takes a predicate
+`p` as argument, and returns a predicate which is true only once each time `p`
+is continuously true. In case it helps, we have illustrated in the following
+figure an example of a predicate `p` over time (below) and the resulting
+predicate `predicate.once(p)` over time (above):
 
 ![predicate.once](fig/predicate-once.pdf)\
 
-This means that `predicate.once({12h00-12h15})` is a predicate which is true
-once between 12h00 and 12h15. This is exactly what we were looking for, and the
-script we were looking for is
+This means that `predicate.once({00m-15m})` is a predicate which is true once
+between in the first quarter of every hour, and can thus be used to play on
+jingle in the first quarter of every hour as follows:
 
-```{.liquidsoap include="liq/jingles-once2.liq" from=3 to=-1}
+```{.liquidsoap include="liq/jingles-once6.liq" from=3 to=-1}
 ```
 
 As a variant, if we wanted to play a jingle every half hour, we could replace
 the second line by
 
 ```liquidsoap
-    ({00m-15m or 30m-45m}, once(jingles)),
+    (predicate.once({00m-15m or 30m-45m}), jingles),
 ```
 
 As another variant, if we wanted to play 3 jingles, we could write
@@ -1180,67 +1268,13 @@ every half hour as follows:
 ```{.liquidsoap include="liq/jingles-available.liq" from=3 to=-1}
 ```
 
-#### Delaying tracks
-
-Another approach consists in using the `delay` function which prevents a source
-from being available before some time. For instance, we can play a jingle
-roughly every 30 minutes with
-
-```{.liquidsoap include="liq/jingles-delay.liq" from=3 to=-1}
-```
-
-The function `delay` above enforces that, after playing a track, the source will
-not be available again before 1800 seconds (which is 30 minutes). Therefore
-every time the current music track ends and more than 30 minutes has passed
-since the last jingle, a new one will be inserted. As a variant, we can add the
-jingle on top of the currently playing music with
-
-```{.liquidsoap include="liq/jingles-delay2.liq" from=3 to=-1}
-```
-
-\TODO{this is useful for non-track-sensitive switches to play one track, but
-ensuring that is won't last longer, see https://github.com/savonet/liquidsoap/issues/1544}
-
-#### Rotating tracks
-
-How often we should play jingles, instead of being based on time, can be based
-on tracks. The `rotate` operator allows implementing such behaviors by
-specifying that we want to play a track of such source every n tracks of such
-other source. This function takes a list of sources and a list of weights
-associated to each source (in the argument labeled `weight`), and selects tracks
-from the sources according to the weights. For instance, in the following script
-
-```{.liquidsoap include="liq/jingles-rotate.liq" from=3 to=-1}
-```
-
-we play `jingles` with weight `1` and `music` with weight `4`: this means that
-we are going to play one jingle, then four music tracks, then one jingle, then
-four music tracks, and so on. If you want something less regular, the `random`
-operator can be used instead of `rotate`:
-
-
-```{.liquidsoap include="liq/jingles-random.liq" from=3 to=-1}
-```
-
-It is basically a randomized version of the previous source, which will randomly
-chose tracks from `jingles` and `music`, the probability of choosing a track
-from the later being four times the probability of choosing a track from the
-former.
-
-The `rotate` and `random` operators can also be used to vary the contents of a
-source. For instance, if we wanted our `jingles` sources to play alternatively a
-jingle, a commercial and an announcement for a show, we could have defined
-
-```{.liquidsoap include="liq/jingles-rotate2.liq" from=1 to=-1}
-```
-
 #### Signaling
 
-As a more advanced use of predicate, we would like to introduce the
+As a more advanced use of predicates, we would like to introduce the
 `predicate.signal` function which creates a particular predicate which is false
 most of the time, unless some other part of the program sends a "signal", in
-which case the predicate becomes true once and then false again (until the next
-signal). Concretely, we can use this function to create a predicate `p` by
+which case the predicate becomes true once and then false again, until the next
+signal. Concretely, we can use this function to create a predicate `p` by
 
 ```liquidsoap
 p = predicate.signal()
@@ -1297,42 +1331,51 @@ tracks and only change stream when a track is over in order not to abruptly
 interrupt a playing song (this behavior can be altered by setting the
 `track_sensitive` parameter to `false`).
 
-To every track is associated metadata, which are information concerning the song
+To every track is associated metadata, which is information concerning the song
 which is going to be played. In Liquidsoap, metadata can actually be present at
-any time, and don't have to correspond to a track boundary (we can have metadata
-in the middle of a song) although this is generally the case. We have seen that
-metadata is generally coded as an association list, as detailed in
-[there](#sec:association-list): this is a list consisting of pairs of strings,
-whose type is thus `[string * string]`. Typically, the metadata `m` for a track
-will look like
+any time, and does not have to correspond to a track boundary (we can have
+metadata in the middle of a song) although this is generally the case. We have
+seen in [there](#sec:association-list) that metadata is generally coded as an
+association list: this is a list consisting of pairs of strings, whose type is
+thus `[string * string]`. Typically, the metadata `m` for a track will look like
 
 ```{.liquidsoap include="liq/metadata.liq" from=0 to=0}
 ```
 
 which indicates that the artist is "Sinatra" and the title is "Fly me". Typical
-metadata fields are: artist, title, album, genre, year and comment.
+metadata fields are: `artist`, `title`, `album`, `genre`, `year` and `comment`.
 
-In order to retrieve the title in such a list, one should use the notation
+#### Manipulating metadata
+
+In order to retrieve the title in such a list, one can use the notation
 
 ```liquidsoap
 m["title"]
 ```
 
-which will return the value associated to the field `title` in the metadata `m`,
-the empty string `""` being returned in the case where the metadata is not
+which returns the value associated to the field `title` in the metadata `m`, the
+empty string `""` being returned in the case where the metadata is not
 present. Changing the value of some metadata is simply obtained by putting the
-new metadata at the top, by using the function `list.append`. For instance, we
-can define a metadata `m'` where the artist has been changed and the year has
-been added by
+new metadata at the top, by using the function `list.add` or `list.append`. For
+instance, we can define a metadata `m'` where the artist has been changed and
+the year has been added by
 
 ```{.liquidsoap include="liq/metadata.liq" from=1 to=1}
 ```
 
-Metadata are usually stored within files (for instance, mp3 files generally
-contain metadata encoded in the ID3v2 format). Typical operators reading files,
+or, if we only want to change the year,
+
+
+```{.liquidsoap include="liq/metadata2.liq" from=1 to=1}
+```
+
+#### Metadata in requests
+
+Metadata are usually stored within files: for instance, mp3 files generally
+contain metadata encoded in the ID3v2 format. Typical operators reading files,
 such as `playlist`, automatically read those when opening a file. We recall that
 it is also possible to add metadata to files in playlists using the annotate
-protocol described above. For instance,
+protocol. For instance,
 
 ```
 annotate:artist=The artist,comment=Played on my radio:test.mp3
@@ -1351,12 +1394,17 @@ write something like
 
 Each source has a method `on_track` and a method `on_metadata` to execute a
 function when a track boundary or metadata occur in the stream. In both cases,
-it takes as argument a function of type `([string * string]) -> unit`: this
-function itself will be called with the metadata as argument.
+it takes as argument a function of type
+
+```
+([string * string]) -> unit
+```
+
+This function will itself be called with the metadata as argument.
 
 #### Logging tracks
 
-We can use this to log every song which has gone on air:
+We can for instance use this mechanism to log every song which has gone on air:
 
 ```{.liquidsoap include="liq/log-songs.liq" from=1 to=-1}
 ```
@@ -1365,7 +1413,7 @@ We first define a function `log_song` which takes the metadata `m` as argument,
 extracts the artist and the title, and appends those to the file
 `/tmp/songs`. We then run the method `on_track` of our `music` source to
 register this function to be called when there is a new track and that's it! By
-the way, if you want a quick and effective logging of the metadata, we would
+the way, if you want a quick and effective way of logging the metadata, we
 advise the use the `json_of` function, which will convert all the metadata at
 once into a standardized textual representation called
 [JSON](https://www.json.org/):
@@ -2213,7 +2261,7 @@ can be used to make the listening experience more homogeneous and give a "unique
 color" to your radio. We however need to begin by explaining one of the main
 issues we have to face when operating on sound: clipping.
 
-#### Clipping
+#### Clipping {#sec:clipping}
 
 We have indicated that all the audio samples should have a value between -1 and
 1 in Liquidsoap. However, if we increase too much the volume of a source be it
