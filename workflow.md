@@ -565,7 +565,7 @@ Underrun! You may minimize them by increasing the buffer size.
 
 which indicates that you should buffer in order to avoid defects in the audio.
 
-### Icecast inputs with harbor {#sec:input.harbor}
+### Distant inputs with harbor {#sec:input.harbor}
 
 Many programs are able to stream to an Icecast server, and we can use those as
 an input for Liquidsoap scripts with the `input.harbor` operator. This operator
@@ -610,8 +610,9 @@ cat test.ogg | shout --format ogg --host localhost --pass hackme --mount /live
 
 will send the file `test.ogg` to our harbor server.
 
-Yet another possibility consists in using the `darkice` program to send our
-voice with
+Yet another possibility consists in using the `darkice` program which captures
+the microphone of the computer and sends it to an Icecast server. We can use it
+to stream our voice with
 
 ```
 darkice -c darkice.cfg
@@ -689,6 +690,13 @@ openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout server.key -out server
 ```
 
 #### Webcast
+
+For interventions by external collaborators, it can be problematic to have them
+perform a "complex setup" such as installing Liquidsoap or run `darkice`. For
+this reason, we have developed a protocol which allows streaming sound directly
+from the browser, be it from music files or the microphone, without having to
+install anything: this protocol is called
+[`webcast`](https://github.com/webcast/webcast.js).
 
 TODO
 
