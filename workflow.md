@@ -696,11 +696,12 @@ For interventions by external collaborators, it can be problematic to have them
 perform a "complex setup" such as installing Liquidsoap or run `darkice`. For
 this reason, we have developed a protocol which allows streaming sound directly
 from the browser, be it from music files or the microphone, without having to
-install anything: this protocol is called `webcast` and we provide a [JavaScript
+install anything: this protocol is called _webcast_ and we provide a [JavaScript
 implementation `webcast.js`](https://github.com/webcast/webcast.js), which
-should be easy to integrate in your own website. Of course, `input.harbor` has
-support for it and will accept clients using the webcast protocol in addition to
-the traditional Icecast protocol.
+should be easy to integrate in your own website, based on websockets and media
+recorder API. Of course, `input.harbor` has support for it and will accept
+clients using the webcast protocol in addition to the traditional Icecast
+protocol.
 
 A full-fledged website based on this library, called _Webcaster_, [is
 available](https://webcast.github.io/webcaster/). It provides a web interface which
@@ -793,6 +794,7 @@ If the other program has support for it, it is possible to use JACK with the
 data between programs and greater stability and precision is expected than with
 the above method. Its use is detailed in [there](#sec:JACK).
 
+<!--
 ### Distant streams
 
 Sometimes the machine which is producing the sound is not the same as the one
@@ -814,15 +816,51 @@ possibility is to use the Icecast protocol:
 
 This solution is not entirely satisfactory because the sound has to be
 compressed (the Icecast protocol does not allow sending uncompressed data such
-as wav, it can however send losslessly compressed data with the FLAC codec).
+as wav, it can however send lossless compressed data with the FLAC codec).
 
 #### UDP
 
 `input.udp` and `output.udp`
+-->
 
 #### SRT
 
-`input.srt` and `output.srt`
+In order to transmit a stream between two machines on the same local network,
+one can use the Icecast protocol (i.e. `input.harbor` or `input.http`) but this
+is not satisfactory: firstly, the has to be compressed (the Icecast protocol
+does not allow sending uncompressed data such as wav, it can however send
+lossless compressed data with the FLAC codec) and, secondly, it induces much
+delay in the stream due to the various buffers used by Icecast.
+
+A much better solution consists in using the SRT (for _Secure Reliable
+Transport_) protocol, which allows reliable data transmission with low latency,
+and can be performed using the `input.srt` operator. A minimal script could be
+
+```{.liquidsoap include="liq/input.srt.liq" from=1}
+```
+
+Note that we need to use the `buffer` operator here because SRT uses its own
+synchronization mechanism, which is different from the one on the output based
+on the Pulseaudio library, see [below](#sec:clocks-ex). The input is not
+available unless it receives some stream, which is why we pass `fallible=true`
+to `buffer`. We can send such a stream with `ffmpeg` for instance: the script
+
+```
+ffmpeg -re -i test.mp3 -f mp3 -c:a copy srt://localhost:8000
+```
+
+sends the contents of the `test.mp3` using SRT on the host `localhost` (you
+should of course change this if you are connecting to a distant machine) on the
+port 8000, which is the default one. The `-re` option ensure that the file is
+sent progressively and not all at once. Another option to send an SRT stream is,
+of course, to use Liquidsoap. We can use the script
+
+```{.liquidsoap include="liq/output.srt.liq" from=1}
+```
+
+to stream our music library to the above SRT input in wav format (you could use
+`%mp3` instead of `%wav` to compress in mp3 in order save bandwidth).
+
 
 Scheduling
 ----------
