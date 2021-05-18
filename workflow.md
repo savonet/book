@@ -1392,15 +1392,16 @@ write something like
 
 ### Handling tracks {#sec:on-metadata}
 
-Each source has a method `on_track` and a method `on_metadata` to execute a
-function when a track boundary or metadata occur in the stream. In both cases,
-it takes as argument a function of type
+Every source has `on_track` and `on_metadata` methods, which respectively
+enforce the execution of a function when a track boundary or metadata occur in
+the stream. In both cases, the method takes as argument a function of type
 
 ```
 ([string * string]) -> unit
 ```
 
-This function will itself be called with the metadata as argument.
+This function will itself be called with the metadata as argument when a track
+or metadata occurs.
 
 #### Logging tracks
 
@@ -1415,8 +1416,7 @@ extracts the artist and the title, and appends those to the file
 register this function to be called when there is a new track and that's it! By
 the way, if you want a quick and effective way of logging the metadata, we
 advise the use the `json_of` function, which will convert all the metadata at
-once into a standardized textual representation called
-[JSON](https://www.json.org/):
+once into a standardized textual representation in JSON format:
 
 ```{.liquidsoap include="liq/log-songs2.liq" from=1 to=3}
 ```
@@ -1442,7 +1442,7 @@ using the `say` protocol:
 ```{.liquidsoap include="liq/jingles-metadata2.liq" from=5}
 ```
 
-Another approach to insert jingles when the particular metadata is present could
+Another approach to insert jingles when particular metadata is present could
 consist in using the `predicate.signal` function detailed above to trigger
 playing one track of a `jingles` playlist when the metadata is present:
 
@@ -1451,7 +1451,7 @@ playing one track of a `jingles` playlist when the metadata is present:
 
 #### Prepending and appending tracks
 
-The logic of the programs can be somewhat simplified by the use of the `prepend`
+The logic of the above scripts can be somewhat simplified by the use of the `prepend`
 operator: this operator takes as argument a function which is called on every
 track, with its metadata as source, and returns a source to be played before the
 current track. For instance, we can insert a jingle when the metadata `jingle`
@@ -1496,10 +1496,13 @@ Whenever a metadata passes on the source `s`, the function `update_metadata` is
 executed with it and returns the metadata to insert. Here, it states that we
 should set the title to `"<title> (<year>)"` (where `<title>` is the title and
 `<year>` is the year present in the original metadata) and that we should
-advertise about Liquidsoap in the field `comment`.
+advertise about Liquidsoap in the `comment` field.
 
-As another example, suppose that your files do not have proper metadata. It is
-easy to use the filename as title as follows:\TODO{explain that there are always Liquidsoap's builtin metadata, and that they are not all exported}
+As another example, suppose that your files do not have proper metadata, for
+instance, there could be no metadata at all. Even in this case, Liquidsoap will
+add some metadata in order to indicate internal information such as the
+filename, more details are given in [there](#sec:requests-metadata). We could
+thus use the filename as the title as follows:
 
 ```{.liquidsoap include="liq/map_metadata2.liq" from=2 to=-1}
 ```
@@ -1509,9 +1512,9 @@ The function `path.basename` gives the filename without the leading path and
 
 ### Removing tracks and metadata
 
-In order to remove the tracks of a source, the `merge_track` operator can be
-used: it takes a source `s` as argument and returns the same source with the
-track boundaries removed.
+In order to remove the tracks indications from a source, the `merge_track`
+operator can be used: it takes a source `s` as argument and returns the same
+source with the track boundaries removed.
 
 Similarly, `drop_metadata` removes all metadata from a source. This can be
 useful if you want to "clean up" all the metadata before inserting your own, as
@@ -1520,16 +1523,16 @@ indicated below.
 ### Inserting tracks and metadata
 
 If you want to insert tracks or metadata at any point in a source, you can use
-the `insert_metadata`: this operator takes a source as argument and returns the
-same source with a new method `insert_metadata` whose type is
+`insert_metadata`: this operator takes a source as argument and returns the same
+source with a new method `insert_metadata` whose type is
 
 ```
 (?new_track : bool, [string * string]) -> unit
 ```
 
 It takes an argument labeled `new_track` to indicate if some track should be
-inserted along with the metadata (by default, not) and the metadata, and inserts
-the metadata in the stream. For instance, suppose that we have a source `s` and
+inserted along with the metadata (by default, it is not the case) and the metadata itself, and inserts
+the metadata into the stream. For instance, suppose that we have a source `s` and
 we want to set the title and artist metadata to "Liquidsoap" every minute. This
 can be achieved by
 
@@ -1540,24 +1543,23 @@ Here, we add the ability to insert metadata in the source `s` with the operator
 `insert_metadata`, and we then use `thread.run` to regularly call a function
 which will insert metadata by calling `s.insert_metadata`.
 
-Similarly, we can add a telnet command to change the title metadata by
+Similarly, we can add a telnet command to change the title metadata of a source `s` by
 
 ```{.liquidsoap include="liq/insert_metadata-title.liq" from=3 to=-1}
 ```
 
-Again, we suppose given a source `s`. We begin by defining a function `cmd`
-which takes the title as argument, inserts it into the stream of `s`, and
-returns a message saying that the title was inserted. We then register this
-command as `set_metadata` on the telnet server (see [there](#sec:telnet) for
-details): when we enter the command
+We begin by defining a function `cmd` which takes the title as argument, inserts
+it into the stream of `s`, and returns a message saying that the title was
+inserted. We then register this command as `set_metadata` on the telnet server,
+as detailed in [there](#sec:telnet): when we enter the command
 
 ```
 set_title New title
 ```
 
 on the telnet, the title will be set to "New title". In fact, the standard
-library offers a generic function in order to do this and not have to program
-this by yourself: the function `server.insert_metadata` takes an identifier `id`
+library offers a generic function in order to do this and we do not have to program
+this by ourselves: the function `server.insert_metadata` takes an identifier `id`
 and a source as argument and registers a command `id.insert` on the telnet which
 can be used to insert any metadata. A typical script will contain
 
@@ -1637,14 +1639,14 @@ of the function.
 
 ### Skipping tracks
 
-Every source has a method `skip` which allows skipping the current track and go
+Every source has a method `skip` whose purpose is to skip the current track and go
 to the next one. For instance, if our main source is `s`, we can hear the first
 5 seconds of each track of `s` with
 
 ```{.liquidsoap include="liq/source.skip.liq" from=2}
 ```
 
-We could also easily use this to register a telnet command but this done by
+We could also easily use this to register a telnet command, but this done by
 default with the `playlist` operator: you can always use the `skip` telnet
 command (or `id.skip` if an identifier `id` was specified for the source) to
 skip the current song. For instance, with the script
@@ -1659,24 +1661,55 @@ next one. As another example, let us register skip as an http service: the scrip
 ```
 
 makes it so that whenever we connect to the url `http://localhost:8000/skip` the
-current song on the source `s` is abruptly ended: this is part of the
-interaction you would typically have when designing a web interface for your
-radio. Interaction through telnet and harbor http is handled in
-[there](#sec:interaction), so that we do not further detail this example here.
+function `skipper` is called and the current song on the source `s` is abruptly
+ended: this is part of the interaction you would typically have when designing a
+web interface for your radio. Interaction through telnet and harbor http is
+handled in [there](#sec:interaction), so that we do not further detail this
+example here.
 
-\TODO{seeking}
+### Seeking tracks
+
+Every source has a method `seek` which takes as argument a number of second and
+goes forward this number of seconds. It returns the number of seconds
+effectively seeked: it might happen that that the source cannot be seeked (if it
+is a live stream for instance), in which case the function will always return 0,
+or we might not be able to seek the given amount of time if we are near an end
+of track. For instance, the following script will seek forward 5 seconds every 3
+second:
+
+```{.liquidsoap include="liq/seek0.liq" from=1}
+```
+
+The first line instructs to use the mad decoder for mp3 files, because it has
+better support for seeking than the default decoder FFmpeg. It is possible to
+give a negative argument to `seek`, in which case it will try to seek backward
+in time.
 
 ### End of tracks
 
-TODO: `source.on_end`
+The operator `source.on_end` can be used to call a function some time before the
+end of each track. In addition to the `delay` parameter, which specifies this
+amount of time, the operator takes the source whose tracks are to be processed
+and a handler function, which is executed when a track is about to end. This
+handler function takes as arguments, the amount of remaining time and the
+metadata for the track. For instance, the following track will say the title of
+each song 10 seconds before it ends:
 
-example, say the current song 10 seconds before the end
+```{.liquidsoap include="liq/source.on_end.liq" from=1}
+```
 
-say that this is used to implement fade outs
+You should now recognize a usual programming pattern. The main source is `s`,
+which is added to a queue `q`. We use `source.on_end` to register the handler
+function `speaker`, which inserts into the queue a request to say the title.
 
+The operator `source.on_end` is also used behind the curtains to implement
+`fade.out`.
+
+<!--
 ### Submitting tracks
 
 TODO: librefm and lastfm
+-->
 
 Transitions {#sec:transitions}
 -----------
@@ -1687,7 +1720,7 @@ the `fallback` or `switch` operators). However, the resulting transitions
 between two tracks are quite abrupt: one track ends and the other starts. We
 often want crossfading transitions between tracks, which means that the volume
 of the first track should be progressively lowered and the one of the second
-progressively increased in such a way that we hear the two during the
+progressively increased, in such a way that we hear the two during the
 transition:
 
 ![Transition](fig/transition.pdf)\
@@ -1710,15 +1743,15 @@ otherwise we will run into synchronization issues.
 
 ### Cue points
 
-Before performing transitions, we should first ensure that our tracks begin and
+Before discussing transitions, we should first ensure that our tracks begin and
 end at the right time: some songs features long introductions or long endings,
 that we would like not to play on a radio (think of a Pink Floyd song). In order
 to do so, we would rather avoid directly editing the music files, and simply add
-metadata indicating the time at which we should begin and end playing the files:
+metadata indicating the time at which we should begin and stop playing the files:
 these are commonly referred to as the _cue in_ and the _cue out_ points.
 
 The `cue_cut` operator takes a source and cuts each track according to the cue
-points which are stored in the metadata: by default, the metadata `liq_cue_in`
+points which are stored in the metadata. By default, the metadata `liq_cue_in`
 and `liq_cue_out` are used for cue in and cue out points (the name of the
 metadata can be changed with the `cue_in_metadata` and `cue_out_metadata`
 parameters of `cue_cut`), and are supposed to be specified in seconds relative
@@ -1726,14 +1759,14 @@ to the beginning of the track. Negative cue points are ignored and if the cue
 out point is earlier than the cue in point then only the cue in point is kept.
 
 For instance, in the following example, we use the `prefix` argument of
-`playlist` to set `liq_cue_in` to `30` and `liq_cue_out` to `40.5` for every
+`playlist` to set `liq_cue_in` to `3` and `liq_cue_out` to `9.5` for every
 track of the playlist:
 
 ```{.liquidsoap include="liq/cue_cut.liq" from=2}
 ```
 
-We will thus play every song of the playlist for 10.5 seconds, starting at
-second 30. In practice, the metadata for cue points would either be hardcoded in
+We will thus play every song of the playlist for 6.5 seconds, starting at
+second 3. In practice, the metadata for cue points would either be hardcoded in
 the files or added for each file with `annotate` in the playlist. In a more
 elaborate setup, a `request.dynamic` setup would typically also use `annotate`
 in order to indicate the cue points, which would be fetched by your own
@@ -1750,7 +1783,7 @@ and their effect on the volume can be pictured as follows:
 
 ![Fading in and out](fig/fade-in-out.pdf)\
 
-The operators `fade.in` and `fade.out` fade respectively in and out every track
+The operators `fade.in` and `fade.out` respectively fade in and out every track
 of the source given as argument. The `duration` parameter controls the duration
 in seconds of the fade: this corresponds to the length of the ramp on the above
 figures, by default it takes 3 seconds to entirely change the volume. The
@@ -1758,7 +1791,7 @@ duration can also be changed by using setting the metadata `liq_fade_in` (the
 name can be changed by with the `override_duration` parameter of the
 functions). Finally, the parameter `type` controls the shape of the fade: it can
 respectively be `"lin"`, `"sin"`, `"log"` and `"exp"` which will respectively
-change the shape of the fade as follows:\TODO{mention track-sensitive parameter}
+change the shape of the fade as follows:
 
 ![Fading shapes](fig/fade-shapes.pdf)\
 
@@ -1790,21 +1823,32 @@ transition as figured below:
 
 ![Fading durations](fig/transition-durations.pdf)\
 
-(in this example, we have a fade out time of 2 seconds, a fade in time of 3
-seconds and a fade duration of 4 seconds). The default values are 3 seconds for
-fade in and out and 5 seconds for fade:
+In this example, we have a fade out time of 2 seconds, a fade in time of 3
+seconds and a fade duration of 4 seconds, which corresponds to the following
+script:
+
+```{.liquidsoap include="liq/crossfade2.liq" from=2 to=-1}
+```
+
+The default values are 3 seconds for fade in and out and 5 seconds for fade:
 
 ![Fading durations](fig/transition-default.pdf)\
 
 The total duration should always be strictly longer than the one of the fades,
 otherwise the fades will not be complete and you will hear abrupt changes in the
 volume. For instance, with a fade in and out of 3 seconds and a fade duration of
-2 seconds:
+2 seconds
+
+```{.liquidsoap include="liq/crossfade3.liq" from=2 to=-1}
+```
+
+we will have the following incomplete transitions:
 
 ![Fading durations](fig/transition-short.pdf)\
 
-The duration can be changed by setting the `liq_cross_duration` metadata (and
-the name of the metadata can be changed in the `override_duration` parameter).
+The fade duration can be changed by setting the `liq_cross_duration` metadata
+(and the name of the metadata can be changed in the `override_duration`
+parameter).
 
 <!--
 This operator needs to compute the beginning of the next track of the source in
@@ -1838,18 +1882,16 @@ brutal (i.e. loud) music. In details the transitions are as follows:
   ![Fading durations](fig/transition-left.pdf)\
   
   and dually if the first one is loud and the second one is not.
-  
-\TODO{explain smooth add}
 
 #### Under the hood: the `cross` operator
 
-In the case you want to have more custom transitions between tracks, you should
-use the `cross` operator which allows the fully specify which transition we
-should apply (in fact, the `crossfade` operator is itself programmed using the
-`cross` operator). This operator takes as argument `duration` the duration of
-the fade (default value is 5 seconds), a function specifying the transition, and
-the source whose tracks should be crossfaded. The type of the transition
-function is
+In the case you want to customize transitions between tracks, you should use the
+`cross` operator which allows the fully specify which transition we should
+apply.  In fact, the `crossfade` operator is itself programmed in the standard
+library using the `cross` operator. This operator takes as argument `duration`
+the duration of the fade (whose default value is 5 seconds), a function specifying the
+transition, and the source whose tracks should be crossfaded. The type of the
+transition function is
 
 ```
 ({metadata : [string * string], db_level : float, source : source},
@@ -1873,7 +1915,7 @@ instance, the usual fading can be achieved with
 
 The transition function `f` simply adds the source of the ending track, which is
 faded out, together with the source of the beginning track, which is faded
-in. It is important that We set here the `normalize` argument of the `add` to
+in. It is important that we set here the `normalize` argument of the `add` to
 `false`: otherwise the overall volume will be divided by two (because there are
 two sources) and we will hear a volume jump once the transition is over.
 
@@ -1890,12 +1932,12 @@ We could take this opportunity to insert a jingle in between the tracks:
 ```
 
 (we suppose there that `jingle` is a playlist of jingles). Or we could to all
-the three at once. Suppose that we have a jingle and we want to achieve the
-following:
+the three at once. Namely, suppose that we have a jingle and we want to achieve
+the following:
 
 - we begin by fading out `a` for 3 seconds,
 - after 1 second, we start playing the jingle (say that it lasts for 3 seconds),
-- after 2 seconds, we start playing `b` which is faded in
+- after 2 seconds, we start playing `b` which is faded in.
 
 Graphically, this would look like the following:
 
@@ -1910,8 +1952,8 @@ source faded out, the jingle and the new source faded in:
 The operators `sequence` are used here to add some blank at the beginning of the
 source in order to delay the moment where they are started. The "real" duration
 of the fade is 5 seconds, but we set the `duration` parameter to 6 to have 1
-extra second for safety. In order to illustrate the use of the metadata, suppose
-that we want to have no transition, but want to insert a jingle when the
+extra second for safety. In order to illustrate the use of the `metadata` fields,
+suppose that we want to have no transition, but want to insert a jingle when the
 metadata `jingle` of the new track is set to `true`. This can be achieved with:
 
 ```{.liquidsoap include="liq/cross5.liq" from=3 to=-2}
@@ -1990,7 +2032,30 @@ the music source otherwise. We set the list `transitions` of transitions to
 `to_live` and `to_music`, which are respectively used when switching to the
 `live` and `music` sources.
 
-\TODO{test and implement track-sensitive=false transitions}
+<!-- \TODO{test and implement track-sensitive=false transitions} -->
+
+### Smooth add
+
+We have seen earlier that we could insert a jingle every 30 minutes in a stream
+with by adding to the main `music` source a track of `jingle` as follows:
+
+```{.liquidsoap include="liq/smooth_add.liq" from=1}
+```
+
+If we want to fade the jingle instead of adding it abruptly when available, we
+could use the above functions to program our fades. But fortunately, this is
+already programmed for us in the standard library, with the `smooth_add`
+function. It takes as argument a `special` source which is available from time
+to time (the jingles in our case), a `normal` source which is usually available
+(the music source in our case) and, whenever a track of `special` is available
+adds it on top of `normal` with a faded transition. The argument `duration`
+controls the duration of the transition (1 second by default) and the parameter
+`p` controls the proportion of the normal source in the mix (0.2 by default with
+means 20% normal source and 80% special source). In the above script, we could
+use it by replacing the penultimate line by
+
+```{.liquidsoap include="liq/smooth_add2.liq" from=3 to=3}
+```
 
 <!--
 Transitions have limited duration, defined by the `transition_length`
@@ -2107,6 +2172,10 @@ playlists can be used add this protocol to all the files in the playlist:
 
 ```{.liquidsoap include="liq/replaygain5.liq" from=1 to=-1}
 ```
+
+The operation of computing the ReplayGain for a given file is a bit costly so
+that we strongly advice to perform it once for all for your music files instead
+of using the above mechanisms.
 
 #### Normalization
 
