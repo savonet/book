@@ -5,7 +5,7 @@ radio   = fallback(track_sensitive=false, [queue, default])
 def on_request()
   fname = string.trim(file.contents("to-play"))
   log.important("Playing #{fname}.")
-  queue.push(request.create(fname))
+  queue.push.uri(fname)
 end
 file.write(data=string_of(time()), "to-play")
 file.watch("to-play", on_request)

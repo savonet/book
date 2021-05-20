@@ -8,8 +8,7 @@ def play(~protocol, ~headers, ~data, uri)
   fname = args["file"]
   title = args["title"]
   if file.exists(fname) then
-    queue.push(request.create(
-      "annotate:title=#{string.quote(title)}:#{fname}"))
+    queue.push.uri("annotate:title=#{string.quote(title)}:#{fname}")
     http.response(data="Request pushed.")
   else
     http.response(code=404, data="Invalid file.")

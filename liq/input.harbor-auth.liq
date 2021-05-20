@@ -1,7 +1,7 @@
 #!./liquidsoap
 def auth(login)
   ans = process.read.lines("./harbor-auth \
-        #{process.quote(login.user)} #{process.quote(login.password)}")
+        #{string.quote(login.user)} #{string.quote(login.password)}")
   if list.hd(default="", ans) == "allowed" then
     true
   else

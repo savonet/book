@@ -1,6 +1,7 @@
 #!./liquidsoap
 set("server.telnet", true)
-radio = fallback(track_sensitive=false,
-          [request.queue(id="reqs"), playlist(id="main", "~/Music")])
+q = request.queue(id="reqs")
+p = playlist(id="main", "~/Music")
+radio = fallback(track_sensitive=false, [q, p])
 output(radio)
 server.harbor()

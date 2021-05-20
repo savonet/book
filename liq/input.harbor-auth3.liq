@@ -3,7 +3,7 @@ set("sandbox","enabled")
 def auth(login)
   p = process.run(rodirs=["/users"], rwdirs=[], network=false,
         "./harbor-auth \
-        #{process.quote(login.user)} #{process.quote(login.password)}")
+        #{string.quote(login.user)} #{string.quote(login.password)}")
   p.status == "exit" and p.status.code == 0
 end
 s = input.harbor("live", auth=auth)

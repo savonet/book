@@ -667,7 +667,7 @@ that the user has the right to connect at the given time).
 ```
 
 Here, our function `auth` begins by executing the script `harbor-auth` with the
-username and password as argument. Note that we use `process.quote` to escape
+username and password as argument. Note that we use `string.quote` to escape
 shell special characters, so that the user cannot introduce shell commands in
 his username for instance... The `process.read.lines` function returns the list
 of lines returned by our script and our function returns `true` or `false`
@@ -1667,7 +1667,7 @@ web interface for your radio. Interaction through telnet and harbor http is
 handled in [there](#sec:interaction), so that we do not further detail this
 example here.
 
-### Seeking tracks
+### Seeking tracks {#sec:seeking}
 
 Every source has a method `seek` which takes as argument a number of second and
 goes forward this number of seconds. It returns the number of seconds
@@ -4178,8 +4178,8 @@ If the other program has support for it, the best way to exchange audio data is
 to use the [_JACK library_](https://jackaudio.org/), which is dedicated to this
 and provides very good performances and low latency. In order to use it, you
 first need to run a JACK server: this is most easily done by using applications
-such as _QjackCtl_ which provide a convenient graphical interface. Once this is
-done, various applications provide virtual ports which can be connected
+such as _QjackCtl_ which provides a convenient graphical interface. Once this is
+done, the applications using JACK export virtual ports which can be connected
 together.
 
 In Liquidsoap, you can use the operator `output.jack` to create a port to which
@@ -4227,14 +4227,14 @@ to keep the same process across tracks and that metadata should be passed from
 the input to the output source with a delay of 1 second (which is approximately
 the delay introduced by the tool to process sound).
 
-As another artificial illustration, we can use the `ffmpeg` binary in order to
-amplify a source `s` with
+As another illustration, we can use the `ffmpeg` binary in order to amplify a
+source `s` with
 
 ```{.liquidsoap include="liq/pipe-ffmpeg.liq" from=2 to=-1}
 ```
 
-(of course, using the builtin `amplify` operator is a much better idea if you
-simply want to change the volume).
+Of course, in practice, using the builtin `amplify` operator is a much better
+idea if you simply want to change the volume.
 
 ### Running external programs {#sec:run-external}
 
@@ -4274,10 +4274,11 @@ follows:
 - `stderr`: what the program wrote on the standard error.
 
 In the vast majority of cases, the program will return `"exit"` as status, in
-this case one should check whether the return code is 0 (the program ended
-normally) or not (the status generally indicates the cause of an error leading
-to the end of the program, in a way which depends on the program). One thus
-typically checks for the end of the program in the following way:
+which case one should check whether the return code is 0 (the program ended
+normally) or not (the program ended with an error, and the status generally
+indicates the cause of an error leading to the end of the program, in a way
+which depends on the program). One thus typically checks for the end of the
+program in the following way:
 
 ```{.liquidsoap include="liq/process.run-check.liq" from=1}
 ```
@@ -4289,8 +4290,8 @@ do not need to retrieve the standard output or error:
 ```{.liquidsoap include="liq/process.test.liq" from=1}
 ```
 
-The field `stdout` of the returned value contains what the program printed. For
-instance, in the script
+The field `stdout` of the returned value contains what the program printed on
+the standard output. For instance, in the script
 
 ```{.liquidsoap include="liq/process.run-stdout.liq" from=1}
 ```
@@ -4324,9 +4325,10 @@ files in this directory as follows:
 ```{.liquidsoap include="liq/process.read.lines2.liq" from=1}
 ```
 
-Here, `l` contains the list of all our files. We use `list.shuffle` to put it in
-a random order, print its length (obtained with `list.length`) and finally pass
-it to the `playlist.list` operator which will play all the files.
+Here, `l` contains the list of all our files in the `~/Music` directory. We use
+`list.shuffle` to put it in a random order, print its length (obtained with
+`list.length`) and finally pass it to the `playlist.list` operator which will
+play all the files.
 
 #### Security
 
@@ -4347,7 +4349,7 @@ improve security, Liquidsoap provides the possibility to _sandbox_ processes,
 which means running them in a special environment which checks whether the
 directories the program reads from and writes to are allowed ones, whether it is
 allowed to use the network, and so on. In order to use this, one should set the
-`sandbox` configuration key as follows:\TODO{what is "auto" for the conf key?}
+`sandbox` configuration key as follows:
 
 ```liquidsoap
 set("sandbox","enabled")
@@ -4356,8 +4358,8 @@ set("sandbox","enabled")
 When this is done, every execution of a program by `process.run` (or derived
 functions) will be done using the sandboxing program `bwrap` (which can be
 changed with the configuration key `sandbox.binary`). The following
-configuration keys can then be changed in order to change the permissions the
-run programs have by default:
+configuration keys can then be set in order to change the permissions the run
+programs have by default:
 
 - `sandbox.ro`: which directories the programs can read from (the root directory
   by default),
@@ -4425,7 +4427,10 @@ function whose type is
 
 It takes a string containing the JSON representation of a value and a `default`
 value, which is used both in order to determine the expected type for the value
-and is returned in the case where the JSON data does not have the right type.
+and to have a value to return by default in the case where the JSON data does
+not have the right type.
+
+#### Parsing song requests
 
 For instance, suppose that we have a script `next-song-json` which returns, in
 JSON format, the next song to be played along with cue in and out points and
@@ -4458,7 +4463,10 @@ expected by those operators.
 ```{.liquidsoap include="liq/json-fade-cue.liq" from=2}
 ```
 
-Note that the typing provided by `default` is important. Here we parse the data with
+#### Influence of the `default` argument
+
+Note that the typing provided by `default` is important. Here, we parse the data
+with
 
 ```{.liquidsoap include="liq/json-fade-cue2.liq" from=1 to=-1}
 ```
@@ -4487,14 +4495,15 @@ value as a result:
 ```
 
 Note that the fade parameters are given in floats instead of strings as in
-previous example, and that the `file` field is not present because there is no
-sensible way to parse it as a float. Alternatively, we could also parse the JSON
-data as a record
+previous example, and that the field `file` is not present because there is no
+sensible way to parse it as a float.
+
+Alternatively, we could also parse the JSON data as a record
 
 ```{.liquidsoap include="liq/json-fade-cue4.liq" from=1 to=-1}
 ```
 
-which would give rise to the following records as result
+which would give rise to the following record as result
 
 ```liquidsoap
 {file="test.mp3", cue_in=1.1, cue_out=239., fade_in=2.5, fade_out=3.2}
@@ -4506,20 +4515,22 @@ definition of the `next_song` function:
 ```{.liquidsoap include="liq/json-fade-cue5.liq" from=2 to=-3}
 ```
 
+which is more structured and natural.
+
 ### Watching files
 
-A simple, although not very robust, way of communicating with external programs
-is through files. For instance, suppose that we have a webserver on which users
-can make requests. When this is the case, our server writes the name of the file
-to play in a file `to-play`. In the following script, whenever the file
-`to-play` is modified, we push it in a queue so that it is played online, and we
-play the `default` source if there is no request:
+A simple, although not very robust, way of communicating data with external
+programs is through files. For instance, suppose that we have a webserver on
+which users can make requests. When this is the case, our server writes the name
+of the file to play in a file `to-play`. In the following script, whenever the
+file `to-play` is modified, we push it in a queue so that it is played online,
+and we play the `default` source if there is no request:
 
 ```{.liquidsoap include="liq/file.watch.liq" from=2 to=-1}
 ```
 
 In order to do so, we use the `file.watch` function, which registers a function
-to be called whenever a file changes: here, when `to-play` is modified, the
+to be called whenever a file changes: here, when the file `to-play` is modified, the
 function `on_request` is called, which reads the contents of the file and pushes
 a corresponding request on the queue. Of course, we could easily be combine this
 with the techniques of previous paragraph and store the file in JSON format to
@@ -4566,17 +4577,21 @@ Other related configuration keys can be set:
 - `server.timeout`: timeout for read and write operations (30 seconds by
   default), if nothing happens for this duration the client is disconnected
   (setting this to a negative value disables timeout).
+  
+#### A running example
 
-#### Commands
-
-Some telnet commands are always available, and some operators additionally
-register their own. For instance, consider the following simple radio script:
+In order to illustrate the use of the telnet server we will be considering the
+following simple script, which implements a simple radio:
 
 ```{.liquidsoap include="liq/telnet-radio.liq" from=1 to=-1}
 ```
 
-The radio consists of a request queue named `reqs` with a fallback on a playlist
-name `main`. We can connect to the server using the `telnet` program with
+You can see that we have enabled telnet support and that our radio consists of a
+request queue named `reqs` with a fallback on a playlist named `main`.
+
+#### Executing commands
+
+We can connect to the server using the `telnet` program with
 
 ```
 telnet localhost 1234
@@ -4621,21 +4636,43 @@ Type "help <command>" for more information.
 END
 ```
 
-Alternatively, if you add
+The answer to a command can be arbitrary text, but always ends with a line
+containing only `END`, which is convenient when automating communications
+through telnet.
+
+We have already seen that commands can also be sent with shell one-liners such
+as
+
+```
+echo reqs.skip | telnet localhost 1234
+```
+
+which will launch the `reqs.skip` command on the telnet server.
+
+If you like web interfaces more than old shell programs, you can add
 
 ```liquidsoap
 server.harbor()
 ```
 
-in your script, the telnet server will be available on your browser at the url
-`http://localhost:8000/telnet` (the port and the url can be configured by
-passing `port` and `uri` parameters to the function `server.harbor`:
+in your script, and the telnet server will be available on your browser at the
+url
+
+```
+http://localhost:8000/telnet
+```
+
+(the port and the url can be configured by passing `port` and `uri` parameters
+to the function `server.harbor`). If you point your browser at this page, you
+should see a web emulation of the telnet server which looks like this:
 
 ![Web interface for telnet server](img/server.harbor.png)\
 
-The answer to a command can be arbitrary text, but always ends with a line
-containing only `END`, which is convenient when automating communications
-through telnet. Let us present the generic commands listed above:
+#### Generic commands
+
+Let us present the generic commands listed above, in the answer to the `help`
+command, i.e. the commands which will always be present in the telnet server of
+a script:
 
 - `exit` ends the telnet communication,
 - `help` prints the list of available commands, or prints detailed help about a
@@ -4651,7 +4688,19 @@ END
   (the "usage" line explains how the command should be used, and which arguments
   are expected),
   
-- `list` details the available operators and their interfaces\TODO{explain this better},
+- `list` details the available operators, for instance, in our example, the
+  answer would be
+
+  ```
+reqs : request.dynamic.list
+main : request.dynamic.list
+switch_65380 : switch
+pulse_out(liquidsoap:) : output.pulseaudio
+  ```
+
+  indicating that we have two `request.dynamic.list` operators name `reqs` and
+  `main`, a `switch` and an `output.pulseaudio` whose name have been
+  automatically generated,
 - `quit` is the same as `exit`,
 - `uptime` shows for how long the script has been running,
 - `version` displays the Liquidsoap version.
@@ -4664,12 +4713,63 @@ is a number uniquely identifying the request.
   waiting to be played,
 - `request.all` lists all the requests used up to now,
 - `request.metadata` can be used to list the metadata associated to a particular request,
-- `request.alive` lists all the requests which are being played,
+- `request.on_air` lists all the requests which are being played,
 - `request.resolving` lists all the requests which are being resolved, such as
   distant files being downloaded,
 - `request.trace` shows the log associated to a particular request, which can be
   useful to know information about it, such as the reason why it failed to
   be resolved.
+
+In a typical telnet session, we could ask for the alive and known requests:
+
+```
+request.alive
+12 11
+END
+request.all
+12 11 10 9
+END
+```
+
+ask for the metadata of a particular request:
+
+```
+request.metadata 12
+rid="12"
+on_air="2021/05/20 17:04:06"
+status="playing"
+initial_uri="/path/to/file.mp3"
+source="main"
+temporary="false"
+filename="/path/to/file.mp3"
+title="My song"
+artist="The artist"
+kind="{audio=pcm(stereo),video=none,midi=none}"
+END
+```
+
+trace a valid request:
+
+```
+request.trace 12
+[2021/05/20 17:04:06] Pushed ["/path/to/file.mp3";...].
+[2021/05/20 17:04:06] Currently on air.
+END
+```
+
+push an invalid request and trace it:
+
+```
+reqs.push non-existent-file
+13
+END
+request.trace 13
+[2021/05/20 17:05:16] Pushed ["non-existent-file";...].
+[2021/05/20 17:05:16] Nonexistent file or ill-formed URI!
+[2021/05/20 17:05:16] Every possibility failed!
+[2021/05/20 17:05:16] Request finished.
+END
+```
   
 Some commands are specific to interactive variables and have been detailed in
 [an earlier section](#sec:interactive-variables):
@@ -4678,18 +4778,20 @@ Some commands are specific to interactive variables and have been detailed in
 - `var.list` lists all the defined interactive variables,
 - `var.set` changes the value of an interactive variable.
 
-Those are the commands which are available in the telnet server of every
-script. Moreover, the operators used in a particular script can register their
-own commands. This is the case for the `playlist` operator, which has registered
-the following three commands:
+#### Operators' commands
+
+Above are presented the commands which are available in the telnet server of
+every script. But the operators used in a particular script also register
+additional commands. This is for instance the case for the `playlist` operator,
+which has registered the following three commands:
 
 - `main.reload` reloads the playlist,
 - `main.skip` skips the current song and goes to the next track,
 - `main.uri` can be used to retrieve or change the location of the playlist.
 
 Note that the commands are prefixed with `main`, which is the `id` of the
-playlist, so that we know which operator we are referring to. However, no prefix
-is added if no `id` is provided. The `request.queue` operator also has
+playlist, so that we know which operator we are referring to (no prefix
+is added if no `id` is provided). The `request.queue` operator also has
 registered three commands
 
 - `reqs.push` allows adding a new request in the queue, for instance
@@ -4716,8 +4818,8 @@ used and what it does, and are used when displaying help.
 
 For instance, suppose that we have three sources `rap`, `rock` and `techno`, and
 that we want to be able to switch between them whenever we want by typing the
-command `select rap`, `select rock` or `select techno` on the telnet. This can
-be achieved as follows:
+command "`select rap`", "`select rock`" or "`select techno`" on the telnet. This
+can be achieved as follows:
 
 ```{.liquidsoap include="liq/server.register.liq" from=2}
 ```
@@ -4727,7 +4829,7 @@ describing the currently selected source (it can be `"rap"`, `"rock"` or
 `"techno"`, and is initially the last one). We then define the callback function
 `on_select`, which changes the value of `selected` according to its argument. We
 then use `server.register` to have `on_select` be called when the `select`
-command is typed on the telnet. Finally we define our radio with a `switch`
+command is typed on the telnet. Finally, we define our radio with a `switch`
 which plays the `rap` source when the value of `selected` is `"rap"` and
 similarly for other sources. We can then change the played source to `rock` by
 typing the telnet command
@@ -4771,11 +4873,13 @@ When the web interface for the telnet server is enabled with `server.harbor()`,
 it is also possible to POST the command at the url of the server (by default
 [`http://localhost:8000/telnet`](http://localhost:8000/telnet)). You should have
 a look at the implementation of `server.harbor` in the standard library if you
-want to customize this (e.g. in order to support GET), which is based on
-`harbor.http.register` which is described next.
+want to customize this (e.g. in order to support GET): it is based on
+`harbor.http.register`, which is described next.
 
-Finally, it is also possible to run a server command from within the Liquidsoap
-script itself by using `server.execute` function such as
+#### Running commands from scripts
+
+It is also possible to run a server command from within a Liquidsoap script
+itself by using `server.execute` function such as
 
 ```liquidsoap
 server.execute("title My new title")
@@ -4787,7 +4891,8 @@ or
 server.execute("title", "My new title")
 ```
 
-if you want to separate the command from the argument.
+if you want to separate the command from the argument. This is working even if
+the telnet interface for the server is not enabled.
 
 ### Web-based interactions {#sec:harbor}
 
@@ -4810,15 +4915,15 @@ radio = playlist("http://www.some-server.com/playlist")
 and the playlist can itself consist in a list of urls of files to be played.
 
 It might also happen that you need to retrieve some distant file over http and
-https. This can be achieved with the functions `http.get` (or `https.get`\TODO{https.get was removed}) which
-takes a url as argument and returns the contents of the file as a string. For
-instance, you can display the changelog for Liquidsoap with
+https. This can be achieved with the functions `http.get` which takes a url as
+argument and returns the contents of the served page as a string. For instance,
+you can display the changelog for Liquidsoap with
 
 ```{.liquidsoap include="liq/https.get.liq"}
 ```
 
-The value returned by this function also features the following fields, which
-can be used to obtain more information about the request:
+The value returned by the function `http.get` also features the following
+fields, which can be used to obtain more information about the request:
 
 - `headers` is the list of headers and their value,
 - `protocol_version` is the version of the http protocol we used (typically
@@ -4829,7 +4934,7 @@ can be used to obtain more information about the request:
 - `status_message` is a textual description of the status code.
 
 When making requests, you should always check the status code in order to ensure
-that everything went on fine
+that everything went on fine. A value above 400 means that an error occurred:
 
 ```{.liquidsoap include="liq/http.get.liq" from=1}
 ```
@@ -4839,14 +4944,13 @@ to the request and the parameter `timeout` controls how long we can take at most
 in order to fetch the page (default is 10 seconds).
 
 The http protocol actually defines two main ways of retrieving webpages: GET,
-which is handled by the functions `http.get` and `https.get`\TODO{no https anymore} presented above,
-and POST, which is handled by the functions `http.post` and `https.post`\TODO{no https anymore}. The
-POST method is generally used for forms and takes an argument named `data`,
-which contains the data we want to pass as the contents of the form. The way
-this data is encoded is application-dependent and should be specified using the
-`Content-Type` header. For instance, suppose that we have a script
-`update_metadata.php` that we can call to update the metadata on our
-website. The script
+which is handled by the function `http.get` presented above, and POST, which is
+handled by the function `http.post`. The POST method is generally used for forms
+and takes an argument named `data`, which contains the data we want to pass as
+the contents of the form. The way this data is encoded is application-dependent
+and should be specified using the `Content-Type` header. For instance, suppose
+that we have a script `update_metadata.php` that we can call to update the
+metadata on our website. The script
 
 ```{.liquidsoap include="liq/http.post.liq" from=2 to=-1}
 ```
@@ -4857,9 +4961,9 @@ in JSON as data.
 Additional useful http functions are `http.head` to only retrieve the headers of
 the corresponding GET request, `http.put` and `http.delete` which respectively
 perform PUT and DELETE http requests in order to upload or delete a distant
-file. All those functions have an `https` variant as well.\TODO{no https anymore}
+file.
 
-#### Serving webpages and services
+#### Serving static webpages
 
 Liquidsoap embeds a webserver which makes it possible for it to serve
 webpages. The most basic way of doing so is by making a directory available on
@@ -4898,14 +5002,16 @@ http://localhost:8000/pages/test.html
 ```
 
 When serving files in this way, it is important that the server knows the kind
-of file it is serving. This is automatically detected by default, but can also
+of file it is serving. This is automatically detected by default, but it can also
 be specified manually with the `content_type` argument of `harbor.http.static`.
+
+#### Serving dynamic webpages
 
 The full power of the harbor server can be used through the
 `harbor.http.register` function, which allows serving http requests with
 dynamically generated answers. It takes as arguments
 
-- `port`: the port of the server (8000 by default),
+- `port`: the port of the server (`8000` by default),
 - `method`: the kind of request we want to handle (`"GET"`, `"POST"`, etc.,
   default being `"GET"`),
 - the url we want to serve,
@@ -4926,9 +5032,9 @@ which indicates that it receives as arguments
 
 and returns a string which is the http answer. This answer has to follow a
 particular format specified by the http protocol, and is usually generated by
-`http.response` which takes as argument the protocol (HTTP/1.1 by default),
-status code (200 by default), headers (none by default), content type and data
-of the answer, and properly formats it. For instance, in the script
+`http.response` which takes as argument the protocol (HTTP/1.1 by default), the
+status code (200 by default), the headers (none by default), the content type
+and the data of the answer, and properly formats it. For instance, in the script
 
 ```{.liquidsoap include="liq/harbor.http.register1.liq" from=1 to=-1}
 ```
@@ -4940,18 +5046,18 @@ prints `It works!` as answer. You can test it by browsing the url
 http://localhost:8000/test
 ```
 
-and you will see the message. We can also easily provide an html-formatted
-answer:
+and you will see the message. We can also easily provide an answer formatted in
+HTML:
 
 ```{.liquidsoap include="liq/harbor.http.register2.liq" from=1 to=-1}
 ```
 
 #### Skipping tracks
 
-What makes this function powerful is the fact that the serving function is an
-arbitrary function, which can perform any sequence of operations in the
-script. For instance, we have already seen that that we can implement a service
-to skip the current track on the source `s` with
+What makes this mechanism incredibly powerful is the fact that the serving
+function is an arbitrary function, which can itself perform any sequence of
+operations in the script. For instance, we have already seen that that we can
+implement a service to skip the current track on the source `s` with
 
 ```{.liquidsoap include="liq/source.skip3.liq" from=2 to=-1}
 ```
@@ -4967,8 +5073,8 @@ returning a message.
 
 #### Exposing metadata
 
-The contents we serve might depend on values in the script. For instance, the
-following script shows the metadata of our `radio` source encoded in JSON:
+The contents we serve might also depend on values in the script. For instance,
+the following script shows the metadata of our `radio` source encoded in JSON:
 
 ```{.liquidsoap include="liq/harbor.http.register-last-track.liq" from=2 to=-1}
 ```
@@ -4995,8 +5101,7 @@ which will provide an answer of the following form:
 }
 ```
 
-This can be used with AJAX-based backends to fetch the current metadata of our
-radio.
+This can be used with AJAX backends to fetch the current metadata of our radio.
 
 #### Enqueuing tracks
 
@@ -5009,9 +5114,9 @@ http://localhost:8000/play?file=test.mp3&title=La%20bohème
 
 we play the file `test.mp3` and specify that the title should be "La
 bohème". Here, the "real" part of the url ends with `/play`, and the part after
-the question mark (`?`) should be considered as arguments, separated by
-ampersand (`&`) and passed in the form `name=value`. It should also be noted
-that urls use a particular, standardized, coding, where `%20` represents a
+the question mark (`?`) should be considered as arguments, separated by
+ampersand (`&`) and passed in the form `name=value`. It should also be noted
+that an URL uses a particular, standardized, coding, where `%20` represents a
 space. This can be achieved as follows:
 
 ```{.liquidsoap include="liq/harbor.http.register-play.liq" from=1 to=-1}
@@ -5065,7 +5170,7 @@ do not natively support passing metadata. <!-- #515 -->
 
 In [an earlier section](#sec:registering-commands), we have seen how to switch
 between a `rock`, a `rap` and a `techno` source using telnet commands. Of
-course, this can also be achieved with web services as follows:
+course, this can also be achieved with a web service as follows:
 
 ```{.liquidsoap include="liq/harbor.http.register-switch.liq" from=2 to=-1}
 ```
@@ -5146,24 +5251,25 @@ help:
 Monitoring and testing
 ----------------------
 
-If you have read this chapter up to there, you should now have all the tools to
-write the script for the radio you have always dreamed of. We give here some
-functions that you can use to check that your script is running correctly.
+If you have read this (long) chapter up to there, you should now have all the
+tools to write the script for the radio you have always dreamed of. Now it is
+time to test this script to ensure that it performs as expected. We give here
+some functions that you can use to check that your script is running correctly.
 
 ### Metrics
 
 In order to ensure that your script is running alright at all times and perform
 forensic investigation in case of a problem, it is useful to have _metrics_
-about the script: these are relevant which indicate relevant information about
-the stream production.
+about the script: these are data, often numeric data, which indicate relevant
+information about the stream production.
 
 #### Useful indicators
 
 The _power_ of the stream can be obtained with the `rms` operator, which adds to
 a source an `rms` method which returns the current rms. Here, rms stands for
-_root mean square_ and is a good way of measuring the power of the sound. This
-value is a float between 0 (silent sound) and 1 (very loud sound). It can be
-converted to decibels, which is a more usual way of measuring power using the
+_root mean square_ and is a decent way of measuring the power of the sound. This
+value is a float between 0 (silent sound) and 1 (maximally loud sound). It can
+be converted to decibels, which is a more usual way of measuring power using the
 `dB_of_lin` function. For instance, the script
 
 ```{.liquidsoap include="liq/rms.liq" from=2 to=-1}
@@ -5173,8 +5279,8 @@ will print the power in decibels of the source `s` every second.
 
 Another measurement for loudness of sound is LUFS (for _Loudness Unit Full
 Scale_). It is often more relevant than rms because it takes in account the way
-human ears perceive the sound (which is not always the same depending on the
-frequency). It can be obtained quite in a similar way:
+human ears perceive the sound (which is not homogeneous depending on the
+frequency of the sound). It can be obtained quite in a similar way:
 
 ```{.liquidsoap include="liq/lufs.liq" from=2 to=-1}
 ```
@@ -5185,8 +5291,8 @@ musical stream can be computed in a similar way:
 ```{.liquidsoap include="liq/bpm.liq" from=1}
 ```
 
-We can also detect whether the stream has sound or is streaming blank using
-`blank.detect`:
+We can also detect whether the stream has sound or is streaming silence the using
+`blank.detect` operator:
 
 ```{.liquidsoap include="liq/blank.detect2.liq" from=2 to=-1}
 ```
@@ -5200,15 +5306,15 @@ following methods:
 
 #### Exposing metrics
 
-Once we have decided upon which metrics you want to expose, we need to make them
+Once we have decided upon which metrics we want to expose, we need to make them
 available to external tools. For instance, suppose that we have a source `s` and
-that we want to export readyness, RMS and LUFS as indicators. We thus first define a
-function which returns the metrics of interest:
+that we want to export readyness, RMS and LUFS as indicators. We thus first
+define a function which returns the metrics of interest as a record:
 
 ```{.liquidsoap include="liq/metrics.liq" from=1}
 ```
 
-One way to do this is simply to export them in a file. This can be done with
+We can then export our metrics in a file, which can be performed with
 
 ```{.liquidsoap include="liq/metrics-file.liq" from=2 to=-1}
 ```
@@ -5224,7 +5330,7 @@ If you need a more robust way of storing and exploring metrics, Liquidsoap has
 support for the [Prometheus](https://prometheus.io/) tool, which is dedicated to
 this task. Suppose that we have two sources named `radio1` and `radio2` for
 which we want to export the RMS. We first need to declare that we want to use
-prometheus and declare the port we want to run the server on:
+Prometheus and declare the port we want to run the server on:
 
 ```{.liquidsoap include="liq/prometheus.liq" from=2 to=3}
 ```
@@ -5272,15 +5378,15 @@ monitor the internal latency of a given source.
 
 On top of prometheus, [Grafana](https://grafana.com/) offers a nice web-based
 interface. The reader interested in those technologies is advised to have a look
-at the [SRT2HLS](https://github.com/mbugeia/srt2hls) projects which builds on
+at the [`srt2hls`](https://github.com/mbugeia/srt2hls) project which builds on
 Liquidsoap and those technologies.
 
 ### Testing scripts
 
-We provide here a few tips in order to help the elaboration and the testing of
-scripts.
+We provide here a few tips in order to help with the elaboration and the testing
+of scripts.
 
-#### Log the script
+#### Logging
 
 A first obvious remark is that you will not be able to understand the problems
 of your radio if you don't know what's going on, and a good way to obtain
@@ -5294,7 +5400,7 @@ set("log.file.path", "/tmp/liquidsoap.log")
 ```
 
 where the second line specifies the file those should be written to. A typical
-log line looks like this:
+log entry looks like this:
 
 ```
 2021/04/26 09:18:46 [request.dynamic_65:3] Prepared "test.mp3" (RID 0).
@@ -5304,8 +5410,7 @@ It states that on the given day and time, an operator `request.dynamic` (the
 suffix `_65` was added in case there are multiple operators, to distinguish
 between them) has issued a message at level `3` (important) and the message is
 "`Prepared "test.mp3" (RID 0).`", which means here that a request to the file
-`test.mp3` is about to be played and has rid 0.\TODO{importance of the
-identifier we give to operators}
+`test.mp3` is about to be played and has rid 0.
 
 We recall that there are various levels of importance for information:
 
@@ -5329,7 +5434,7 @@ argument `label` which will be used as "operator name" in the log. For instance,
 ```{.liquidsoap include="liq/log.liq" from=2 to=-2}
 ```
 
-will issue the following line in the logs:
+will add the following line in the logs:
 
 ```
 2021/04/26 09:28:18 [testing:2] This is my message to you.
@@ -5350,13 +5455,12 @@ a failure of the network...).
 
 Apart from reading the logs, the way you are generally going to test and debug
 your scripts is by using your ears. The simplest way to generate sound is by
-having a few music files at hand that you know well.
-
-Another very efficient way to generate easily recognizable sound is by
-generating sines, with different frequencies for different events. Those can be
-generated with the `sine` operator where the `duration` argument specifies the
-length of the track (infinite by default) and the unlabeled argument specifies
-the frequency. For instance, we can test the `fallback` operator as follows:
+having a few music files at hand that you know well. Another very efficient way
+to generate easily recognizable sound is by generating sines, with different
+frequencies for different events. Those can be generated with the `sine`
+operator where the `duration` argument specifies the length of the track
+(infinite by default) and the unlabeled argument specifies the frequency. For
+instance, we can test the `fallback` operator as follows:
 
 ```{.liquidsoap include="liq/test-fallback.liq" from=1}
 ```
@@ -5368,8 +5472,8 @@ sine and then medium frequency sine:
 
 ![Testing fallback](fig/test-fallback.pdf)\
 
-This can be particularly handy if you want to test fallback's transitions for
-instance.
+This can be particularly handy if you want to test faded transitions in fallback
+for instance.
 
 Sines can also be generated by special requests using the `synth` protocol,
 which are of the following form:
@@ -5378,10 +5482,10 @@ which are of the following form:
 synth:shape=sine,frequency=440,duration=1
 ```
 
-The parameters for the request are the shape (which can be `sine`, `saw`,
-`square` or `blank`, the default being `sine`), the frequency in Hz (440 by
-default) and the duration in seconds (10 by default). For instance, we can test
-request queues with the script
+The parameters for the request are the shape of the generated sound wave (which
+can be `sine`, `saw`, `square` or `blank`, the default being `sine`), the
+frequency in Hz (440 by default) and the duration in seconds (10 by
+default). For instance, we can test request queues with the script
 
 ```{.liquidsoap include="liq/test-queue.liq" from=1}
 ```
@@ -5406,9 +5510,9 @@ synthesize the sine!).
 
 #### Generating events
 
-The last example should make it clear that the function `thread.run` is quite
-useful to generate "events" such as pushing in a queue. Apart from the function
-to run `thread.run` takes two interesting arguments:
+The previous example should have made it clear that the function `thread.run` is
+quite useful to generate "events" such as pushing in a queue. Apart from the
+function to run `thread.run` takes two interesting arguments:
 
 - `delay`: after how much time (in seconds) the function should be executed,
 - `every`: how often (in seconds) the function should be called (by default, the
@@ -5424,10 +5528,10 @@ every 10 seconds with `thread.run` as follows:
 ```
 
 The `thread.run` function can be used to execute a function regularly according
-to the time of the computer. Sometimes it is more convenient to run the function
+to the time of the computer. But, sometimes, it is more convenient to run the function
 according to the internal time of a particular source, which can be achieved
 with the `source.run` function: this function takes similar arguments as
-`thread.run`, as well as a source which should be taken as time reference. For
+`thread.run`, but also a source which should be taken as time reference. For
 instance, suppose that you have a source `s2` which is in a fallback and that
 you want to skip it every 10 seconds when it is playing (and not skip when it is
 not playing). This is achieved with
@@ -5442,27 +5546,27 @@ is the case.
 #### Generating tracks
 
 We have seen above that we can generate short tracks by regularly skipping a
-source. Since this is quite useful to perform test (transitions, metadata
+source. Since this is quite useful to perform tests (transitions, metadata
 handling, switching between sources, etc.), Liquidsoap provides various
-functions in order to do so.
+operators in order to do so.
 
-- `skipper` takes a source and skips the track at regular intervals (specified
-  by the argument `every`):
+- `skipper` takes a source and skips the track at regular intervals, specified
+  by the argument `every`:
   
   ```{.liquidsoap include="liq/skipper.liq" from=2 to=-1}
   ```
   
-  (its implementation is essentially given above),
+  (its implementation was essentially given above),
 
-- `chop` takes a source and insert track boundaries at regular intervals
+- `chop` takes a source and inserts track boundaries at regular intervals
   (specified by the argument `every`), with given metadata:
   
   ```{.liquidsoap include="liq/chop.liq" from=2 to=-1}
   ```
 
 - `accelerate` plays a stream at faster speed by dropping or repeating frames,
-  the speeding factor is given by `radio` (i.e. how many times we should speed
-  up the stream)
+  the speeding factor being given by the `ratio` argument, which specifies how
+  many times we should speed up the stream:
   
   ```{.liquidsoap include="liq/accelerate.liq" from=2 to=-1}
   ```
@@ -5496,7 +5600,7 @@ Another way to achieve this is as follows:
 ```{.liquidsoap include="liq/test-live2.liq" from=1}
 ```
 
-We use the `uptime` function, which counts the time in seconds since the
+We use the `time.up` function, which counts the time in seconds since the
 beginning of the execution of the script, with the `mod 10.` operator which
 forces the counting to go back to 0 every 10 seconds: thus `time.up() mod 10.`
 is greater than 5 for 5 seconds every 10 seconds, as desired.
@@ -5511,15 +5615,15 @@ seconds, by amplifying with 1 or 0, in order to test `blank.strip` for instance:
 
 In order to simulate sources which are slow to produce a stream (because of a
 high CPU load, because of a network lag, etc.), one can use the `sleeper`
-operator. It takes a `delay` operator which indicates how much times it takes to
-produce 1 second of audio. For instance, in the script
+operator. It takes a `delay` operator which indicates how much times it should
+take to produce 1 second of audio. For instance, in the script
 
 ```{.liquidsoap include="liq/sleeper.liq" from=1}
 ```
 
-we simulate a sine which takes 1.1 second to produce audio. Because the sound
-production is slower than realtime, you will soon hear glitches in the audio, as
-well as see log messages such as
+we simulate a sine which takes 1.1 second to produce 1 second audio. Because the
+sound production is slower than realtime, you will soon hear glitches in the
+audio, as well as see log messages such as
 
 ```
 2020/07/29 11:13:05 [clock.pulseaudio:2] We must catchup 0.86 seconds!
@@ -5566,7 +5670,8 @@ columns indicate
 - `function`: the function name,
 - `self`: the time spent in the function, excluding the time spent in function
   calls,
-- `total`: the time spent in the function,
+- `total`: the time spent in the function, including the time spent in function
+  calls,
 - `calls`: the number of time the function was called.
 
 For instance, in the script
@@ -5605,7 +5710,7 @@ Some methods provide information about the source.
   ```{.liquidsoap include="liq/fallible-sine.liq" from=1}
   ```
   
-  will always print `fallse` because the sine source will never fail, but
+  will always print `false` because the sine source will never fail, but
     
   ```{.liquidsoap include="liq/fallible-input.harbor.liq" from=1}
   ```
@@ -5629,11 +5734,12 @@ Some methods allow registering functions called on some events.
 
 Some methods allow performing actions on the source.
 
-- `seek`: seek forward and returns the amount of time effectively seeked. The
-  argument is given in seconds relative to current position, so that negative
-  means seek backward. Seeking is not available on every source (e.g. we cannot
-  seek on an `input.http` source). For instance, the following script will loop
-  in the first 10 seconds of the source `s`:
+- `seek`: seek forward and returns the amount of time effectively seeked, see
+  also [earlier](#sec:seeking). The argument is given in seconds relative to
+  current position, so that a negative value instructs to seek backward. Seeking
+  is not available on every source (e.g. we cannot seek on an `input.http`
+  source). The following script will loop in the first 10 seconds of the
+  source `s`:
 
   ```{.liquidsoap include="liq/seek.liq" from=1}
   ```
@@ -5748,11 +5854,12 @@ Some other useful functions are
 
 #### Decoupling latencies
 
-The first reason to explicitly assign clocks is to precisely handle the various
-latencies that might occur in your setup and make sure that those from an
-operator do not affect the ones from another operator. For instance, suppose
-that you have a script consisting of a microphone source, which is saved in a
-file for backup purposes and streamed to icecast:
+The first reason you might want to explicitly assign clocks is to precisely
+handle the various latencies that might occur in your setup, and make sure that
+delay induced by an operator do not affect other operators. Namely, two
+operators animated by two different clocks are entirely independent. For
+instance, suppose that you have a script consisting of a microphone source,
+which is saved in a file for backup purposes and streamed to icecast:
 
 ```{.liquidsoap include="liq/clock-decoupling.liq" from=1}
 ```

@@ -18,8 +18,11 @@ FLAC [flac]{.smallcaps}
 HLS [hls]{.smallcaps}
 MPEG-DASH [mpeg-dash]{.smallcaps}
 RTMP [rtmp]{.smallcaps}
-URI [uri]{.smallcaps}
 uri [uri]{.smallcaps}
+URI [uri]{.smallcaps}
+url [url]{.smallcaps}
+URL [url]{.smallcaps}
+urls [url]{.smallcaps}
 JSON [json]{.smallcaps}
 CD [cd]{.smallcaps}
 OSC [osc]{.smallcaps}
@@ -49,6 +52,7 @@ RSS [rss]{.smallcaps}
 youtube YouTube
 Youtube YouTube
 IP [ip]{.smallcaps}
+IPs [ip]{.smallcaps}
 API [api]{.smallcaps}
 cpu [cpu]{.smallcaps}
 CPU [cpu]{.smallcaps}
@@ -64,3 +68,12 @@ AVI [avi]{.smallcaps}
 mp4 [mp4]{.smallcaps}
 MP4 [mp4]{.smallcaps}
 FDK [fdk]{.smallcaps}
+liquidsoap Liquidsoap
+GET [post]{.smallcaps}
+POST [post]{.smallcaps}
+PUT [put]{.smallcaps}
+DELETE [delete]{.smallcaps}
+html [html]{.smallcaps}
+HTML [html]{.smallcaps}
+AJAX [ajax]{.smallcaps}
+LUFS [lufs]{.smallcaps}
