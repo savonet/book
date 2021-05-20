@@ -36,6 +36,7 @@ XML [xml]{.smallcaps}
 wav [wav]{.smallcaps}
 speex Speex
 ogg Ogg
+vorbos Vorbis
 uri [uri]{.smallcaps}
 URI [uri]{.smallcaps}
 pulseaudio PulseAudio
@@ -49,3 +50,17 @@ youtube YouTube
 Youtube YouTube
 IP [ip]{.smallcaps}
 API [api]{.smallcaps}
+cpu [cpu]{.smallcaps}
+CPU [cpu]{.smallcaps}
+RFC [rfc]{.smallcaps}
+ftp [ftp]{.smallcaps}
+FTP [ftp]{.smallcaps}
+PCM [pcm]{.smallcaps}
+LAME [lame]{.smallcaps}
+MPEG-TS [mpeg-ts]{.smallcaps}
+MPEG [mpeg]{.smallcaps}
+avi [avi]{.smallcaps}
+AVI [avi]{.smallcaps}
+mp4 [mp4]{.smallcaps}
+MP4 [mp4]{.smallcaps}
+FDK [fdk]{.smallcaps}

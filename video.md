@@ -807,6 +807,8 @@ of the video codec should be at most twice the framerate). For instance,
 ```{.liquidsoap include="liq/video-facebook.liq" from=1}
 ```
 
+\TODO{all three together!!}
+
 ### Saving frames
 
 In case you need it, it is possible to save frames of the video with the

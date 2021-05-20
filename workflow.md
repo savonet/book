@@ -2263,7 +2263,7 @@ because listeners generally don't like it and will go away.
 
 #### Skipping blank
 
-For instance, it might happen that some music file is badly encoded and features
+Itt might happen that some music file is badly encoded and features
 a long period of blank at the end. In this case we want to skip the end of the
 song, and this is precisely the role of the `blank.skip` function:
 
@@ -2280,17 +2280,22 @@ intermittent short noises).
 #### Stripping blank
 
 It might also happen that the DJ has turned his microphone off but forgotten to
-disconnect, in which case we want to get back to the default radio stream. In
-this case, we cannot use `blank.skip` because we cannot skip a live stream, and
-have to use `blank.strip` which makes a source unavailable when it is steaming
-blank, and is typically used in conjunction with fallback:
+disconnect, in which case we want to get back to the default radio stream. To
+handle such situations, we cannot use `blank.skip` because we cannot skip a live
+stream, but we can resort to the `blank.strip` operator which makes a source
+unavailable when it is steaming blank, and is typically used in conjunction with
+fallback:
 
 ```{.liquidsoap include="liq/blank.strip.liq" from=1 to=-1}
 ```
 
-Note that we are using the `min_noise` parameter here, so that we sill consider
-as silent a microphone where there is no sound most of the time, excepting short
-noises from time to time (such as a person walking around).
+The `max_blank` parameter states that we wait for 1 second of silence before
+making the source unavailable and the `threshold` parameter means that we
+consider anything below -20 dB as silence. The `min_noise` parameter means that
+we require that there is 0.1 s of noise before making the source available
+again, so that we sill consider as silent a microphone where there is no sound
+most of the time, excepting very short noises from time to time (such as a
+person walking around).
 
 #### Gating
 
@@ -2327,8 +2332,8 @@ or "open", i.e. if the volume is currently lowered or not.
 Now that we have presented the basic effects, which mainly operate on the volume
 of the sound, we will now be presenting some more advanced audio effects, which
 can be used to make the listening experience more homogeneous and give a "unique
-color" to your radio. We however need to begin by explaining one of the main
-issues we have to face when operating on sound: clipping.
+color" to your radio. We however need to begin by explaining one of the
+classical issues we have to face when operating on sound: clipping.
 
 #### Clipping {#sec:clipping}
 
@@ -2424,7 +2429,7 @@ is higher than 1:
 ```
 
 Since the `normalize` function is not perfect, it might happen that it produces
-a too loud sound for a short period of time. In order to avoid the clipping it
+a very loud sound for a short period of time. In order to avoid the clipping it
 would induce, it is advisable to always pipe the output of `normalize` to a
 limiter:
 
@@ -2447,7 +2452,7 @@ figures:
 ![Filters](fig/filter.pdf)\
 
 For instance, a low-pass filter would keep all the frequencies below the cutoff
-exactly as they were in the original signal and keep none above. In practice,
+exactly as they were in the original signal, and keep none above. In practice,
 the transition between kept and removed frequencies is smother and the actual
 filter response of a low-pass filter is rather like this:
 
@@ -2479,8 +2484,8 @@ less abrupt for `filter.rc` than for biquadratic filters and `filter` does not
 handle well high cutoff frequencies (higher than the quarter of the sampling
 rate, which often means around 10 kHz). The `filter.iir.butterworth.*` filter
 are of good quality (and their quality can be arbitrarily increased by
-increasing their `order` parameter which -- of course -- also makes them more
-cpu-hungry), but require more computations.
+increasing their `order` parameter), but require more computations (and the
+higher the order is, the more cpu is used).
 
 A typical use of filters is (obviously) to remove unwanted frequencies. For
 instance, cheap microphones, often produce noise at low frequencies, which can
@@ -2524,7 +2529,7 @@ in fact a combination of previous effects: _multiband_ compression aka the _big
 fat FM radio sound_. This is what is used in most commercial music radios so
 that, when you listen to songs in your car without thinking too much, you are
 not disturbed by changes in the dynamics of songs. Whether you like it or not,
-this can easily be achieve in Liquidsoap. This is basically achieved by
+this can easily be done in Liquidsoap. This is basically achieved by
 splitting the signal in various bands of frequencies (using band-pass filters
 such as `filter.iir.eq.low_high`), independently compress each of those (using
 `compress`), and add them back together (using `add`). In other words, we apply
@@ -2653,10 +2658,11 @@ follows:
 Plugins can be a bit difficult to understand if you have no idea what the plugin
 does, in which case the documentation on the author's websites can be useful.
 
-\TODO{explain that it takes startup time and that loading can be disabled}
+<!-- \TODO{explain that it takes startup time and that loading can be disabled} -->
 
-\TODO{mention FFmpeg plugins, and say that they are developed in video section,
-see sec:ffmpeg-filters, because they are typically used for this}
+Many other plugins are provided by the FFmpeg library. They are presented later,
+in [there](#sec:ffmpeg-filters), since they are a bit more difficult to use and
+you are most likely to use them for video.
 
 #### Stereo Tool {#sec:stereo-tool}
 
@@ -2664,7 +2670,7 @@ A last possibility to handle your sound is to use software dedicated to
 producing high quality radio sound, such as _[Stereo
 Tool](https://www.stereotool.com/)_. If you want to do so, you can use the
 `pipe` operator which allow exchanging audio data with external software through
-the standard input and output and is described in [a later
+the standard input and output and is detailed in [a later
 section](#sec:pipe). Typically, one would use it to handle a source `s` with
 Stereo Tool as follows:
 
@@ -2679,10 +2685,10 @@ the Stereo Tool binary is located, `myradio.sts` by your configuration file and
 ### Playing with parameters
 
 We would now like to make a few remarks about the way parameters can be handled
-in order to configure sound effects. As you will remark, you quickly face with
-loads of parameters and, when you want to find the right values, it can be very
-tedious to change them in your script, save the file, and relaunch the whole
-script in order to listen to the effect.
+in order to configure sound effects. You will certainly experience that you
+quickly face with loads of parameters and, when you want to find the right
+values, it can be very tedious to change them in your script, save the file, and
+relaunch the whole script in order to listen to the effect.
 
 #### Decibels
 
@@ -2703,15 +2709,16 @@ decibels is pictured below in both ways:
 ![Linear vs decibels](fig/lin-dB.pdf)\
 
 In Liquidsoap, the functions `lin_of_dB` and `dB_of_lin` can be used to convert
-between the two (the first converts decibels in linear units and the second does
-the converse). For instance, we can amplify a source `s` by 2 dB with
+between the two: the first converts decibels in linear units and the second does
+the converse. For instance, we can amplify a source `s` by 4 dB with
 
 ```{.liquidsoap include="liq/amplify-db.liq" from=2 to=-1}
 ```
 
-When using operators, you should always check in the doc the unit for the
-amplitudes. Unfortunately, both exist in nature (for instance, `amplify` takes a
-linear parameter whereas most effects such as compressors expect decibels).
+When using operators, you should always check in the documentation the unit for
+the amplitudes. Unfortunately, both exist in nature (for instance, `amplify`
+takes a linear parameter whereas most effects such as compressors expect
+decibels).
 
 #### Getters
 
@@ -2749,8 +2756,15 @@ as
 ```{.liquidsoap include="liq/amplify-time2.liq" from=2 to=-1}
 ```
 
-This is quite useful for retrieving parameters from external sources. For
-instance, the function `file.getter.float` has type
+and, in fact, we could even directly use the function `time.up` which gives the
+time since startup
+
+```{.liquidsoap include="liq/amplify-time3.liq" from=2 to=-1}
+```
+
+The fact that we can use getters as parameters is quite useful for retrieving
+parameters from external sources. For instance, the function `file.getter.float`
+has type
 
 ```
 (string) -> () -> float
@@ -2796,9 +2810,9 @@ typing
 telnet localhost 1234
 ```
 
-(here, we suppose that we are on the machine running the script, otherwise
-`localhost` has to be replaced by its address, and `1234` is the default port
-for the telnet server). Then we can change the value of the interactive variable
+Here, we suppose that we are on the machine running the script, otherwise
+`localhost` has to be replaced by its address. `1234` is the default port for
+the telnet server. Then, we can change the value of the interactive variable
 `main_volume` to 0.75 by typing
 
 ```
@@ -2851,7 +2865,7 @@ interactive.persistent("script.params")
 you will observe that a file `script.params` has been created and its contents is
 
 ```
-[ [  ], { "main_volume": 0.5 }, [  ], [  ] ]
+[ { "main_volume": 0.5 }, [  ], [  ], [  ] ]
 ```
 
 which, without entering the details, contains the value for
@@ -2859,7 +2873,7 @@ which, without entering the details, contains the value for
 script, so that interactive variables will keep their values across executions.
 
 There is one important caveat: the function `interactive.persistent` must be
-called after all interactive values have been created (i.e. after all calls to
+called _after_ all interactive values have been created (i.e. after all calls to
 functions `interactive.float` and similar), otherwise previous values are not
 taken in account when restarting scripts. If you do not want to think too much,
 follow this simple rule: put any call to `interactive.persistent` toward the end
@@ -2890,7 +2904,7 @@ webpage like
 where we can edit in realtime the value of the interactive variable (of course
 if we had many variables we would have one line for each of them). If we specify
 the minimal and maximal value of the interactive variable (`min` and `max`
-parameters of `interactive.float`) we moreover get a slider and if we moreover
+parameters of `interactive.float`) we moreover get a slider, and if we moreover
 set the `description` it will be displayed. This means that by changing the
 declaration of the interactive variable to
 
@@ -2904,29 +2918,29 @@ the webpage will change to
 ![Interactive variables webpage](img/interactive2.png) \
 
 In this way you easily get access to a convenient interface for setting your
-parameters, and its values can be stored on the long run by using
-`interactive.persistent`.
+parameters, and their values can be stored on the long run by using
+`interactive.persistent` as explained above.
 
 In order to provide another illustration, suppose that we want to setup a bass
 booster for our radio source `s`. The way we are going to design it is by
 setting up two interactive variables `f` and `g` for the frequency and the gain
 
-```{.liquidsoap include="liq/bass-boost3.liq" from=2}
+```{.liquidsoap include="liq/bass-boost4.liq" from=2}
 ```
 
 and tweaking them using the interactive variables webpage which looks like
 
 ![Interactive variables webpage](img/interactive3.png)\
 
-Once the right values found, they are stored in the `bb.params` files, but we
-can hardcode them for more resiliency.
+Once the right values found, they will be stored in the `bb.params` files, but
+you could then hardcode them in your script for more resiliency.
 
 As a last example, suppose that we want to set up a multiband compressor. Well,
 we could do the same as above for the parameters of `compress.multiband`, but it
 becomes quite tedious to create interactive variables for all the parameters of
 the function, for each band. Fortunately, the `compress.multiband.interactive`
 operator can do this for us: we provide it with the number of bands we want to
-have and it creates the `compress.multiband` instance as well as all the
+have and it creates a `compress.multiband` instance as well as all the
 interactive variables for us. For instance, given a source `s`, the script
 
 ```{.liquidsoap include="liq/compress.multiband3.liq" from=2}
@@ -2936,9 +2950,9 @@ will give rise tot he following interface
 
 ![Interactive variables webpage](img/interactive4.png)\
 
-which allows to easily set up the multiband compressor using our ears. The _wet_
-parameter allows to compare the output with and without compression, as
-explained below.
+which allows to easily set up the multiband compressor using our ears and our
+mouse. The _wet_ parameter allows to compare the output with and without
+compression, as explained below.
 
 #### Interactive variables: OSC
 
@@ -2946,8 +2960,8 @@ Another way to modify interactive variables is through the OSC (_Open Sound
 Control_) protocol, which is used to communicate values over a local
 network. There is plenty of software for your tablet or your phone, which
 emulate controllers with loads of sliders and send their values using this
-protocol. Each of the sliders has an OSC address which looks like
-`/the/address`, whose name depend on the software you use. When launching your
+protocol. Each of the sliders has an OSC address, which looks like
+"`/the/address`", whose name depend on the software you use. When launching your
 software, you should first enter the IP address of the machine you want to
 communicate with (in our case, the machine where Liquidsoap is running) and the
 port on which we want to communicate (Liquidsoap uses 7777 by default, this can
@@ -2960,20 +2974,37 @@ corresponding controller updates its value. For instance, the script
 ```
 
 listens on the port 9000 for OSC events and changes the value of the interactive
-variable `a` when a new float value is sent at the OSC address `/volume`.
+variable `a` when a new float value is sent at the OSC address "`/volume`".
 
-#### Low-level OSC
+<!-- #### Low-level OSC -->
 
-\TODO{fill me in!}
+In passing, Liquidsoap also offers some more low-level functions in order to
+manipulate OSC values:
 
-It is also
+- `osc.float` takes an OSC address and an initial value as argument, and returns
+  a getter whose value changes when a new value is signaled by OSC:
+  
+  ```{.liquidsoap include="liq/osc.float.liq" from=2 to=-1}
+  ```
 
-`osc.float` / `osc.on_float` / `osc.send_float`
+- `osc.on_float` allows registering a function which is called when a new value
+  is received through OSC:
+  
+  ```{.liquidsoap include="liq/osc.on_float.liq" from=2 to=-1}
+  ```
+  
+- `osc.send_float` allows sending values through OSC:
+  
+  ```{.liquidsoap include="liq/osc.send_float.liq" from=2 to=-1}
+  ```
 
-#### Comparing dry an wet
+Of course, similar functions exist for other types (`osc.on_int`,
+`osc.send_bool`, etc.)
+
+#### Comparing dry and wet
 
 In order to test the pertinence of an effect, it is often useful to compare the
-sound without and with the effect. The `dry_wet` operator can help for this: it
+sound without and with the effect. The `dry_wet` operator can help with this: it
 takes a float parameter, a source with the original sound (the _dry_ source) and
 a source with the modified sound (the _wet_ source). When the parameter varies
 between 0 and 1, the output varies between the dry and the wet source: with 0
@@ -3038,7 +3069,7 @@ introductory material](#sec:icecast-setup) or the [official
 documentation](http://www.icecast.org) for this. We simply suppose here that we
 have setup a sever on the local machine (its address will be `localhost`) with
 the default password `hackme` (that you should really really change if you do
-not want to have problems).
+not want to run into problems).
 
 Streaming our radio to the world is then as simple as this:
 
@@ -3071,7 +3102,8 @@ and aac with
 Here, first define a function `out` which consists in `output.icecast` partially
 applied to the common parameters in order not to have to repeat them for each
 output, and then we define the various outputs. Note that it is absolutely not a
-problem that a given source is encoded multiple times.
+problem that a given source is encoded multiple times (excepting perhaps that it
+requires some cpu resources).
 
 Various arguments of `output.icecast` are available to provide more information
 about your radio including its `name`, `genre` and provide a `description` of
@@ -3083,8 +3115,8 @@ proper file output as described below.
 
 If you want to quickly test Icecast output without going through the hassle of
 setting up an Icecast server, you can use the `output.harbor` operator which
-will use Liquidsoap's internal webserver _harbor_. It will make Liquidsoap
-start a server which behave like Icecast would, and it is as simple as this:
+will use Liquidsoap's internal webserver _harbor_. It will make Liquidsoap start
+a server which behaves like Icecast would, and it is as simple as this:
 
 ```{.liquidsoap include="liq/output.harbor.liq" from=2}
 ```
@@ -3095,14 +3127,14 @@ format, the mountpoint and the source to encode, and it will be available at
   `http://localhost:8000/my-radio.mp3`
   
 for you to listen. You can protect the stream by specifying a `user` and a
-`password` argument (both need to specified) which will be required when trying
-to listen to the stream:
+`password` argument (both need to specified) which will then be required when
+trying to listen to the stream:
 
 ```{.liquidsoap include="liq/output.harbor2.liq" from=2}
 ```
 
 Alternatively, you can also specify an authentication function in the `auth`
-argument: this function itself takes the user and password as argument and
+argument: this function itself takes the user and password as arguments and
 returns whether the listener should be granted access to the stream. For
 instance, the following allows listeners whose password have odd length:
 
@@ -3116,17 +3148,17 @@ connections from listeners.
 
 In the last few years, people have started moving away from Icecast and turn to
 HLS to distribute streams. Basically, a stream in HLS is a playlist of very
-short portions of the stream, called segments, whose duration is generally 2
-around seconds. The playlist itself contains the last minute or so of the
-stream, split in segments, and is regularly updated. Compared to Icecast, this
-has the advantage of not requiring a constant connection from the user, and is
-thus robust to network changes or disconnections, and moreover, the segments are
-regular files and can thus be cached using the standard techniques for serving
-files over http. Another useful feature of HLS is that multiple encodings of the
-same stream can be served simultaneously: typically, one would serve both a low
-and a high quality version of the stream, and the user can seamlessly switch
-between the two depending on the quality of its connection (e.g. when going from
-3G to 4G on a phone).
+short portions of the stream, called segments, whose duration is generally
+between 2 and 10 seconds. The playlist itself contains the last minute or so of
+the stream, split in segments, and is regularly updated. Compared to Icecast,
+this has the advantage of not requiring a constant connection from the user, and
+is thus robust to network changes or disconnections, and moreover, the segments
+are regular files and can thus be cached using the standard techniques for
+serving files over http. Another useful feature of HLS is that multiple
+encodings of the same stream can be served simultaneously: typically, one would
+serve both a low and a high quality version of the stream, and the user can
+seamlessly switch between the two depending on the quality of its connection
+(e.g. when going from 3G to 5G on a phone).
 
 The `output.file.hls` operator takes care of this. It takes as mandatory arguments
 the directory where all the files will be put (the playlist and the segments), a
@@ -3137,11 +3169,11 @@ if  we have a stream named `radio`, the script
 ```{.liquidsoap include="liq/output.file.hls.liq" from=2}
 ```
 
-will generate an HLS stream in the directory `/tmp/hls`, encoding it in two
-qualities (`mp3-low` which is mp3 encoded at the bitrate 96 kbps and `mp3-hi`
-which is mp3 encoded at 160 kbps). The directory `/tmp/hls` would then typically
-be served by an http server. If you have a look at it you will see that it
-contains
+will generate an HLS stream in the directory `/tmp/hls`, by encoding the source
+in two qualities (`mp3-low` which is mp3 encoded at the bitrate 96 kbps and
+`mp3-hi` which is mp3 encoded at 160 kbps). The directory `/tmp/hls` would then
+typically be served by an http server. If you have a look at the contents of
+this directory, you will see that it contains
 
 - a file `stream.m3u8`: this is the main playlist that your listeners should
   listen to (it links to streams in both qualities, between which the listener
@@ -3177,8 +3209,9 @@ Some useful arguments of the `output.file.hls` operator are the following.
   somewhere.
 
 - `persist_at`: this specifies a file name which stores the state of the output
-  (such as the currently created segments) and will be used to properly continue
-  the HLS playlist in the case the script is stopped and restarted.
+  (such as the currently created segments, in JSON format) and will be used to
+  properly continue the HLS playlist in the case the script is stopped and
+  restarted.
 - `playlist`: the name of the main playlist, which is `"stream.m3u8"` by
   default.
 - `segment_duration`: the duration of each segment, 10 seconds by default.
@@ -3189,12 +3222,12 @@ Some useful arguments of the `output.file.hls` operator are the following.
   to download the files, and that they have an "old" version of the playlist,
   which will contain names for "old" segments. It is thus important to keep a
   few old segments in order to accommodate for such situations.
-- `streams_info`: can be used to specify additional information for the streams
+- `streams_info`: can be used to specify additional information about the streams
   such as the bandwith (in bits per second), the codecs (following RFC 6381),
   the extension for the files, and the dimensions in pixels for video streams.
 
 A more involved example, inspired of
-[srt2hls](https://github.com/mbugeia/srt2hls), is
+[`srt2hls`](https://github.com/mbugeia/srt2hls), is
 
 ```{.liquidsoap include="liq/output.file.hls2.liq" from=2}
 ```
@@ -3204,24 +3237,25 @@ some custom parameters set up.
 
 #### Encoders
 
-Any encoder can be used for streams in Liquidsoap. However, the
+Any encoder (see [below](#sec:encoders)) can be used for encoding HLS streams in
+Liquidsoap. However, the
 [HLS specification](https://tools.ietf.org/html/rfc8216) enforces that the
 codecs used should be mp3 and aac, so that you should restrict to those for
 maximum compatibility with players. Furthermore, in order to improve
-compatibility, it is recommended that sent data encapsulated in a `MPEG-TS`
-stream: currently, the only encoder capable of doing this in Liquidsoap is
+compatibility, it is recommended that sent data encapsulated in an `MPEG-TS`
+container: currently, the only encoder capable of doing this in Liquidsoap is
 `%ffmpeg`, as illustrated above.
 
 #### Serving with Liquidsoap
 
-It is possible to have Liquidsoap to serve directly the files for the HLS stream
+It is possible to have Liquidsoap directly serve the files for the HLS stream
 with its internal web server with the operator `output.harbor.hls` (and
 `output.harbor.hls.ssl` for encrypting with SSL). The arguments of this operator
 are the same as those of `output.file.hls`, excepting `port` and `path` which
 respectively specify the port of the server, and the path where the stream is
 served. It is not recommended for listener-facing setup, because we do not
 consider the internal web server harbor ready for heavy loads, but it can be
-useful to sync up with a caching system such as cloudfront. A simple setup would
+useful to sync up with a caching system such as CloudFront. A simple setup would
 be
 
 ```{.liquidsoap include="liq/output.harbor.hls.liq" from=2}
@@ -3233,7 +3267,7 @@ which would make the stream of the `radio` source available at the url
 
 ### File output
 
-The next output we are going to see is file output which, as you would expect,
+The next output we are going to see is the file output which, as you would expect,
 is performed by the operator `file.output`. It takes three arguments: the
 encoding format, the name of the file, and the source we want to encode in the
 file. For instance, we can encode a source `s` in the mp3 file `out.mp3` with
@@ -3241,7 +3275,7 @@ file. For instance, we can encode a source `s` in the mp3 file `out.mp3` with
 ```{.liquidsoap include="liq/output.file.liq" from=2}
 ```
 
-The file name can contain special substring which will automatically be replaced:
+The file name can contain special substrings which will automatically be replaced:
 
 - some strings stand for the current time: `%Y` (year), `%m` (month), `%d`
   (day), `%H` (hour), `%M` (minute), `%S` (second), `%w` (weekday), `%z`
@@ -3251,7 +3285,7 @@ The file name can contain special substring which will automatically be replaced
 - some strings stand for the current metadata of the source: `$(title)` is the
   title, `$(artist)` is the artist, `$(album)` is the album, and so on.
 
-For instance, when archiving the radio stream, it is useful to have the current
+For instance, when archiving a radio stream, it is useful to have the current
 time in the filename in order not to overwrite the file if the script is
 restarted:
 
@@ -3287,10 +3321,10 @@ server. For instance, in the script
 ```
 
 The function `on_file` is called each time an archive file is created. Here, we
-call a command to simply copy this file to the `/tmp` directory, but a more
-realistic application would for instance upload it on a ftp server or so.
+call a command to simply copy this file to the `/radio/backup` directory, but a
+more realistic application would for instance upload it on an ftp server or so.
 
-Some other useful optional argument of the `output.file` operator are
+Some other useful optional arguments of the `output.file` operator are
 
 - `append`: when set to `true`, the file will not be overwritten if it exists,
   but new data will be added at the end instead,
@@ -3348,29 +3382,75 @@ Youtube, this is `rtmp://a.rtmp.youtube.com/live2/` followed by the key) and use
 the `output.url` operator to send our stream `radio` encoded with the encoder
 `enc` to the url.
 
-\TODO{mention other youtube outputs}
+### SRT
 
-### Distant streams
+In order to send a stream on a local network, we recommend the use of the SRT
+protocol, using the `output.srt` operator, which has a low latency and can cope
+with network problems. This operator has two modes, which are specified by the
+`mode` argument.
 
-`output.srt` / `output.udp`
+- In `"caller"` mode, which is the default one, it initiates a connection to a
+  remote server (specified by the parameters `host` and `port`). For instance,
 
-Usage of srt....... example with ffplay
+  ```{.liquidsoap include="liq/output.srt.liq" from=1}
+  ```
+  
+  will connect to an SRT server on `localhost` on the default port `8000` (this
+  client would typically be another instance of Liquidsoap with an `input.srt`
+  input in `"listener"` mode) and stream the source `s` in wav format.
+- In `"listener"` mode, it waits for clients to connect to it to send them the
+  stream. The `port` argument specifies the port it listens to. For instance,
+  the script will send the stream of the source `s` encoded in mp3 when a client
+  connects to it:
+
+  ```{.liquidsoap include="liq/output.srt2.liq" from=1}
+  ```
+  
+  The stream can then be played by another Liquidsoap script with an `input.srt`
+  in `"caller"` mode, or with external tools such as `ffplay`:
+
+  ```
+  ffplay srt://localhost:8000
+  ```
 
 ## Encoding formats {#sec:encoders}
 
-The encoding formats are specified by expressions of the form `%encoder` or
-`%encoder(parameters...)` if we need to specify parameters. For instance, the
-encoding format for mp3 with default parameters is `%mp3` and the format for mp3
-at 192 kbps in joint stereo is
-`%mp3(bitrate=192, stereo_mode="joint_stereo")`. This means that if we want to
-use this for an harbor output, we will write
+The encoding formats are specified by expressions of the form
+```
+%encoder
+```
+
+or
+
+```
+%encoder(parameters...)
+```
+
+if we need to specify some parameters. For instance, the encoding format for
+mp3, with default parameters, is
+
+```
+%mp3
+```
+
+and the format for mp3 at 192 kbps in joint stereo is
+
+```
+%mp3(bitrate=192, stereo_mode="joint_stereo")
+
+```
+
+This means that if we want to use this for an harbor output, we will write
 
 ```{.liquidsoap include="liq/output.harbor4.liq" from=2}
 ```
 
-\TODO{we can add "" around parameter names when they contain dashes}
-\TODO{we have support for most formats:}
-<https://www.liquidsoap.info/doc-dev/encoding_formats.html>
+<!-- \TODO{we can add "" around parameter names when they contain dashes} -->
+
+Liquidsoap has support for almost every common standard format. We explain here
+the main ones and refer to the [online
+documentation](https://www.liquidsoap.info/doc-dev/encoding_formats.html) for
+further details.
 
 ### MP3
 
@@ -3390,7 +3470,7 @@ second one is more adaptative: it will produce much data when the stream is
 "complex", and less when it is more "simple", which means that we get a stream
 of better quality, but whose bitrate is less predictable. The third one is a
 balance between the two: it will adapt to the complexity of the stream, but will
-always output the same bitrate on average. You should rarely have to use the
+always output the same bitrate on the average. You should rarely have to use the
 last one: it is a constant bitrate encoder, like `%mp3`, which does not use
 floating point computations (`fxp` stands for fixed-point), and is thus more
 suitable for devices without hardware support for floats, such as some low-end
@@ -3402,18 +3482,19 @@ The parameters common to all variants are
   `stereo`),
 - `stereo_mode` is either `"stereo"` or `"joint_stereo"` or `"default"`: encode
   left and right channels separately or conjointly (default is `"default"`),
-- `samplerate` is an integer: samplerate of encoded stream in samples per second
-  (default is `44100` Hz),
+- `samplerate` is an integer: number of samples per seconds in the encoded
+  stream (default is `44100`),
 - `internal_quality` is an integer between 0 and 9: controls the quality of the
-  encoding, 0 being the highest quality and 9 being the worst (default is 2, the
+  encoding, 0 being the highest quality and 9 being the worst (default is 2, the
   higher the quality the more cpu encoding takes),
-- `id3v2` is either `false` or `true`: whether to add Id3v2 tags to the stream
-  (default is `false`).
+- `id3v2` is either `false` or `true`: whether to add Id3v2 tags (i.e. metadata
+  in our terminology) to the stream (default is `false`).
 
 The parameters for `%mp3` are
 
-- `bitrate`: the fixed bitrate in kilobits per second of the encoded stream
-  (common values are 128, 160 and 192 kbps).
+- `bitrate`: the fixed bitrate in kilobits per second (kbps) of the encoded
+  stream (common values are 128, 160 and 192 kbps, higher means better quality
+  but also higher bandwidth).
 
 The parameters for `%mp3.vbr` are
 
@@ -3462,18 +3543,18 @@ Fixed-point encoding in stereo at 44100 Hz at 128 kbps is
 
 ### Wav
 
-Wav is a non-compressed format: this means that you do not loose anything, but
-it takes quite some space to store audio. Not recommended for streaming. The
-parameters are
+wav is a non-compressed format: this means that you do not loose anything, but
+it takes quite some space to store audio. Not recommended for streaming, but
+rather for archiving. The parameters are
 
-- `channels`: the number of channels (1 and 2 can also be specified with `mono`
-  and `stereo`),
+- `channels`: the number of channels (`1` and `2` can also respectively be
+  specified with `mono` and `stereo`),
 - `duration`: duration in seconds to set in the wav header,
-- `samplerate`: the samplerate in Hz,
+- `samplerate`: the number of samples per second,
 - `samplesize`: the number of bits per sample (only the values 8, 16, 24 and 32
-  are supported for now),
+  are supported for now, 16 being the reasonable default),
 - `header`: whether a header should be issued or not (the value `false` means no
-  header, and can be used for exachanging raw PCM data).
+  header, and can be used for exchanging raw PCM data).
   
 For instance,
 
@@ -3481,18 +3562,18 @@ For instance,
 ```
 
 Because Liquidsoap encodes a possibly infinite stream, there is no way to know
-in advance the duration of encoded data. Since wav header has to be written
-first, by default its length is set to the maximun possible value. If you know
-the expected duration of the encoded data and you actually care about the wav
-length header then you should use the `duration` parameter.
+in advance the duration of encoded data. However, the wav header has to be
+written first, and its length is thus set to the maximum possible value by
+default. If you know the expected duration of the encoded data and you actually
+care about the wav length header then you should use the `duration` parameter.
 
 ### Ogg {#sec:ogg}
 
 Liquidsoap has native support for ogg which is a _container_: it is a file
 format which can contain multiple streams (typically, audio and/or video). The
 syntax for encoding in ogg is `%ogg(...)`, where the `...` is a list of
-streams. The currently supported encoders for the streams them selves are Opus,
-Vorbis, Speex and FLAC for audio, and theora for video. For instance, we can
+streams. The currently supported encoders for the streams themselves are Opus,
+Vorbis, Speex and FLAC for audio, and Theora for video. For instance, we can
 encode an opus stream in an ogg container with the encoder
 
 ```{.liquidsoap include="liq/encoder-ogg-1.liq" from=2 to=-1}
@@ -3520,8 +3601,8 @@ standard codecs (MP3, Vorbis) and highly compressed codecs (AAC, Speex). This is
 the one you should use by default for sound encapsulated in ogg, unless you have
 specific needs. It has the same or better quality than equivalent codecs and is
 free (both as in beer and as in speech). The only drawback is that it is
-slightly less supported on user-end than, say, MP3 and AAC, although this tends
-to be less and less the case.
+slightly less supported on the user-end than MP3 and AAC, although it tends to
+be less and less the case.
 
 The encoder is named `%opus` and its parameters are
 
@@ -3582,8 +3663,8 @@ The common parameters are
 The parameters specific to `%vorbis` are
 
 - `quality`: the quality of the stream between -0.1 (lowest quality, smallest
-  files) and 1 (highest quality, largest files). The aotuv implementation of
-  vorbis can even go down to -0.2.
+  files) and 1 (highest quality, largest files).
+  <!-- The `aotuv` implementation of vorbis can even go down to -0.2. -->
   
 The parameters specific to `%vorbis.abr` are
 
@@ -3620,7 +3701,7 @@ The encoder is named `%speex` and its parameters are
 
 - `samplerate`: the number of samples per second,
 - `mono` / `stereo`: set the number of channels to 1 or 2,
-- `abr`: encode with specified average bitrate
+- `abr`: encode with specified average bitrate,
 - `quality`: use quality based encoding with specific value between 0 (lowest
   quality) and 10 (highest quality), default being 7,
 - `vbr`: encode with variable bitrate,
@@ -3635,18 +3716,19 @@ The encoder is named `%speex` and its parameters are
 #### Ogg/FLAC
 
 The last audio codec supported in the Ogg container is FLAC. Contrary to other
-codecs, it is a _lossless_ one, which means that after decoding you get the
-exact same signal you encoded, but the signal still takes less space than raw
-data, as found for instance in the wav format. By opposition, most other codecs
-are lossy: they deliberately forget about some parts of the signal in order to
-achieve higher compression rates.
+codecs, it is a _lossless_ one, which means that, after decoding, you get the
+exact same signal you encoded. However, the signal is still compressed in the
+sense that encoded sound takes less space than the raw data, as found for
+instance in the wav format. By opposition, most other codecs are lossy: they
+deliberately forget about some parts of the signal in order to achieve higher
+compression rates.
 
 The flac encoding format comes in two flavors:
 
 - `%flac` is the native flac format, useful for file output but not for
   streaming purpose,
-- `%ogg(%flac)` is the Ogg/[FLAC]{.smallcaps} format, which can be used to broadcast data with
-  icecast.
+- `%ogg(%flac)` is the Ogg/[FLAC]{.smallcaps} format, which can be used to
+  broadcast data with icecast.
   
 Note that contrarily to most other codecs, the two are not exactly the same.
 
@@ -3666,35 +3748,39 @@ For instance,
 ```{.liquidsoap include="liq/encoder-flac.liq" from=2 to=-1}
 ```
 
+A typical compression achieves around 75% of the original size for a rock song
+and 50% for a classical music song.
+
 ### AAC
 
 The AAC codec (AAC stands for _Advanced Audio Coding_) was designed to be a
 better replacement for MP3: it achieves better quality at the same bitrates and
 can decently encode the stream it low bitrates. Unlike opus, it main competitor,
-patent license is required for distributing an AAC codec.
+patent license is required for distributing an AAC codec. However, it has better
+hardware support, especially on low-end devices.
 
 The encoder is called `%fdkaac` and its parameters are
 
 - `channels`: the number of audio channels (2 by default),
 - `samplerate`: the number of samples per second,
-- `bitrate`: encode at given constant bitrate
+- `bitrate`: encode at given constant bitrate,
 - `vbr`: encode in variable bitrate with given quality between 1 (lowest bitrate
   and quality) to 5 (highest bitrate and quality),
-- `aot` specifies the _audio object type_ (the kind of encoding for AAC data,
+- `aot`: specifies the _audio object type_ (the kind of encoding for AAC data,
   which has influence on quality and delay): it can either be `"mpeg4_aac_lc"`,
   `"mpeg4_he_aac"`, `"mpeg4_he_aac_v2"` (the default), `"mpeg4_aac_ld"`,
   `"mpeg4_aac_eld"`, `"mpeg2_aac_lc"`, `"mpeg2_he_aac"` or `"mpeg2_he_aac_v2"`,
 - `bandwidth`: encode with fixed given bandwidth (default is `"auto"`, which
   means that the encoder is free to determine the best one),
-- `transmux` sets the transport format: should be one of `"raw"`, `"adif"`,
+- `transmux`: sets the transport format, should be one of `"raw"`, `"adif"`,
   `"adts"` (the default), `"latm"`, `"latm_out_of_band"` or `"loas"`,
 - `afterburner`: when set to `true` use _afterburner_ which should increase
   quality, but also encoding time,
 - `sbr_mode`: when set to `true`, use _spectral band replication_, which should
   enhance audio quality at low bitrates.
 
-More information about the parameters can be found in the [hydrogenaudio
-knowledge
+More information about the meaning of those parameters can be found in the
+[hydrogenaudio knowledge
 base](http://wiki.hydrogenaud.io/index.php?title=Fraunhofer_FDK_AAC). For
 instance,
 
@@ -3705,8 +3791,9 @@ instance,
 
 The `%gstreamer` encoder can be used to encode streams using the GStreamer
 multimedia framework, which handles many formats, and can provide effects and
-more on the stream. It is quite useful, although it is considered as less mature
-than the FFmpeg encoder, which fulfills similar purposes, and is presented next.
+more on the stream. It is quite useful, although it support in Liquidsoap should
+be considered as much less mature than the FFmpeg encoder, which fulfills
+similar purposes, and is presented next.
 
 The parameters of the `%gstreamer` encoder are
 
@@ -3714,18 +3801,18 @@ The parameters of the `%gstreamer` encoder are
 - `log`: the log level of GStreamer between 0 (no message) and 9 (very very
   verbose), default is 5.
 
-In GStreamer, the _pipelines_ describe sequences of GStreamer operators to be
+In GStreamer, _pipelines_ describe sequences of GStreamer operators to be
 applied, separated by `!`, see also [there](#sec:gstreamer-input). Those are
 specified by three further parameters of the encoder:
 
-- `audio`: the audio pipeline (default is `"lamemp3enc"`),
-- `video`: the video pipeline (default is `"x264enc"`),
+- `audio`: the audio pipeline (default is `"lamemp3enc"`, the LAME mp3 encoder),
+- `video`: the video pipeline (default is `"x264enc"`, the x264 H.264 encoder),
 - `muxer`: the muxer which takes care of encapsulating both audio and video
-  streams (default is `"mpegtsmux"`).
+  streams (default is `"mpegtsmux"`, which performs MPEG-TS encapsulation).
 
-If the `audio` pipeline is not empty then `channels` audio channels are
-expected, and if the `video` pipeline is not empty then one video channel is
-expected.
+If the `audio` pipeline is not empty then the number of audio channels specified
+by the `channels` parameter is expected, and if the `video` pipeline is not
+empty then one video channel is expected.
 
 For instance, we can encode a source in mp3 with
 
@@ -3739,7 +3826,7 @@ the "tag setter" API. We can thus encode our stream in mp3 with tags using
 ```{.liquidsoap include="liq/encoder-gstreamer-2.liq" from=2 to=-1}
 ```
 
-or in vorbis with tags using
+or in Vorbis with tags using
 
 ```{.liquidsoap include="liq/encoder-gstreamer-3.liq" from=2 to=-1}
 ```
@@ -3755,12 +3842,13 @@ and in Ogg/Vorbis+Theora with
 ```{.liquidsoap include="liq/encoder-gstreamer-5.liq" from=2 to=-1}
 ```
 
-The `audio`, `video` and `muxer` are combined internally to form one GStreamer
-pipeline which will handle the whole encoding. For instance, with previous
-example, the generated pipeline is indicated with the following debug message:
+The `audio`, `video` and `muxer` are combined internally to form one (big)
+GStreamer pipeline which will handle the whole encoding. For instance, with
+previous example, the generated pipeline is indicated with the following debug
+message:
 
 ```
-[encoder.gstreamer:5] Gstreamer encoder pipeline: appsrc name="audio_src" block=true caps="audio/x-raw, format=S16LE, layout=interleaved, channels=2, rate=44100" format=time max-bytes=40960 ! queue ! audioconvert ! audioresample ! vorbisenc ! muxer. appsrc name="video_src" block=true caps="video/x-raw, format=I420, width=1280, height=720, framerate=25/1, pixel-aspect-ratio=1/1" format=time blocksize=3686400 max-bytes=40960 ! queue ! videoconvert ! videoscale add-borders=true ! videorate ! theoraenc ! muxer. oggmux name=muxer ! appsink name=sink sync=false emit-signals=true
+[encoder.gstreamer:5] GStreamer encoder pipeline: appsrc name="audio_src" block=true caps="audio/x-raw, format=S16LE, layout=interleaved, channels=2, rate=44100" format=time max-bytes=40960 ! queue ! audioconvert ! audioresample ! vorbisenc ! muxer. appsrc name="video_src" block=true caps="video/x-raw, format=I420, width=1280, height=720, framerate=25/1, pixel-aspect-ratio=1/1" format=time blocksize=3686400 max-bytes=40960 ! queue ! videoconvert ! videoscale add-borders=true ! videorate ! theoraenc ! muxer. oggmux name=muxer ! appsink name=sink sync=false emit-signals=true
 ```
 
 For advanced users, the `pipeline` argument can be used to directly specify the
@@ -3771,18 +3859,18 @@ mp3 encoding can also be performed with
 ```{.liquidsoap include="liq/encoder-gstreamer-pipeline.liq" from=2 to=-1}
 ```
 
-Beware that, when using the `%gstreamer` encoder, one must think of it as an
-encoder for an infinite stream. This means that not all containers (and muxers)
-will work. For instance, the AVI and MP4 containers need to write in their
-header some information that is only known with finite streams, such as the
-total time of the stream. These containers are usually not suitable for
-streaming, which is the main purpose of Liquidsoap.
+Beware that, when using the `%gstreamer` encoder, you should consider that the
+stream you are encoding is infinite (or could be). This means that not all
+containers (and muxers) will work. For instance, the AVI and MP4 containers need
+to write in their header some information that is only known with finite
+streams, such as the total time of the stream. These containers are usually not
+suitable for streaming, which is the main purpose of Liquidsoap.
 
 ### FFmpeg {#sec:ffmpeg-encoder}
 
-The `%ffmpeg` encoder is a "meta-encoder": it uses the versatile FFmpeg library
-in order to encode in various formats, including the ones presented above, but
-also many more. The general syntax is
+The `%ffmpeg` encoder is a "meta-encoder", just like the GStreamer one: it uses
+the versatile FFmpeg library in order to encode in various formats, including
+the ones presented above, but also many more. The general syntax is
 
 ```liquidsoap
 %ffmpeg(format="<format>", ...)
@@ -3798,15 +3886,15 @@ Each stream can either be
 
 - `%audio`: for encoding native audio (this is the one you generally want to
   use),
-- `%audio.raw`: for encoding raw audio,
+- `%audio.raw`: for encoding audio in FFmpeg's raw format,
 - `%audio.copy`: for transmitting encoded audio (see below),
-- `%video` / `%video.raw` / `%video.copy`: similar but for video (see [later
-  on](#sec:ffmpeg-video)).
+- `%video` / `%video.raw` / `%video.copy`: similar but for video (this will be
+  developed in [a later section](#sec:ffmpeg-video)).
 
 The `%audio` and `%audio.raw` streams all take as parameters
 
 - `codec`: the name of the codec to encode the stream (all [FFmpeg
-  codecs](https://www.ffmpeg.org/ffmpeg-codecs.html) should be supported here,
+  codecs](https://ffmpeg.org/ffmpeg-codecs.html) should be supported here,
   you can run the command `ffmpeg -codecs` to have a full list),
 - `channels`: the number of audio channels,
 - `samplerate`: the number of samples per second,
@@ -3815,8 +3903,8 @@ as well as parameters specific to the codec (any option supported by FFmpeg can
 be passed here). If an option is not recognized, it will raise an error during
 the instantiation of the encoder.
 
-For instance, we can encode in AAC using mpegts muxer and and fdk-aac encoder,
-at 22050 Hz with
+For instance, we can encode in AAC using the MPEG-TS muxer and the FDK AAC
+encoder, at 22050 Hz with
 
 ```{.liquidsoap include="liq/encoder-ffmpeg-fdkaac.liq" from=2 to=-1}
 ```
@@ -3829,7 +3917,7 @@ is adapted for encoding at low bitrates. Here is a list of profiles you can use
 - `aac_low`: the default profile (_low complexity_), adapted for bitrates above
   128 kbps.
   
-\TODO{also mention the "aac" encoder}
+<!-- \TODO{also mention the "aac" encoder} -->
 
 We can encode in AAC in variable bitrate with
 
@@ -3848,23 +3936,29 @@ We can encode mp3 in variable bitrate quality 4 with
 ```{.liquidsoap include="liq/encoder-ffmpeg-mp3-2.liq" from=2 to=-1}
 ```
 
-where quality ranges from 0 (highest quality, 245 kbs average bitrate) to 9
+where quality ranges from 0 (highest quality, 245 kbps average bitrate) to 9
 (lowest quality, 65 kbps average bitrate). We can encode mp3 in variable bitrate
 with 160 kbps average bitrate with
-
 
 ```{.liquidsoap include="liq/encoder-ffmpeg-mp3-3.liq" from=2 to=-1}
 ```
 
-\TODO{encode in opus: warnings 44100 is not a valid samplerate + encoder is libopus not opus (which is for standalone)}
+An encoding in Ogg/Opus with default parameters can be achieved with
 
-Some encoding formats, such as mp4,\TODO{peut-on avoir une liste ? est-ce que
-c'est le cas pour wav ?} require rewinding their stream and write a header after
-the encoding of the current track is over. For historical reasons, such formats
-cannot be used with `output.file`. To remedy that, we have introduced the
-`output.url` operator. When using this operator, the encoder is fully in charge
-of the output file and can thus write headers after the encoding. The `%ffmpeg`
-encoder is one such encoder that can be used with this operator.
+```{.liquidsoap include="liq/encoder-ffmpeg-opus.liq" from=2 to=-1}
+```
+
+Beware that the codec is `libopus` (not `opus` which is for standalone opus) and
+that the default samplerate of 44100 is not supported in the Opus format (which
+is why we force the use of 48000 instead).
+
+Some encoding formats, such as wav, avi or mp4, require rewinding their stream
+and write a header after the encoding of the current track is over. For
+historical reasons, such formats cannot be used with `output.file`. To remedy
+that, we have introduced the `output.url` operator. When using this operator,
+the encoder is fully in charge of the output file and can thus write headers
+after the encoding. The `%ffmpeg` encoder is one such encoder that can be used
+with this operator.
 
 ### Encoded streams {#sec:encoded-streams}
 
@@ -3876,9 +3970,10 @@ have properly generated the stream, the outputs use encoders to convert this to
 compressed formats (such as mp3) which take less space. We detail here a unique
 feature of the FFmpeg encoder: the ability to directly manipulate encoded data
 (such as audio encoded in mp3 format) within Liquidsoap, thus avoiding useless
-decoding and re-encoding of streams in some situations. Note that most
+decoding and re-encoding of streams in some situations. Note that most usual
 operations (even changing the volume for instance) are not available on encoded
-sources, but this is still quite useful in many situations.
+sources, but this is still quite useful in some situations, mainly in order to
+encode multiple times in the same format.
 
 Remember that we can encode audio in mp3 format using FFmpeg with the encoder
 
@@ -3887,8 +3982,8 @@ Remember that we can encode audio in mp3 format using FFmpeg with the encoder
 ```
 
 This says that we want to generate generate a file in the mp3 format, and that
-we should put in audio which is encoded in mp3 with the `libmp3lame`
-library. Now, if we change this to
+we should put in audio which is encoded in mp3 with the LAME library. Now, if we
+change this to
 
 ```liquidsoap
 %ffmpeg(format="mp3", %audio.copy)
@@ -3912,9 +4007,9 @@ internal format and then encode them in mp3 before sending them to Icecast.
 However, if our files are already in mp3 we are doing useless work here: we are
 decoding mp3 files and then encoding them in mp3 again to broadcast
 them. Firstly, this decoding-reencoding degrades the audio quality. And
-secondly, this is costly in terms of cpu computations: if we have many streams
-or have more involved data such as video, we would rather avoid that. This can
-be done as explained above as follows:
+secondly, this is costly in terms of cpu cycles: if we have many streams or have
+more involved data such as video, we would rather avoid that. This can be done
+as explained above as follows:
 
 ```{.liquidsoap include="liq/no-decoding2.liq" from=1 to=-1}
 ```
@@ -3944,11 +4039,11 @@ but it should be a subtype of
   source(audio=ffmpeg.audio.copy(_),...)
 ```
 
-which says that `amplify` only knows to manipulate audio data in internal format
-(`audio=pcm(_)`) whereas we have here encoded data
+which says that `amplify` is only able to manipulate audio data in internal
+format (`audio=pcm(_)`) whereas we have here encoded data
 (`audio=ffmpeg.audio.copy(_)`).
 
-Now suppose that, in addition to transmitting the mp3 files through Icecast, we
+Now, suppose that, in addition to transmitting the mp3 files through Icecast, we
 also want to provide another version of the stream in opus. In this, case we
 need to decode the stream provided by the source, which is encoded in mp3,
 before being able to convert it in opus. This can be achieved with
@@ -3974,7 +4069,7 @@ in a file:
 
 Because there are three outputs with `%mp3` format, Liquidsoap will encode the
 stream three times in the same format, which is useless and can be costly if you
-have many streams or video streams. We would thus like to encode in mp3 once,
+have many streams or, worse, video streams. We would thus like to encode in mp3 once,
 and send the result to Icecast, HLS and the file.
 <!--
 
@@ -4022,14 +4117,13 @@ variants `ffmpeg.encode.video` and `ffmpeg.encode.audio_video` of the
 both audio and video.
 
 Note that the function `ffmpeg.decode.audio` can be thought of as an "inverse"
-of the function `ffmpeg.encode.audio`: this means that the script\TODO{make sure
-that \#1573 gets this example fixed}
+of the function `ffmpeg.encode.audio`: this means that the script
 
 ```{.liquidsoap include="liq/ffmpeg.encode-decode.liq" from=2}
 ```
 
-will play the source `s`, after encoding it in mp3 and decoding it back to
-Liquidsoap's internal format for sources.
+will play the source `s`, after uselessly encoding it in mp3 and decoding it
+back to Liquidsoap's internal format for sources.
 
 ### External encoders
 
@@ -4037,14 +4131,15 @@ Although the `%ffmpeg` encoder does almost everything one could dream of, it is
 sometimes desirable to use an external program in order to encode our audio
 streams. In order to achieve this, the `%external` encoder can be used: with it,
 an external program will be executed and given the audio data on the standard
-input (as interleaved little-endian 16 bit samples), while we expect to read the
-encoded data on the standard output of the program.
+input (as interleaved little-endian 16 bit integer samples), while we expect to
+read the encoded data on the standard output of the program.
 
 The parameters of the `%external` encoder are
+
 - `process`: the name of the program to execute,
 - `channels`: the number of audio channels (2 by default),
 - `samplerate`: the number of samples per seconds (44100 by default),
-- `header`: whether a wav header should be added to the audio data (true by
+- `header`: whether a wav header should be added to the audio data (`true` by
   default),
 - `restart_on_metadata` or `restart_after_delay`: restart the encoding process
   on each new metadata or after some time (in seconds),
@@ -4058,10 +4153,10 @@ encoder
 ```{.liquidsoap include="liq/encoder-external.liq" from=2 to=-1}
 ```
 
-Videos can also be encoded by programs able to read files in avi format from
-standard input. To use it, the flag `video=true` should be passed to
-`%external`. For instance, a compressed avi file can be generated with the
-`ffmpeg` binary with
+Videos can also be encoded by external programs, by passing the flag
+`video=true` to `%external`: in this case, the data is given in AVI format on
+the standard input. For instance, a compressed Matroska file (with H.264 video
+and mp3 audio) can be produced using the `ffmpeg` binary with
 
 ```{.liquidsoap include="liq/encoder-external2.liq" from=2 to=-1}
 ```

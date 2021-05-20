@@ -20,6 +20,7 @@ header-includes: |
   \usepackage{imakeidx}\makeindex[intoc]
   \usepackage{titlepic}
   \titlepic{\vspace{3cm}\includegraphics[width=3cm]{img/logo.pdf}\vspace{-3cm}}
+  \usepackage{perpage}\MakePerPage{footnote}
 numbersections: true
 secnumdepth: 1
 toc-depth: 1
