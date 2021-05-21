@@ -3,18 +3,17 @@ A streaming language {#chap:streaming}
 
 After reading [this chapter](#chap:language), you should have been convinced you
 that Liquidsoap is a pretty decent general-purpose scripting language. But what
-makes it unique is the features dedicated to streaming, which were put to use in
-previous chapters. We now present the general concepts behind the streaming
-features of the language, for those who want to understanding how the streaming
-parts of the language work. The main purpose of Liquidsoap is to manipulate
-functions which will generate streams and are called _sources_ in
-Liquidsoap. Typically, the `playlist` operator is a source, which generates
-streams by sequentially reading files. The way sources generate audio or video
-data is handled abstractly: you almost never get down to the point where you
-need to understand how or in what format this data is actually generated, you
-usually simply combine sources in order to get elaborate ones. It is however
-useful to have a general idea of how Liquidsoap works internally. Beware, this
-chapter is a bit more technical than previous ones.
+makes it unique is the features dedicated to audio and video streaming, which
+were put to use in previous chapters. We now present the general concepts behind
+the streaming features of the language, for those who want to understand in
+depth how the streaming parts of the language work. The main purpose of
+Liquidsoap is to manipulate functions which will generate streams and are called
+_sources_ in Liquidsoap. The way those generate audio or video data is handled
+abstractly: you almost never get down to the point where you need to understand
+how or in what format this data is actually generated, you usually simply
+combine sources in order to get elaborate ones. It is however useful to have a
+general idea of how Liquidsoap works internally. Beware, this chapter is a bit
+more technical than previous ones.
 
 Sources and content types {#sec:source-type}
 -------------------------
@@ -26,7 +25,7 @@ Each source has a number of channels of
 - _midi_ data: containing notes to be played (typically, by a synthesizer).
 
 The last kind of data is much less used in practice in Liquidsoap, so that we
-will insist less on it. Moreover, each of those channels can either contain
+will mostly forget about it. Moreover, each of those channels can either contain
 
 - _raw_ data: this data is in an internal format (usually obtained by decoding
   compressed files), suitable for manipulation by operators within Liquidsoap,
@@ -37,10 +36,11 @@ will insist less on it. Moreover, each of those channels can either contain
 In practice, users manipulate sources handling raw data most of the time since
 most operations are not available on encoded data, even very basic ones such as
 changing the volume or performing transitions between tracks. Encoded data was
-introduced starting from version 2.0 of Liquidsoap and is however useful for
-avoiding to have to encode a stream multiple times in the same format, e.g. when
-sending the same encoded stream to multiple icecast instances, or both to
-icecast and in HLS, etc.
+introduced starting from version 2.0 of Liquidsoap and we have seen in [an
+earlier section](#sec:encoded-streams) that it is however useful to avoid
+encoding a stream multiple times in the same format, e.g. when sending the same
+encoded stream to multiple icecast instances, or both to icecast and in HLS,
+etc.
 
 The type of sources is of the form
 
@@ -65,7 +65,7 @@ of channels: here we see that audio is generated in some internal format (call
 it `'a`), video is generated in some internal data format (call it `'b`) and
 similarly for midi. The contents `internal` does not specify any number of
 channels, which means that any number of channels can be generated. Of course,
-only the audio channels are going to be meaningful:
+for the `sine` operator, only the audio channels are going to be meaningful:
 
 - if multiple audio channels are requested, they will all contain the same audio
   consisting of a sine waveform, with specified frequency and amplitude,
@@ -82,7 +82,7 @@ audio from a source:
 We see that it takes a source as argument and returns another source. We also
 see that that is accepts any audio, video and midi contents for the input
 source, be they in internal format or not, calling them respectively `'a`, `'b`
-and `'c`. The output source has `none` as audio contents, meaning that it will
+and `'c`. The returned source has `none` as audio contents, meaning that it will
 have no audio at all, and that the video content is the same as the content for
 the input (`'b`), and similarly for midi content (`'c`).
 
@@ -90,13 +90,13 @@ the input (`'b`), and similarly for midi content (`'c`).
 
 Contents of the form `internal('a)` only impose that the format is one supported
 internally. If we want to be more specific, we can specify the actual
-contents. For instance, the internal contents are:
+contents. For instance, the internal contents are currently:
 
-- for raw audio: `pcm`
-- for raw video: `yuva420p`
-- for midi: `midi`
+- for raw audio: `pcm`,
+- for raw video: `yuva420p`,
+- for midi: `midi`.
 
-The arguments of `pcm` is the number of channels which can either be `none` (0
+The argument of `pcm` is the number of channels which can either be `none` (0
 audio channel), `mono` (1 audio channel), `stereo` (2 audio channels) or `5.1`
 (6 channels for surround sound: front left, front right, front center,
 subwoofer, surround left and surround right, in this order). For instance, the
@@ -122,10 +122,10 @@ exactly. Every content valid for the second, such as `pcm(stereo)`, is also
 valid for the first, but the content `none` is only accepted by the first
 (again, this subtle difference can be ignored in practice).
 
-For now, `yuva420p` does not take any argument. The only argument of `midi` is
-of the form `channels=n` where `n` is the number of midi channels of the
-stream. For instance, the operator `synth.all.sine` which generates sound for
-all midi channels using sine waves has type
+For now, the raw video format `yuva420p` does not take any argument. The only
+argument of `midi` is of the form `channels=n` where `n` is the number of midi
+channels of the stream. For instance, the operator `synth.all.sine` which
+generates sound for all midi channels using sine waves has type
 
 ```
 (source(audio=pcm(mono), video='a, midi=midi(channels=16))) -> source(audio=pcm(mono), video='a, midi=midi(channels=16))
@@ -137,22 +137,20 @@ and returns a stream of the same type.
 ### Encoded contents
 
 Liquidsoap has support for the wonderful
-[FFmpeg](https://ffmpeg.org/)\index{FFmpeg} library which allow for manipulating
-audio and video data in most common (and uncommon) video formats: it can be used
-to convert between different formats, apply effects, etc. By the way, if
-converting files is the only thing you want to do, you don't need to use
-Liquidsoap: you can directly use the `ffmpeg` commandline program, which is a
-frontend for the library. This is implemented by having native support for
+[FFmpeg](https://ffmpeg.org/)\index{FFmpeg} library which allows for
+manipulating audio and video data in most common (and uncommon) video formats:
+it can be used to convert between different formats, apply effects, etc. This is
+implemented by having native support for
 
 - the raw FFmpeg formats: `ffmpeg.audio.raw` and `ffmpeg.video.raw`,
 - the encoded FFmpeg formats: `ffmpeg.audio.copy` and `ffmpeg.video.copy`.
 
 Typically, the raw formats used in order to input from or output data to FFmpeg
-filters, whose use is detailed in [there](...)\TODO{reference}: as for
+filters, whose use is detailed in [there](#sec:ffmpeg-filters): as for
 Liquidsoap, FFmpeg can only process decoded raw data. The encoded formats are
 used to handled encoded data, such as sound in mp3, typically in order to encode
 the stream once in mp3 and output the result both in a file and to Icecast, this
-is detailed in [there](...)\TODO{reference}. Their name come from the fact that
+is detailed in [there](#sec:encoded-streams). Their name come from the fact that
 when using those, Liquidsoap simply copies and passes on data generated by
 FFmpeg without having a look into it.
 
@@ -215,13 +213,16 @@ with the description of the raw contents used in Liquidsoap, described in
 Most of the sources are _passive_ which means that they are simply waiting to be
 asked for some data, they are not responsible for when the data is going to be
 produced. For instance, a playlist is a passive source: we can decode the files
-of the playlist at the rate we want. Similarly, an amplification operator
-`amplify(a, s)` is passive: it waits to be asked for data, then in turn asks the
-source `s` for data, and finally it returns the given data amplified by a
-coefficient `a`. However, some sources are _active_ which means that they are
-responsible for asking data. This is typically the case for outputs such as to a
-soundcard (e.g. `output.alsa`) or to a file (e.g. `output.file`). For instance,
-the (simplified) type of `output.alsa` is
+of the playlist at the rate we want, and will actually not decode any of those
+if we are not asked to. Similarly, the amplification operator `amplify(a, s)` is
+passive: it waits to be asked for data, then in turn asks the source `s` for
+data, and finally it returns the given data amplified by the
+coefficient `a`.
+
+However, some sources are _active_ which means that they are responsible for
+asking data. This is typically the case for outputs such as to a soundcard
+(e.g. `output.alsa`) or to a file (e.g. `output.file`). For instance, the
+(simplified) type of `output.alsa` is
 
 ```
 (source(audio=pcm('a), video='b, midi='c)) -> active_source(audio=pcm('a), video='b, midi='c)
@@ -268,11 +269,15 @@ Here, the only active source is `output` which is playing the `blank`
 source. The source `s` is not connected to an active source, and its contents
 will never be computed. This can be observed because we are printing a message
 for each new track: here, no stream is produced, thus no new track is produced,
-thus we will never see the message. Some operators also do not ask for frames
-from all their input sources: typically, the `switch` operator will only ask a
-frame from the currently active source.
+thus we will never see the message.
 
-The above story is not precise on one point. We will see in [a section
+<!--
+Some operators also do not ask for frames from all their input sources:
+typically, the `switch` operator will only ask a frame from the currently active
+source.
+-->
+
+The above story is entirely not precise on one point. We will see in [a section
 below](#sec:clocks) that it is not the exactly the active sources themselves
 which are responsible for initiating computation of data, but rather the
 associated clocks.
@@ -294,7 +299,7 @@ In the first line, suppose that we do not know yet what the type of the source
 `s` should be. On the second line, we see that it is used as an argument of
 `output.alsa` and should therefore have a type of the form
 `source(audio=pcm('a), video='b, midi='c)`, i.e. the audio should be in `pcm`
-format. Similarly, on the second line, we see that it is used as an argument of
+format. Similarly, on the third line, we see that it is used as an argument of
 `output.sdl` (which displays the video of the stream) and should therefore have
 a type of the form `source(audio='a, video=yuva420p('b), midi='c))`, i.e. the
 video should be in `yuva420p` format. Combining the two constraints, we deduce
@@ -304,7 +309,7 @@ video=yuva420p('b), midi='c)`.
 In the end, the parameters of the stream which are not fixed will be taken to be
 default values. For instance, the number of audio channels will take the default
 value 2 (stereo), which is specified in the configuration option
-`frame.audio.channels`. So that if we want streams to be mono by default, we can
+`frame.audio.channels`. If we want streams to be mono by default, we should
 type, at the beginning of the script,
 
 ```{.liquidsoap include="liq/set-channels.liq" from=1}
@@ -313,13 +318,13 @@ type, at the beginning of the script,
 Similarly, the default number of midi channels is 0, since it is expected to be
 useless for most users, and can be changed in the configuration option
 `frame.midi.channels`. Once determined at startup, the contents of the streams
-(such as number of audio channels) are fixed during the whole execution of the
+(such as number of audio channels) is fixed during the whole execution of the
 script. Earlier versions of Liquidsoap somehow supported sources with varying
 contents, but this was removed because it turned out to be error-prone and not
 used much in practice.
 
 During the type checking phase, it can happen that two constraints are not
-compatible for a stream, in which case an error is returned before the script is
+compatible for a stream. In this case, an error is returned before the script is
 executed. For instance, suppose that we have a source `s` and we execute the
 following script:
 
@@ -1638,7 +1643,7 @@ destroying afterward, so that you are only going to need `request.create` in
 practice in the above list of functions, although other are used in the standard
 library to implement advanced operators.
 
-#### Metadata
+#### Metadata {#sec:requests-metadata}
 
 When resolving requests, Liquidsoap inserts metadata in addition to the metadata
 already contained in the files. This can be observed with the following script:

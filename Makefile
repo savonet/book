@@ -33,10 +33,10 @@ web.pdf: web.tex
 	pdflatex web.tex
 	makeindex web.idx
 
-book.epub: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
+book.epub book.html: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
 	@$(MAKE) -C fig png
 	@echo "Generating $@..."
-	@$(PANDOC) --syntax-definition=liquidsoap.xml --filter=pandoc-pdf2png --toc --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
+	@$(PANDOC) -s --syntax-definition=liquidsoap.xml --filter=pandoc-pdf2png --toc --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
 
 liquidsoap.xml:
 	wget https://raw.githubusercontent.com/savonet/liquidsoap/master/scripts/liquidsoap.xml

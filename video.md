@@ -2,14 +2,14 @@ Video {#chap:video}
 =====
 
 Historically, Liquidsoap was dedicated to generating audio streams such as those
-found in radios, even though it was conceived in order to be extensible with
-other kinds of data, such as video. When it started in 2004, there was
-absolutely no video support, then some work began to add that around 2009, but
-it was still not much used, partly because it was quite inefficient. Starting
-with the release of Liquidsoap 2.0 in 2021, the internal coding of video changed
-to RGB to YUV420, which is much more compact and used by most video libraries:
-Liquidsoap is now able to decently handle videos, as we will see in this
-chapter.
+found in radios, even though it was conceived from the beginning in order to be
+extensible with other kinds of data, such as video. When it started in 2004,
+there was absolutely no video support, then some work began to add that around
+2009, but it was still not much used, partly because it was quite
+inefficient. Starting with the release of Liquidsoap 2.0 in 2021, the internal
+coding of video changed to RGB to YUV420, which is much more compact and used by
+most video libraries: Liquidsoap is now able to decently handle videos, as we
+will see in this chapter.
 
 Generating videos
 -----------------
@@ -34,6 +34,17 @@ Liquidsoap. There are currently two of them:
 - `output.graphics` which uses the library provided by OCaml in order to display
   graphical data.
 
+The videos can even be directly be pulled from YouTube with the `youtube-dl`
+protocol, which requires that you have installed the
+[`youtube-dl`](https://youtube-dl.org/) program:
+
+```{.liquidsoap include="liq/play-video-yt.liq" from=1}
+```
+
+Since the whole video has to be downloaded beforehand, it can take quite some
+time, which is why we specify a "large" `timeout` parameter (10 minutes instead
+of 30 seconds).
+
 As another example, if we have a playlist `video.playlist` of video files, it
 can be played with
 
@@ -43,8 +54,6 @@ can be played with
 Generally, the video will be generated form a playlist using the `playlist`
 operator or from user's request using `request.queue` operator. Those were
 already presented in [there](#sec:inputs), nothing changes for video.
-
-\TODO{videos from youtube ex https://www.youtube.com/watch?v=VT6TEjJzWoY}
 
 #### The webcam
 
@@ -70,7 +79,7 @@ _Full HD_) format with
 ```{.liquidsaop include="liq/full-hd.liq"}
 ```
 
-Remember that processing video data in real time is very costly. Reducing the
+Remember that processing video data in realtime is very costly. Reducing the
 resolution to 854×480 (called 480p) or even 640×360 (called 360p) will degrade
 the quality of images, but can greatly improve the CPU consumption, in
 particular if your server is getting a bit old: a low resolution video is better
@@ -83,9 +92,10 @@ parameters.
 ### Blank and colored frames
 
 The operator `blank` can generate video (in addition to audio): it will generate
-a blank image (transparent). In order to generate a video of a given color, you
-can use the `video.fill` operator which fills the video of the source with the
-color specified in the `color` argument. For instance, the script
+an image which is _blank_, i.e. fully transparent. In order to generate a video
+of a given color, you can use the `video.fill` operator which fills the video of
+the source with the color specified in the `color` argument. For instance, the
+script
 
 ```{.liquidsoap include="liq/video.fill.liq" from=1}
 ```
@@ -93,7 +103,7 @@ color specified in the `color` argument. For instance, the script
 will play a red image. The color should be specified in hexadecimal, in the form
 `0xrrggbb` where `rr` specifies the red intensity, `gg` the green and `bb` the
 blue, each color ranges from `00` (color absent) to `ff` (color with maximum
-intensity).
+intensity) in hexadecimal.
 
 ### Images
 
@@ -112,8 +122,8 @@ no audio as follows, and you should then see the image:
 ```{.liquidsoap include="liq/image2.liq" from=1}
 ```
 
-Here, `(x:source(audio=none))` is that we force `x` to be a source with no
-audio: this mechanism is explained in details in [there](#sec:source-type). In
+Here, `(x:source(audio=none))` means that we constrain `x` to be a source with no
+audio, this mechanism is explained in more details in [there](#sec:source-type). In
 order for you to avoid thinking of those subtleties, the standard library
 provides the `image` operator which does this for you and conveniently creates a
 source from an image:
@@ -148,7 +158,7 @@ generate a video stream from it. The script
 ```{.liquidsoap include="liq/cover.liq" from=1 to=-1}
 ```
 
-generates a source `a` from our music library, generates a video track from its
+defines an audio source `a` from our music library, generates a video track `v` from its
 covers with `video.cover`, adds it to the sound track `a` (with `mux_video`,
 detailed below) and plays the result. It is important here that we use `mksafe`
 around `video.cover` in order to play black by default: the source will not be
@@ -177,18 +187,19 @@ will display for 2 seconds the images of the playlist `image.playlist`.
 
 #### Changing images
 
-The `image` operator produces a source with a method `set` which takes as
-argument the new path to the image to stream. For instance, the following script
-shows a random image in the current directory every 2 seconds:
+The `image` operator produces a source with a method `set` which can be used to
+change the displayed image: it takes as argument the new path to the image to
+stream. For instance, the following script shows a random image in the current
+directory every 2 seconds:
 
 ```{.liquidsoap include="liq/image-set.liq" from=1 to=-1}
 ```
 
-In more details, the `file.ls(".")` function returns a list of functions in the
+In more details, the `file.ls(".")` function returns a list of files in the
 current directory. We then use `list.filter` to extract all the files which end
-with `.png` or `.jpg` (the `string.match` function looks at whether the strings
+with the `.png` or `.jpg` extension (the `string.match` function looks at whether the strings
 match the regular expression `.*\\.png|.*\\.jpg` which means: "anything followed
-by `.png` or anything followed by `.jpg`). We define an `image` source `s` of
+by `.png` or anything followed by `.jpg`"). We define an `image` source `s` of
 which we change the image every 2 second using the `set` method, with
 `list.pick(files)` which picks a random element of the list `files`.
 
@@ -270,7 +281,7 @@ overall opacity of a video can be changed with the `video.opacity` operator,
 which takes a coefficient between 0 (transparent) and 1 (fully opaque) in
 addition to the source. For instance, with
 
-```{.liquidsoap include="liq/video.opacity.liq" from=3}
+```{.liquidsoap include="liq/video.opacity.liq" from=3 to=-1}
 ```
 
 we are adding the source `s1` with the source `s2` made opaque at 75%: this
@@ -278,7 +289,7 @@ means that we are going to see 75% of `s2`, and the remaining 25% are from `s1`
 behind.
 
 Transparent regions are also supported from usual picture formats such as
-png. This means that when you add a logo to a video stream, it does not have to
+png. In particular, when you add a logo to a video stream, it does not have to
 be a square!
 
 ### Combining audio and video sources
@@ -302,7 +313,7 @@ playlist of image files with
 ```
 
 The "opposite" of the muxing functions are the functions `drop_audio` and
-`drop_video` which respectively remove the audio and video channels from a video
+`drop_video`, which respectively remove the audio and video channels from a video
 track. For instance, if we have two sources `s1` and `s2` with both audio and
 video, we can create a source `s` with the audio from `s1` and the video from
 `s2` by
@@ -331,22 +342,41 @@ tracks:
 ```{.liquidsoap include="liq/video.fade.in.liq" from=2 to=-1}
 ```
 
-\TODO{crossfading with cross when it will work see bug 1603}
+Since the `add` and `cross` operators also work with video sources, this means
+that we can nicely crossfade the tracks of a video playlist as follows:
+
+```{.liquidsoap include="liq/video-cross.liq" from=2}
+```
+
+We apply fading at the beginning and the end of the videos, and then use the
+`cross` operator to add the end of each track with the beginning of the next one
+during 1.5 seconds. As a variant, slided transitions can be achieved with
+
+```{.liquidsoap include="liq/video-cross2.liq" from=2}
+```
 
 ### Test sources
 
-\TODO{See bug 1604, we should rename ffmpeg to video.testsrc, test it for sync and detail various test patterns}
+<!-- \TODO{See bug 1604, we should rename ffmpeg to video.testsrc, test it for sync and detail various test patterns} -->
 
-In case you do not have any video at hand to play, the sources
-`video.testsrc.ffmpeg` and `video.testsrc.gstreamer` can be used to generate
-test videos such as
+In order to generate test videos, the operator `video.testsrc` can be used. For
+instance,
 
-![Test video](img/testsrc.png){width=300px} \
+```{.liquidsoap include="liq/video.testsrc.liq" from=1 to=-1}
+```
+
+will generate a video such as
+
+![Test video](img/testsrc.png){width=300px}\
+
+The pattern displayed can be changed by passing the parameter `pattern` whose
+value can be `"testsrc"` (the default value), `"testsrc2"`, `"smptebars"` or
+`"rgbtestsrc"`.
 
 ### Text
 
 In order to add text on videos, we provide the `video.add_text` operator which,
-in addition to the text to print and the source on which it should add the text
+in addition to the text to print and the source on which it should add the text,
 takes the following optional arguments:
 
 - `color`: color of the text, in the format `0xrrggbb` as explained above for
@@ -358,10 +388,10 @@ takes the following optional arguments:
   flash" effect (in pixels per seconds, set to `0` to disable),
 - `x` and `y`: the position of the text.
 
-This function uses one of the various implementation we provide. You should try
-them in order to reach what you want, they have various quality and
-functionalities, and unfortunately we have not found the silver bullet yet. The
-implementations are:
+This function uses one of the various basic implementations we provide. You
+should actually try those various implementations in order to reach what you
+want: they have various quality and functionalities, and unfortunately we have
+not found the silver bullet yet. Those implementations are
 
 - `video.add_text.native`: the native implementation. It always works and does
   not rely on any external library, but uses a hand-made, hard-coded, low-fi
@@ -397,7 +427,8 @@ Filters and effects
 
 In order to change the appearance of your videos Liquidsoap offers video
 effects. These are not as well developed as for audio processing, but this is
-expected to improve in a near future.
+expected to improve in the future, and we support generic libraries which
+provide a large amount of effects.
 
 ### Builtin filters
 
@@ -410,8 +441,8 @@ By default, Liquidsoap only offers some very basic builtin video filters such as
 
 ### Frei0r
 
-Liquidsoap has native support for [frei0r plugins](https://frei0r.dyne.org/)
-which is an API for video effects. When those are installed on your system, they
+Liquidsoap has native support for [frei0r plugins](https://frei0r.dyne.org/),
+which are based on the frei0r API for video effects. When those are installed on your system, they
 are automatically detected and corresponding operators are added in the
 language. Those have names of the form `video.frei0r.*` where `*` is the name of the
 plugin. For instance, the following adds a "plasma effect" to the video:
@@ -421,7 +452,7 @@ plugin. For instance, the following adds a "plasma effect" to the video:
 
 Each operator (there are currently 129) of course has specific parameters which
 allow modifying its effect, you are advised to have a look at their
-documentation, as usual!
+documentation, as usual.
 
 ### FFmpeg filters {#sec:ffmpeg-filters}
 
@@ -453,9 +484,10 @@ returns the resulting stream. Usually this function
   - `ffmpeg.filter.video.output`
   - `ffmpeg.filter.audio_video.output`
 
-In this way, we can define the following function `myfilter` which adds a
-flanger effect on the audio track, flips the images horizontally and inverts the
-colors of the video:
+In this way, we can define the following function `myfilter` which inputs the
+audio track and add a flanger effect to it, inputs the video track, flips its
+images horizontally and inverts the colors of the video, and finally outputs
+both audio and video:
 
 <!-- \TODO{could be simplified with audio + video output, see bug 1612} -->
 
@@ -474,10 +506,11 @@ If you look at the type of the function `myfilter`, you will see that it is
 ```
 
 which means that it operates on streams where both audio and video are in
-FFmpeg's internal raw format. In the above example this is working well because
+FFmpeg's internal raw format (`ffmpeg.audio.raw` and `ffmpeg.video.raw`). In the
+above example this is working well because
 
 - sources which decode audio from files such as `single` (or `playlist`) can
-  generate streams in most formats including FFmpeg's raw,
+  generate streams in most formats, including FFmpeg's raw,
 - the encoder we have chosen operates directly on streams in FFmpeg's raw format
   (because we use an `%ffmpeg` encoder with `%audio.raw` and `%video.raw`
   streams).
@@ -529,11 +562,13 @@ For instance, from the above `myfilter` function, we can define a function
 ```{.liquidsoap include="liq/ffmpeg-effect5.liq" from=2}
 ```
 
+by encoding before applying the filter and decoding afterward.
+
 Encoders
 --------
 
 The usual outputs described in [there](#sec:outputs) support streams with video,
-this includes
+which includes
 
 - `output.file`: for recording in a file,
 - `output.icecast`: for streaming using Icecast,
@@ -561,9 +596,9 @@ The full list of supported formats can be obtained by running `ffmpeg
 -formats`. Popular formats for
 
 - encoding in files:
-  - `mp4` is the most widely supported (its main drawback is that index tables
+  - `mp4` is the most widely supported, (its main drawback is that index tables
     are located at the end of the file, so that partially downloaded files
-    cannot reliably be played),
+    cannot reliably be played, and the format is not suitable for streaming),
   - `matroska` corresponds to `.mkv` files, supports slightly more codecs than
   mp4 and it license-free, but is less widely supported,
   - `webm` is well supported by modern browsers (in combination with the VP9
@@ -572,6 +607,7 @@ The full list of supported formats can be obtained by running `ffmpeg
 - streaming:
   - `mpegts` is the standard container for streaming, this is the one you should
     use for HLS for instance,
+  - `webm` is a modern container adapted to streaming with Icecast,
   - `flv` is used by some old streaming protocols such as RTMP, still widely in
     use to stream video to platforms such as Youtube.
 
@@ -614,12 +650,12 @@ intended for streaming since it can lead to unexpected bandwidth problems on
 those scenes.
 
 Another useful parameter is the GOP (group of picture) which can be set by
-passing the argument `g` and controls how often (in frames) keyframes are
-inserted. A typical default value is 12, which allows easy seeking in videos,
-but for video streams this value can be increased in order to decrease the size
-of the video. The habit for streaming is to have a keyframe every 2 minutes or
-less, which means setting `g=50` at most for the default framerate of 25 images
-per second.
+passing the argument `g` and controls how often keyframes are inserted (we
+insert one keyframe every `g` frames). A typical default value is 12, which
+allows easy seeking in videos, but for video streams this value can be increased
+in order to decrease the size of the video. The habit for streaming is to have a
+keyframe every 2 minutes or less, which means setting `g=50` at most for the
+default framerate of 25 images per second.
 
 We now detail the two most popular codecs H.264 and VP9, but there are [many
 other ones](https://ffmpeg.org/ffmpeg-codecs.html).
@@ -627,7 +663,7 @@ other ones](https://ffmpeg.org/ffmpeg-codecs.html).
 #### H.264
 
 The most widely used codec for encoding video is `libx264` which encodes in
-H.264, and has hardware support in many devices such as smartphones (for
+H.264. This format has hardware support in many devices such as smartphones (for
 decoding). The most important parameter is `preset`, which controls how fast the
 encoder is, and whose possible values are
 
@@ -685,9 +721,9 @@ The encoder in FFmpeg is called `libvpx-vp9`, some of its [useful
 parameters](https://developers.google.com/media/vp9) are
 
 - `quality` can be `good` (the decent default), `best` (takes much time) or
-  `mealtime` (which should be used in your scripts since we usually want fast
+  `realtime` (which should be used in your scripts since we usually want fast
   encoding),
-- `speed` goes from -8 (very slow and high quality) to 8 (fast but low quality),
+- `speed` goes from -8 (slow and high quality) to 8 (fast but low quality),
   for realtime encoding you typically want to set this to 5 or 6,
 - `crf` controls quality-based encoding, as for H.264.
 
@@ -705,7 +741,7 @@ The successor of VP9 is AV1 and is under heavy development and diffusion. It can
 be used through the FFmpeg codec `libaom-av1` which essentially takes the same
 parameters as `libvpx-vp9`.
 
-### Ogg/theora
+### Ogg/Theora
 
 We have support for the Theora video codec encapsulated in ogg container,
 already presented in [there](#sec:ogg). The encoder is named `%theora` whose
@@ -717,7 +753,7 @@ main parameters are
 - `speed`: speed of the encoder,
 - `keyframe_frequency`: how often keyframes should be inserted.
 
-For instance, we can encode a video in ogg with opus for the audio and theora
+For instance, we can encode a video in ogg with opus for the audio and Theora
 for the video with
 
 ```{.liquidsoap include="liq/encoder-theora.liq" from=2 to=-1}
@@ -727,8 +763,8 @@ for the video with
 
 Liquidsoap has native (without any external library) builtin support for
 generating AVI files with the `%avi` encoder. The resulting files contain raw
-data (no encoding is performed on frames), which means that we need to compute
-almost nothing but also that it will not be compressed: this format should thus
+data (no compression is performed on frames), which means that we need to compute
+almost nothing but also that it will not be compressed. This format should thus
 be favored for machines which are tight on CPU but not on hard disk, for backup
 purposes:
 
@@ -749,10 +785,10 @@ Specific inputs and outputs
 
 ### Standard streaming methods
 
-The two standard methods for streaming have already been presented for audio in
-[there](#sec:outputs): they are Icecast (with `output.icecast`) and HLS (with
-`output.hls`). The only difference is that the encoder should be one which has
-support for video.
+The two standard methods for streaming video are the same as those which have
+already been presented for audio in [there](#sec:outputs): they are Icecast
+(with `output.icecast`) and HLS (with `output.hls`). The only difference is that
+the encoder should be one which has support for video.
 
 ### Streaming platforms
 
@@ -768,7 +804,7 @@ and mp3 or aac for audio.
 #### Youtube {#sec:youtube}
 
 The streaming key can be obtained from the [Youtube streaming
-platform](https://www.youtube.com/live_dashboard) and the url to stream to is
+platform](https://youtube.com/live_dashboard) and the url to stream to is
 
 ```
 rtmp://a.rtmp.youtube.com/live2/<secret key>
@@ -797,8 +833,8 @@ servers). For instance:
 #### Facebook
 
 The url and streaming key can be obtained from the [Facebook Live
-Producer](https://www.facebook.com/live/producer/). According to
-[recommendations](https://www.facebook.com/help/1534561009906955), Your video
+Producer](https://facebook.com/live/producer/). According to
+[recommendations](https://facebook.com/help/1534561009906955), your video
 resolution should not exceed 1280×720 at 30 frames per second, video should be
 encoded in H.264 at at most 4000 kbps and audio in AAC in 96 or
 128 kbps. Keyframes should be sent at most every two second (the `g` parameter
@@ -806,8 +842,6 @@ of the video codec should be at most twice the framerate). For instance,
 
 ```{.liquidsoap include="liq/video-facebook.liq" from=1}
 ```
-
-\TODO{all three together!!}
 
 ### Saving frames
 

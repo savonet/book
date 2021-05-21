@@ -5857,9 +5857,10 @@ Some other useful functions are
 The first reason you might want to explicitly assign clocks is to precisely
 handle the various latencies that might occur in your setup, and make sure that
 delay induced by an operator do not affect other operators. Namely, two
-operators animated by two different clocks are entirely independent. For
-instance, suppose that you have a script consisting of a microphone source,
-which is saved in a file for backup purposes and streamed to icecast:
+operators animated by two different clocks are entirely independent and can be
+thought of as being run "in parallel". For instance, suppose that you have a
+script consisting of a microphone source, which is saved in a file for backup
+purposes and streamed to Icecast for diffusion:
 
 ```{.liquidsoap include="liq/clock-decoupling.liq" from=1}
 ```
@@ -5869,8 +5870,9 @@ Here, all sources are animated by the same clock, which is the `alsa` one
 the synchronization of the sources). If for some reason, the icecast output is
 slow (for instance, because of a network lag), it will slow down the `alsa`
 clock and thus all the operators will lag. This means that we might loose some
-of the microphone input, because we are not reading fast enough on it. In order
-to prevent from this happening, we can put the icecast output in its own clock:
+of the microphone input, because we are not reading fast enough on it, and even
+the file output will have holes. In order to prevent from this happening, we can
+put the icecast output in its own clock:
 
 ```{.liquidsoap include="liq/clock-decoupling2.liq" from=1}
 ```
@@ -5878,18 +5880,25 @@ to prevent from this happening, we can put the icecast output in its own clock:
 In this way, the timing problems of icecast will not affect the reading on the
 microphone and the backup file will contain the whole emission for later
 replace, even if the live transmission had problems. Note that we have to put a
-`buffer` operator between the two clocks, otherwise Liquidsoap with the usual
-error message.
+`buffer` operator between `mic` and the `clock` operator, which belong to
+different clocks, otherwise Liquidsoap will issue the usual error message
+
+```
+A source cannot belong to two clocks (alsa[], input.alsa_65308[]).
+```
+
+indicating that `mic` cannot belong both to its own new clock and the icecast
+clock.
 
 #### Encoding in parallel
 
-Each clock runs in its own thread and, because of, this two operators running
-in two different clocks can be run in parallel and exploit multiple cores. This
-is particularly interesting for encoding, which is the most CPU-hungry part of
-the tasks: two outputs will different clocks will be able to encode
-simultaneously in two different cores of the CPU.
+From a technical point of view, each clock runs in its own thread and, because
+of, this two operators running in two different clocks can be run in parallel
+and exploit multiple cores. This is particularly interesting for encoding, which
+is the most CPU consuming part of the tasks: two outputs will different clocks
+will be able to encode simultaneously in two different cores of the CPU.
 
-In order to illustrate this consider the following script which performs two
+In order to illustrate this, consider the following script which performs two
 encodings of two different video files:
 
 ```{.liquidsoap include="liq/clock-parallel-encodings.liq" from=1}
@@ -5901,19 +5910,21 @@ time:
 ![Encoding with one clock](img/encoding1.png)\
 
 (the kernel changes the core we use over time in order to better distribute the
-heat). However, if we assign different clocks to the outputs, by changing the
-clock of the second output which will not be the default one anymore, with
+heat, but there is only one core used at a given time). Now, let us assign
+different clocks to the outputs, by changing the clock of the second output,
+which will not be the default one anymore:
 
 ```{.liquidsoap include="liq/clock-parallel-encodings2.liq" from=1}
 ```
 
-we see that we now often use two cores simultaneously, which makes the encoding
+We see that we now often use two cores simultaneously, which makes the encoding
 twice as fast:
 
 ![Encoding with multiple clocks](img/encoding2.png)\
 
-Here, things are working well because the two encoders encode different
-sources. If they encode a common source, it can still be done by using a buffer
+Here, things are working well because the two encoders encode different sources
+(`a` and `b`). If they encode a common source, it can still be done by using a
+buffer
 
 ```{.liquidsoap include="liq/clock-parallel-encodings3.liq" from=1}
 ```
@@ -5932,23 +5943,40 @@ automate some processing on audio files. Those will typically begin with
 
 which means that the rest of the script should be executed by the default
 command `liquidsoap`, with the `-q` argument passed in order to avoid printing
-the usual log messages. The arguments of the script can be obtained with the
-`argv` function which takes a number n and returns the nth argument. If you run
-your script with `liquidsoap`, the arguments in `argv` are those which are after
-the `--` argument. For instance, if we run
+the usual log messages.
+
+#### Retrieving commandline arguments
+
+The arguments of the script can be obtained with the `argv` function which takes
+a number _n_ and returns the _n_-th argument. This means that if your script is
+called `myscript.liq` and you run
+
+```
+./myscript.liq arg1 arg2
+```
+
+then `argv(1)` will return `"arg1"`, `argv(2)` will return `"arg2"` and
+`argv(3)` will return `""` (the empty string is returned by default when there
+is no such an argument). If you run your script with `liquidsoap` instead, the
+arguments in `argv` are those which are after the "`--`" argument. For instance,
+if we run
 
 ```
 liquidsoap mylib.lib myscript.liq -- arg1 arg2
 ```
 
-the arguments in `argv` are going to be `"arg1"` and `"arg2"`.
+the arguments in `argv` are going to be `"arg1"` and `"arg2"`, as above.
 
-Another trick to process files in script is to assign a clock to the output with
-`sync="none"` as parameter: this will make Liquidsoap assume that the operator
-is taking care of synchronization on its own, and thus produce the stream as
-fast as the CPU allows.
+#### Deactivating synchronization
 
-For instance, we have used this in the following script `convert2wav`:
+Another useful trick to process files in scripts is to assign a clock to the
+output with `sync="none"` as parameter: this will make Liquidsoap assume that
+the operator is taking care of synchronization on its own, and thus produce the
+stream as fast as the CPU allows. This means processing a 5 minutes mp3 file
+will not take 5 minutes, but will be performed as fast as possible.
+
+For instance, we have used this in the following script `convert2wav` which, as
+its name indicates, converts any audio file into wav format:
 
 ```{.liquidsoap include="liq/convert2wav.liq"}
 ```
@@ -5967,10 +5995,16 @@ the source becomes unavailable.
 
 Of course, we could easily adapt this script in order to apply audio effects to
 files (compression, volume normalization, etc), to merge a playlist into one
-file, and so on. For instance, the following script will merge a playlist of mp3
-files into one mp3 file, without reencoding them:
+file, and so on. For instance, the following `merge-playlist` script will merge
+a playlist of mp3 files into one mp3 file, without reencoding them:
 
 ```{.liquidsoap include="liq/merge-playlist.liq"}
+```
+
+It can be run with a commandline of the form
+
+```
+merge-playlist myplaylist output.mp3
 ```
 
 <!--
@@ -6004,8 +6038,8 @@ before effectively restarting the daemon.
 
 ### Dynamic sources
 
-Sources can be created dynamically in Liquidsoap, at any time of the execution
-of the script. For instance, the script
+Sources can be created dynamically in Liquidsoap: the number of source does not
+have to be fixed in advance. For instance, the script
 
 ```{.liquidsoap include="liq/play-lists.liq" from=1}
 ```
@@ -6019,43 +6053,45 @@ playlists!
 
 #### Creating sources during execution
 
-The creation of a source can be done at any point during the execution, not
-necessarily at startup. For instance, as a variant of the preceding script, we
-are going to register a telnet command `play p` which starts playing a given
-playlist and `stop p` which stops playing a given playlist (the playlist located
-at `playlists/p`):
+Another point is that the creation of a source can be done at any point during
+the execution, not necessarily at startup. For instance, as a variant of the
+preceding script, we are going to register a telnet command `play p` which
+starts playing a given playlist `p` and `stop p` which stops playing a given
+playlist `p`, the playlist being located at `playlists/p`:
 
 ```{.liquidsoap include="liq/play-lists2.liq" from=1 to=-1}
 ```
 
 Here, we have two commands `play` and `stop` which are registered with
-`server.command`. We maintain a list `sources` which contains pairs consisting
-of the name of playing sources and the sources themselves: the `play` command,
-in addition to playing the requested playlist, add the pair `(pl, s)` to the
-list, where `pl` is the name of the playlist and `s` is the source we created to
-play it. The `stop` command finds the source to stop by looking for its name in
-the list with `list.assoc`, removes it from the list with `list.assoc.remove`
-and then stops the source by calling its `shutdown` method.
+`server.register`. We maintain a list `sources` which contains pairs consisting
+of the name of currently played playlists and the corresponding sources (this is
+an association list): the `play` command, in addition to playing the requested
+playlist, adds the pair `(pl, s)` to the list, where `pl` is the name of the
+playlist and `s` is the source we created to play it. The `stop` command finds
+the source to stop by looking for its name in the list with `list.assoc`,
+removes it from the list with `list.assoc.remove` and then stops the source by
+calling its `shutdown` method.
 
 As a general rule, any dynamically created source which is not used anymore
-should be shut down using its `shutdown` method.
+should be shut down using its `shutdown` method in order to avoid uselessly
+wasting resources.
 
 #### Even more dynamic sources
 
 We have seen that we can dynamically create sources, but this cannot be used to
-dynamically change the contents of sources which are already playing. This can
-be achieved by using `source.dynamic`: this operator takes as argument a
-function which returns the source to play at any given time, and can thus be
-used to create a source which changes overtime.
-
-\TODO{rather use a set approach for the dynamic source than the functional one}
+dynamically change the contents of sources which are already playing. This
+behavior can be achieved by using `source.dynamic`: this operator creates a
+source, which has a method `set` to change the source it is relaying, and can
+thus be used to create a source which changes overtime. It can be thought of as
+a suitable analogous of references for sources.
 
 For instance, the `add` operator takes a fixed list of sources, but suppose that
 the list of sources we want to add varies over time. We can program this with
-`source.dynamic` where the function returns an `add` applied to a list which
-varies over times. For instance, the following script maintains a list `sines`
-of sources, to which we add some `sine` sources with random parameters over time
-by calling the function `new`:
+`source.dynamic` where, each time the list changes, we use the `set` method to
+update the dynamic source and enforce that it consists in `add` applied to the
+updated list. For instance, the following script maintains a list `sine`
+sources, to which we add some new elements from time to time, with random
+parameters, by calling the function `new`:
 
 ```{.liquidsoap include="liq/bells.liq" from=1}
 ```
@@ -6067,7 +6103,7 @@ Of course, the above example is not something that you would usually have in a
 radio, but this is the same mechanism which is used to implement the
 `request.player` operator in the standard library. `source.dynamic` is also used
 in the standard library to provide alternative implementation of basic
-Liquidsoap functions, you should have a look at the file `native.liq` in order
+Liquidsoap operators, you should have a look at the file `native.liq` in order
 to learn more about those.
 
 <!--

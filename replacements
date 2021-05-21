@@ -77,3 +77,15 @@ html [html]{.smallcaps}
 HTML [html]{.smallcaps}
 AJAX [ajax]{.smallcaps}
 LUFS [lufs]{.smallcaps}
+RGB [rgb]{.smallcaps}
+YUV420 [yuv420]{.smallcaps}
+SDL [sdl]{.smallcaps}
+bpm [bpm]{.smallcaps}
+BPM [bpm]{.smallcaps}
+VP9 [vp9]{.smallcaps}
+AV1 [av1]{.smallcaps}
+GOP [gop]{.smallcaps}
+CRF [crf]{.smallcaps}
+HEVC [hevc]{.smallcaps}
+theora Theora
+FLV [flv]{.smallcaps}
