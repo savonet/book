@@ -324,7 +324,7 @@ contents, but this was removed because it turned out to be error-prone and not
 used much in practice.
 
 During the type checking phase, it can happen that two constraints are not
-compatible for a stream. In this case, an error is returned before the script is
+compatible for a given stream. In this case, an error is returned before the script is
 executed. For instance, suppose that we have a source `s` and we execute the
 following script:
 
@@ -364,7 +364,7 @@ but it should be a subtype of
   source(audio=ffmpeg.audio.copy(_),...)
 ```
 
-which is precisely a way to state the above.
+which is a formal way of stating the above explanation.
 
 ### Adding and removing channels
 
@@ -399,11 +399,12 @@ and filling it in blue), we add them and finally play the resulting source
 ```
 
 it takes a list of sources to add, and lists cannot contain heterogeneous
-elements. Therefore, in order to produce a source with both audio and video, the
-elements of the list given as argument to `add` must all be sources with audio
-and video.
+elements, otherwise said all the elements of a list should have the same type.
+Therefore, in order to produce a source with both audio and video, the elements
+of the list given as argument to `add` must all be sources with both audio and
+video.
 
-If you insist of adding a video channel to a source which does not have one, you
+If you insist on adding a video channel to a source which does not have one, you
 should use the dedicated function `mux_video`, whose type is
 
 ```
@@ -413,8 +414,8 @@ should use the dedicated function `mux_video`, whose type is
 
 (and the function `mux_audio` can similarly be used to add audio to a source
 which does not have that). However, since this function is much less well-known
-than `add`, we like leaving the possibility to the user of using both most of
-the time, as explained above. Note that the following variant of the above
+than `add`, we like to leave the possibility for the user to use both most of
+the time, as indicated above. Note however that the following variant of the above
 script
 
 ```{.liquidsoap include="liq/blue-sine2.liq" from=1}
@@ -450,10 +451,10 @@ Namely, in the second line, we constrain the type of `s` to be
 ### Encoding formats {#sec:encoders-intro}
 
 In order to specify the format in which a stream is encoded, Liquidsoap uses
-particular annotations called _encoders_. For instance, consider the
-`output.file` operator which stores a stream into a file: this operator needs to
-know what kind of file we want to produce. The (simplified) type of this
-operator is
+particular annotations called _encoders_, already presented in
+[there](#sec:encoders). For instance, consider the `output.file` operator which
+stores a stream into a file: this operator needs to know the kind of file we
+want to produce. The (simplified) type of this operator is
 
 ```
 (format('a), string, source('a)) -> active_source('a)
@@ -462,11 +463,13 @@ operator is
 We see that the second argument is the name of the file and the third argument
 is the source we want to dump. The first argument is the encoding format, of
 type `format('a)`. Observe that it takes a type variable `'a` as argument, which
-is the same variable as the parameters of the source taken as third argument
-(and the returned source): the format required by the source will depend on the
-chosen format.
+is the same variable as the parameters of the source taken as argument, and the
+parameters of the returned source: the format required for the intput source
+will depend on the chosen format.
 
-The encoding formats are given by encoders, whose name always begin with the
+#### Encoders
+
+The encoding formats are given by _encoders_, whose name always begin with the
 "`%`" character and can take parameters: their exhaustive list is given in
 [there](#sec:encoders). For instance, if we want to encode a source `s` in mp3
 format, we are going to use the encoder `%mp3` and thus write something like
@@ -494,8 +497,8 @@ follows:
 ```{.liquidsoap include="liq/format-mp3-mono.liq" from=2}
 ```
 
-Note that this will have an influence on the type of the stream: if we pass
-`mono` as parameter, the type of the encoder becomes
+Some of those parameters will have an influence on the type of the stream. For
+instance, if we pass `mono` as parameter, the type of the encoder becomes
 
 ```
 format(audio=pcm(mono), video=none, midi=none)
@@ -503,7 +506,7 @@ format(audio=pcm(mono), video=none, midi=none)
 
 and thus imposes that `s` should have mono audio.
 
-Because they have such an influence on types, an encoder is not a value as any
+Because is has such an influence on types, an encoder is not a value as any
 other in Liquidsoap, and specific restrictions have to be imposed. In
 particular, you cannot use variables or complex expressions in the parameters
 for the encoders. For instance, the following will not be accepted
@@ -512,11 +515,13 @@ for the encoders. For instance, the following will not be accepted
 ```{.liquidsoap include="liq/bad/format-mp3-mono.liq" from=2}
 ```
 
-because we are trying to use a variable as value for the bitrate. This might
-change in the future though.
+because we are trying to use the variable `b` as value for the bitrate. This is
+sometimes annoying and might change in the future.
 
-As another example, suppose that we want to encode our whole music library as a
-long mp3. We would proceed in this way:
+#### Encoded sources
+
+As another example of the influence of encoders, suppose that we want to encode
+our whole music library as a long mp3. We would proceed in this way:
 
 
 ```{.liquidsoap include="liq/encoded-concat.liq" from=1}
@@ -524,16 +529,17 @@ long mp3. We would proceed in this way:
 
 The first line creates a `playlist` source which will read all our music files
 once, the second line ensures that we try to encode the files as fast as
-possible instead of performing this in real time (the use of clocks is detailed
-in [there](...)\TODO{reference}) and the third line requires the encoding in mp3
-of the resulting source, calling the `shutdown` function once the source is
-over, which will terminate the script. If you try this at home, you will see
-that it takes quite some time, because the `playlist` operator has to decode all
-the files of the library into internal raw contents, and the `output.file`
-operator has to encode the stream in mp3, which is quite CPU-hungry. If our
-music library already consists of mp3 files, it is much more efficient to avoid
-decoding and then reencoding the files. In order to do so, we can use the
-FFmpeg encoder, by replacing the last line with
+possible instead of performing this in realtime as explained in
+[there](#sec:clocks-ex), and the third line requires the encoding in mp3 of the
+resulting source, calling the `shutdown` function once the source is over, which
+will terminate the script.
+
+If you try this at home, you will see that it takes quite some time, because the
+`playlist` operator has to decode all the files of the library into internal raw
+contents, and the `output.file` operator has to encode the stream in mp3, which
+is quite CPU hungry. If our music library already consists of mp3 files, it is
+much more efficient to avoid decoding and then reencoding the files. In order to
+do so, we can use the FFmpeg encoder, by replacing the last line with
 
 ```{.liquidsoap include="liq/encoded-concat2.liq" from=3}
 ```
@@ -549,11 +555,14 @@ source(audio=ffmpeg.audio.copy, video=none, midi=none)
 where the contents of the audio is already encoded. Because of this, the
 `playlist` operator will not try to decode the mp3 files, it will simply pass
 their data on, and the encoder in `output.file` will simply copy them in the
-output file, thus resulting in a much more efficient script.
+output file, thus resulting in a much more efficient script. More details can be
+found in [there](#sec:encoded-streams).
 
+<!--
 The format of most encoded output operators (`output.icecast`,
 `output.file.hls`, `output.srt`, etc.) is determined by an encoder argument in
 the same way.
+-->
 
 Frames
 ------
@@ -561,19 +570,18 @@ Frames
 At this point, we think that it is important to explain a bit how streams are
 handled "under the hood", even though you should never have to explicitly deal
 with this in practice. After parsing a script, liquidsoap starts one or more
-streaming loop. Each streaming loop is responsible for creating audio data from
+streaming loops. Each streaming loop is responsible for creating audio data from
 the inputs, pass it through the various operators and, finally, send it to the
-outputs. Each operator is attached to a _clock_, which is in charge of controlling
-the latency during the streaming (in most cases, the clock follows the
-computer's CPU clock, in order to stream data in real time to your
-listeners). This way of functioning is detailed below.
+outputs. Those streaming loops are animated by _clocks_: each operator is
+attached to such a clock, which ensures that data is produced regularly. This
+section details this way of functioning.
 
 ### Frames
 
-For performance reasons, the data contained in streams is generated by small
+For performance reasons, the data contained in streams is generated in small
 chunks, that we call _frames_ in Liquidsoap. The default size of a frame is
-controlled by the setting `frame.duration` whose default value is 0.04 second,
-i.e. 1/25 th of a second, which corresponds to 1764 audio samples and 1 video
+controlled by the `frame.duration` setting whose default value is 0.04 second,
+i.e. 1/25 th of a second. This corresponds to 1764 audio samples and 1 video
 image with default settings. The actual duration is detailed at the beginning of
 the logs:
 
@@ -581,9 +589,16 @@ the logs:
 Frames last 0.04s = 1764 audio samples = 1 video samples = 1764 ticks.
 ```
 
-Note that if you request a duration of 0.06 second, by
+#### Changing the size
+
+The size of frames can be changed by instructions such as
 
 ```{.liquidsoap include="liq/frame-duration.liq" from=1 to=1}
+```
+
+Note that if you request a duration of 0.06 second, by
+
+```{.liquidsoap include="liq/frame-duration2.liq" from=1 to=1}
 ```
 
 you will see that Liquidsoap actually selects a frame duration of 0.08 seconds:
@@ -594,6 +609,8 @@ Frames last 0.08s = 3528 audio samples = 2 video samples = 3528 ticks.
 
 this is because the requested size is rounded up so that we can fit an integer
 number of samples and images (0.06 would have amounted to 1.5 image per frame).
+
+#### Pulling frames
 
 In a typical script, such as
 
@@ -609,6 +626,8 @@ and passes it to the `amplify` source asking it to fill it in. In turn, it will
 pass it to the `sine` source, which will fill it with a sine, then the `amplify`
 source will modify its volume, and then the `output.pulseaudio` source will send
 it to the soundcard.
+
+#### Assumptions on frame size
 
 The frame duration is always supposed to be "small" so that values are constant
 over a frame. For this reason, and in order to gain performance, expressions are
