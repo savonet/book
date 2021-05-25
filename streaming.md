@@ -617,22 +617,23 @@ In a typical script, such as
 ```{.liquidsoap include="liq/streaming1.liq"}
 ```
 
-The active source is `output.pulseaudio`, and is thus responsible for
-synchronization. In practice, it waits for the soundcard to say: "hey, my
-internal buffer is almost empty, now is a good time to fill me in!". Each time
-this happens, and this occurs 25 times per second, the active source generates a
+The active source is `output.pulseaudio`, and is responsible for the generation
+of frames. In practice, it waits for the soundcard to say: "hey, my internal
+buffer is almost empty, now is a good time to fill me in!". Each time this
+happens, and this occurs 25 times per second, the active source generates a
 _frame_, which is a buffer for audio (or video) data waiting to be filled in,
 and passes it to the `amplify` source asking it to fill it in. In turn, it will
 pass it to the `sine` source, which will fill it with a sine, then the `amplify`
 source will modify its volume, and then the `output.pulseaudio` source will send
-it to the soundcard.
+it to the soundcard. Note that, for performance reasons, all the operators work
+directly on the same buffer.
 
 #### Assumptions on frame size
 
-The frame duration is always supposed to be "small" so that values are constant
-over a frame. For this reason, and in order to gain performance, expressions are
-evaluated only once at the beginning of each frame. For instance, the following
-script plays music at a random volume:
+The frame duration is always supposed to be "small" so that values can be
+considered to be constant over a frame. For this reason, and in order to gain
+performance, expressions are evaluated only once at the beginning of each
+frame. For instance, the following script plays music at a random volume:
 
 ```{.liquidsoap include="liq/random-volume.liq" from=2}
 ```
@@ -650,13 +651,25 @@ noticed. It can be sometimes useful to increase it a bit (but not as much as 1
 second) in order to improve the performance of scripts, at the cost of
 decreasing the precision of computed values.
 
-\TODO{mention source.on\_frame}
+#### Triggering computations on frames
+
+It is possible to trigger a computation on every frame, with the
+`source.on_frame` operator, which takes in addition to a source, a function
+which is called every time a new frame is computed. For instance, the following
+script will increase the volume of the source `s` by 0.01 on every frame:
+
+```{.liquidsoap include="liq/source.on_frame.liq" from=2 to=-1}
+```
+
+The default size of a frame being 0.04 s, volume will progressively be increased
+by 0.25 each second.
 
 ### Frame raw contents {#sec:liquidsoap-raw}
 
 Let us provide some more details about the way data is usually stored in those
-frames, when using raw internal contents. Each frame has room for audio, video
-and midi data.
+frames, when using raw internal contents, which is the case most of the
+time. Each frame has room for audio, video and midi data, the format of this
+data we now describe.
 
 #### Audio
 
@@ -681,7 +694,7 @@ although default samplerate of 44100 Hz is largely the most commonly in use.
 
 #### Video
 
-A video consists of a sequence images given regularly. By default, these images
+A video consists of a sequence images provided at regular interval. By default, these images
 are presented at the _frame rate_ of 25 images per second, but this can be
 changed using the setting `frame.video.framerate` similarly as above. Each image
 consists of a rectangle of pixels: its default width and height are 1280 and 720
@@ -694,51 +707,56 @@ format would be achieved with
 ```{.liquidsoap include="liq/fullhd.liq" from=1}
 ```
 
-Each pixel has a color and a transparency (also sometimes called an _alpha
-channel_): this last parameter controls how opaque the pixels is and is used
+Each pixel has a color and a transparency, also sometimes called an _alpha
+channel_: this last parameter specifies how opaque the pixels is and is used
 when superimposing two images (the less opaque a pixel of the above image is,
 the more you will see the pixels below it). Traditionally, the color would be
 coded in RGB, consisting of the values for the intensity of the red, green and
-blue for each pixel. However, if we did things in this way, a pixel would take 4
-bytes (1 byte for each color and 1 for transparency), which means 4×1280×720×25
-bytes (= 87 Mb) of video per seconds, which is too much to handle in realtime
-for a standard computer. For this reason, instead using the RGB representation,
-we use the YUV representation (Y, U and V respectively being the _luma_, _blue
-chroma_ and _red chroma components_): human eye is not very sensitive to chroma
-variations, we can take the same U and V values for 4 neighboring pixels. This
-means that each pixel is now encoded by 2.5 bytes (1 for Y, ¼ for U, ¼ for V and
-1 for alpha) and 1 second of typical video is down to a more reasonable 54 Mb
-per second.
-
-\TODO{merge the following old paragraph with the above}
-
-TODO: As a side note, in practice, video pixels are not represented by red, green and
-blue channels as we learn in school, but in another base often called _YUV_
-consisting of one _luma_ channel Y (roughly, the black and white component of
-the image) and two _chroma_ channels U and V (roughly, the color part of the
-image represented as blueness and redness). Moreover, because the eye is much
-more sensitive to the variations in luma than in chroma components, we can use
-one Y byte for each pixel and one U byte and one V byte for every four pixels,
-thus using 1.5 byte per pixel instead of 3 for traditional RGB
-representation. The conversion between YUV and RGB is not entirely trivial and
-costs in terms of computations, so it is generally better to code video
-manipulations directly on the YUV representation.
-
+blue for each pixel. However, if we did things in this way, every pixel would
+take 4 bytes (1 byte for each color and 1 for transparency), which means
+4×1280×720×25 bytes (= 87 Mb) of video per seconds, which is too much to handle
+in realtime for a standard computer. For this reason, instead using the RGB
+representation, we use the YUV representation consisting of one _luma_ channel Y
+(roughly, the black and white component of the image) and two _chroma_ channels
+U and V (roughly, the color part of the image represented as blueness and
+redness). Moreover, since the human eye is not very sensitive to chroma
+variations, we can be less precise for those and take the same U and V values
+for 4 neighboring pixels. This means that each pixel is now encoded by 2.5 bytes
+on average (1 for Y, ¼ for U, ¼ for V and 1 for alpha) and 1 second of typical
+video is down to a more reasonable 54 Mb per second.
 
 #### MIDI
 
 MIDI stands for _Musical Instrument Digital Interface_ and is a (or, rather,
-the) standard for communicating between various digital instruments and
+_the_) standard for communicating between various digital instruments and
 devices. Liquidsoap mostly follows it and encodes data as lists of _events_
 together with the time (in ticks, relative to the beginning of the frame) they
 occur and the channel on which they occur. Each event can be "such note is
 starting to play at such velocity", "such note is stopping to play", "the value
 of such controller changed", etc.
 
+#### Encoded contents
+
+As indicated in [there](#sec:encoded-streams), the data present in frames is not
+always in the above format. Namely, Liquidsoap also has support for frames whose
+contents is stored either in a format supported by the FFmpeg library, which can
+consist of encoded streams (e.g. audio in the mp3 format).
+
+<!--
+#### Presentation time
+
+Lastly, each frame also contains a pts (for _presentation timestamp_) which
+indicates how this frame should be ordered with respect to other frames. This is
+generally irrelevant in traditional applications, but is required 
+
+TODO: explain why we need to have pts (_presentation timestamp_) in
+frames\SM{Romain, I need your help on this!}
+-->
+
 ### Ticks
 
-The time at which something occurs in a frame is measured in a unit called
-_ticks_. To avoid errors due to rounding, which tend to accumulate when
+The time at which something occurs in a frame is measured in a custom unit which
+we call _ticks_. To avoid errors due to rounding, which tend to accumulate when
 performing computations with float numbers, we want to measure time with
 integers. The first natural choice would thus be to measure time in audio
 samples, since they have the highest rate, and in fact this is what is done with
@@ -760,19 +778,21 @@ Using 44100Hz audio, 24Hz video, 88200Hz main.
 ```
 
 which means that there are 44100 audio samples, 24 images and 88200 ticks per
-second, as well as
+second. You will also see in the logs
 
 ```
 Frames last 0.08s = 3675 audio samples = 2 video samples = 7350 ticks.
 ```
 
 which means that a frame lasts 0.8 seconds and contains 8675 audio samples and 2
-video samples, which corresponds to 7350 ticks.
+video samples, which corresponds to 7350 ticks. More generally, the number of
+ticks per second as the smallest number such that both an audio and a video
+sample lasts for an integer number of ticks.
 
 ### Tracks and metadata
 
-Each frame contains two additional arrays of data which are timed (in ticks
-relative to the beginning of the frame): breaks and metadata.
+Each frame contains two additional arrays of data which are timed, in ticks
+relative to the beginning of the frame: breaks and metadata.
 
 #### Tracks
 
@@ -830,23 +850,16 @@ that Liquidsoap adds internal information such as
 - `kind`: the kind (i.e. the contents of audio, video and midi) of the stream,
 - `on_air`: the time at which it has been put on air, i.e. first played.
 
-These are added when resolving requests, which are detailed below. In order to
-prevent internal information leaks (we don't want our listeners to know about
-our filenames), the metadata are filtered before being sent to outputs: this is
-controlled by the `"encoder.encoder.export"` setting, which contain the list of
-metadata which will be exported, and whose default value is
+These are added when resolving requests, as detailed below. In order to prevent
+internal information leaks (we do not want our listeners to know about our
+filenames for instance), the metadata are filtered before being sent to outputs:
+this is controlled by the `"encoder.encoder.export"` setting, which contain the
+list of metadata which will be exported, and whose default value is
 
 ```
 ["artist", "title", "album", "genre", "date", "tracknumber",
  "comment", "track", "year", "dj", "next"]
 ```
-
-\TODO{explain the tag.encodings setting and that tags are recoded}
-
-### Presentation time
-
-TODO: explain why we need to have pts (_presentation timestamp_) in
-frames\SM{Romain, I need your help on this!}
 
 The streaming model
 -------------------
@@ -864,7 +877,9 @@ source are
   has its own way of keeping synced, e.g. using the internal clock of a
   soundcard (this is also detailed below).
 
-Then the standard life cycle of a source is the following one:
+#### Lifecycle of a source
+
+The standard lifecycle of a source is the following one:
 
 - we first inform the source that we are going to use it (we also say that we
   _activate_ it) by asking it to _get ready_, which triggers its initialization,
@@ -872,15 +887,15 @@ Then the standard life cycle of a source is the following one:
 - and finally, when the script shuts down, we _leave_ the source, indicating
   that we are not going to need it anymore.
 
-The information always flows from outputs. For instance, in a simple script such
-as
+The information always flows from outputs to inputs. For instance, in a simple
+script such as
 
 ```{.liquidsoap include="liq/amplify-playlist.liq" from=1}
 ```
 
 at beginning Liquidsoap will ask the output to get ready, in turn the output
 will ask the amplification operator to get ready, which will in turn ask the
-playlist to get ready (and leaving is performed similarly, as well as the
+playlist to get ready (and leaving would be performed similarly, as well as the
 computation of frames as explained above). Note that a given source might be
 asked multiple times to get ready, for instance if it is used by two outputs
 (typically, an icecast output and an HLS output). The first time it is asked to
@@ -921,7 +936,7 @@ nature of `audio`, `video` and `midi` channels as presented above. This might
 seem surprising because this information is already present in the type of
 sources, as explained above. However, for efficiency reasons, we drop types
 during execution, which means that we do not have access to this and have to
-compute it again (this is only done at startup and is quite inexpensive anyway):
+compute it again (this is only done once at startup and is quite inexpensive anyway):
 some sources need this information in order to know in which format they should
 generate the stream or decode data. The computation of the kind is performed in
 two phases: we first determine the _content kind_ which are the necessary
@@ -949,7 +964,7 @@ type has been fixed to two channels of pcm audio, no video nor midi.
 #### The streaming loop
 
 As explained above, once the initialization phase is over, the outputs regularly
-ask their the source they should play to fill in frames: this is called the
+ask the sources they should play to fill in frames: this is called the
 _streaming loop_. Typically, in a script of the form
 
 ```{.liquidsoap include="liq/streaming3.liq" from=3}
@@ -958,13 +973,14 @@ _streaming loop_. Typically, in a script of the form
 the Icecast output will ask the amplification operator to fill in a frame, which
 will trigger the switch to fill in a frame, which will require either the
 `morning` or `default` source to produce a frame depending on the time. For
-performance reasons we want to avoid copies of data, and the computations are
+performance reasons, we want to avoid copies of data, and the computations are
 performed in place, which means that each operator directly modifies the frame
-produces by its source, e.g. the amplification operator directly changes the
-volume in the frame produced by the switch. Since computation of frames is
-triggered by outputs, when a source is shared by two outputs, at each round it
-will be asked twice to fill a frame (once by each source). For instance,
-consider the following script:
+produced by its source, e.g. the amplification operator directly changes the
+volume in the frame produced by the switch.
+
+Since the computation of frames is triggered by outputs, when a source is shared by
+two outputs, at each round it will be asked twice to fill a frame (once by each
+source). For instance, consider the following script:
 
 ```{.liquidsoap include="liq/streaming2.liq"}
 ```
@@ -973,7 +989,7 @@ Here, the source `s` is used twice: once by the pulseaudio output and once by
 the icecast output. Liquidsoap detects such cases and goes into _caching mode_:
 when the first active source (say, `output.pulseaudio`) asks `amplify` to fill
 in a frame, Liquidsoap will temporarily store the result (we say that it
-"caches" it, in what we call a _memo_) so that when the second active source
+"caches" it, in what we call a _memo_ frame) so that when the second active source
 asks `amplify` to fill in the frame, the stored one will be reused, thus
 avoiding to compute twice a frame which would be disastrous (each output would
 have one frame every two computed frames).
@@ -982,8 +998,6 @@ have one frame every two computed frames).
 TODO: explain that there are boundary conditions: a source can be fetched twice
 with different track boundaries
 -->
-
-\TODO{we should speak about dynamic sources at some point: source.dynamic}
 
 ### Fallibility
 
@@ -1010,7 +1024,7 @@ determined whether it has something to play.
 
 On startup, Liquidsoap ensures that the sources used in outputs never fail
 (unless the parameter `fallible=true` is passed to the output). This is done by
-propagating fallibility from sources to sources. For instance, we know that a
+propagating fallibility information from sources to sources. For instance, we know that a
 `blank` source or a `single` source will never fail (for the latter, this is
 because we download the requested file at startup), `input.http` is always
 fallible because the network might go down, a source `amplify(s)` has the same
@@ -1039,7 +1053,7 @@ Or to use `mksafe` which is defined by
 
 and will play blank in case the input source is down.
 
-The "worse" source is given by the operator `fail`, which creates a source which
+The "worse" source with respect to fallibility is given by the operator `fail`, which creates a source which
 is never ready. This is sometimes useful in order to code elaborate
 operators. For instance, the operator `once` is defined from the `sequence`
 operator (which plays one track from each source in a list) by
@@ -1076,7 +1090,7 @@ minutes after a month: this means that at some point in the month we will have
 to insert 43 minutes of silence or cut 43 minutes of music in order to
 synchronize back the two clocks! The uses of clocks allows Liquidsoap to detect
 such situations and require the user to deal with them. In practice, this means
-that each library (ALSA, Pulseaudio, etc.) has to be in its own clock, as well
+that each library (ALSA, Pulseaudio, etc.) has to be attached to its own clock, as well
 as network libraries taking care of synchronization by themselves (SRT).
 
 There are also some reasons that are purely _internal_ to Liquidsoap: in order
@@ -1085,7 +1099,7 @@ another source at a different rate. This is obvious for an operator that speeds
 up or slows down audio, such as `stretch`. But it also holds more subtly for
 operators such as `cross`, which is responsible for crossfading successive
 tracks in a source: during the lapse of time where the operator combines data
-from an end of track with the beginning of the other other, the crossing
+from an end of track with the beginning of the next one, the crossing
 operator needs twice as much stream data. After ten tracks, with a crossing
 duration of six seconds, one more minute will have passed for the source
 compared to the time of the crossing operator.
@@ -1183,8 +1197,8 @@ can be represented as the following graph:
 
 The dotted boxes on this graph represent clocks: all the nodes in a box are
 operators which belong to the same clock. Here, we see that the `playlist`
-operator has to be in its own clock `clock₂` (because it can be manipulated in a
-non-linear way by the `crossfade` operator in order to compute transitions)
+operator has to be in its own clock `clock₂`, because it can be manipulated in a
+non-linear way by the `crossfade` operator in order to compute transitions,
 whereas all other operators belong the same clock `clock₁` and will produce
 their stream at the same rate.
 
@@ -1193,7 +1207,7 @@ their stream at the same rate.
 At startup Liquidsoap assigns a clock to each operator by applying the three
 following rules:
 
-1. we should follow the clock imposed by some operators:
+1. we should follow the clock imposed by operators which have special requirements:
    - `input.alsa` and `output.alsa` have to be in the `alsa` clock,
      `input.pulseaudio` and `output.pulseaudio` have to be in the `pulseaudio`
      clock, etc.,
@@ -1203,7 +1217,7 @@ following rules:
 2. each operator should have the same clock as the sources it is using (unless
    for special operators such as `cross` or `buffer`),
 3. if the two above rules do not impose a clock to an operator, it is assigned to
-   the default clock which based on CPU and called `main`.
+   the default clock `main`, which based on CPU.
 
 It should always be the case that a given operator belongs to exactly one
 clock. If, by applying the above rules, we discover that an operator should
@@ -1212,13 +1226,13 @@ belong to two (or more) clocks, we raise an error. For instance, the script
 ```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=2}
 ```
 
-will raise the error
+will raise at startup the error
 
 ```
 A source cannot belong to two clocks (alsa[], pulseaudio[]).
 ```
 
-at startup because the source `s` should be both in the `alsa` and in the
+because the source `s` should be both in the `alsa` and in the
 `pulseaudio` clock, which is forbidden. This is for a good reason: the ALSA and
 the Pulseaudio libraries each have their own way of synchronizing streams and
 might lead to the source `s` being pulled at two different rates. Similarly, the
@@ -1234,7 +1248,7 @@ Cannot unify two nested clocks (resample_65223[], ?(3f894ac2d35c:0)[resample_652
 ```
 
 because the source `s` should belong to the clock used by `stretch` and the
-clock of `stretch`. When we thing about it the reason is clear: we are trying to
+clock of `stretch`. When we think about it the reason should be clear: we are trying to
 add the source `s` played at normal speed and at a speed slowed down twice. This
 means that in order to compute the stream `o` at a given time _t_, we need to
 know the stream `s` both at time _t_ and at time _t/2_, which is forbidden
@@ -1416,18 +1430,18 @@ adaptative resampler. One such example is The VLC player.
 
 #### Mediating between clocks: buffers
 
-As we have seen in [there](#sec:clock-ex), the usual way to handle clock
+As we have seen in [there](#sec:clocks-ex), the usual way to handle clock
 problems is to use buffer operators (either `buffer` of `buffer.adaptative`):
-they record some of their input source before outputting it (1 second by
+they record in a buffer some of their input source before outputting it (1 second by
 default), so that it can easily cope with small time discrepancies. Because of
 this, we allow that the clock of their argument and their clocks are different.
 
-We have seen that the script
+For instance, we have seen that the script
 
 ```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=2}
 ```
 
-is now allowed because it would require `s` to belong to two distinct
+is not allowed because it would require `s` to belong to two distinct
 clocks. Graphically,
 
 ![Alsa vs pulseaudio clocks](fig/clock-alsa-pulseaudio.pdf)\
@@ -1448,7 +1462,7 @@ and thus two distinct clocks for the whole script:
 We have indicated that, by default, a frame is computed every 0.04 second. In
 some situations, the generation of the frame could take more than this: for
 instance, we might fetch the stream over the internet and there might be a
-problem in the connection, or we are using very cpu-intensive audio effects, and
+problem with the connection, or we are using very cpu intensive audio effects, and
 so on. What happens in this case? If this is for a very short period of time,
 nothing: there are buffers at various places, which store the stream in advance
 in order to cope with this kind of problems. If the situation persists, those
@@ -1472,6 +1486,8 @@ This means Liquidsoap took _n_+0.86 seconds to produce _n_ seconds of audio, and
 is thus "late". In such a situation, it will try to produce audio faster than
 realtime in order to "catch up" the delay.
 
+#### Coping witch catch up errors
+
 How can we cope with this kind of situations? Again, buffers are a solution to
 handle temporary disturbances in production of streams for sources. You can
 explicitly add some in you script by using the `buffer` operator: for instance,
@@ -1483,6 +1499,41 @@ s = buffer(s)
 
 which make the source store 1 second of audio (this duration can be configured
 with the `buffer` parameter) and thus bear with delays of less than 1 second.
+
+A more satisfactory way to fix this consists in identifying the cause of the
+delay, but we cannot provide a general answer for this, since it largely depends
+on your particular script. The only general comment we can make is that
+something is taking time to compute at some point. It could be that your cpu is
+overloaded and you should reduce the number of effects, streams or simultaneous
+encodings. It could also come from the fact that you are performing operations
+such as requests over the internet, which typically take time. For instance, we
+have seen in [an earlier section](#sec:harbor) that we can send the metadata of
+each track to a website with a script such as
+
+```{.liquidsoap include="liq/post-metadata.liq" from=1 to=-1}
+```
+
+which uses `http.post` to POST the metadata of each track to a distant
+server. Since the connection to the server can take time, it is much better to
+perform it in a separate thread, which will run in parallel to the computation
+of the stream, without inducing delay in it. This can be performed by calling
+the `handle_metadata` with the `thread.run` function, i.e. replace the last line
+above by
+
+```{.liquidsoap include="liq/post-metadata2.liq" from=7 to=-1}
+```
+
+A last way of dealing with the situation is by simply ignoring it. If the only
+thing which is disturbing you is the error messages that pollute your log and
+not the error itself, you can have fewer messages by changing the
+`clock.log_delay` setting which controls how often the "catchup" error message
+is displayed. For instance, with
+
+```{.liquidsoap include="liq/clock.log_delay.liq" from=1 to=1}
+```
+
+you will only see one every minute.
+
 
 <!--
 #### The `clock` operator
@@ -1541,6 +1592,8 @@ For those reason, most operators (such as `single`, `playlist`, etc.) do not
 directly deal files, but rather with _requests_. Namely, a request is an
 abstraction which allows manipulating files but also performing the above
 operations.
+
+\TODO{explain the tag.encodings setting and that tags are recoded}
 
 ### Requests {#sec:requests}
 

@@ -59,6 +59,7 @@ CPU [cpu]{.smallcaps}
 RFC [rfc]{.smallcaps}
 ftp [ftp]{.smallcaps}
 FTP [ftp]{.smallcaps}
+pcm [pcm]{.smallcaps}
 PCM [pcm]{.smallcaps}
 LAME [lame]{.smallcaps}
 MPEG-TS [mpeg-ts]{.smallcaps}
@@ -78,6 +79,7 @@ HTML [html]{.smallcaps}
 AJAX [ajax]{.smallcaps}
 LUFS [lufs]{.smallcaps}
 RGB [rgb]{.smallcaps}
+YUV [yuv]{.smallcaps}
 YUV420 [yuv420]{.smallcaps}
 SDL [sdl]{.smallcaps}
 bpm [bpm]{.smallcaps}
@@ -89,3 +91,4 @@ CRF [crf]{.smallcaps}
 HEVC [hevc]{.smallcaps}
 theora Theora
 FLV [flv]{.smallcaps}
+MD5 [md5]{.smallcaps}

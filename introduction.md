@@ -66,7 +66,7 @@ radio workflow, you are in trouble.
 
 Based on this observation, we decided to come up with a new _programming
 language_, our beloved _Liquidsoap_, which would allow for describing how to
-generate audio streams. The generation of the stream does not need follow a
+generate audio streams. The generation of the stream does not need to follow a
 particular pattern here, it is instead implemented by the user in a script,
 which combines the various building blocks of the language in an arbitrary way:
 the possibilities are thus virtually unlimited. It does not impose a rigid
@@ -93,7 +93,7 @@ It is also designed to be very robust, since we want our radios to stream
 forever and not have our stream crash after a few weeks because of a rare case
 which is badly handled. For this reason, before running a script, the Liquidsoap
 compiler performs many in-depth checks on it, in order to ensure that everything
-will go on well. Most of those analysis are performed using _typing_, which
+will go on well. Most of this analysis is performed using _typing_, which
 offer very strong guarantees.
 
 - We ensure that the data passed to function is of the expected form. For
@@ -168,7 +168,7 @@ access to those more easily, Samuel wrote a dirty campus indexer in OCaml
 hack for adding user requests to the original system. It probably kind of worked
 for a while. Then they wanted something more, and realized it was all too ugly.
 
-So, they started to built the first audio streamer in pure OCaml, using
+So, they started to build the first audio streamer in pure OCaml, using
 libshout. It had a simple telnet interface, so that a bot on IRC (this was the
 chat at that time) could send user requests easily to it, as well as from the
 website. There were two request queues, one for users, one for admins. But it
@@ -187,8 +187,8 @@ born, and plenty of new libraries for handling sound in OCaml emerged, many of
 which we are still using today. The name of the language was a play on word
 around "savonet" which sounds like "savonette", a soap bar in French.
 
-On the day where the project had to be presented to the teachers, the demo
-miserably failed, but soon after that they ware able to run a webradio with
+On the day when the project had to be presented to the teachers, the demo
+miserably failed, but soon after that they were able to run a webradio with
 several static (but periodically reloaded) playlists, scheduled on different
 times, with a jingle added to the usual stream every hour, with the possibility
 of live interventions, allowing for user requests via a bot on IRC which would
@@ -221,7 +221,7 @@ useful.
 
 The language has gone through some major changes since its beginning and
 maintaining full backward-compatibility was impossible. In this book, we assume
-that you have a version of Liquidsoap which is at least 2.0. Most, examples
+that you have a version of Liquidsoap which is at least 2.0. Most examples
 could easily be adapted to work with earlier versions though, at the cost of
 making minor changes.
 
@@ -270,7 +270,7 @@ free time!
 ### How to improve the book
 
 We did our best to provide a progressive and illustrated introduction to
-Liquidsoap, which covers almost all of the language, including the most advanced
+Liquidsoap, which covers almost all the language, including the most advanced
 features. However, we are open to suggestions: if you find some error, some
 unclear explanation, or some missing topic, please tell us! The best way is by
 opening an issue on [the dedicated
@@ -296,7 +296,7 @@ numerous contributors over the years, the first of them being David Baelde who
 was a leading creator and designer of the language, but also the students of the
 MIM1 (big up to Florent Bouchez, Julien Cristau, Stéphane Gimenez and Sattisvar
 Tandabany), Gilles Pietri, Clément Renard and Vincent Tabard (who also designed
-the logo). Many thanks also to the many people who helped improving the language
+the logo). Many thanks also to the many people who helped to improve the language
 by reporting bugs or suggesting ideas, and to the Radio France team who where
 enthusiastic about the project and motivated some new developments (hello Maxime
 Bugeia, Youenn Piolet and others).

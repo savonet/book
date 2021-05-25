@@ -96,7 +96,7 @@ compression to around 65% of the original size. This compression format is
 _lossless_, which means that if you compress and then decompress an audio file,
 you will get back to the exact same file you started with.
 
-In order to achieve more compression, we should be prepared to loose some data
+In order to achieve more compression, we should be prepared to lose some data
 present in the original file. Most compressed audio formats are based, in
 addition to the previous ideas, on psychoacoustic models which take in account
 the way sound is perceived by the human hear and processed by the human
@@ -201,7 +201,7 @@ you frequently change networks or switch between wifi and 4G and the connection
 cannot be held during such events. In this case, the client has to make a new
 connection to the Icecast server, which in practice induces blanks and glitches
 in the audio for the listener. Another issue is that the data cannot be cached
-as it is done for web traffic, where it helps lowering latencies and
+as it is done for web traffic, where it helps to lower latencies and
 bandwidth-related costs, because each connection can induce a different
 response.
 
@@ -213,7 +213,7 @@ seconds. Moreover, the playlist can indicate multiple versions of the stream
 with various formats and encoding qualities, so that the client can switch to a
 lower bitrate if the connection becomes bad, and back to higher bitrates when it
 is better again, without interrupting the stream: this is called _adaptative_
-streaming. Here, the files are downloaded one by one, and are served by an usual
+streaming. Here, the files are downloaded one by one, and are served by a usual
 HTTP server. This means that we can reuse all the technology developed for those
 to scale up and improve the speed, such as load balancing and caching techniques
 typically provided by content delivery networks. It seems that such formats will

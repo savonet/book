@@ -129,13 +129,13 @@ only at the startup of the script.
 
 #### Avoiding repetitions
 
-A common problem with playlist in randomized order is that, when the playlist is
-reloaded, it might happen that a song which was played not so long ago is
+A common problem with playlists in randomized order is that, when the playlist
+is reloaded, it might happen that a song which was played not so long ago is
 scheduled again. In order to avoid that, it is convenient to use the `playlog`
-operator which can indicate when a song was last played. When called, it returns
-a record with two functions:
+operator which records when songs were played and can indicate when a song was
+last played. When called, it returns a record with two functions:
 
-- `add` which records that a song with given metadata has just be played,
+- `add` which records that a song with given metadata has just been played,
 - `last` which returns when a song with given metadata was last played (in
   seconds).
 
@@ -146,6 +146,21 @@ less than 1 hour (= 3600 seconds) ago as follows:
 ```
 
 and thus avoid repetitions when reloading.
+
+Interesting options of the `playlog` operator are:
+
+- `duration` specifies the time after which the tracks are forgotten in the playlog
+  (setting this avoids that it grows infinitely by constantly adding new
+  tracks),
+- `persistency` provides a file in which the list of songs is recorded, which
+  allows preserving the playlog across restarts of the script,
+- `hash` is a function which extracts the string identifying a file from its
+  metadata: by default, we use the filename as identifier, but we could for
+  instance use an MD5 checksum of the file by passing the function
+  
+  ```liquidsoap
+  fun (m) -> file.digest(metadata.filename(m))
+  ```
 
 #### Single files
 
@@ -4351,8 +4366,7 @@ directories the program reads from and writes to are allowed ones, whether it is
 allowed to use the network, and so on. In order to use this, one should set the
 `sandbox` configuration key as follows:
 
-```liquidsoap
-set("sandbox","enabled")
+```{.liquidsoap include="liq/sandbox.liq"}
 ```
 
 When this is done, every execution of a program by `process.run` (or derived
