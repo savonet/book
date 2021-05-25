@@ -58,7 +58,7 @@ sometimes called the _kind_\index{kind} of the source. For instance, the type of
 (?amplitude : {float}, ?duration : float, ?{float}) -> source(audio=internal('a), video=internal('b), midi=internal('c))
 ```
 
-We see see that it takes 3 optional arguments (the amplitude, the duration and
+We see that it takes 3 optional arguments (the amplitude, the duration and
 the frequency) and returns a source as indicated by the type of the returned
 value: `source(...)`. The parameters of `source` indicate the nature and number
 of channels: here we see that audio is generated in some internal format (call
@@ -70,7 +70,7 @@ for the `sine` operator, only the audio channels are going to be meaningful:
 - if multiple audio channels are requested, they will all contain the same audio
   consisting of a sine waveform, with specified frequency and amplitude,
 - if video channels are requested they are all going to be blank,
-- if midi channels are requested, the are not going to contain any note.
+- if midi channels are requested, they are not going to contain any note.
 
 As another example, consider the type of the operator `drop_audio` which removes
 audio from a source:
@@ -422,7 +422,7 @@ script
 ```
 
 is slightly more efficient since the source `a` does not need to generate video
-and the source `b` does not need generate audio.
+and the source `b` does not need to generate audio.
 
 Dually, in order to remove the audio of a source, the operator `drop_audio` of
 type
@@ -435,7 +435,7 @@ can be used, and similarly the operator `drop_video` can remove the video.
 
 ### Type annotations
 
-If you want to constraint the contents of a source, the Liquidsoap language
+If you want to constrain the contents of a source, the Liquidsoap language
 offers the construction `(e : t)` which allows constraining an expression `e` to
 have type `t` (technically, this is called a type _cast_). It works for
 arbitrary expressions and types, but is mostly useful for sources. For instance,
@@ -506,7 +506,7 @@ format(audio=pcm(mono), video=none, midi=none)
 
 and thus imposes that `s` should have mono audio.
 
-Because is has such an influence on types, an encoder is not a value as any
+Because it has such an influence on types, an encoder is not a value as any
 other in Liquidsoap, and specific restrictions have to be imposed. In
 particular, you cannot use variables or complex expressions in the parameters
 for the encoders. For instance, the following will not be accepted
@@ -827,7 +827,7 @@ insert track by using the method provided by the `insert_metadata` function.
 
 A frame can also contain _metadata_ which are pairs of strings (e.g. `"artist"`,
 `"Alizée"` or `"title"`, `"Moi... Lolita"`, etc.) together with the position in
-the frame where they should be attached. Typically, those information are
+the frame where they should be attached. Typically, this information is
 present in files (e.g. mp3 files contain metadata encoded in ID3 format) and are
 passed on into Liquidsoap streams (e.g. when using the `playlist`
 operator). They are also used by output operators such as `output.icecast` to
@@ -919,7 +919,7 @@ Source xxx gets down.
 
 where `xxx` is the identifier of the source (which can be changed by passing an
 argument labeled `id` when creating the source). You can also determine whether
-a source has been waken up, by using the method `is_up` which is present for any
+a source has been woken up, by using the method `is_up` which is present for any
 source `s`: calling `s.is_up()` will return a boolean indicating whether the
 source `s` is up or not. For instance,
 
@@ -991,7 +991,7 @@ when the first active source (say, `output.pulseaudio`) asks `amplify` to fill
 in a frame, Liquidsoap will temporarily store the result (we say that it
 "caches" it, in what we call a _memo_ frame) so that when the second active source
 asks `amplify` to fill in the frame, the stored one will be reused, thus
-avoiding to compute twice a frame which would be disastrous (each output would
+avoiding computing twice a frame which would be disastrous (each output would
 have one frame every two computed frames).
 
 <!--
@@ -1088,7 +1088,7 @@ radios, which are supposed to run for a very long time, this is a problem. A
 discrepancy of 1 millisecond every second will accumulate to a difference of 43
 minutes after a month: this means that at some point in the month we will have
 to insert 43 minutes of silence or cut 43 minutes of music in order to
-synchronize back the two clocks! The uses of clocks allows Liquidsoap to detect
+synchronize back the two clocks! The use of clocks allows Liquidsoap to detect
 such situations and require the user to deal with them. In practice, this means
 that each library (ALSA, Pulseaudio, etc.) has to be attached to its own clock, as well
 as network libraries taking care of synchronization by themselves (SRT).
@@ -1182,7 +1182,7 @@ and that synchronization is taken care of by the CPU
 
 #### Graphical representation
 
-In case it helps visualizing clocks, a script can be drawn as some sort of graph
+In case it helps to visualize clocks, a script can be drawn as some sort of graph
 whose vertices are the operators and there is an arrow from a vertex `op` to a
 vertex `op'` when the operator `op'` uses the stream produced by the operator
 `op`. For instance, a script such as
@@ -1285,7 +1285,7 @@ will also fail for exactly the same reasons.
 
 Why is it the case? After all, it seems that the time measured by any library
 based on the soundcard or the CPU should be the same. Well, in practice, no: two
-computer's internal clocks (e.g. from the CPU and from the soundcard) are very
+internal clocks in a computer (e.g. from the CPU and from the soundcard) are very
 likely to tick at slightly different rates, which means that the relative time
 measured by those will drift apart over time. For applications such as radios,
 which are supposed to run for a very long time, this is a problem. A discrepancy
@@ -1312,9 +1312,9 @@ happens, you will see the infamous `catchup` log messages:
 However, in some cases such as a `input.alsa`, the sound card already has its
 own clock. In this case, it is assumed that the source (or output) controls the
 latency, blocking each filling call until it has enough data to return. For
-these situation, the clock assigned by liquidsoap does _not_ try to control the
+these situations, the clock assigned by liquidsoap does _not_ try to control the
 latency and, instead, runs the streaming loop as fast as possible, delegating
-latency control to the underlying sources. In these situation, you will not see
+latency control to the underlying sources. In these situations, you will not see
 any `catchup` log messages.
 
 There also are situations where the clock may switch from controlling the
@@ -1349,7 +1349,7 @@ precise down to the frame's duration. The same goes for scripted fade operators.
 Clocks in liquidsoap can be confusing. They are, however, central to the
 functioning of the internals while streaming data. Let's try to explain why they
 had to be introducted and how they are aasigned and used. For more details, the
-reader is invited to checkout our initial research paper, entitled [Liquidsoap:
+reader is invited to check out our initial research paper, entitled [Liquidsoap:
 a High-Level Programming Language for Multimedia
 Streaming](https://www.liquidsoap.info/assets/docs/bbm10.pdf)
 
@@ -1365,16 +1365,16 @@ for instance `1/44.100+0.001` seconds? Even worst, and not to be pedantic here
 but, relativity theory actually tells us that two clocks following different
 motions do not agree on time. A famous example being the fact that the atomic
 clocks over the globe have to be mindful of their respective elevation, in order
-to keep track of time discrepancies due to the earth's rotation..
+to keep track of time discrepancies due to the earth's rotation...
 
 But, anyways, let's go down to earth and consider a much more practical case:
-two computer's internal clocks are _very_ likely to tick at slightly different
+two internal clocks in a computer are _very_ likely to tick at slightly different
 rates. It can be that these two rates cancel out statistically over time or, in
 the worst case, it can be that these two rates drift appart over time.
 
 Consider now what happens when a listener receives a stream encoded by another
 computer. Locally, the listener takes the sequence of data samples and
-re-assembles them to created an analog signal for human's consumption.  However,
+re-assembles them to create an analog signal for human's consumption.  However,
 if the listener's and the encoder's clock do not agree, the might be some issues
 down the road.
 
@@ -1409,7 +1409,7 @@ own notion of time, similar to the sound card's local clock, and will block to
 control the latency over which network data is being delivered.
 
 The third case is specific to our needs. Consider a source with track
-crossfades. Originally, the source contains two track adjacent to each other:
+crossfades. Originally, the source contains two tracks adjacent to each other:
 `<track1>, <track2>`. After applying a crossdade, a portion of the ending and
 starting tracks overlap: `<track1 ...>, <end of track 1 + beginning of track 2>,
 <... track2>`\RB{Add figure} After this operation, the stream's playback time is
@@ -1573,7 +1573,7 @@ actually get the file:
 
 Secondly, we have to find a way to decode the file
 
-- we have guess what format it is, based on the header of the file and its
+- we have to guess what format it is, based on the header of the file and its
   extension,
 - we have to make sure that the file is valid and find a _decoder_, i.e. some
   library that we support which is able to decode it,
@@ -1653,7 +1653,7 @@ return multiple locations of a given file on multiple servers for increased
 resiliency.
 
 When a request is indicated as _persistent_ is can be played multiple times
-(this is typically the case for local files). Otherwise a request should only be
+(this is typically the case for local files). Otherwise, a request should only be
 used once. Internally, with every indicator is also associated the information
 of whether it is _temporary_ or not. If it is, the file is removed when the
 request is destroyed. For instance, the `say` protocol generates the text in a
@@ -1696,8 +1696,8 @@ Requests can be manipulated within the language with the following functions.
 - `request.uri` returns the initial URI which was used to create the request and
   `request.filename` returns the file to which the request resolved.
 - `request.duration` returns the (estimated) duration of the request in seconds.
-- `request.metadata` returns the metadata associated to request. Those metadata
-  are automatically read when resolving the file with a specified content
+- `request.metadata` returns the metadata associated to request. This metadata
+  is automatically read when resolving the file with a specified content
   type. The function `request.read_metadata` can be used to force reading the
   metadata in the case we have a local file.
 - `request.log` returns the log associated to a particular request. It is useful
@@ -1900,7 +1900,7 @@ We see the following steps in the logs:
   [decoder:4] Available decoders: FFMPEG (priority: 10), MAD (priority: 1)
   ```
   
-- the one with highest priority is tried first, accepts the file and is thus
+- the one with the highest priority is tried first, accepts the file and is thus
   selected:
 
   ```

@@ -84,7 +84,7 @@ detailed below):
 Let us explain how this script should be thought of as a way of describing how
 to generate a stream generator. In order to construct the stream generator,
 Liquidsoap will execute the function `list.map`{.liquidsoap} which will produce
-the list obtained by applying the function `note`{.liquidsoap} on each elements
+the list obtained by applying the function `note`{.liquidsoap} on each element
 of the list and, in turn, this function will be replaced by its definition,
 which consists of a `sine` generator. The execution of the script will act as if
 Liquidsoap successively replaced the second line by
@@ -240,7 +240,7 @@ We begin by describing the values one usually manipulates in Liquidsoap.
 
 The _integers_\index{integer}, such as `3` or `42`, are of type
 `int`\index{int@\texttt{int}}. Depending on the current architecture of the
-computer on which we are executing the script (32 or 64 bits, the later being
+computer on which we are executing the script (32 or 64 bits, the latter being
 the most common nowadays) they are stored on 31 or 63 bits. The minimal
 (resp. maximal) representable integer can be obtained as the constant
 `min_int`\index{min\_int@\texttt{min\_int}}
@@ -249,9 +249,9 @@ architecture, they range from -4611686018427387904 to 4611686018427387903.
 
 The _floating point numbers_\index{float}, such as `2.45`, are of type
 `float`\index{float@\texttt{float}}, and are in double precision, meaning that
-they are always stored on 64 bits. We always write the a decimal point in them,
+they are always stored on 64 bits. We always write a decimal point in them,
 so that `3` and `3.` are not the same thing: the former is an integer and the
-later is a float. This is a source of errors for beginners, but is necessary for
+latter is a float. This is a source of errors for beginners, but is necessary for
 typing to work well. For instance, if we try to execute a program containing the
 instruction
 
@@ -672,7 +672,7 @@ let (n, x, s) = t
 ```
 
 which will assign the first element to the variable `n`, the second element to
-he variable `x` and the third element to the variable `s`:
+the variable `x` and the third element to the variable `s`:
 
 ```
 # t = (3, 4.2, "hello");;
@@ -1179,7 +1179,7 @@ corresponding label with "`?`", so that the type of the above function is
 
 As a more concrete example of labeled arguments, we can see that the
 type of the operator `output.youtube.live`, which outputs a video stream to
-Youtube, is
+YouTube, is
 
 ```
 (?id : string, ?video_bitrate : int, ?audio_encoder : string, ?audio_bitrate : int, ?url : string, key : string, source) -> source
@@ -1194,9 +1194,9 @@ documentation of this function, we can still guess what it is doing:
   from the label, e.g. `video_bitrate` should specify the bitrate we want to
   encode video, etc.),
 - there is 1 mandatory argument which is labeled `key` of type `string`: it must
-  be the secret key we need in order to broadcast on our Youtube account,
+  be the secret key we need in order to broadcast on our YouTube account,
 - there is 1 mandatory argument, unlabeled, of type `source`: this is clearly
-  the source that we are going to broadcast to Youtube.
+  the source that we are going to broadcast to YouTube.
   
 As we can see the types and labels of arguments already provide us with much
 information about the functions and prevent many mistakes.
@@ -2077,7 +2077,7 @@ so that passwords are not shown in the main script.
 
 ### Conditional execution
 
-Liquidsoap embeds a preprocessor which allows to include or not part of the code
+Liquidsoap embeds a preprocessor which allows including or not part of the code
 depending on some conditions. For instance, the following script will print
 something only if the function `input.alsa` is defined:
 
@@ -2175,8 +2175,8 @@ Other useful functions are
 - `http.put`: to upload data,
 - `http.delete`: to delete resources.
 
-Liquidsoap also features an internal web server called _harbor_, which allows to
-serve web pages directly from Liquidsoap, which can be handy to present some
+Liquidsoap also features an internal web server called _harbor_, which allows serving
+web pages directly from Liquidsoap, which can be handy to present some
 data related to your script or implement some form of advanced interaction. This
 is described on details in [there](#sec:harbor).
 
@@ -2252,7 +2252,7 @@ switched between `0.` and `1.` every second by the function `change`.
 A perhaps more useful variant of this is _auto-gain control_. We want to adjust
 the volume so that the output volume is always roughly -14 LUFS, which is a
 standard sound loudness measure. One way to do this is to regularly check its
-value and increase or lower the volume depending whether we are below or above
+value and increase or lower the volume depending on whether we are below or above
 the threshold:
 
 ```{.liquidsoap include="liq/agc.liq" from=1}

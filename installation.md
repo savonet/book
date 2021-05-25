@@ -219,9 +219,9 @@ sudo apt install liquidsoap-master
 ```
 -->
 
-### MacOS
+### macOS
 
-No binaries are provided for MacOS, the preferred method is opam, see above.
+No binaries are provided for macOS, the preferred method is opam, see above.
 
 ### Windows
 
@@ -455,5 +455,5 @@ compilation:
 - `awscli`: `s3://` and `polly://` protocol support for Amazon web servers,
 - `curl`: downloading files with `http`, `https` and `ftp` protocols,
 - `ffmpeg`: external input and output, `replay_gain`, level computation, and more,
-- `youtube-dl`: youtube video and playlist downloading support.
+- `youtube-dl`: YouTube video and playlist downloading support.
 

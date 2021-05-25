@@ -107,7 +107,7 @@ intensity) in hexadecimal.
 
 ### Images
 
-Images can be used as sources just as video video files: they are accepted by
+Images can be used as sources just as video files: they are accepted by
 operators such as `single`, `playlist`, etc. However, if you try the following
 simple script
 
@@ -609,7 +609,7 @@ The full list of supported formats can be obtained by running `ffmpeg
     use for HLS for instance,
   - `webm` is a modern container adapted to streaming with Icecast,
   - `flv` is used by some old streaming protocols such as RTMP, still widely in
-    use to stream video to platforms such as Youtube.
+    use to stream video to platforms such as YouTube.
 
 Many [other formats](https://ffmpeg.org/ffmpeg-formats.html) are also
 supported.
@@ -635,7 +635,7 @@ encoded to small ones.
 
 You generally also want to set the bitrate by passing the `b` argument in bits
 per second (e.g. `b="2000k"`). Typical bitrates for streaming, depending on the
-the resolution, at 25 frames per second, are
+resolution, at 25 frames per second, are
 
  Resolution   Bitrate
 -----------  --------
@@ -674,10 +674,10 @@ with the obvious meaning. Of course, the faster the setting is the lower the
 quality of the video will be, so that you have to find a balance between CPU
 consumption and quality.
 
-Instead of imposing a bitrate, one can also chose to encode in order to reach a
+Instead of imposing a bitrate, one can also choose to encode in order to reach a
 target quality, which is measured in _CRF_ (for Constant Rate Factor) and can be
-passed in the `crf` parameter. It is an integer ranging from 0 (best quality) to
-51 (worse quality). In order to give you ideas,
+passed in the `crf` parameter. It is an integer ranging from 0 ( the best quality) to
+51 (the worse quality). In order to give you ideas,
 
 - 0 is lossless,
 - 17 is with nearly unnoticeable compression,
@@ -713,7 +713,7 @@ those for `libx264` described above.
 
 VP9 is a recently developed codec, which is generally more efficient than H.264
 and can achieve lower bitrates at comparable quality, and is royalty-free. It is
-supported by most modern browsers and is for instance the used by the Youtube
+supported by most modern browsers and is for instance the used by the YouTube
 streaming platform. It is generally encapsulated in the WebM container although
 it is supported by most modern containers.
 
@@ -793,7 +793,7 @@ the encoder should be one which has support for video.
 ### Streaming platforms
 
 Another very popular way of streaming video is by going through streaming
-platforms such as Youtube, Twitch or Facebook. All the three basically use the
+platforms such as YouTube, Twitch or Facebook. All the three basically use the
 same method for streaming. You first need to obtain a secret key associated to
 your account on the website. Then you should send your video, using the RTMP
 protocol, to some standard url followed by your secret key, using the
@@ -801,9 +801,9 @@ protocol, to some standard url followed by your secret key, using the
 protocol, videos should be encoded using the FLV container with H.264 for video
 and mp3 or aac for audio.
 
-#### Youtube {#sec:youtube}
+#### YouTube {#sec:youtube}
 
-The streaming key can be obtained from the [Youtube streaming
+The streaming key can be obtained from the [YouTube streaming
 platform](https://youtube.com/live_dashboard) and the url to stream to is
 
 ```
@@ -811,7 +811,7 @@ rtmp://a.rtmp.youtube.com/live2/<secret key>
 ```
 
 If we suppose that we have stored our key in the file `youtube-key`, we can
-stream a video source `s` to Youtube by
+stream a video source `s` to YouTube by
 
 ```{.liquidsoap include="liq/video-youtube.liq" from=2 to=-1}
 ```

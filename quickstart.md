@@ -156,7 +156,7 @@ question mark "`?`" before each argument, and the default value is indicated in
 `Parameters` (e.g. the default amplitude is `1.0` and the default frequency is
 `440.` Hz).
 
-If we want generate a sine wave of 2600 Hz with an amplitude of 0.8, we can thus
+If we want to generate a sine wave of 2600 Hz with an amplitude of 0.8, we can thus
 write
 
 ```{.liquidsoap include="liq/sine3.liq" from=1}
@@ -171,7 +171,7 @@ Finally, just for fun, we can hear an A minor chord by adding three sines:
 ```{.liquidsoap include="liq/sine4.liq" from=1}
 ```
 
-We generates three sines at frequencies 440 Hz, 440×2^3/12^ Hz and
+We generate three sines at frequencies 440 Hz, 440×2^3/12^ Hz and
 440×2^7/12^ Hz, adds them, and plays the result. The operator `add` is taking as
 argument a _list_ of sources, delimited by square brackets, which could contain
 any number of elements.
@@ -235,7 +235,7 @@ Some sources are not always available, and we say that such a source is
 _fallible_. A typical example is a source obtained by `input.http`: at some
 point the stream might stop (e.g. if it is only available during daytime), or be
 subject to technical difficulties (e.g. it gets disconnected from the internet
-for a short period of time). In this case, we generally want to fallback to
+for a short period of time). In this case, we generally want to fall back to
 another source, typically an emergency playlist consisting of local files which
 we are sure are going to be available. This can be achieved by using the
 `fallback` operator which plays the first available source in a list of sources:
@@ -254,8 +254,8 @@ we will not unexpectedly have nothing to stream at some point. We did not see
 this up to now because `output` is an advanced operator which automatically uses
 silence as fallback, because it is primarily intended for quick and dirty
 checking of the stream.  However, if we use the primitive functions for
-outputting audio, we will be able to observe this behavior this behavior. For
-instance, if we try use the operator `output.pulseaudio`, which plays a source
+outputting audio, we will be able to observe this behavior. For
+instance, if we try to use the operator `output.pulseaudio`, which plays a source
 on a soundcard using the pulseaudio library,
 
 ```{.liquidsoap include="liq/bad/fallible1.liq" from=1}
@@ -289,7 +289,7 @@ replaces the first.
 
 #### Falling back to blank
 
-Another option to make the stream infallible would be to fallback to silence,
+Another option to make the stream infallible would be to fall back to silence,
 which in Liquidsoap can be generated with the operator `blank`:
 
 ```{.liquidsoap include="liq/fallible3.liq"}
@@ -305,7 +305,7 @@ function which does exactly that:
 
 A typical radio will do some scheduling, typically by having different playlists
 at different times of the day. In Liquidsoap, this is achieved by using the
-`switch` operator: this operators takes a list of pairs consisting of a
+`switch` operator: this operator takes a list of pairs consisting of a
 predicate (a function returning a boolean `true` or `false`) and a source, and
 plays the first source for which the predicate is true. For time, there is a
 special syntax:
@@ -372,7 +372,7 @@ pleasant transition.
 ### Audio effects
 
 In order to make the sound more uniform, we can use plugins. For instance, the
-`normalize` operator helps you having a uniform volume by dynamically changing
+`normalize` operator helps you to have a uniform volume by dynamically changing
 it, so that volume difference between songs is barely heard:
 
 ```liquidsoap
@@ -405,7 +405,7 @@ having it only on our speakers.
 
 #### Installing Icecast
 
-In order to do so, we first need to setup an Icecast server which will relay the
+In order to do so, we first need to set up an Icecast server which will relay the
 stream to users connecting to it. The way you should proceed with its
 installation depends on your distribution, for instance on Ubuntu you can type
 
@@ -426,7 +426,7 @@ modify the lines
 which are the passwords for sources (e.g. the one Liquidsoap is going to use in
 order to send its stream to Icecast), for relays (used when relaying a stream, you
 are not going to use this one now but still want to change the password) and for the
-administrative interface. By default all three are `hackme`, and we will use
+administrative interface. By default, all three are `hackme`, and we will use
 that in our examples, but, again, you should change them in order not to be
 hacked. Have a look at other parameters though, they are interesting too!
 Once the configuration modified, you should the restart Icecast with the command
