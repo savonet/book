@@ -1567,7 +1567,7 @@ actually get the file:
   `ftp://some.server/file.mp3`), in which case we want to download it beforehand
   in order to ensure that we have a valid file and that we will not be affected
   by the network,
-- the "file" might actually be more a recipe to produce the file (for instance
+- the "file" might actually be more like a recipe to produce the file (for instance
   `say:Hello you`, means that we should take some text-to-speech program to
   generate a sound file with the text `Hello you`).
 
@@ -1577,8 +1577,9 @@ Secondly, we have to find a way to decode the file
   extension,
 - we have to make sure that the file is valid and find a _decoder_, i.e. some
   library that we support which is able to decode it,
-- we have to read the metadata of the file,
-- we have to compute an estimation of the duration of the file when possible.
+- we have to read the metadata of the file
+<!-- - we have to compute an estimation of the duration of the file when
+possible. -->
 
 Finally, we have to perform some cleanup after the file has been played:
 
@@ -1586,14 +1587,13 @@ Finally, we have to perform some cleanup after the file has been played:
 - temporary files (such as downloaded files) have to be removed.
 
 Also note that the decoder depends on the kind of source we want to produce: for
-instance, an mp3 file will not be acceptable if we are trying to generate video.
+instance, an mp3 file will not be acceptable if we are trying to generate video,
+but will of course be if we are trying to produce audio only.
 
-For those reason, most operators (such as `single`, `playlist`, etc.) do not
-directly deal files, but rather with _requests_. Namely, a request is an
+For those reasons, most operators (such as `single`, `playlist`, etc.) do not
+directly deal with files, but rather with _requests_. Namely, a request is an
 abstraction which allows manipulating files but also performing the above
 operations.
-
-\TODO{explain the tag.encodings setting and that tags are recoded}
 
 ### Requests {#sec:requests}
 
@@ -1615,11 +1615,13 @@ As you can see the URI is far from always being the path to a file. The part
 before the first colons (`:`) is the _protocol_ and is used to determine how to
 fetch or produce the file. A local file is assumed when no protocol is
 specified. Some protocols such as `annotate` or `replaygain` operate on URI,
-which means that they allow chaining of protocols:
+which means that they allow chaining of protocols so that
 
 ```
 replaygain:annotate:title="Welcome":say:Hello everybody!
 ```
+
+is a valid request.
 
 #### The status of a request
 
@@ -1662,8 +1664,9 @@ temporary file, which we do not need after it has been played.
 When resolving the request, after a file has been generated, Liquidsoap also
 ensures basic checks on data and computes associated information:
 
-- we read the metadata in the file,
-- we compute its duration if possible,
+- we read the metadata in the file (and convert those to the standard UTF-8
+  encoding for characters),
+<!-- - we compute its duration if possible, -->
 - we find a library to decode the file (a decoder).
 
 The resolution of a request may _fail_ if the protocol did not manage to

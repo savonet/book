@@ -43,7 +43,7 @@ protocol, which requires that you have installed the
 
 Since the whole video has to be downloaded beforehand, it can take quite some
 time, which is why we specify a "large" `timeout` parameter (10 minutes instead
-of 30 seconds).
+of the default 30 seconds).
 
 As another example, if we have a playlist `video.playlist` of video files, it
 can be played with

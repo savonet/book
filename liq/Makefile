@@ -1,6 +1,6 @@
 LIQ := $(filter-out convert2wav.liq, $(sort $(wildcard *.liq)))
 CHECKS := $(foreach l, $(LIQ), check-$(basename $l))
-CHECKS := $(filter-out check-ladspa.fastlookaheadlimiter check-frei0r, $(CHECKS))
+CHECKS := $(filter-out check-ladspa.fastlookaheadlimiter check-frei0r check-encoder-gstreamer-1 check-encoder-gstreamer-2 check-encoder-gstreamer-3 check-encoder-gstreamer-4 check-encoder-gstreamer-5 check-encoder-gstreamer-pipeline check-input.gstreamer check-input.gstreamer2 check-http.head, $(CHECKS))
 
 LIQUIDSOAP = ./liquidsoap
 
