@@ -7,6 +7,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install packages
       run: sudo apt-get install pandoc pandoc-citeproc texlive texlive-fonts-extra imagemagick ocaml-nox ocaml-findlib libyojson-ocaml-dev dune
+    - name: Enable imagemagick pdf conversion
+      run: sudo sed -i 's/<policymap>/<policymap><policy domain="coder" rights="read | write" pattern="PDF" \/>/' /etc/ImageMagick-6/policy.xml
     - name: Build pandoc filters
       run: |
         git clone https://github.com/smimram/ocaml-pandoc
