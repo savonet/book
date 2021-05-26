@@ -34,14 +34,13 @@ web.pdf: web.tex
 	makeindex web.idx
 
 book.epub book.txt: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
-	@$(MAKE) -C fig png
 	@echo "Generating $@..."
 	@$(PANDOC) -s --syntax-definition=liquidsoap.xml --filter=pandoc-pdf2png --toc --toc-depth=2 --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
 
-book.html: book.md $(MD) $(LIQ) epub.css liquidsoap.xml template.html
-	@$(MAKE) -C fig png
+book.html: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
 	@echo "Generating $@..."
-	@$(PANDOC) -s --template template.html --syntax-definition=liquidsoap.xml --filter=pandoc-pdf2png --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
+	@$(PANDOC) -s --syntax-definition=liquidsoap.xml --filter=pandoc-pdf2png --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
+	@sed -i 's/<head>/<head><meta http-equiv="content-type" content="text\/html; charset=UTF-8"\/>/' $@
 
 ebook.zip: fig book.html
 	zip $@ book.html fig/*.png

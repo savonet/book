@@ -2,7 +2,9 @@ TEX = $(wildcard *.tex)
 PDF = $(TEX:.tex=.pdf)
 PNG = $(TEX:.tex=.png)
 
-all: $(PDF)
+all: pdf png
+
+pdf: $(PDF)
 
 png: $(PNG)
 
@@ -13,5 +15,5 @@ clean:
 	pdflatex $<
 
 %.png: %.pdf
-	# convert -density 150 $< $@
-	pdftoppm -png $< > $@
+	@echo "Generating $@..."
+	@pdftoppm -png $< > $@
