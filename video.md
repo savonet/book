@@ -20,12 +20,12 @@ Most sources accepting audio files (`single`, `playlist`, etc.) also accept
 video files, so that generating a video stream is performed in the exact same
 way you would generate an audio stream, excepting that you start from video
 files instead of audio files. For instance, you can play a video file `test.mp4`
-with
+with\indexop{single}
 
 ```{.liquidsoap include="liq/play-video.liq" from=1}
 ```
 
-The operator `output.audio_video` plays both the audio and the video of the
+The operator `output.audio_video`\indexop{output.audio\_video} plays both the audio and the video of the
 source `s`, and you can use `output.video` to play the video only. These
 operators chose a local output operator among the ones provided by
 Liquidsoap. There are currently two of them:
@@ -34,7 +34,7 @@ Liquidsoap. There are currently two of them:
 - `output.graphics` which uses the library provided by OCaml in order to display
   graphical data.
 
-The videos can even be directly be pulled from YouTube with the `youtube-dl`
+The videos can even be directly be pulled from YouTube with the `youtube-dl`\indexop{youtube-dl}
 protocol, which requires that you have installed the
 [`youtube-dl`](https://youtube-dl.org/) program:
 
@@ -46,7 +46,7 @@ time, which is why we specify a "large" `timeout` parameter (10 minutes instead
 of the default 30 seconds).
 
 As another example, if we have a playlist `video.playlist` of video files, it
-can be played with
+can be played with\indexop{playlist}
 
 ```{.liquidsoap include="liq/play-video2.liq" from=1}
 ```
@@ -57,7 +57,9 @@ already presented in [there](#sec:inputs), nothing changes for video.
 
 #### The webcam
 
-Under Linux, it is possible to use our webcam as a source with the `input.v4l2`
+\index{webcam}
+
+Under Linux, it is possible to use our webcam as a source with the `input.v4l2`\indexop{input.v4l2}
 operator which reads from the webcam:
 
 ```{.liquidsoap include="liq/v4l2.liq" from=1}
@@ -91,9 +93,9 @@ parameters.
 
 ### Blank and colored frames
 
-The operator `blank` can generate video (in addition to audio): it will generate
+The operator `blank`\indexop{blank} can generate video (in addition to audio): it will generate
 an image which is _blank_, i.e. fully transparent. In order to generate a video
-of a given color, you can use the `video.fill` operator which fills the video of
+of a given color, you can use the `video.fill`\indexop{video.fill} operator which fills the video of
 the source with the color specified in the `color` argument. For instance, the
 script
 
@@ -125,7 +127,7 @@ no audio as follows, and you should then see the image:
 Here, `(x:source(audio=none))` means that we constrain `x` to be a source with no
 audio, this mechanism is explained in more details in [there](#sec:source-type). In
 order for you to avoid thinking of those subtleties, the standard library
-provides the `image` operator which does this for you and conveniently creates a
+provides the `image`\indexop{image} operator which does this for you and conveniently creates a
 source from an image:
 
 ```{.liquidsoap include="liq/image3.liq" from=1}
@@ -150,9 +152,11 @@ will show a small image of 50×50 pixels.
 
 #### Cover art
 
+\index{cover}
+
 Most recent audio formats (such as mp3 or ogg) allow embedding the cover of the
 album into metadata. Liquidsoap has support for extracting this and provides the
-`video.cover` operator in order to extract the cover from an audio stream and
+`video.cover`\indexop{video.cover} operator in order to extract the cover from an audio stream and
 generate a video stream from it. The script
 
 ```{.liquidsoap include="liq/cover.liq" from=1 to=-1}
@@ -224,7 +228,7 @@ combining the audio source `a` and the video source `v`.
 
 ### Adding videos
 
-Our beloved `add` operator also works with videos. For instance, we can add a
+Our beloved `add`\indexop{add} operator also works with videos. For instance, we can add a
 logo on top of our video source `s` by adding a scaled down version of our
 `logo.png` image:
 
@@ -250,6 +254,9 @@ for the parameters, so that we can program a moving logo as follows:
 
 #### Picture in picture
 
+\index{scale}
+\index{resize}
+
 Instead of adding a small image on top of a big one, we can also add a small
 video on top of a big one. In order to reduce the size of a video, we can either use
 
@@ -274,6 +281,8 @@ of the main video with `add`.
 
 #### Alpha channels
 
+\index{alpha channel}
+
 A defining feature of video in Liquidsoap is that _alpha channels_ are supported
 for video: this means that images in videos can have more or less transparent
 regions, which allows to see the "video behind" whenever adding videos. The
@@ -293,6 +302,8 @@ png. In particular, when you add a logo to a video stream, it does not have to
 be a square!
 
 ### Combining audio and video sources
+
+\index{mux}
 
 Given an audio source `a` and a video source `v`, one can combine them in order
 to make a source `s` with both audio and video with the `mux_audio` and
@@ -323,6 +334,8 @@ video, we can create a source `s` with the audio from `s1` and the video from
 
 ### (Cross)fading
 
+\index{crossfading}
+
 In order to have nice endings for video, one can use the `video.fade.out`
 operator which will fade out to black (or actually rather to transparent) the
 video. The time it takes to perform this is controlled by the `duration`
@@ -349,13 +362,15 @@ that we can nicely crossfade the tracks of a video playlist as follows:
 ```
 
 We apply fading at the beginning and the end of the videos, and then use the
-`cross` operator to add the end of each track with the beginning of the next one
+`cross`\indexop{cross} operator to add the end of each track with the beginning of the next one
 during 1.5 seconds. As a variant, slided transitions can be achieved with
 
 ```{.liquidsoap include="liq/video-cross2.liq" from=2}
 ```
 
 ### Test sources
+
+\indexop{video.testsrc}
 
 <!-- \TODO{See bug 1604, we should rename ffmpeg to video.testsrc, test it for sync and detail various test patterns} -->
 
@@ -374,6 +389,9 @@ value can be `"testsrc"` (the default value), `"testsrc2"`, `"smptebars"` or
 `"rgbtestsrc"`.
 
 ### Text
+
+\index{text}
+\indexop{video.add\_text}
 
 In order to add text on videos, we provide the `video.add_text` operator which,
 in addition to the text to print and the source on which it should add the text,
@@ -406,7 +424,7 @@ For instance,
 ```
 
 The text is a getter which means that it can vary over times. For instance, the
-following prints the current volume and BPM of a song:
+following prints the current volume\index{RMS} and BPM\index{BPM} of a song:
 
 ```{.liquidsoap include="liq/video.add_text-volume-bpm.liq" from=1}
 ```
@@ -432,6 +450,8 @@ provide a large amount of effects.
 
 ### Builtin filters
 
+\index{filter!video}
+
 By default, Liquidsoap only offers some very basic builtin video filters such as
 
 - `video.greyscale`: convert the video to black and white,
@@ -440,6 +460,8 @@ By default, Liquidsoap only offers some very basic builtin video filters such as
 - `video.scale` / `video.resize`: change the size of the video.
 
 ### Frei0r
+
+\index{frei0r}
 
 Liquidsoap has native support for [frei0r plugins](https://frei0r.dyne.org/),
 which are based on the frei0r API for video effects. When those are installed on your system, they
@@ -455,6 +477,8 @@ allow modifying its effect, you are advised to have a look at their
 documentation, as usual.
 
 ### FFmpeg filters {#sec:ffmpeg-filters}
+
+\index{FFmpeg}
 
 Another great provider of video (and audio) effects is FFmpeg: at the time of
 writing, we currently have access to [447 of
@@ -576,11 +600,11 @@ which includes
 - `output.dummy`: for discarding a source.
 
 We do not explain them here again: the only difference with audio is the choice
-of the encoder which indicates that we want to use sources with video.
+of the encoder\index{encoder} which indicates that we want to use sources with video.
 
 ### FFmpeg {#sec:ffmpeg-video}
 
-The encoder of choice for video is FFmpeg, that we have already seen in
+The encoder of choice for video is FFmpeg\index{FFmpeg}, that we have already seen in
 [here](#sec:ffmpeg-encoder). The general syntax is
 
 ```liquisoap
@@ -593,7 +617,7 @@ codec and the video codec.
 #### Formats
 
 The full list of supported formats can be obtained by running `ffmpeg
--formats`. Popular formats for
+-formats`. Popular formats\index{container} for
 
 - encoding in files:
   - `mp4` is the most widely supported, (its main drawback is that index tables
@@ -616,7 +640,7 @@ supported.
 
 #### Codecs
 
-The codec can be set by passing the `codec` argument to `%video`.
+The codec\index{codec} can be set by passing the `codec` argument to `%video`.
 The codecs all take `width` and `height` parameters, which allow setting the
 dimensions of the encoded video. Remember that smaller images have lower
 quality, but require smaller bitrates and encode faster. Common resolutions for
@@ -663,7 +687,7 @@ other ones](https://ffmpeg.org/ffmpeg-codecs.html).
 #### H.264
 
 The most widely used codec for encoding video is `libx264` which encodes in
-H.264. This format has hardware support in many devices such as smartphones (for
+H.264\index{H.264}. This format has hardware support in many devices such as smartphones (for
 decoding). The most important parameter is `preset`, which controls how fast the
 encoder is, and whose possible values are
 
@@ -711,7 +735,7 @@ those for `libx264` described above.
 
 #### VP9 and AV1
 
-VP9 is a recently developed codec, which is generally more efficient than H.264
+VP9\index{VP9} is a recently developed codec, which is generally more efficient than H.264
 and can achieve lower bitrates at comparable quality, and is royalty-free. It is
 supported by most modern browsers and is for instance the used by the YouTube
 streaming platform. It is generally encapsulated in the WebM container although
@@ -737,13 +761,13 @@ and if you are on budget with respect to CPU and bandwidth:
 ```{.liquidsoap include="liq/encoder-ffmpeg-vp9-streaming.liq" from=2 to=-1}
 ```
 
-The successor of VP9 is AV1 and is under heavy development and diffusion. It can
+The successor of VP9 is AV1\index{AV1} and is under heavy development and diffusion. It can
 be used through the FFmpeg codec `libaom-av1` which essentially takes the same
 parameters as `libvpx-vp9`.
 
 ### Ogg/Theora
 
-We have support for the Theora video codec encapsulated in ogg container,
+We have support for the Theora\index{Theora} video codec encapsulated in ogg container,
 already presented in [there](#sec:ogg). The encoder is named `%theora` whose
 main parameters are
 
@@ -762,7 +786,7 @@ for the video with
 ### AVI
 
 Liquidsoap has native (without any external library) builtin support for
-generating AVI files with the `%avi` encoder. The resulting files contain raw
+generating AVI\index{AVI} files with the `%avi` encoder. The resulting files contain raw
 data (no compression is performed on frames), which means that we need to compute
 almost nothing but also that it will not be compressed. This format should thus
 be favored for machines which are tight on CPU but not on hard disk, for backup
@@ -803,6 +827,8 @@ and mp3 or aac for audio.
 
 #### YouTube {#sec:youtube}
 
+\index{YouTube}
+
 The streaming key can be obtained from the [YouTube streaming
 platform](https://youtube.com/live_dashboard) and the url to stream to is
 
@@ -821,6 +847,8 @@ them depending on how powerful your computer and internet connection are.
 
 #### Twitch
 
+\index{Twitch}
+
 The streaming key can be obtained from the [Twitch
 dashboard](https://dashboard.twitch.tv/settings/stream) and a [list of
 _ingesting servers_](https://stream.twitch.tv/ingests/) is provided (the url you
@@ -831,6 +859,8 @@ servers). For instance:
 ```
 
 #### Facebook
+
+\index{Facebook}
 
 The url and streaming key can be obtained from the [Facebook Live
 Producer](https://facebook.com/live/producer/). According to
@@ -846,7 +876,7 @@ of the video codec should be at most twice the framerate). For instance,
 ### Saving frames
 
 In case you need it, it is possible to save frames of the video with the
-`video.still_frame` operator: this operator adds to a source a method `save`
+`video.still_frame`\indexop{video.still\_frame} operator: this operator adds to a source a method `save`
 which, when called with a filename as argument, saves the current image of the
 video stream to the file. Currently, only bitmap files are supported and the
 filename should have a `.bmp` extension. For instance, the following script will

@@ -18,8 +18,8 @@ This instructs Liquidsoap to run the program
 output(sine())
 ```
 
-which plays a sine wave at 440 Hertz. The operator `sine`{.liquidsoap} is called
-a _source_: it generates audio (here, a sine wave) and `output`{.liquidsoap} is
+which plays a sine wave at 440 Hertz. The operator `sine`{.liquidsoap}\indexop{sine} is called
+a _source_\index{source}: it generates audio (here, a sine wave) and `output`{.liquidsoap}\indexop{output} is
 an operator which takes a source as parameter and plays it on the
 soundcard. When running this program, you should hear the expected well-known
 sound and see lots of lines looking like this:
@@ -30,7 +30,7 @@ sound and see lots of lines looking like this:
 ...
 ```
 
-These are the _logs_ for Liquidsoap, which are messages describing what each
+These are the _logs_\index{log} for Liquidsoap, which are messages describing what each
 operator is doing. These are often useful to follow what the script is doing, and
 contain important information in order to understand what is going wrong if it
 is the case. Each of these lines begins with the date and the hour the message
@@ -47,7 +47,7 @@ default, only messages with importance up to `3` are displayed.
 
 You will soon find out that a typical radio takes more than one line of code, and it is
 not practical to write everything on the command line. For this reason, the
-code for describing your webradio can also be put in a _script_, which is a file
+code for describing your webradio can also be put in a _script_\index{script}, which is a file
 containing all the code for your radio. For instance, for our sine example, we
 can put the following code in a file `radio.liq`:
 
@@ -55,7 +55,7 @@ can put the following code in a file `radio.liq`:
 ```
 
 The first line says that the script should be executed by Liquidsoap. It begins
-by `#!` and then says that `/usr/bin/env` should be used in order to find the
+by `#!` (sometimes called a _shebang_\index{shebang}) and then says that `/usr/bin/env` should be used in order to find the
 path for the `liquidsoap` executable. If you know its complete path
 (e.g. `/usr/bin/liquidsoap`) you could also directly put it:
 
@@ -64,7 +64,7 @@ path for the `liquidsoap` executable. If you know its complete path
 ```
 
 In the rest of the book, we will generally omit this first line, since it is
-always the same. The second line of `radio.liq`, is a comment. You can put
+always the same. The second line of `radio.liq`, is a comment\index{comment}. You can put
 whatever you want here: as long as the line begins with `#`, it will not be taken
 in account. The last line is the actual program we already saw above.
 
@@ -92,7 +92,7 @@ in which case the first line (starting with `#!`) is not required.
 
 ### Variables
 
-In order to have more readable code, one can use variables which allow giving
+In order to have more readable code, one can use variables\index{variable} which allow giving
 names to sources. For instance, we can give the name `s` to our sine source and
 then play it. The above code is thus equivalent to
 
@@ -133,11 +133,11 @@ Parameters:
 (this information is also present in [the online
 documentation](https://www.liquidsoap.info/doc-dev/reference.html)).
 
-It begins with a description of the operator, followed by its type, category and
-parameters (there is also a section for methods, which is not shown above, but
+It begins with a description of the operator, followed by its type\index{type}, category and
+arguments\index{argument} (or parameters). There is also a section for methods, which is not shown above, but
 we simply ignore it for now, it will be detailed in [a subsequent
-section](#sec:records)). Here, we see in the type that it is a function, because
-of the presence of the arrow "`->`": the type of the arguments is indicated on
+section](#sec:records). Here, we see in the type that it is a function, because
+of the presence of the arrow "`->`"\indexop{->}: the type of the arguments is indicated on
 the left of the arrow and the type of the output is indicated on the right. More
 precisely, we see that it takes three arguments and returns a source with any
 number of audio, video and midi channels (the precise meaning of `source`
@@ -182,7 +182,7 @@ A radio {#sec:radio}
 ### Playlists and more
 
 Since we are likely to be here not to make synthesizers but rather radios, we should start playing actual music
-instead of sines. In order to do so, we have the `playlist` operator which takes
+instead of sines. In order to do so, we have the `playlist`\indexop{playlist} operator which takes
 as argument a _playlist_: it can be a file containing paths to audio
 files (wav, mp3, etc.), one per line, or a playlist in a standard format (pls,
 m3u, xspf, etc.), or a directory (in which case the playlist consists of all the
@@ -208,7 +208,7 @@ the operator `input.http` should be used instead:
 ```
 
 The playlist can also mention special sort of files, using particular
-_protocols_ which are proper to Liquidsoap: those do not refer to actual files,
+_protocols_\index{protocol} which are proper to Liquidsoap: those do not refer to actual files,
 but rather describe how to produce files. For instance, a line of the form
 
 ```
@@ -219,8 +219,8 @@ in a playlist will instruct Liquidsoap to use a text-to-speech program in order
 to generate a file in which "Hello everybody!" is pronounced.
 
 Finally, there are other types of inputs. For instance, the operator
-`input.alsa` can be used to capture the sound of a microphone on a soundcard,
-with the ALSA library. This means that you should be able to hear your voice with
+`input.alsa`\indexop{input.alsa} can be used to capture the sound of a microphone on a soundcard,
+with the ALSA\index{ALSA} library. This means that you should be able to hear your voice with
 
 ```{.liquidsoap include="liq/mic.liq" from=1}
 ```
@@ -232,13 +232,13 @@ slight delay between your voice and the output due to the buffering.
 ### Fallible sources and fallbacks {#sec:fallible}
 
 Some sources are not always available, and we say that such a source is
-_fallible_. A typical example is a source obtained by `input.http`: at some
+_fallible_\index{fallibility}\index{source!fallible}. A typical example is a source obtained by `input.http`: at some
 point the stream might stop (e.g. if it is only available during daytime), or be
 subject to technical difficulties (e.g. it gets disconnected from the internet
 for a short period of time). In this case, we generally want to fall back to
 another source, typically an emergency playlist consisting of local files which
 we are sure are going to be available. This can be achieved by using the
-`fallback` operator which plays the first available source in a list of sources:
+`fallback`\indexop{fallback} operator which plays the first available source in a list of sources:
 
 ```{.liquidsoap include="liq/fallback.liq" from=1}
 ```
@@ -277,10 +277,10 @@ a fallback to a local file:
 ```{.liquidsoap include="liq/bad/fallible2.liq" from=1}
 ```
 
-Note that we are using `single` here instead of `playlist`: this operator plays
+Note that we are using `single`\index{singleop} here instead of `playlist`: this operator plays
 a single file and ensures that the file is available before running the script
 so that we know it will not fail. The argument
-`track_sensitive=false`{.liquidsoap} means that we want to get back to the live
+`track_sensitive=false`{.liquidsoap}\index{track!sensitive} means that we want to get back to the live
 stream as soon as it is available again, otherwise it would wait the end of the
 track for switching back from emergency playlist to the main radio. Also remark
 that we are defining `s` twice: this is not a problem at all, whenever we
@@ -290,12 +290,12 @@ replaces the first.
 #### Falling back to blank
 
 Another option to make the stream infallible would be to fall back to silence,
-which in Liquidsoap can be generated with the operator `blank`:
+which in Liquidsoap can be generated with the operator `blank`\indexop{blank}:
 
 ```{.liquidsoap include="liq/fallible3.liq"}
 ```
 
-This behavior is so common that Liquidsoap provides the `mksafe`
+This behavior is so common that Liquidsoap provides the `mksafe`\indexop{mksafe}
 function which does exactly that:
 
 ```{.liquidsoap include="liq/fallible4.liq"}
@@ -303,9 +303,11 @@ function which does exactly that:
 
 ### Streams depending on the hour
 
+\index{predicate!time}\index{time!predicate}
+
 A typical radio will do some scheduling, typically by having different playlists
 at different times of the day. In Liquidsoap, this is achieved by using the
-`switch` operator: this operator takes a list of pairs consisting of a
+`switch`\indexop{switch} operator: this operator takes a list of pairs consisting of a
 predicate (a function returning a boolean `true` or `false`) and a source, and
 plays the first source for which the predicate is true. For time, there is a
 special syntax:
@@ -330,9 +332,9 @@ adding the argument `track_sensitive=false`{.liquidsoap}, as for the
 
 ### Jingles
 
-The next thing we want to be able to do is to insert jingles. We suppose that we
+The next thing we want to be able to do is to insert jingles\index{jingle}. We suppose that we
 have a playlist consisting of all the jingles of our radio and we want to play
-roughly one jingle every 5 songs. This can be achieved by using the `random`
+roughly one jingle every 5 songs. This can be achieved by using the `random`\indexop{random}
 operator:
 
 ```liquidsoap
@@ -347,7 +349,7 @@ should be taken in average: here we want to take 1 jingle for 4 radio
 tracks. The selection is randomized however and it might happen that two jingles
 are played one after the other, although this should be rare. If we want to make
 sure that we play 1 jingle and then exactly 4 radio songs, we should use the
-`rotate` operator instead:
+`rotate`\indexop{rotate} operator instead:
 
 ```liquidsoap
 radio = rotate(weights=[1, 4], [jingles, radio])
@@ -355,10 +357,12 @@ radio = rotate(weights=[1, 4], [jingles, radio])
 
 ### Crossfading
 
+\index{crossfading}
+
 Now that we have our basic sound production setup, we should try to make things
 sound nicer. A first thing we notice is that the transition between songs is
 quite abrupt whereas we would rather have a smooth chaining between two
-consecutive tracks. This can be addressed using the `crossfade` operator which
+consecutive tracks. This can be addressed using the `crossfade`\indexop{crossfade} operator which
 will take care of this for us. If we insert the following line
 
 ```liquidsoap
@@ -372,7 +376,7 @@ pleasant transition.
 ### Audio effects
 
 In order to make the sound more uniform, we can use plugins. For instance, the
-`normalize` operator helps you to have a uniform volume by dynamically changing
+`normalize`\indexop{normalize} operator helps you to have a uniform volume by dynamically changing
 it, so that volume difference between songs is barely heard:
 
 ```liquidsoap
@@ -380,10 +384,10 @@ radio = normalize(radio)
 ```
 
 In practice, it is better to precompute the gain of each audio track in advance
-and change the volume according to this information, often called _replaygain_,
+and change the volume according to this information, often called _ReplayGain_\index{ReplayGain},
 see [there](#sec:replaygain). There are also various traditional sound effects
 that can be used in order to improve the overall color and personality of the
-sound. A somewhat reasonable starting point is provided by the `nrj` operator:
+sound. A somewhat reasonable starting point is provided by the `nrj`\indexop{nrj} operator:
 
 ```liquidsoap
 radio = nrj(radio)
@@ -405,7 +409,7 @@ having it only on our speakers.
 
 #### Installing Icecast
 
-In order to do so, we first need to set up an Icecast server which will relay the
+In order to do so, we first need to set up an Icecast\index{Icecast} server which will relay the
 stream to users connecting to it. The way you should proceed with its
 installation depends on your distribution, for instance on Ubuntu you can type
 
@@ -454,7 +458,7 @@ order to instruct Liquidsoap to send the stream to Icecast:
 ```{.liquidsoap include="liq/output.icecast.liq" from=2}
 ```
 
-The parameters of the operator `output.icecast` we used here are
+The parameters of the operator `output.icecast`\indexop{output.icecast} we used here are
 
 - the format of the stream: here we encode as mp3,
 - the parameters of your Icecast server: hostname, port (8000 is the default
@@ -481,7 +485,7 @@ with the login for administrators (`admin` / `hackme` by default).
 
 #### The encoder
 
-The first argument `%mp3`, which controls the format, is called an _encoder_ and
+The first argument `%mp3`, which controls the format, is called an _encoder_\index{encoder} and
 can itself be passed some arguments in order to fine tune the encoding. For instance,
 if we want our mp3 to have a 256k bitrate, we should pass
 `%mp3(bitrate=256)`. It is perfectly possible to have multiple streams with

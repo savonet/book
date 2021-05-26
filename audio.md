@@ -12,7 +12,7 @@ Inputs {#sec:inputs}
 ### Playlists
 
 A radio generally starts with a _playlist_, which is simply a file containing a
-list of files to be played. The `playlist`\index{playlist@\texttt{playlist}}
+list of files to be played. The `playlist`\indexop{playlist}
 operator does that: it takes as a playlist as argument and sequentially plays
 the files it contains. For instance, the script
 
@@ -131,7 +131,7 @@ only at the startup of the script.
 
 A common problem with playlists in randomized order is that, when the playlist
 is reloaded, it might happen that a song which was played not so long ago is
-scheduled again. In order to avoid that, it is convenient to use the `playlog`
+scheduled again. In order to avoid that, it is convenient to use the `playlog`\indexop{playlog}
 operator which records when songs were played and can indicate when a song was
 last played. When called, it returns a record with two functions:
 
@@ -165,7 +165,7 @@ Interesting options of the `playlog` operator are:
 #### Single files
 
 If you only need to play one file, you can avoid creating a playlist with this
-file only, by using the operator `single` which loops on one file. This operator
+file only, by using the operator `single`\indexop{single} which loops on one file. This operator
 is also more efficient in the case the file is distant because it is downloaded
 once for all:
 
@@ -173,7 +173,7 @@ once for all:
 ```
 
 By the way, if you do not want to loop over and over the file, and only play it
-once, you can use the operator `once` which takes a source as argument, plays
+once, you can use the operator `once`\indexop{once} which takes a source as argument, plays
 one song of this source, and becomes unavailable after that.
 
 ```{.liquidsoap include="liq/single-once.liq" from=1 to=-1}
@@ -188,7 +188,7 @@ suitable in order to play continuous streams (which are very long, or can even
 be infinite), because Liquidsoap would try to download them entirely before
 reading them.
 
-This is the reason why the `input.http` operator should be used instead in order
+This is the reason why the `input.http`\indexop{input.http} operator should be used instead in order
 to play a stream:
 
 ```{.liquidsoap include="liq/input.http.liq" from=1 to=-1}
@@ -200,14 +200,12 @@ location, and therefore should be used for locations that are assumed to be
 available most of the time. If not, it might generate unnecessary traffic and
 pollute the logs: in this case, it is perhaps better to inverse the paradigm and
 use the `input.harbor` operator described below, which allows the distant stream
-to connect to Liquidsoap. If the stream is using secure http protocol (if the
-uri starts with `https://...`), the operator `input.https` should be used
-instead.
+to connect to Liquidsoap.
 
 Streams in HLS format are quite different from the above ones: they consist of a
 rolling playlist of short audio segments, as explained in
 [there](#sec:HLS). This is the reason why they are handled by a different
-operator, `input.hls`:
+operator, `input.hls`\indexop{input.hls}:
 
 ```{.liquidsoap include="liq/input.hls.liq" from=1 to=-1}
 ```
@@ -232,7 +230,7 @@ Instead of having a static playlist, you might want to use you own script to
 generate the song which should be played next (e.g. you might fetch requests
 from users from the web or a database, or you might have a neural network
 deciding for you which song is the best to be played next). In order to proceed
-in this way, you should use the `request.dynamic` operator, which takes as
+in this way, you should use the `request.dynamic`\indexop{request.dynamic} operator, which takes as
 argument a function returning the next song to be played: this function has type
 `() -> request('a)`, meaning that it takes no argument and returns a
 request. For instance, suppose that we have a script called `next-song`, which
@@ -251,7 +249,7 @@ song as follows:
 ```
 
 Here, our `next` function executes the above script `next-song`, using the
-function `get_process_lines` which returns the list of lines returned by the
+function `process.read.lines` which returns the list of lines returned by the
 script. We then take the first line with `list.hd` and create a request from
 from it using `request.create`. As a variant, suppose that the next song to be
 played is present in a file named `song`. We can play it as follows:
@@ -292,8 +290,8 @@ you would rather have an active way of proceeding (you inform the operator of th
 new files to play when you have some). Typically, if you have a website where users can
 request songs, you would like to be able to put the requested song in a playlist
 at the moment the user requests it. This is precisely the role of the
-`request.queue` operator, which maintains a list of songs to be played in a
-queue (the songs are played in the order they are pushed). A typical setup
+`request.queue`\indexop{request.queue} operator, which maintains a list of songs to be played in a
+_queue_\index{queue} (the songs are played in the order they are pushed). A typical setup
 involving this operator would be the following:
 
 ```{.liquidsoap include="liq/request.queue.liq" from=1}
@@ -301,7 +299,7 @@ involving this operator would be the following:
 
 We have both a playlist and a queue, and the radio is defined by using the
 `fallback` operator which tries to fetch the stream from the queue and defaults
-to the playlist if the queue is empty. The `track_sensitive=false` argument
+to the playlist if the queue is empty. The `track_sensitive=false`\index{track!sensitive} argument
 instructs that we should play the stream generated by the queue as soon as it is
 available: by default, `switch` will wait for the end of the current track
 before switching to the queue.
@@ -314,7 +312,7 @@ listening by default on port 1234, on which commands can be sent. The queue will
 register a new command on this server, so that if you connect to it and write
 `queue.push` followed by an uri, it will be pushed into the queue where it will
 wait for its turn to be played. In practice this can be done with commands such
-as
+as\index{telnet}
 
 ```
 echo "queue.push test.mp3" | telnet localhost 1234
@@ -371,13 +369,13 @@ with the method `push`.
 ### Protocols
 
 We have seen that playlists can contain files which are either local or distant,
-the latter beginning by prefixes such as "`http:`" or "`ftp:`". A _protocol_ is
+the latter beginning by prefixes such as "`http:`" or "`ftp:`". A _protocol_\index{protocol} is
 a way of turning such a prefixed uri into an actual file. Most of the time it
 will consist in downloading the file in the appropriate way, but not
 only. Liquidsoap supports many protocols and even the possibility of adding your
 own.
 
-For instance, the `youtube-dl` protocol allows the use of the `youtube-dl`
+For instance, the `youtube-dl` protocol allows the use of the `youtube-dl`\indexop{youtube-dl}
 program in order to download files from YouTube.
 
 ```{.liquidsoap include="liq/youtube-dl.liq" from=1 to=-1}
@@ -385,7 +383,7 @@ program in order to download files from YouTube.
 
 when playing such a file, we need to do more than simply connect to some
 particular location over the internet, and have to do tricky stuff in order to
-fetch the video from YouTube. Similarly, the `say` protocol uses the
+fetch the video from YouTube. Similarly, the `say`\indexop{say} protocol uses the
 text-to-speech software `text2wav` provided by the festival project in order to
 synthesize speech. For instance,
 
@@ -399,7 +397,7 @@ means that the following will read out the paths of the files in the playlist:
 ```{.liquidsoap include="liq/say-playlist.liq" from=1 to=-1}
 ```
 
-Another very useful protocol is `annotate` which adds metadata to the following
+Another very useful protocol is `annotate`\indexop{annotate} which adds metadata to the following
 song, as in
 
 ```
@@ -413,7 +411,7 @@ also internal information such as cue in and cue out time.
 
 #### The process protocol
 
-More powerful, the `process` protocol allows to launch any command in order to
+More powerful, the `process`\indexop{process} protocol allows to launch any command in order to
 process files. The syntax is
 
 ```
@@ -479,7 +477,7 @@ will print a list of files such as
 
 We are going to define a new protocol named `artist` so that, when playing a
 file such as `artist:Halliday`, Liquidsoap will run the above command in order
-to find a song. This can be done by using the `add_protocol` operator: its first
+to find a song. This can be done by using the `add_protocol`\indexop{add\_protocol} operator: its first
 mandatory argument is the name of the protocol (here, `artist`) and the second
 one is a function which takes as arguments
 
@@ -533,7 +531,7 @@ instance, you can hear your voice with
 ```{.liquidsoap include="liq/mic.liq" from=1}
 ```
 
-Basically, this script plays the stream generated by `input.alsa`. However, we
+Basically, this script plays the stream generated by `input.alsa`\indexop{input.alsa}. However, we
 have to use the `buffer` operator in order to bufferize the stream coming from
 the soundcard and deal with synchronization issues between the input and
 the output, as detailed in [there](#sec:clocks-ex).
@@ -583,7 +581,7 @@ which indicates that you should buffer in order to avoid defects in the audio.
 ### Distant inputs with harbor {#sec:input.harbor}
 
 Many programs are able to stream to an Icecast server, and we can use those as
-an input for Liquidsoap scripts with the `input.harbor` operator. This operator
+an input for Liquidsoap scripts with the `input.harbor`\indexop{input.harbor} operator. This operator
 instructs Liquidsoap to run an Icecast-compatible server, called
 _harbor_\index{harbor}. Clients can then connect to it, as they would do on any
 Icecast server, and the stream they send there is then available as a source in
@@ -696,7 +694,7 @@ of the harbor source, which is present only if Liquidsoap has been compiled with
 SSL support. The certificate can be specified with the setting
 `harbor.ssl.certificate` (the setting `harbor.ssl.private_key` can also be used
 to specify the private key and `harbor.ssl.password` the password to unlock the
-private key). Obtaining a proper SSL certificate can be tricky. You may want to
+private key). Obtaining a proper SSL\index{SSL} certificate can be tricky. You may want to
 start with a self-signed certificate first, which you can for instance obtain
 from [_Let's Encrypt_](https://letsencrypt.org/). Alternatively, a self-signed
 certificate for local testing you can use the following one-liner:
@@ -711,7 +709,7 @@ For interventions by external collaborators, it can be problematic to have them
 perform a "complex setup" such as installing Liquidsoap or run `darkice`. For
 this reason, we have developed a protocol which allows streaming sound directly
 from the browser, be it from music files or the microphone, without having to
-install anything: this protocol is called _webcast_ and we provide a [JavaScript
+install anything: this protocol is called _webcast_\index{webcast} and we provide a [JavaScript
 implementation `webcast.js`](https://github.com/webcast/webcast.js), which
 should be easy to integrate in your own website, based on websockets and media
 recorder API. Of course, `input.harbor` has support for it and will accept
@@ -744,6 +742,8 @@ authentication).
 
 ### External inputs
 
+\index{external!input}
+
 In case you are still not satisfied (for instance, if you have very specific
 needs or are the proud owner of hardware which is not widely supported), it is
 possible to use any program as an input, as long as this program echoes audio on
@@ -771,7 +771,7 @@ format (`-f s16le`), and output it on the standard output (`-`).
 
 The above examples are only to illustrate the use external programs as input,
 but you would not use it with `ffmpeg` in practice because Liquidsoap has
-builtin support for it, through the `input.ffmpeg` operator. A more natural way
+builtin support for it, through the `input.ffmpeg`\indexop{input.ffmpeg} operator. A more natural way
 of writing the above to generate a sine through FFmpeg would thus be
 
 ```{.liquidsoap include="liq/input.ffmpeg.liq" from=1 to=-1}
@@ -805,7 +805,7 @@ already has builtin support for using GStreamer to decode files...
 #### JACK input
 
 If the other program has support for it, it is possible to use JACK with the
-`input.jack` operator. This library is dedicated to the communication of audio
+`input.jack`\indexop{input.jack} operator. This library is dedicated to the communication of audio
 data between programs and greater stability and precision is expected than with
 the above method. Its use is detailed in [there](#sec:JACK).
 
@@ -847,9 +847,9 @@ does not allow sending uncompressed data such as wav, it can however send
 lossless compressed data with the FLAC codec) and, secondly, it induces much
 delay in the stream due to the various buffers used by Icecast.
 
-A much better solution consists in using the SRT (for _Secure Reliable
+A much better solution consists in using the SRT\index{SRT} (for _Secure Reliable
 Transport_) protocol, which allows reliable data transmission with low latency,
-and can be performed using the `input.srt` operator. A minimal script could be
+and can be performed using the `input.srt`\indexop{input.srt} operator. A minimal script could be
 
 ```{.liquidsoap include="liq/input.srt.liq" from=1}
 ```
@@ -884,7 +884,7 @@ Now that we have a wide panel of sources, we need to combine them.
 
 ### Fallback {#sec:fallback}
 
-The first way of combining sources is through the `fallback` operator, which
+The first way of combining sources is through the `fallback`\indexop{fallback} operator, which
 takes as argument a list of sources, and plays the first one which is available,
 i.e. can produce some stream. We have already seen examples of this with request
 queues ([here](#sec:request.queue)) such as
@@ -897,7 +897,7 @@ Here, we want to play a song from the request queue when there is one, otherwise
 we play songs from the playlist. By default, if we are playing a song from the
 playlist and there is a new song in the queue, the operator will wait for the
 current playlist song to finish before playing the one from the queue. This
-behavior can be changed by setting the `track_sensitive` parameter to `false`,
+behavior can be changed by setting the `track_sensitive`\index{track!sensitive} parameter to `false`,
 in which case the song from the queue will be immediately played:
 
 ```liquidsoap
@@ -914,7 +914,7 @@ or to feature live interventions when someone is speaking on the microphone
 ```{.liquidsoap include="liq/blank.strip.liq" from=1 to=-1}
 ```
 
-In this last example, we are using the operator `blank.strip` to make the source
+In this last example, we are using the operator `blank.strip`\index{blank} to make the source
 `mic` unavailable when there are at least 2 seconds of silence (the duration is
 controlled by the `max_blank` argument, and the `threshold` argument indicates
 that we consider anything below -20 dB as silence): in this case, the `fallback`
@@ -927,7 +927,7 @@ blank when the source is not available, i.e. re-define the source
 ```
 
 with a fallback on blank. Since this is quite common in scripts, the function
-`mksafe` is defined in the standard library as a shorthand, and the above is
+`mksafe`\indexop{mksafe} is defined in the standard library as a shorthand, and the above is
 equivalent to writing
 
 ```liquidsoap
@@ -961,9 +961,9 @@ will behave like the above one:
 
 ### Switching and time predicates
 
-Another way of selecting a source among multiple ones is the `switch`
+Another way of selecting a source among multiple ones is the `switch`\indexop{switch}
 operator. It takes as argument a list, whose elements are pairs consisting of a
-predicate and a source. Here, each _predicate_ is function taking no argument an
+predicate and a source. Here, each _predicate_\index{predicate} is function taking no argument an
 returning a boolean (it is of type `() -> bool`) indicating whether the
 corresponding source should be played or not: a typical predicate is `{8h-10h}`
 which is true when the current time is between 8h and 10h. The `switch` operator
@@ -975,7 +975,7 @@ we could alternate between those depending on the hour with
 ```{.liquidsoap include="liq/switch.liq" from=3 to=-1}
 ```
 
-Here also, the `track_sensitive` parameter controls whether a change of source
+Here also, the `track_sensitive`\index{track!sensitive} parameter controls whether a change of source
 only occurs at track boundaries (when `true`, which is the default) or as soon
 as possible.
 
@@ -994,6 +994,9 @@ we had used a `fallback` operator:
 ```
 
 #### Time predicates {#sec:time-predicates}
+
+\index{time!predicate}
+\index{predicate!time}
 
 In the above examples, `{0h-7h}` is a _time predicate_: it is something which is
 `true` or `false` depending on the current time. Some other examples of time
@@ -1037,7 +1040,7 @@ in [there](#sec:telnet), and defined instead
 The interactive boolean is a sort of reference whose value can be changed over
 the telnet by issuing commands such as "`var.set r1 = true`", which sets the
 value of the boolean named `r1` to `true`. Therefore, we can switch to radio 1
-by typing the command
+by typing the command\index{interactive}\index{telnet}
 
 ```
 echo "var.set r1 = true" | telnet localhost 1234
@@ -1055,7 +1058,7 @@ echo "var.set r1 = false" | telnet localhost 1234
 ### Adding
 
 Instead of switching between two sources, we can play them at the same time with
-the `add` operator, which takes a list of sources whose sound are to be
+the `add`\indexop{add} operator, which takes a list of sources whose sound are to be
 added. For instance, if we want to make a radio consisting of a microphone input
 together with background music (which is often called a "bed"), we can define
 
@@ -1103,7 +1106,7 @@ but more efficient and natural.
 
 ### Sequencing
 
-The `sequence` operator allows a behavior which sometimes useful: it takes as
+The `sequence`\indexop{sequence} operator allows a behavior which sometimes useful: it takes as
 argument a list of sources and plays one track from each source in order, and
 finally keeps on playing tracks from the last source. This means that
 
@@ -1117,7 +1120,7 @@ in order to insert jingles during transitions.
 
 ### Jingles and ads
 
-Jingles are short announcements, generally indicating the name of the radio or
+Jingles\index{jingle} are short announcements, generally indicating the name of the radio or
 the current show. They are quite important in order for the listener to remember
 the brand of your radio and create some familiarity with the radio (the music
 changes, but the jingles remain the same). Technically, jingles are not
@@ -1135,7 +1138,7 @@ where `jingles` is a playlist containing all our jingles.
 #### Rotating tracks
 
 The most basic strategy consists in inserting one jingle every _n_ tracks, which
-is easily achieved thanks to the `rotate` operator. It takes a list of sources
+is easily achieved thanks to the `rotate`\indexop{rotate} operator. It takes a list of sources
 and a list of weights associated to each source (in the argument labeled
 `weight`), and selects tracks from the sources according to the weights. For
 instance, in the following script
@@ -1147,7 +1150,7 @@ we play `jingles` with weight `1` and `music` with weight `4`: this means that
 we are going to play one jingle, then four music tracks, then one jingle, then
 four music tracks, and so on.
 
-If you want something less regular, the `random` operator can be used instead of
+If you want something less regular, the `random`\indexop{random} operator can be used instead of
 `rotate`:
 
 ```{.liquidsoap include="liq/jingles-random.liq" from=3 to=-1}
@@ -1168,7 +1171,7 @@ jingle, a commercial and an announcement for a show, we could have defined
 #### Playing jingles regularly
 
 Another approach for jingles consists in playing them at regular time
-intervals. This is easily achieved with the `delay` operator function which
+intervals. This is easily achieved with the `delay`\indexop{delay} operator function which
 prevents a source from being available before some time. For instance, we can
 play a jingle roughly every 30 minutes with
 
@@ -1211,7 +1214,7 @@ predicate and replace the second line with
 Well, this is not good either: if a track of the music source ends at 12h01, we
 now hear a jingle as expected, but we actually continuously hear jingles for 14
 minutes instead of hearing only one. In order to fix this, we are tempted to use
-the `once` operator and change the line to
+the `once`\indexop{once} operator and change the line to
 
 ```{.liquidsoap include="liq/jingles-once3.liq" from=4 to=4}
 ```
@@ -1242,7 +1245,7 @@ and interrupt the currently playing song if necessary, it is enough to add
 #### Jingles at fixed time: alternative approach
 
 In the previous example, an alternative approach instead of using the `delay`
-operator, consists in using the `predicate.once` function. It takes a predicate
+operator, consists in using the `predicate.once`\index{predicate!once} function. It takes a predicate
 `p` as argument, and returns a predicate which is true only once each time `p`
 is continuously true. In case it helps, we have illustrated in the following
 figure an example of a predicate `p` over time (below) and the resulting
@@ -1286,7 +1289,7 @@ every half hour as follows:
 #### Signaling
 
 As a more advanced use of predicates, we would like to introduce the
-`predicate.signal` function which creates a particular predicate which is false
+`predicate.signal`\index{predicate!signal} function which creates a particular predicate which is false
 most of the time, unless some other part of the program sends a "signal", in
 which case the predicate becomes true once and then false again, until the next
 signal. Concretely, we can use this function to create a predicate `p` by
@@ -1339,14 +1342,14 @@ section](#sec:transitions).
 Tracks and metadata {#sec:tracks}
 -------------------
 
-Liquidsoap has a notion of _track_ in stream, which is generally used to mark
+Liquidsoap has a notion of _track_\index{track} in stream, which is generally used to mark
 the boundary between two successive songs. We have seen that many functions to
 control the stream (`fallback`, `switch`, etc.) have the ability to detect
 tracks and only change stream when a track is over in order not to abruptly
 interrupt a playing song (this behavior can be altered by setting the
 `track_sensitive` parameter to `false`).
 
-To every track is associated metadata, which is information concerning the song
+To every track is associated metadata\index{metadata}, which is information concerning the song
 which is going to be played. In Liquidsoap, metadata can actually be present at
 any time, and does not have to correspond to a track boundary (we can have
 metadata in the middle of a song) although this is generally the case. We have
@@ -1389,7 +1392,7 @@ or, if we only want to change the year,
 Metadata are usually stored within files: for instance, mp3 files generally
 contain metadata encoded in the ID3v2 format. Typical operators reading files,
 such as `playlist`, automatically read those when opening a file. We recall that
-it is also possible to add metadata to files in playlists using the annotate
+it is also possible to add metadata to files in playlists using the `annotate`\indexop{annotate}
 protocol. For instance,
 
 ```
@@ -1407,7 +1410,7 @@ write something like
 
 ### Handling tracks {#sec:on-metadata}
 
-Every source has `on_track` and `on_metadata` methods, which respectively
+Every source has `on_track`\indexop{on\_track} and `on_metadata`\indexop{on\_metadata} methods, which respectively
 enforce the execution of a function when a track boundary or metadata occur in
 the stream. In both cases, the method takes as argument a function of type
 
@@ -1431,7 +1434,7 @@ extracts the artist and the title, and appends those to the file
 register this function to be called when there is a new track and that's it! By
 the way, if you want a quick and effective way of logging the metadata, we
 advise the use the `json_of` function, which will convert all the metadata at
-once into a standardized textual representation in JSON format:
+once into a standardized textual representation in JSON\index{JSON} format:
 
 ```{.liquidsoap include="liq/log-songs2.liq" from=1 to=3}
 ```
@@ -1441,7 +1444,7 @@ once into a standardized textual representation in JSON format:
 The above functions can also be used in order to insert jingles (or ads) when
 some metadata is present. For instance, we suppose that we have a music source
 `s`, perhaps generated by a playlist: when a track has the metadata `jingle` set
-to `true`, we want to play a jingle beforehand. One way to perform this is
+to `true`, we want to play a jingle beforehand. One way to perform this is\indexop{request.queue}
 
 ```{.liquidsoap include="liq/jingles-metadata.liq" from=10}
 ```
@@ -1466,7 +1469,7 @@ playing one track of a `jingles` playlist when the metadata is present:
 
 #### Prepending and appending tracks
 
-The logic of the above scripts can be somewhat simplified by the use of the `prepend`
+The logic of the above scripts can be somewhat simplified by the use of the `prepend`\indexop{prepend}
 operator: this operator takes as argument a function which is called on every
 track, with its metadata as source, and returns a source to be played before the
 current track. For instance, we can insert a jingle when the metadata `jingle`
@@ -1477,12 +1480,12 @@ is set to `true` by:
 
 The function `insert_jingle` looks at the metadata, and if present returns the
 `jingles` source, containing all the jingles, of which one track will be
-played. If the metadata is not present, we return `fail()` which is a source
+played. If the metadata is not present, we return `fail()`\indexop{fail} which is a source
 which is never available: in this case, prepend will simply not insert any track
 because none is ready. The function is then registered with the `prepend`
 operator.
 
-Of course, there is a dual operator `append` which allows appending a track for
+Of course, there is a dual operator `append`\indexop{append} which allows appending a track for
 every track: contrarily to `prepend`, it inserts the track after the currently
 playing track. For instance, we can read the song which we have just played with
 
@@ -1492,7 +1495,7 @@ playing track. For instance, we can read the song which we have just played with
 ### Rewriting metadata
 
 If you want to systematically modify the metadata, you can use the
-`map_metadata` function which will modify the metadata of a source: it takes as
+`map_metadata`\indexop{map\_metadata} function which will modify the metadata of a source: it takes as
 argument a function and a source, and uses the function to systematically change
 the metadata. The type of the function is
 
@@ -1538,7 +1541,7 @@ indicated below.
 ### Inserting tracks and metadata
 
 If you want to insert tracks or metadata at any point in a source, you can use
-`insert_metadata`: this operator takes a source as argument and returns the same
+`insert_metadata`\indexop{insert\_metadata}: this operator takes a source as argument and returns the same
 source with a new method `insert_metadata` whose type is
 
 ```
@@ -1654,7 +1657,7 @@ of the function.
 
 ### Skipping tracks
 
-Every source has a method `skip` whose purpose is to skip the current track and go
+Every source has a method `skip`\indexop{skip} whose purpose is to skip the current track and go
 to the next one. For instance, if our main source is `s`, we can hear the first
 5 seconds of each track of `s` with
 
@@ -1684,7 +1687,7 @@ example here.
 
 ### Seeking tracks {#sec:seeking}
 
-Every source has a method `seek` which takes as argument a number of second and
+Every source has a method `seek`\indexop{seek} which takes as argument a number of second and
 goes forward this number of seconds. It returns the number of seconds
 effectively seeked: it might happen that the source cannot be seeked (if it
 is a live stream for instance), in which case the function will always return 0,
@@ -1763,9 +1766,9 @@ end at the right time: some songs features long introductions or long endings,
 that we would like not to play on a radio (think of a Pink Floyd song). In order
 to do so, we would rather avoid directly editing the music files, and simply add
 metadata indicating the time at which we should begin and stop playing the files:
-these are commonly referred to as the _cue in_ and the _cue out_ points.
+these are commonly referred to as the _cue in_\index{cue point} and the _cue out_ points.
 
-The `cue_cut` operator takes a source and cuts each track according to the cue
+The `cue_cut`\indexop{cue\_cut} operator takes a source and cuts each track according to the cue
 points which are stored in the metadata. By default, the metadata `liq_cue_in`
 and `liq_cue_out` are used for cue in and cue out points (the name of the
 metadata can be changed with the `cue_in_metadata` and `cue_out_metadata`
@@ -1793,7 +1796,7 @@ containing all the songs).
 In order to have smoother transitions, a first way to proceed is to
 progressively increase the volume from 0 (the minimum) to 1 (the maximum) at the
 beginning of tracks and progressively decrease the volume from 1 to 0 at the end
-of tracks: these operations are respectively called _fading in_ and _fading out_
+of tracks: these operations are respectively called _fading in_\index{fade} and _fading out_
 and their effect on the volume can be pictured as follows:
 
 ![Fading in and out](fig/fade-in-out.pdf)\
@@ -1822,7 +1825,7 @@ every track of the source `s`.
 ### Transitions between successive tracks
 
 In order to have nice transitions between successive tracks of a source, the
-simplest way is to use the `crossfade` operator which takes a source and
+simplest way is to use the `crossfade`\indexop{crossfade} operator which takes a source and
 performs fading: it fades out the current track, fades in the next track and
 superposes the two. In order to crossfade the tracks of a source `s` you can
 simply write
@@ -1901,7 +1904,7 @@ brutal (i.e. loud) music. In details the transitions are as follows:
 #### Under the hood: the `cross` operator
 
 In the case you want to customize transitions between tracks, you should use the
-`cross` operator which allows the fully specify which transition we should
+`cross`\indexop{cross} operator which allows the fully specify which transition we should
 apply.  In fact, the `crossfade` operator is itself programmed in the standard
 library using the `cross` operator. This operator takes as argument `duration`
 the duration of the fade (whose default value is 5 seconds), a function specifying the
@@ -1988,7 +1991,7 @@ we simply don't apply any transition.
 
 The operators which allow switching between different sources (`switch`,
 `fallback`, `rotate` and `random`) also allow specifying the transitions to be
-applied when switching from one source to the other. A _transition_ is described
+applied when switching from one source to the other. A _transition_\index{transition} is described
 by a function taking two sources as arguments and returning a new source: the
 first argument is the source which is about to be left, the second argument is
 the newly selected source, and the returned source is the result of their
@@ -2059,7 +2062,7 @@ with by adding to the main `music` source a track of `jingle` as follows:
 
 If we want to fade the jingle instead of adding it abruptly when available, we
 could use the above functions to program our fades. But fortunately, this is
-already programmed for us in the standard library, with the `smooth_add`
+already programmed for us in the standard library, with the `smooth_add`\indexop{smooth\_add}
 function. It takes as argument a `special` source which is available from time
 to time (the jingles in our case), a `normal` source which is usually available
 (the music source in our case) and, whenever a track of `special` is available
@@ -2096,7 +2099,7 @@ free to comment}
 ### Amplification {#sec:amplification}
 
 The first basic sound effect is _amplification_, i.e. raising or lowering the
-volume of a source. This is basically achieved with the `amplify` operator which
+volume of a source. This is basically achieved with the `amplify`\indexop{amplify} operator which
 takes a float coefficient and a source, and amplifies the sources by the
 coefficient. For instance, we can halve the loudness of a source `s` by
 
@@ -2140,7 +2143,7 @@ In particular, `amplify` is quite useful if you want to have all your audio
 files playing at the same loudness, without having to re-encode them: we can
 simply amplify each track differently based on a metadata in order to have more
 homogeneous loudness. There is a standard way of computing the required
-amplification factor, called _ReplayGain_, which takes in account the human
+amplification factor, called _ReplayGain_\index{ReplayGain}, which takes in account the human
 perception of the sound in order to suggest a volume correction, thus ensuring a
 comfortable, consistent listening experience. Many tools are available to
 precompute this value and store it as a metadata in the file, for instance
@@ -2198,10 +2201,10 @@ The above ReplayGain allows performing _volume normalization_ when playing music
 files: we want the loudness to be more or less constant during the stream. For
 files this is "easy" because we can compute this information in advance, however
 for live streams we have to proceed differently since we do not have access to
-the whole stream beforehand. For such situations, the `normalize` operator can
+the whole stream beforehand. For such situations, the `normalize`\indexop{normalize} operator can
 be used: it continuously computes the loudness of a stream and adjusts the
 volume in order to reach a target loudness: this operation is sometimes called
-_automatic gain control_. Basically, the sound of a source `s` can be normalized
+_automatic gain control_\index{automatic gain control}. Basically, the sound of a source `s` can be normalized
 with
 
 ```{.liquidsoap include="liq/normalize.liq" from=2 to=-1}
@@ -2273,7 +2276,7 @@ of the standard library.
 ### Handling silence
 
 Another basic signal-processing feature that everyone wants to have is _blank
-detection_. We want at all cost to avoid silence being streamed on our radio,
+detection_\index{blank}. We want at all cost to avoid silence being streamed on our radio,
 because listeners generally don't like it and will go away.
 
 #### Skipping blank
@@ -2317,7 +2320,7 @@ person walking around).
 Sometimes we do want to stream silence, and when we do so, we want to stream
 real silence. When you have an input such as a microphone, it generally induces
 a small noise, which is almost unnoticeable when someone is talking, but quite
-annoying when we hear only that. In order to address this, the `gate` operator
+annoying when we hear only that. In order to address this, the `gate`\index{gate} operator
 can be used to lower the volume when a source is almost silent. For instance,
 
 ```{.liquidsoap include="liq/gate.liq" from=1 to=-1}
@@ -2361,7 +2364,7 @@ that we obtain samples above 1 or below -1:
 
 This is not a problem per se: Liquidsoap is perfectly able to handle such values
 for the samples. However, when we send such a signal to an output, it will be
-_clipped_: all the values above 1 will be changed to 1 and all the values below
+_clipped_\index{clipping}: all the values above 1 will be changed to 1 and all the values below
 -1 will be changed to -1, in order to conform to the standard range for
 samples. Our signal will then look like this
 
@@ -2389,7 +2392,7 @@ samples between -1 and 1 as described above) you can use the `clip` operator.
 #### Compressing and limiting
 
 In order be able to increase the loudness of the signal without the sound
-artifacts due to clipping, people typically use _compressors_ which are audio
+artifacts due to clipping, people typically use _compressors_\index{compressor} which are audio
 effects, which leave the signal untouched when it is not very loud, and
 progressively lowers when it gets loud. Graphically, the output level given the
 input level is represented in the following figure:
@@ -2400,7 +2403,7 @@ We can observe that below the _threshold_ the output is the same as the input
 (the curve on the bottom left is a diagonal), and that above the threshold, the
 output increases more slowly than the input, following a _ratio_ which can be
 configured (we have pictured ratios 2:1 and 5:1 to illustrate this). This
-operator is implemented in Liquidsoap as the `compress` operator. For instance,
+operator is implemented in Liquidsoap as the `compress`\indexop{compress} operator. For instance,
 the compression of a source `s` above -10 dB at a ratio of 5:1 can be achieved
 with
 
@@ -2433,7 +2436,7 @@ A typical compressor, will have a ratio from 2 to 5: it will smoothly attenuate
 high loudness signals, which allows boosting its loudness while avoiding the
 clipping effect. Compressors with higher ratios such as 20 are called
 _limiters_: they are here to ensure that the signal will not get out of
-bounds. The standard library defines `limit`, which is basically a compressor
+bounds. The standard library defines `limit`\indexop{limit}, which is basically a compressor
 with a ratio of 20, and can be thought of as a better version of `clip` with
 much less sound distortion induced on the sound. For instance, if we get back to
 the example we used to illustrate the effects of clipping, you can hear that the
@@ -2453,7 +2456,7 @@ limiter:
 
 #### Filters
 
-The last basic effect we are going to introduce are _filters_, which only keep
+The last basic effect we are going to introduce are _filters_\index{filter}, which only keep
 some frequencies of the input signal. There are three main types:
 
 - low-pass filters only keep low frequencies (below a given _cutoff_ frequency),
@@ -2540,7 +2543,7 @@ that the above can be more concisely written
 #### Multiband compression
 
 We are now ready to introduce the effect that you were all waiting for, which is
-in fact a combination of previous effects: _multiband_ compression aka the _big
+in fact a combination of previous effects: _multiband_ compression\index{compressor!multiband} aka the _big
 fat FM radio sound_. This is what is used in most commercial music radios so
 that, when you listen to songs in your car without thinking too much, you are
 not disturbed by changes in the dynamics of songs. Whether you like it or not,
@@ -2611,7 +2614,7 @@ which is able to perform _pitch-shifting_ and _time-stretching_.
 #### LADSPA and LV2 plugins
 
 In the case where you are not satisfied by the builtin operators, Liquidsoap
-support LADSPA and LV2 plugins. Those are standards for signal processing
+support LADSPA\index{LADSPA} and LV2\index{LV2} plugins. Those are standards for signal processing
 plugins, for use in any application. Many free plugin packs are available, among
 which we recommend
 
@@ -2683,7 +2686,7 @@ you are most likely to use them for video.
 
 A last possibility to handle your sound is to use software dedicated to
 producing high quality radio sound, such as _[Stereo
-Tool](https://www.stereotool.com/)_. If you want to do so, you can use the
+Tool](https://www.stereotool.com/)_\index{Stereo Tool}. If you want to do so, you can use the
 `pipe` operator which allow exchanging audio data with external software through
 the standard input and output and is detailed in [a later
 section](#sec:pipe). Typically, one would use it to handle a source `s` with
@@ -2708,7 +2711,7 @@ relaunch the whole script in order to listen to the effect.
 #### Decibels
 
 Before dealing with parameters themselves, we remind you that there are two ways
-to measure amplitude, either _linearly_ or in _decibels_. The relationship
+to measure amplitude, either _linearly_ or in _decibels_\index{decibel}. The relationship
 between the two is not simple: recall from [the beginning of the
 book](#sec:audio-processing) that linear _l_ and decibel _d_ measurements are
 related by the relations _d_=20 log~10~(_l_) and _l_=10^_d_/20^. What you should
@@ -2737,7 +2740,7 @@ decibels).
 
 #### Getters
 
-Most sound operators take _getters_ as arguments, as already explained in [an
+Most sound operators take _getters_\index{getter} as arguments, as already explained in [an
 earlier section](#sec:getters). For instance, the type of `amplify` is (roughly)
 
 ```
@@ -2797,6 +2800,11 @@ as you change the value in this file, you will hear a corresponding change in
 the volume.
 
 #### Interactive variables: telnet {#sec:interactive-variables}
+
+\index{interactive variable}
+\index{variable!interactive}
+\index{server}
+\index{telnet}
 
 Instead of using files to store parameters as described above, our preferred way
 of handling those is with _interactive variables_. These can be thought of as
@@ -2898,7 +2906,7 @@ of the script!
 
 All this is very nice, but having to go through a telnet interface to change
 values is not very user-friendly. Fortunately, we can also get a web interface
-for free, simply by typing
+for free, simply by typing\indexop{interactive.harbor}\index{harbor}
 
 ```liquidsoap
 interactive.harbor()
@@ -2971,7 +2979,7 @@ compression, as explained below.
 
 #### Interactive variables: OSC
 
-Another way to modify interactive variables is through the OSC (_Open Sound
+Another way to modify interactive variables is through the OSC\index{OSC} (_Open Sound
 Control_) protocol, which is used to communicate values over a local
 network. There is plenty of software for your tablet or your phone, which
 emulate controllers with loads of sliders and send their values using this
@@ -3044,14 +3052,14 @@ distributed, as well as the various ways it can be encoded.
 ### Soundcard output
 
 The first basic output is the soundcard. As we have already seen many times, the
-`output` operator should select for us a decent soundcard output. You can also
+`output`\indexop{output} operator should select for us a decent soundcard output. You can also
 use various output operators, depending on the library you want to use to
 communicate with the soundcard `output.pulseaudio`, `output.alsa`,
 `output.portaudio` and `output.ao`. The first two are generally a good choice.
 
 ### Dummy output
 
-Liquidsoap also features an output called `output.dummy` which allows streaming
+Liquidsoap also features an output called `output.dummy`\indexop{output.dummy} which allows streaming
 to... nowhere! It can still be useful to animate source: without an output a
 source does not produce a stream. As an illustration, suppose that we want to
 log the metadata (say, the title and artist) of a stream without listening to
@@ -3077,7 +3085,7 @@ No output defined, nothing to do.
 
 ### Icecast
 
-Icecast is a server on which Liquidsoap can send a stream, which will take care
+Icecast\index{Icecast} is a server on which Liquidsoap can send a stream, which will take care
 of redistributing to the world. In order to use this method, you first need to
 setup such a server, which will not be detailed here: you can refer to [the
 introductory material](#sec:icecast-setup) or the [official
@@ -3091,7 +3099,7 @@ Streaming our radio to the world is then as simple as this:
 ```{.liquidsoap include="liq/output.icecast.liq" from=2}
 ```
 
-The `output.icecast` operator takes as first argument the encoding format:
+The `output.icecast`\indexop{output.icecast} operator takes as first argument the encoding format:
 `%mp3` means that we want to encode our stream in mp3. The encoding formats are
 detailed in [next section](#sec:encoders), for instance `%mp3.abr(bitrate=160)`
 would specify encoding in mp3 with average bitrate of 160 kbps, or
@@ -3128,8 +3136,10 @@ proper file output as described below.
 
 #### Casting without ice
 
+\index{harbor}
+
 If you want to quickly test Icecast output without going through the hassle of
-setting up an Icecast server, you can use the `output.harbor` operator which
+setting up an Icecast server, you can use the `output.harbor`\indexop{output.harbor} operator which
 will use Liquidsoap's internal webserver _harbor_. It will make Liquidsoap start
 a server which behaves like Icecast would, and it is as simple as this:
 
@@ -3162,7 +3172,7 @@ connections from listeners.
 ### HLS output {#sec:HLS-output}
 
 In the last few years, people have started moving away from Icecast and turn to
-HLS to distribute streams. Basically, a stream in HLS is a playlist of very
+HLS\index{HLS} to distribute streams. Basically, a stream in HLS is a playlist of very
 short portions of the stream, called segments, whose duration is generally
 between 2 and 10 seconds. The playlist itself contains the last minute or so of
 the stream, split in segments, and is regularly updated. Compared to Icecast,
@@ -3283,7 +3293,7 @@ which would make the stream of the `radio` source available at the url
 ### File output
 
 The next output we are going to see is the file output which, as you would expect,
-is performed by the operator `file.output`. It takes three arguments: the
+is performed by the operator `output.file`\indexop{output.file}. It takes three arguments: the
 encoding format, the name of the file, and the source we want to encode in the
 file. For instance, we can encode a source `s` in the mp3 file `out.mp3` with
 
@@ -3357,7 +3367,7 @@ this allows calling a function when the source fails, see
 
 Another way to stream your radio to the world consists in using the usual video
 streaming platforms to deliver the contents. Let us illustrate this by sending
-our `radio` stream to YouTube (the setup for streaming to other platforms such
+our `radio` stream to YouTube\index{YouTube} (the setup for streaming to other platforms such
 as Twich or Facebook live should more or less be the same). This is done as
 follows:
 
@@ -3369,7 +3379,7 @@ achieve this are detailed in [this chapter](#chap:video). Here, we simply take
 an image `image.jpg`, generate a `video` stream from it and add it to the
 `radio` stream using the `mux_video` operator. Note that if you wanted to stream
 a video `video.mp4` instead of a static image, you could simply replace the
-second line by
+second line by\indexop{output.url}
 
 ```liquidsoap
 video = single("video.mp4")
@@ -3399,8 +3409,8 @@ the `output.url` operator to send our stream `radio` encoded with the encoder
 
 ### SRT
 
-In order to send a stream on a local network, we recommend the use of the SRT
-protocol, using the `output.srt` operator, which has a low latency and can cope
+In order to send a stream on a local network, we recommend the use of the SRT\index{SRT}
+protocol, using the `output.srt`\indexop{output.srt} operator, which has a low latency and can cope
 with network problems. This operator has two modes, which are specified by the
 `mode` argument.
 
@@ -3430,7 +3440,7 @@ with network problems. This operator has two modes, which are specified by the
 
 ## Encoding formats {#sec:encoders}
 
-The encoding formats are specified by expressions of the form
+The encoding\index{encoder} formats are specified by expressions of the form
 ```
 %encoder
 ```
@@ -3469,7 +3479,7 @@ further details.
 
 ### MP3
 
-The mp3 format is perhaps the most widespread and well-supported compressed
+The mp3\index{MP3} format is perhaps the most widespread and well-supported compressed
 audio format. It provides reasonable quality and reasonable compression, so that
 it is often a good choice. There are three variants of the mp3 encoder depending
 on the way you want to handle bitrate (the number of bits of data per second the
@@ -3558,7 +3568,7 @@ Fixed-point encoding in stereo at 44100 Hz at 128 kbps is
 
 ### Wav
 
-wav is a non-compressed format: this means that you do not lose anything, but
+wav\index{WAV} is a non-compressed format: this means that you do not lose anything, but
 it takes quite some space to store audio. Not recommended for streaming, but
 rather for archiving. The parameters are
 
@@ -3584,7 +3594,7 @@ care about the wav length header then you should use the `duration` parameter.
 
 ### Ogg {#sec:ogg}
 
-Liquidsoap has native support for ogg which is a _container_: it is a file
+Liquidsoap has native support for Ogg\index{Ogg} which is a _container_: it is a file
 format which can contain multiple streams (typically, audio and/or video). The
 syntax for encoding in ogg is `%ogg(...)`, where the `...` is a list of
 streams. The currently supported encoders for the streams themselves are Opus,
@@ -3611,7 +3621,7 @@ The usual value is between 4 kB and 8 kB.
 
 #### Ogg/Opus
 
-The opus codec is an open-source codec intended as a modern replacement of both
+The Opus\index{Opus} codec is an open-source codec intended as a modern replacement of both
 standard codecs (MP3, Vorbis) and highly compressed codecs (AAC, Speex). This is
 the one you should use by default for sound encapsulated in ogg, unless you have
 specific needs. It has the same or better quality than equivalent codecs and is
@@ -3661,7 +3671,7 @@ documentation](http://www.opus-codec.org/docs/). A typical encoder would be
 
 #### Ogg/Vorbis
 
-Vorbis is an audio codec which was developed as an open-source replacement for
+Vorbis\index{Vorbis} is an audio codec which was developed as an open-source replacement for
 mp3. It is now largely considered as superseded by opus. There are three
 variants of the encoder:
 
@@ -3707,7 +3717,7 @@ and a constant bitrate encoding with
 
 #### Ogg/Speex
 
-The Speex codec is dedicated to encoding at low bitrates, targeting applications
+The Speex\index{Speex} codec is dedicated to encoding at low bitrates, targeting applications
 such as the transmission of voice over the internet, where having uninterrupted
 transmission of the stream, with low latency, is considered more important than
 having high-quality sound. It is now considered as superseded by the opus codec.
@@ -3730,7 +3740,7 @@ The encoder is named `%speex` and its parameters are
 
 #### Ogg/FLAC
 
-The last audio codec supported in the Ogg container is FLAC. Contrary to other
+The last audio codec supported in the Ogg container is FLAC\index{FLAC}. Contrary to other
 codecs, it is a _lossless_ one, which means that, after decoding, you get the
 exact same signal you encoded. However, the signal is still compressed in the
 sense that encoded sound takes less space than the raw data, as found for
@@ -3768,7 +3778,7 @@ and 50% for a classical music song.
 
 ### AAC
 
-The AAC codec (AAC stands for _Advanced Audio Coding_) was designed to be a
+The AAC\index{AAC} codec (AAC stands for _Advanced Audio Coding_) was designed to be a
 better replacement for MP3: it achieves better quality at the same bitrates and
 can decently encode the stream it low bitrates. Unlike opus, its main competitor,
 patent license is required for distributing an AAC codec. However, it has better
@@ -3804,7 +3814,7 @@ instance,
 
 ### GStreamer
 
-The `%gstreamer` encoder can be used to encode streams using the GStreamer
+The `%gstreamer` encoder can be used to encode streams using the GStreamer\index{GStreamer}
 multimedia framework, which handles many formats, and can provide effects and
 more on the stream. It is quite useful, although its support in Liquidsoap should
 be considered as much less mature than the FFmpeg encoder, which fulfills
@@ -3883,7 +3893,7 @@ suitable for streaming, which is the main purpose of Liquidsoap.
 
 ### FFmpeg {#sec:ffmpeg-encoder}
 
-The `%ffmpeg` encoder is a "meta-encoder", just like the GStreamer one: it uses
+The `%ffmpeg`\index{FFmpeg} encoder is a "meta-encoder", just like the GStreamer one: it uses
 the versatile FFmpeg library in order to encode in various formats, including
 the ones presented above, but also many more. The general syntax is
 
@@ -3976,6 +3986,8 @@ after the encoding. The `%ffmpeg` encoder is one such encoder that can be used
 with this operator.
 
 ### Encoded streams {#sec:encoded-streams}
+
+\index{encoded stream}
 
 By default, all the sources manipulate audio (or video) in Liquidsoap's internal
 format, which is raw data: for audio, it consists in sequences of samples (which
@@ -4142,6 +4154,8 @@ back to Liquidsoap's internal format for sources.
 
 ### External encoders
 
+\index{external!encoder}
+
 Although the `%ffmpeg` encoder does almost everything one could dream of, it is
 sometimes desirable to use an external program in order to encode our audio
 streams. In order to achieve this, the `%external` encoder can be used: with it,
@@ -4190,21 +4204,21 @@ with other programs.
 #### JACK {#sec:JACK}
 
 If the other program has support for it, the best way to exchange audio data is
-to use the [_JACK library_](https://jackaudio.org/), which is dedicated to this
+to use the [_JACK library_](https://jackaudio.org/)\index{JACK}, which is dedicated to this
 and provides very good performances and low latency. In order to use it, you
 first need to run a JACK server: this is most easily done by using applications
 such as _QjackCtl_ which provides a convenient graphical interface. Once this is
 done, the applications using JACK export virtual ports which can be connected
 together.
 
-In Liquidsoap, you can use the operator `output.jack` to create a port to which
-the contents of a source will be streamed, and `input.jack` to create a port
+In Liquidsoap, you can use the operator `output.jack`\indexop{output.jack} to create a port to which
+the contents of a source will be streamed, and `input.jack`\indexop{input.jack} to create a port
 from which we should input a stream. When using this operators, it is a good
 idea to set the `id` parameter, which will be used as the name of the
 application owning the virtual ports.
 
 For instance, in order to shape the sound of our radio, we might want to use
-[_JAMin_](http://jamin.sourceforge.net/), which is an audio mastering tool
+[_JAMin_](http://jamin.sourceforge.net/)\index{JAMin}, which is an audio mastering tool
 providing a multiband equalizer, a multiband compressor, a limiter, a spectrum
 analyzer and various other useful tools along with a graphical interface:
 
@@ -4226,11 +4240,11 @@ script:
 #### External decoders/encoders {#sec:pipe}
 
 If JACK is not available, a more basic way of interacting with external tools is
-by the `pipe` operator, which runs the program specified in the `process`
+by the `pipe`\indexop{pipe} operator, which runs the program specified in the `process`
 argument, writes audio to the standard input of the program and reads the audio
 from the standard output of the program. Both input and output are supposed to
 be encoded in wav format. We have already seen this illustrated in
-[there](#sec:stereo-tool) in order to use _Stereo Tool_ to perform mastering:
+[there](#sec:stereo-tool) in order to use _Stereo Tool_\index{Stereo Tool} to perform mastering:
 
 ```{.liquidsoap include="liq/stereotool.liq" from=2 to=-1}
 ```
@@ -4253,8 +4267,11 @@ idea if you simply want to change the volume.
 
 ### Running external programs {#sec:run-external}
 
+\index{external!program}
+\index{process}
+
 We also have the possibility of executing external programs for performing
-various actions, by using the `process.run` function. For instance, suppose that
+various actions, by using the `process.run`\indexop{process.run} function. For instance, suppose that
 we have a program `send-text-msg` to send a text message to the owner of the
 radio. The script
 
@@ -4351,7 +4368,7 @@ As usual in the modern world, extra care should be taken when passing data from
 external users to applications, in order to mitigate the possibility of
 executing malicious code. This is typically the case if we use an external
 script in order to validate credentials for `input.harbor`. In such situations,
-one should always apply the function `string.quote` to the users' data, in order
+one should always apply the function `string.quote`\index{string!escaping} to the users' data, in order
 to remove the possibility that some parts of it are interpreted as bash
 commands. For instance,
 
@@ -4360,7 +4377,7 @@ commands. For instance,
 
 Following this practice should make your script pretty secure, but there is no
 way to be 100% sure that a corner case was not missed. In order to further
-improve security, Liquidsoap provides the possibility to _sandbox_ processes,
+improve security, Liquidsoap provides the possibility to _sandbox_\index{sandbox} processes,
 which means running them in a special environment which checks whether the
 directories the program reads from and writes to are allowed ones, whether it is
 allowed to use the network, and so on. In order to use this, one should set the
@@ -4409,7 +4426,7 @@ of users.
 ### JSON
 
 In order to exchange data with other programs (via `process.run`, files, and so
-on), the preferred way for formatting data is _JSON_, which is a standard way of
+on), the preferred way for formatting data is _JSON_\index{JSON}, which is a standard way of
 representing structured data (consisting of records, arrays, etc.) and is
 supported by most modern languages. You can obtain the JSON representation of
 any Liquidsoap value with the function `json_of`, which takes a value as
@@ -4533,12 +4550,14 @@ which is more structured and natural.
 
 ### Watching files
 
+\index{file!watch}
+
 A simple, although not very robust, way of communicating data with external
 programs is through files. For instance, suppose that we have a webserver on
 which users can make requests. When this is the case, our server writes the name
 of the file to play in a file `to-play`. In the following script, whenever the
 file `to-play` is modified, we push it in a queue so that it is played online,
-and we play the `default` source if there is no request:
+and we play the `default` source if there is no request:\indexop{request.queue}
 
 ```{.liquidsoap include="liq/file.watch.liq" from=2 to=-1}
 ```
@@ -4567,6 +4586,9 @@ although this is more easily achieved using the `file.getter.float` function, as
 explained in [an earlier section](#sec:amplification).
 
 ### The telnet server {#sec:telnet}
+
+\index{telnet}
+\index{server}
 
 A common way of interacting between Liquidsoap and another program is through
 the telnet server, which can be used to by external programs to run commands in
@@ -4663,7 +4685,7 @@ echo reqs.skip | telnet localhost 1234
 
 which will launch the `reqs.skip` command on the telnet server.
 
-If you like web interfaces more than old shell programs, you can add
+If you like web interfaces more than old shell programs, you can add\indexop{server.hoarbor}\index{harbor}
 
 ```liquidsoap
 server.harbor()
@@ -4822,7 +4844,7 @@ END
 
 #### Registering commands {#sec:registering-commands}
 
-You can register your own telnet commands with the `server.register`
+You can register your own telnet commands with the `server.register`\indexop{server.register}
 function. This function takes as argument the name of the command, and a
 function which will be called when the command is issued (the function receives
 as argument the argument on the command on telnet, and returns the message that
@@ -4859,7 +4881,7 @@ Source rock selected.
 END
 ```
 
-As another example, the script
+As another example, the script\indexop{insert\_metadata}
 
 ```{.liquidsoap include="liq/server.register-title.liq" from=2 to=-1}
 ```
@@ -4916,7 +4938,9 @@ we easily fetch webpages and distant files, but we also feature a builtin web
 server, called _harbor_, which can be handy in order to expose information on
 webpages or implement web services.
 
-#### Making http requests to other sites
+#### Making HTTP requests to other sites
+
+\index{HTTP}
 
 We recall that Liquidsoap has integrated support distant files, in particular
 through the http and https protocols. This means that you can load a playlist on
@@ -4929,7 +4953,7 @@ radio = playlist("http://www.some-server.com/playlist")
 and the playlist can itself consist in a list of urls of files to be played.
 
 It might also happen that you need to retrieve some distant file over http and
-https. This can be achieved with the functions `http.get` which takes a url as
+https. This can be achieved with the functions `http.get`\indexop{http.get} which takes a url as
 argument and returns the contents of the served page as a string. For instance,
 you can display the changelog for Liquidsoap with
 
@@ -4978,6 +5002,8 @@ perform PUT and DELETE http requests in order to upload or delete a distant
 file.
 
 #### Serving static webpages
+
+\index{harbor}
 
 Liquidsoap embeds a webserver which makes it possible for it to serve
 webpages. The most basic way of doing so is by making a directory available on
@@ -5071,7 +5097,7 @@ HTML:
 What makes this mechanism incredibly powerful is the fact that the serving
 function is an arbitrary function, which can itself perform any sequence of
 operations in the script. For instance, we have already seen that we can
-implement a service to skip the current track on the source `s` with
+implement a service to skip the current track on the source `s` with\indexop{skip}
 
 ```{.liquidsoap include="liq/source.skip3.liq" from=2 to=-1}
 ```
@@ -5086,6 +5112,8 @@ the `skipper` function is called, and thus `s.skip()` is executed before
 returning a message.
 
 #### Exposing metadata
+
+\indexop{on\_track}
 
 The contents we serve might also depend on values in the script. For instance,
 the following script shows the metadata of our `radio` source encoded in JSON:
@@ -5131,7 +5159,7 @@ bohème". Here, the "real" part of the url ends with `/play`, and the part after
 the question mark (`?`) should be considered as arguments, separated by
 ampersand (`&`) and passed in the form `name=value`. It should also be noted
 that an URL uses a particular, standardized, coding, where `%20` represents a
-space. This can be achieved as follows:
+space. This can be achieved as follows:\index{queue}\indexop{request.queue}
 
 ```{.liquidsoap include="liq/harbor.http.register-play.liq" from=1 to=-1}
 ```
@@ -5172,7 +5200,7 @@ http://localhost:8000/play?artist=Charles%20Aznavour&title=La%20bohème
 ```
 
 sets the current metadata of the `radio` source accordingly (the artist will be
-"Charles Aznavour" and the title "La bohème"):
+"Charles Aznavour" and the title "La bohème"):\indexop{insert\_metadata}
 
 ```{.liquidsoap include="liq/harbor.http.register-set-metadata.liq" from=2 to=-1}
 ```
@@ -5184,7 +5212,7 @@ do not natively support passing metadata. <!-- #515 -->
 
 In [an earlier section](#sec:registering-commands), we have seen how to switch
 between a `rock`, a `rap` and a `techno` source using telnet commands. Of
-course, this can also be achieved with a web service as follows:
+course, this can also be achieved with a web service as follows:\indexop{switch}
 
 ```{.liquidsoap include="liq/harbor.http.register-switch.liq" from=2 to=-1}
 ```
@@ -5238,7 +5266,7 @@ Since we use a request queue, we cannot play two jingles at once: if we press
 multiple buttons at once, the jingles will be played sequentially. If instead of
 jingles you have some sound effects (for instance, laughter, clapping, etc.),
 you might want to play the files immediately. This can be achieved by using
-`request.player` instead of `request.queue` to play the jingles (and the method
+`request.player`\indexop{request.player} instead of `request.queue` to play the jingles (and the method
 to play them is then `play` instead of `push`).
 
 <!-- liq/harbor.http.register-jingles.liq -->
@@ -5273,13 +5301,13 @@ some functions that you can use to check that your script is running correctly.
 ### Metrics
 
 In order to ensure that your script is running alright at all times and perform
-forensic investigation in case of a problem, it is useful to have _metrics_
+forensic investigation in case of a problem, it is useful to have _metrics_\index{metrics}
 about the script: these are data, often numeric data, which indicate relevant
 information about the stream production.
 
 #### Useful indicators
 
-The _power_ of the stream can be obtained with the `rms` operator, which adds to
+The _power_ of the stream can be obtained with the `rms`\index{RMS} operator, which adds to
 a source an `rms` method which returns the current rms. Here, rms stands for
 _root mean square_ and is a decent way of measuring the power of the sound. This
 value is a float between 0 (silent sound) and 1 (maximally loud sound). It can
@@ -5291,7 +5319,7 @@ be converted to decibels, which is a more usual way of measuring power using the
 
 will print the power in decibels of the source `s` every second.
 
-Another measurement for loudness of sound is LUFS (for _Loudness Unit Full
+Another measurement for loudness of sound is LUFS\index{LUFS} (for _Loudness Unit Full
 Scale_). It is often more relevant than rms because it takes in account the way
 human ears perceive the sound (which is not homogeneous depending on the
 frequency of the sound). It can be obtained quite in a similar way:
@@ -5299,7 +5327,7 @@ frequency of the sound). It can be obtained quite in a similar way:
 ```{.liquidsoap include="liq/lufs.liq" from=2 to=-1}
 ```
 
-The current BPM (number of _beats per minute_, otherwise known as tempo) of a
+The current BPM\index{BPM} (number of _beats per minute_, otherwise known as tempo) of a
 musical stream can be computed in a similar way:
 
 ```{.liquidsoap include="liq/bpm.liq" from=1}
@@ -5341,7 +5369,7 @@ Alternatively, metrics can be exposed using the webserver with
 #### Prometheus
 
 If you need a more robust way of storing and exploring metrics, Liquidsoap has
-support for the [Prometheus](https://prometheus.io/) tool, which is dedicated to
+support for the [Prometheus](https://prometheus.io/)\index{Prometheus} tool, which is dedicated to
 this task. Suppose that we have two sources named `radio1` and `radio2` for
 which we want to export the RMS. We first need to declare that we want to use
 Prometheus and declare the port we want to run the server on:
@@ -5401,6 +5429,8 @@ We provide here a few tips in order to help with the elaboration and the testing
 of scripts.
 
 #### Logging
+
+\index{log}
 
 A first obvious remark is that you will not be able to understand the problems
 of your radio if you don't know what's going on, and a good way to obtain
@@ -5471,7 +5501,7 @@ Apart from reading the logs, the way you are generally going to test and debug
 your scripts is by using your ears. The simplest way to generate sound is by
 having a few music files at hand that you know well. Another very efficient way
 to generate easily recognizable sound is by generating sines, with different
-frequencies for different events. Those can be generated with the `sine`
+frequencies for different events. Those can be generated with the `sine`\indexop{sine}
 operator where the `duration` argument specifies the length of the track
 (infinite by default) and the unlabeled argument specifies the frequency. For
 instance, we can test the `fallback` operator as follows:
@@ -5487,9 +5517,10 @@ sine and then medium frequency sine:
 ![Testing fallback](fig/test-fallback.pdf)\
 
 This can be particularly handy if you want to test faded transitions in fallback
-for instance.
+for instance. If you want to vary the kind of sound, the operators `square` and
+`saw` take similar parameters as `sine` and produce different sound waves.
 
-Sines can also be generated by special requests using the `synth` protocol,
+Sines can also be generated by special requests using the `synth`\indexop{synth} protocol,
 which are of the following form:
 
 ```
@@ -5510,7 +5541,7 @@ sine for 3 seconds. The frequency of what we hear will thus be
 
 ![Testing queue](fig/test-queue.pdf)\
 
-As a variant on sines, the `metronome` operator is sometimes useful: it
+As a variant on sines, the `metronome`\indexop{metronome} operator is sometimes useful: it
 generates sine beeps at fixed rate (one every second, or 60 bpm, by
 default). This can be used to measure time with your ears. For instance, in the
 above example, if you replace the definition of the default source `d` by
@@ -5523,6 +5554,8 @@ second: this is because the request takes some time to be processed (we have to
 synthesize the sine!).
 
 #### Generating events
+
+\index{thread}
 
 The previous example should have made it clear that the function `thread.run` is
 quite useful to generate "events" such as pushing in a queue. Apart from the
@@ -5559,6 +5592,8 @@ is the case.
 
 #### Generating tracks
 
+\index{track}
+
 We have seen above that we can generate short tracks by regularly skipping a
 source. Since this is quite useful to perform tests (transitions, metadata
 handling, switching between sources, etc.), Liquidsoap provides various
@@ -5594,11 +5629,13 @@ Full example (already presented, we only want to show the first part here)...:
 
 #### Availability of sources
 
+\index{availability}
+
 We sometimes want to simulate sources which are not always available. For
 instance a live show which is only available when a client connects to some
 `input.habor`, or a microphone capture with `blank.strip(input.alsa())` which is
 only available when the microphone is switched on and someone is talking. Such a
-`live` source can be simulated using the `source.available` operator which makes
+`live` source can be simulated using the `source.available`\indexop{source.available} operator which makes
 a source available or not depending on a condition. For instance, in the script
 
 ```{.liquidsoap include="liq/test-live.liq" from=1}
@@ -5628,7 +5665,7 @@ seconds, by amplifying with 1 or 0, in order to test `blank.strip` for instance:
 #### Simulating slow sources
 
 In order to simulate sources which are slow to produce a stream (because of a
-high CPU load, because of a network lag, etc.), one can use the `sleeper`
+high CPU load, because of a network lag, etc.), one can use the `sleeper`\indexop{sleeper}
 operator. It takes a `delay` operator which indicates how much time it should
 take to produce 1 second of audio. For instance, in the script
 
@@ -5660,7 +5697,7 @@ more slowly in order to counter-balance the slow production of the sound.
 
 ### Profiling
 
-Liquidsoap features a builtin _profiler_, which records the time spent in all
+Liquidsoap features a builtin _profiler_\index{profiler}, which records the time spent in all
 "pure Liquidsoap" functions (i.e. excluding encoding of audio and video). It can
 be enabled by calling `profiler.enable()` and then the profiling statistics can
 be retrieved at any time with `profiler.stats.string()`. This string is of the
@@ -5704,6 +5741,8 @@ the function `+` (in order to compute the average) and in the function `aux`
 Going further {#sec:further-workflow}
 -------------
 
+\index{standard library}
+
 A great way to learn more Liquidsoap tricks is to read the code of the standard
 library. For instance, we have already mentioned that even advanced functions
 are defined in there such as the `playlist` operator (in `playlist.liq`),
@@ -5711,6 +5750,8 @@ interactive values (in `interactive.liq`) or the `normalize` operator (in
 `sound.liq`). In this section, we present some more advanced topics.
 
 ### Operations on sources {#sec:source-methods}
+
+\index{source!methods}
 
 If you have a look at the help of the function `sine`, you will notice that it
 has quite a number of methods. In fact, all the functions producing sources have
@@ -5821,7 +5862,7 @@ the computer's CPU.
 In order to mediate between operators with two different clocks, one can use a
 buffer, which will compute the stream of a source in advance, and will thus be
 able to cope with small timeflow discrepancies. This can be achieved using the
-`buffer` operator which takes, in addition to the source, the following optional
+`buffer`\indexop{buffer} operator which takes, in addition to the source, the following optional
 arguments:
 
 - `buffer`: how much time to buffer in advance (1 second by default),
@@ -5961,7 +6002,9 @@ the usual log messages.
 
 #### Retrieving commandline arguments
 
-The arguments of the script can be obtained with the `argv` function which takes
+\index{argument!commandline}
+
+The arguments of the script can be obtained with the `argv`\indexop{argv} function which takes
 a number _n_ and returns the _n_-th argument. This means that if your script is
 called `myscript.liq` and you run
 
@@ -6052,6 +6095,8 @@ before effectively restarting the daemon.
 
 ### Dynamic sources
 
+\index{source!dynamic}
+
 Sources can be created dynamically in Liquidsoap: the number of source does not
 have to be fixed in advance. For instance, the script
 
@@ -6094,7 +6139,7 @@ wasting resources.
 
 We have seen that we can dynamically create sources, but this cannot be used to
 dynamically change the contents of sources which are already playing. This
-behavior can be achieved by using `source.dynamic`: this operator creates a
+behavior can be achieved by using `source.dynamic`\indexop{source.dynamic}: this operator creates a
 source, which has a method `set` to change the source it is relaying, and can
 thus be used to create a source which changes overtime. It can be thought of as
 a suitable analogous of references for sources.

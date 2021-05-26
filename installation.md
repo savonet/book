@@ -12,7 +12,7 @@ Automated building using opam {#sec:opam}
 -----------------------------
 
 The recommended method to install Liquidsoap is by using the [package manager
-opam](http://opam.ocaml.org/). This program, which is available on all major
+opam](http://opam.ocaml.org/)\index{opam}. This program, which is available on all major
 distributions and architectures, makes it easy to build programs written in
 OCaml by installing the required dependencies (the libraries the program needs
 to be compiled) and managing consistency between various versions (in
@@ -110,7 +110,7 @@ developments in progress are performed apart, and integrated into the main
 branch only once they have been tested and reviewed.
 
 In order to install this version, you should first download the repository
-containing all the code, which is managed using the git version control system:
+containing all the code, which is managed using the git\index{git} version control system:
 
 ```
 git clone https://github.com/savonet/liquidsoap.git
@@ -315,7 +315,7 @@ install in the usual directories for libraries and binaries.
 Docker image
 ------------
 
-[Docker](https://www.docker.com/) images are provided as `savonet/liquidsoap`:
+[Docker](https://www.docker.com/)\index{Docker} images are provided as `savonet/liquidsoap`:
 these are Debian-based images with Liquidsoap pre-installed (and not much more
 in order to have a file as small as possible), which you can use to easily and
 securely deploy scripts using it. The tag `main` always contains the latest

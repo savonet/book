@@ -16,6 +16,7 @@ unix Unix
 flac [flac]{.smallcaps}
 FLAC [flac]{.smallcaps}
 HLS [hls]{.smallcaps}
+DASH [dash]{.smallcaps}
 MPEG-DASH [mpeg-dash]{.smallcaps}
 RTMP [rtmp]{.smallcaps}
 uri [uri]{.smallcaps}
@@ -95,3 +96,7 @@ MD5 [md5]{.smallcaps}
 UTF-8 [utf-8]{.smallcaps}
 rid [rid]{.smallcaps}
 RID [rid]{.smallcaps}
+ffmpeg FFmpeg
+alsa [alsa]{.smallcaps}
+Alsa [alsa]{.smallcaps}
+ALSA [alsa]{.smallcaps}

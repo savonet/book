@@ -18,7 +18,7 @@ more technical than previous ones.
 Sources and content types {#sec:source-type}
 -------------------------
 
-Each source has a number of channels of
+Each source\index{source} has a number of channels of
 
 - _audio_ data: containing sound,
 - _video_ data: containing animated videos,
@@ -63,7 +63,7 @@ the frequency) and returns a source as indicated by the type of the returned
 value: `source(...)`. The parameters of `source` indicate the nature and number
 of channels: here we see that audio is generated in some internal format (call
 it `'a`), video is generated in some internal data format (call it `'b`) and
-similarly for midi. The contents `internal` does not specify any number of
+similarly for midi. The contents `internal`\indexop{internal} does not specify any number of
 channels, which means that any number of channels can be generated. Of course,
 for the `sine` operator, only the audio channels are going to be meaningful:
 
@@ -92,8 +92,8 @@ Contents of the form `internal('a)` only impose that the format is one supported
 internally. If we want to be more specific, we can specify the actual
 contents. For instance, the internal contents are currently:
 
-- for raw audio: `pcm`,
-- for raw video: `yuva420p`,
+- for raw audio: `pcm`\indexop{pcm},
+- for raw video: `yuva420p`\indexop{yuva420p},
 - for midi: `midi`.
 
 The argument of `pcm` is the number of channels which can either be `none` (0
@@ -135,6 +135,8 @@ We see that it takes a stream with mono audio and 16 midi channels as argument
 and returns a stream of the same type.
 
 ### Encoded contents
+
+\index{encoded stream}
 
 Liquidsoap has support for the wonderful
 [FFmpeg](https://ffmpeg.org/)\index{FFmpeg} library which allows for
@@ -219,6 +221,8 @@ passive: it waits to be asked for data, then in turn asks the source `s` for
 data, and finally it returns the given data amplified by the
 coefficient `a`.
 
+\index{source!active}
+
 However, some sources are _active_ which means that they are responsible for
 asking data. This is typically the case for outputs such as to a soundcard
 (e.g. `output.alsa`) or to a file (e.g. `output.file`). For instance, the
@@ -230,7 +234,7 @@ asking data. This is typically the case for outputs such as to a soundcard
 
 We see that it takes a source as input (the one to be played) and returns an
 active source: the returned source is the same as the input source, but the type
-indicates that it is active, as witnessed by the `active_source` instead of the
+indicates that it is active, as witnessed by the `active_source`\indexop{active\_source} instead of the
 usual `source`.
 
 Perhaps surprisingly, some inputs are also tagged as active, because they are
@@ -283,6 +287,8 @@ which are responsible for initiating computation of data, but rather the
 associated clocks.
 
 ### Type inference
+
+\index{type}
 
 In order to determine the type of the sources, Liquidsoap looks where they are
 used and deduces constraints on their type. For instance, consider a script of
@@ -384,7 +390,7 @@ source(audio=internal('a), video=none, midi=none)
 i.e. why allow the `sine` operator to generate video and midi data, whereas
 those are always quite useless (they are blank). The reason is mainly because of
 the following pattern. Suppose that you want to generate a blue screen with a
-sine wave as sound. You would immediately write something like this
+sine wave as sound. You would immediately write something like this\indexop{add}
 
 ```{.liquidsoap include="liq/blue-sine.liq" from=1}
 ```
@@ -405,7 +411,7 @@ of the list given as argument to `add` must all be sources with both audio and
 video.
 
 If you insist on adding a video channel to a source which does not have one, you
-should use the dedicated function `mux_video`, whose type is
+should use the dedicated function `mux_video`\index{mux}, whose type is
 
 ```
 (video : source(audio=none, video='a, midi=none), source(audio='b, video=none, midi='c)) -> source(audio='b, video='a, midi='c)
@@ -435,6 +441,8 @@ can be used, and similarly the operator `drop_video` can remove the video.
 
 ### Type annotations
 
+\index{type!annotation}
+
 If you want to constrain the contents of a source, the Liquidsoap language
 offers the construction `(e : t)` which allows constraining an expression `e` to
 have type `t` (technically, this is called a type _cast_). It works for
@@ -451,7 +459,7 @@ Namely, in the second line, we constrain the type of `s` to be
 ### Encoding formats {#sec:encoders-intro}
 
 In order to specify the format in which a stream is encoded, Liquidsoap uses
-particular annotations called _encoders_, already presented in
+particular annotations called _encoders_\index{encoder}, already presented in
 [there](#sec:encoders). For instance, consider the `output.file` operator which
 stores a stream into a file: this operator needs to know the kind of file we
 want to produce. The (simplified) type of this operator is
@@ -520,6 +528,8 @@ sometimes annoying and might change in the future.
 
 #### Encoded sources
 
+\index{encoded stream}
+
 As another example of the influence of encoders, suppose that we want to encode
 our whole music library as a long mp3. We would proceed in this way:
 
@@ -577,6 +587,8 @@ attached to such a clock, which ensures that data is produced regularly. This
 section details this way of functioning.
 
 ### Frames
+
+\index{frame}
 
 For performance reasons, the data contained in streams is generated in small
 chunks, that we call _frames_ in Liquidsoap. The default size of a frame is
@@ -673,7 +685,7 @@ data we now describe.
 
 #### Audio
 
-The raw audio contents is called `pcm` for _pulse-code modulation_. The signal
+The raw audio contents is called `pcm`\indexop{pcm} for _pulse-code modulation_. The signal
 is represented by a sequence of _samples_, one for each channel, which represent
 the amplitude of the signal at a given instant. Each sample is represented by
 floating point number, between -1 and 1, stored in double precision (using 64
@@ -723,11 +735,12 @@ redness). Moreover, since the human eye is not very sensitive to chroma
 variations, we can be less precise for those and take the same U and V values
 for 4 neighboring pixels. This means that each pixel is now encoded by 2.5 bytes
 on average (1 for Y, ¼ for U, ¼ for V and 1 for alpha) and 1 second of typical
-video is down to a more reasonable 54 Mb per second.
+video is down to a more reasonable 54 Mb per second. You should now understand
+why the internal contents for video is called `yuva420p`\indexop{yuva420p} in source types.
 
 #### MIDI
 
-MIDI stands for _Musical Instrument Digital Interface_ and is a (or, rather,
+MIDI\index{MIDI} stands for _Musical Instrument Digital Interface_ and is a (or, rather,
 _the_) standard for communicating between various digital instruments and
 devices. Liquidsoap mostly follows it and encodes data as lists of _events_
 together with the time (in ticks, relative to the beginning of the frame) they
@@ -756,7 +769,7 @@ frames\SM{Romain, I need your help on this!}
 ### Ticks
 
 The time at which something occurs in a frame is measured in a custom unit which
-we call _ticks_. To avoid errors due to rounding, which tend to accumulate when
+we call _ticks_\index{tick}. To avoid errors due to rounding, which tend to accumulate when
 performing computations with float numbers, we want to measure time with
 integers. The first natural choice would thus be to measure time in audio
 samples, since they have the highest rate, and in fact this is what is done with
@@ -796,6 +809,8 @@ relative to the beginning of the frame: breaks and metadata.
 
 #### Tracks
 
+\index{track}
+
 It might happen that a source cannot entirely fill the current frame. For
 instance, in the case of a source playing one file once (e.g. using the operator
 `once`), where there are only 0.02 seconds of audio left whereas the frame lasts
@@ -824,6 +839,8 @@ a track occurs using the `on_track` method that all sources have, and you can
 insert track by using the method provided by the `insert_metadata` function.
 
 #### Metadata
+
+\index{metadata}
 
 A frame can also contain _metadata_ which are pairs of strings (e.g. `"artist"`,
 `"Alizée"` or `"title"`, `"Moi... Lolita"`, etc.) together with the position in
@@ -931,6 +948,9 @@ example it will always be the case).
 
 #### Computing the kind, again
 
+\index{contents}
+\index{kind}
+
 When waking up, the source also determines its _kind_, that is the number and
 nature of `audio`, `video` and `midi` channels as presented above. This might
 seem surprising because this information is already present in the type of
@@ -1001,6 +1021,9 @@ with different track boundaries
 
 ### Fallibility
 
+\index{fallibility}
+\index{source!fallible}
+
 Some sources can _fail_, which means that they do not have a sensible stream to
 produce at some point. This typically happens after ending a track when there is
 no more track to play. For instance, the following source `s` will play the file
@@ -1040,22 +1063,22 @@ Error 7: Invalid value: That source is fallible
 ```
 
 indicating that it has determined that we are trying to play the source `s`,
-which might fail. The way to fix this is to use the `fallback` operator in order
+which might fail. The way to fix this is to use the `fallback`\indexop{fallback} operator in order
 to play a file which is always going to be available in case `s` falls down:
 
 ```{.liquidsoap include="liq/bad/fallible2.liq" from=1}
 ```
 
-Or to use `mksafe` which is defined by
+Or to use `mksafe`\indexop{mksafe} which is defined by
 
 ```{.liquidsoap include="liq/mksafe.liq" from=1}
 ```
 
 and will play blank in case the input source is down.
 
-The "worse" source with respect to fallibility is given by the operator `fail`, which creates a source which
+The "worse" source with respect to fallibility is given by the operator `fail`\indexop{fail}, which creates a source which
 is never ready. This is sometimes useful in order to code elaborate
-operators. For instance, the operator `once` is defined from the `sequence`
+operators. For instance, the operator `once`\indexop{once} is defined from the `sequence`
 operator (which plays one track from each source in a list) by
 
 ```{.liquidsoap include="liq/once.liq"}
@@ -1066,7 +1089,7 @@ source unavailable after some fixed amount of time.
 
 ### Clocks {#sec:clocks}
 
-Every source is attached to a particular a _clock_, which is fixed during the
+Every source is attached to a particular a _clock_\index{clock}, which is fixed during the
 whole execution of the script, and is responsible for determining when the next
 frame should be computed: at regular intervals, the clock will ask active
 sources it controls to generate frames. We have said that a frame lasts for 0.04
@@ -1215,7 +1238,8 @@ following rules:
      operators have their own clock,
    - the operator `clock` generates a new clock,
 2. each operator should have the same clock as the sources it is using (unless
-   for special operators such as `cross` or `buffer`),
+   for special operators such as `cross` or `buffer`): this called clock
+   _unification_\index{clock!unification},
 3. if the two above rules do not impose a clock to an operator, it is assigned to
    the default clock `main`, which based on CPU.
 
@@ -1431,7 +1455,7 @@ adaptative resampler. One such example is The VLC player.
 #### Mediating between clocks: buffers
 
 As we have seen in [there](#sec:clocks-ex), the usual way to handle clock
-problems is to use buffer operators (either `buffer` of `buffer.adaptative`):
+problems is to use buffer operators (either `buffer`\indexop{buffer} of `buffer.adaptative`):
 they record in a buffer some of their input source before outputting it (1 second by
 default), so that it can easily cope with small time discrepancies. Because of
 this, we allow that the clock of their argument and their clocks are different.
@@ -1459,6 +1483,8 @@ and thus two distinct clocks for the whole script:
 
 #### Catching up
 
+\index{catchup}
+
 We have indicated that, by default, a frame is computed every 0.04 second. In
 some situations, the generation of the frame could take more than this: for
 instance, we might fetch the stream over the internet and there might be a
@@ -1469,7 +1495,7 @@ in order to cope with this kind of problems. If the situation persists, those
 buffer will empty and we will run into trouble: there is not enough audio data
 to play and we will regularly hear no sound.
 
-This can be tested with the `sleeper` operator, which can be used to simulate
+This can be tested with the `sleeper`\indexop{sleeper} operator, which can be used to simulate
 various audio delays. Namely, the following script simulates a source
 which takes roughly 1.1 second to generate 1 second of sound:
 
@@ -1597,11 +1623,11 @@ operations.
 
 ### Requests {#sec:requests}
 
-A _request_ is something from which we can eventually produce a file.
+A _request_\index{request} is something from which we can eventually produce a file.
 
 #### URI
 
-It starts with an URI (_Uniform Resource Identifier_), such as
+It starts with an URI\index{URI} (_Uniform Resource Identifier_), such as
 
 - `/path/to/file.mp3`
 - `http://some.server/file.mp3`
@@ -1625,7 +1651,7 @@ is a valid request.
 
 #### The status of a request
 
-When a request is created it is assigned a _RID_, for _request identifier_,
+When a request is created it is assigned a _RID_\index{RID}, for _request identifier_,
 which is a number which uniquely identifies it (in practice the first request
 has RID 0, the second one RID 1, and so on). Each request also has a _status_
 which indicate where it is in its lifecycle:
@@ -1639,13 +1665,16 @@ which indicate where it is in its lifecycle:
 
 #### Resolution
 
+\index{resolution}
+\index{request!resolution}
+
 The process of generating a file from a request is called _resolving_ the
 request. The _protocol_ specifies the details of this process, which is done in
 two steps:
 
 1. some computations are performed (e.g. sound in produced by a text-to-speech
    library for `say`),
-2. a list of URI, called _indicators_, is returned.
+2. a list of URI, called _indicators_\index{indicator}, is returned.
 
 Generally, only one URI is returned: for instance, the `say` protocol generates
 audio in a temporary file and returns the path to the file it produced. When
@@ -1693,9 +1722,10 @@ Requests can be manipulated within the language with the following functions.
   resolution will simply not do anything the second time.
 - `request.destroy` indicates that the request will not be used anymore and
   associated resources can be freed (typically, we remove temporary files).
-- `request.id` returns the identifier (RID) of the request.
-- `request.status` returns the current status of a request and `request.ready`
-  indicates whether a request is ready to play.
+- `request.id` returns the RID of the request.
+- `request.status` returns the current status of a request (idle, resolving,
+  ready, playing or destroyed) and `request.ready` indicates whether a request
+  is ready to play.
 - `request.uri` returns the initial URI which was used to create the request and
   `request.filename` returns the file to which the request resolved.
 - `request.duration` returns the (estimated) duration of the request in seconds.
@@ -1713,22 +1743,20 @@ Requests can be played using operators such as
 - `request.dynamic` which plays a sequence of dynamically generated requests,
 - `request.once` which plays a request once.
 
-Those operator take care of resolving the requests before using them and
-destroying afterward, so that you are only going to need `request.create` in
-practice in the above list of functions, although other are used in the standard
-library to implement advanced operators.
+Those operators take care of resolving the requests before using them and
+destroying them afterward.
 
 #### Metadata {#sec:requests-metadata}
 
-When resolving requests, Liquidsoap inserts metadata in addition to the metadata
+When resolving requests, Liquidsoap inserts metadata\index{metadata} in addition to the metadata
 already contained in the files. This can be observed with the following script:
 
 ```{.liquidsoap include="liq/request-metadata.liq" from=1}
 ```
 
 Here, we are creating a request from a file path `test.mp3`. Since we did not
-resolve the request, the metadata of the file have not been read yet. However,
-the request still contains metadata indicating information about it. Namely, the
+resolve the request, the metadata of the file has not been read yet. However,
+the request still contains metadata indicating internal information about it. Namely, the
 script prints:
 
 ```
@@ -1747,6 +1775,8 @@ The meaning of the metadata should be obvious:
 
 #### Protocols
 
+\index{protocol}
+
 The list of protocols available in Liquidsoap for resolving requests can be
 obtained by typing the command
 
@@ -1764,7 +1794,7 @@ Some of those protocols are built in the language such as
 - `http` and `https` to download distant files over HTTP,
 - `annotate` to add metadata.
 
-Some other are defined in the standard library (in the file `protocols.liq`)
+Some other protocols are defined in the standard library (in the file `protocols.liq`)
 using the `add_protocol` function which registers a new protocol. This function
 takes as argument a function `proto` of type
 
@@ -1793,7 +1823,7 @@ playlist contained distant files, this would mean that we would have to download
 them all before starting to play. Because of this, Liquidsoap warns you when
 there are hundreds of requests alive: this either mean that you are constantly
 creating requests, or that they are not properly destroyed (what we call a
-_request leak_). For instance, the following script creates 150 requests at
+_request leak_). For instance, the following script creates 250 requests at
 once:
 
 ```{.liquidsoap include="liq/request-loop.liq" from=1 to=-1}
@@ -1811,7 +1841,7 @@ Consequently, you will therefore see in the logs messages such as
 ### Decoders
 
 As mentioned above, the process of resolving requests involves finding an
-appropriate decoder.
+appropriate decoder\index{decoder}.
 
 #### Configuration
 
@@ -1850,7 +1880,7 @@ set("decoder.priorities.mad", 1)
 
 The decoders with higher priorities are tried first, and the first decoder which
 accepts a file is chosen. For mp3 files, this means that the FFmpeg decoder is
-very likely to be used over mad because it also accepts mp3 files and has
+very likely to be used over mad, because it also accepts mp3 files but has
 priority 10 by default.
 
 #### Custom decoders
@@ -1860,7 +1890,10 @@ which registers an external program to decode some audio files: this program
 should read the data on standard input and write decoded audio in wav format on
 its standard output.
 
-#### Log a resolution
+#### The log of a resolution
+
+\index{resolution}
+\index{request!resolution}
 
 The choice of a decoder can be observed when setting log level to debug. For
 instance, consider the simple script
@@ -1903,7 +1936,7 @@ We see the following steps in the logs:
   [decoder:4] Available decoders: FFMPEG (priority: 10), MAD (priority: 1)
   ```
   
-- the one with the highest priority is tried first, accepts the file and is thus
+- the one with the highest priority is tried first, accepts the file, and is thus
   selected:
 
   ```
@@ -1917,7 +1950,7 @@ We see the following steps in the logs:
   [request:5] Resolved to [[test.mp3]].
   ```
 
-#### Log of a failed resolution
+#### The log of a failed resolution
 
 For comparison, consider the following variant of the script
 
@@ -1973,15 +2006,15 @@ mp3 does not. The logs of the resolution process are as follows:
   [clock.main:4] Error when starting graphics: Request_simple.Invalid_URI("test.mp3")!
   ```
 
-#### Other libraries involved in decoding files
+#### Other libraries involved in the decoding of files
 
-Apart from decoders the following additional libraries are involved when
+Apart from decoders, the following additional libraries are involved when
 resolving and decoding requests.
 
 - _Metadata decoders_: some decoders are dedicated to decoding the metadata of
   the files.
 - _Duration decoders_: some decoders are dedicated to computing the duration of
-  the files. those are not enabled by default and can be by setting the
+  the files. Those are not enabled by default and can be by setting the
   dedicated configuration key
   
   ```liquidsoap
@@ -1989,9 +2022,8 @@ resolving and decoding requests.
   ```
   
   The reason they are not enabled is that they can take quite some time to
-  compute the duration of a file. If you need the duration of files, it is
-  rather advised to precompute it and store the result in the `duration`
-  metadata.
+  compute the duration of a file. If you need this, it is rather advised to
+  precompute it and store the result in the `duration` metadata.
 - _Samplerate converters_: those are libraries used to change the samplerate of
   audio files when needed (e.g. converting files sampled at 48 kHz to default
   44.1 kHz). The following configuration key sets the list of converters:
@@ -2027,13 +2059,15 @@ Custom metadata decoders can be added with the function `add_metadata_resolver`.
 Reading the source code
 -----------------------
 
+\index{source code}
+
 As indicated in [there](#sec:further-workflow), a great way of learning about
-Liquidsoap and adding features to it is to read (and modify) the standard
+Liquidsoap, and adding features to it, is to read (and modify) the standard
 library, which is written in the Liquidsoap language detailed in [the dedicated
-chapter](#chap:language). In case you need to modify the internal behavior of
-Liquidsoap or chase an intricate bug you might have to read (and modify) the
-code of Liquidsoap itself, which is written in the [OCaml
-language](https://ocaml.org/). This can be a bit intimidating at first, but it
+chapter](#chap:language). However, in the case you need to modify the internal
+behavior of Liquidsoap or chase an intricate bug you might have to read (and
+modify) the code of Liquidsoap itself, which is written in the [OCaml
+language](https://ocaml.org/)\index{OCaml}. This can be a bit intimidating at first, but it
 is perfectly doable with some motivation, and it might be reassuring to learn
 that some other people have gone through this before you!
 
@@ -2052,7 +2086,7 @@ the source, where all the code lies. The main folders are
   - `io/`: libraries performing both input and output such as
   alsa,
   - `sources/`: input sources
-  - `outputs/`,
+  - `outputs/`: outputs,
 - file formats:
   - `decoder/`, `encoder_formats/` and `encoder/`: decoders and
   encoders using various libraries for various formats and codecs,
@@ -2072,4 +2106,4 @@ File | Description
 `clock.ml` | Definition of clocks
 `request.ml` | Definition of requests
 
-Happy hacking, and remember you can get help by the usual means!
+Happy hacking, and remember that the community is here to help you!

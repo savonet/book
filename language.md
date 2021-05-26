@@ -17,7 +17,7 @@ chapter](#chap:streaming).
 
 ### Typing
 
-One of the main features of the language is that it is _typed_. This means that
+One of the main features of the language is that it is _typed_\index{type}. This means that
 every expression belongs to some type which indicates what it is. For instance,
 `"hello"` is a _string_ whereas `23` is an _integer_, and, when presenting a
 construction of the language, we will always indicate the associated
@@ -112,6 +112,8 @@ generated the three `sine` stream generators!
 
 ### Standard library
 
+\index{standard library}
+
 Although the core of Liquidsoap is written in OCaml, many of the functions of
 Liquidsoap are written in the Liquidsoap language itself. Those are defined in
 the `pervasives.liq` script, which is loaded by default and includes all the
@@ -129,7 +131,7 @@ Writing scripts
 
 ### Choosing an editor
 
-Scripts in Liquidsoap can be written in any editor, although Emacs is the
+Scripts in Liquidsoap can be written in any editor\index{editor}, although Emacs is the
 preferred editor, as being the only editor with specific Liquidsoap support
 (syntax coloration and indentation). Some other tools, described below, can also
 be useful in order to learn Liquidsoap or elaborate scripts.
@@ -239,16 +241,16 @@ We begin by describing the values one usually manipulates in Liquidsoap.
 ### Integers and floats
 
 The _integers_\index{integer}, such as `3` or `42`, are of type
-`int`\index{int@\texttt{int}}. Depending on the current architecture of the
+`int`\indexop{int}. Depending on the current architecture of the
 computer on which we are executing the script (32 or 64 bits, the latter being
 the most common nowadays) they are stored on 31 or 63 bits. The minimal
 (resp. maximal) representable integer can be obtained as the constant
-`min_int`\index{min\_int@\texttt{min\_int}}
-(resp. `max_int`)\index{max\_int@\texttt{max\_int}}; typically, on a 64 bits
+`min_int`
+(resp. `max_int`); typically, on a 64 bits
 architecture, they range from -4611686018427387904 to 4611686018427387903.
 
-The _floating point numbers_\index{float}, such as `2.45`, are of type
-`float`\index{float@\texttt{float}}, and are in double precision, meaning that
+The _floating point numbers_, such as `2.45`, are of type
+`float`\indexop{float}, and are in double precision, meaning that
 they are always stored on 64 bits. We always write a decimal point in them,
 so that `3` and `3.` are not the same thing: the former is an integer and the
 latter is a float. This is a source of errors for beginners, but is necessary for
@@ -273,14 +275,14 @@ The usual arithmetic operations are available (`+`, `-`, `*`, `/`), and work for
 both integers and floats. For floats, traditional arithmetic functions are
 available such as `sqrt` (square root), `exp` (exponential), `sin` (sine), `cos`
 (cosine) and so on. Random integers and floats can be generated with the
-`random.int` and `random.float` functions.
+`random.int`\index{random} and `random.float` functions.
 
 ### Strings
 
 Strings\index{string} are written between double or single quotes,
 e.g. `"hello!"` or `'hello!'`, and are of type `string`.
 
-The function to output strings on the standard output is `print`, as
+The function to output strings on the standard output is `print`\indexop{print}, as
 in
 
 ```liquidsoap
@@ -295,7 +297,7 @@ print(3+2)
 ```
 
 will display `5`, as expected. In practice, one rarely does use this functions,
-which displays on the standard output, but rather the logging functions
+which displays on the standard output, but rather the logging\index{log} functions
 `log.critical`, `log.severe`, `log.important`, `log.info` and `log.debug` which
 write strings of various importance in the logs, so that it is easier to keep
 track of them: they are timestamped, they can easily be stored in files, etc.
@@ -341,7 +343,7 @@ print("Current user is " ^ user)
 ```
 
 Instead of using concatenation, it is often rather convenient to use _string
-interpolation_: in a string, `#{e}` is replaced by the string representation of
+interpolation_\index{string!interpolation}: in a string, `#{e}` is replaced by the string representation of
 the result of the evaluation of the expression `e`:
 <!--
 \SM{there is another kind of string interpolation but I don't think that anybody ever used that in practice}
@@ -362,7 +364,7 @@ will print `The number 0.663455738438 is random.` (at least it did last time I
 tried).
 
 The string representation of any value in Liquidsoap can be obtained using the
-function `string_of`, e.g. `string_of(5)`{.liquidsoap} is `"5"`. Some other
+function `string_of`\indexop{string\_of}, e.g. `string_of(5)`{.liquidsoap} is `"5"`. Some other
 useful string-related function are
 
 - `string.length`: compute the length of a string
@@ -375,7 +377,7 @@ useful string-related function are
   # string.sub("hello world!", start=6, length=5);;
   - : string = "world"
   ```
-- `string.split`: split a string on a given character
+- `string.split`\indexop{string.split}: split a string on a given character
   ```
   # string.split(separator=":", "a:42:hello");;
   - : [string] = ["a", "42", "hello"]
@@ -385,7 +387,7 @@ useful string-related function are
 - `string.quote`: escape shell special characters (you should always use this
   when passing strings to external programs).
 
-Finally, some functions operate on _regular expressions_, which describe some
+Finally, some functions operate on _regular expressions_\index{regular expression}, which describe some
 shapes for strings:
 
 - `string.match`: test whether a string matches a regular expression,
@@ -412,19 +414,19 @@ any number of any character followed by `.jpg`".
 
 ### Booleans
 
-The _booleans_\index{boolean} are either `true`{.liquidsoap}\index{true} or
-`false`{.liquidsoap}\index{false} and are of type `bool`. They can be combined
+The _booleans_\index{boolean} are either `true`{.liquidsoap}\indexop{true} or
+`false`{.liquidsoap}\indexop{false} and are of type `bool`\indexop{bool}. They can be combined
 using the usual boolean operations
 
-- `and`: conjunction,
-- `or`: disjunction,
-- `not`: negation.
+- `and`\indexop{and}: conjunction,
+- `or`\indexop{or}: disjunction,
+- `not`\indexop{not}: negation.
 
 Booleans typically originate from comparison operators, which take two values
 and return booleans:
 
-- `==`: compares for equality,
-- `!=`: compares for inequality,
+- `==`\indexop{==}: compares for equality,
+- `!=`\indexop{!=}: compares for inequality,
 - `<=`: compares for inequality,
 
 and so on (`<`, `>=`, `>`). For instance, the following is a boolean expression:
@@ -436,7 +438,7 @@ and so on (`<`, `>=`, `>`). For instance, the following is a boolean expression:
 The time predicates such as `10h-15h` are also booleans, which are true or false
 depending on the current time, see [there](#sec:time-predicates).
 
-_Conditional branchings_ execute code depending on whether a condition is true
+_Conditional branchings_\indexop{if} execute code depending on whether a condition is true
 or not. For instance, the code
 
 ```{.liquidsoap include="liq/cond1.liq" from=1}
@@ -507,7 +509,7 @@ Some functions, such as `print`, do not return a meaningful value: we are
 interested in what they are doing (e.g. printing on the standard output) and not
 in their result. However, since typing requires that everything returns
 something of some type, there is a particular type for the return of such
-functions: `unit`. Just as there are only two values in the booleans (`true` and
+functions: `unit`\indexop{unit}. Just as there are only two values in the booleans (`true` and
 `false`), there is only one value in the unit type, which is written `()`. This
 value can be thought of as the result of the expression saying "I'm done".
 
@@ -550,7 +552,7 @@ ignore the result:
 ### Lists
 
 Some more elaborate values can be constructed by combining the previous ones. A
-first kind is _lists_ which are finite sequences of values, being all of the
+first kind is _lists_\index{list} which are finite sequences of values, being all of the
 same type. They are constructed by square bracketing the sequence whose elements
 are separated by commas. For instance, the list
 
@@ -560,7 +562,7 @@ are separated by commas. For instance, the list
 
 is a list of three integers (1, 4 and 5), and its type is `[int]`, and the type
 of `["A", "B"]`{.liquidsoap} would obviously be `[string]`. Note that a list can
-be empty: `[]`. The function `list.hd` returns the head of the list, that is its
+be empty: `[]`. The function `list.hd` returns the _head_ of the list, that is its
 first element:
 
 ```
@@ -635,7 +637,7 @@ x : [int] = [1, 2, 3, 4, 5, 6, 7]
   
 ### Tuples
 
-Another construction present in Liquidsoap is _tuples_ of values, which are
+Another construction present in Liquidsoap is _tuples_\index{tuple} of values, which are
 finite sequences of values which, contrarily to lists, might have different
 types. For instance,
 
@@ -650,9 +652,9 @@ int * float * string
 ```
 
 which indicate that the first element is an integer, the second a float and the
-third a string. In particular, a _pair_ is a tuple with two elements. For those,
-the first and second element can be retrieved with the functions `fst` and
-`snd`:
+third a string. In particular, a _pair_\index{pair} is a tuple with two elements. For those,
+the first and second element can be retrieved with the functions `fst`\indexop{fst} and
+`snd`\indexop{snd}:
 
 ```
 # p = (3, "a");;
@@ -690,9 +692,9 @@ t : int * float * string = (3, 4.2, "hello")
 ### Association lists {#sec:association-list}
 
 A quite useful combination of the two previous data structures is _association
-lists_, which are lists of pairs. Those can be thought of as some kind of
+lists_\index{association list}\index{list!association}, which are lists of pairs. Those can be thought of as some kind of
 dictionary: each pair is an entry whose first component is its key and second
-component is its value. These are the way metadata are represented for instance:
+component is its value. These are the way metadata\index{metadata} are represented for instance:
 they are lists of pairs of strings, the first string being the name of the
 metadata, and the second its value. For instance, a metadata would be the
 association list
@@ -745,7 +747,7 @@ Programming primitives
 
 ### Variables
 
-We have already seen many examples of uses of _variables_: we use
+We have already seen many examples of uses of _variables_\index{variable}: we use
 
 ```liquidsoap
 x = e
@@ -764,7 +766,7 @@ cannot be changed (unless we explicitly require this by using references, see
 below), so the above program does not modify the value of `n`, it is simply that
 a new `n` is defined.
 
-There is an alternative syntax for declaring variables which is
+There is an alternative syntax for declaring variables which is\indexop{def}
 
 ```liquidsoap
 def x =
@@ -791,10 +793,9 @@ it is defined only until the next `end`, so that
 will print `5`: outside the definition of `x`, the definition of `y` one on the
 first line is not affected by the local redefinition.
 
-
 When we define a variable, it is generally to use its value: otherwise, why
 bothering defining it? For this reason, Liquidsoap issues a warning when an
-unused variable is found, since it is likely to be a bug. For instance, on
+_unused_ variable\index{variable!unused} is found, since it is likely to be a bug. For instance, on
 
 ```{.liquidsoap include="liq/bad/unused.liq"}
 ```
@@ -806,14 +807,14 @@ Line 1, character 1:
 Warning 4: Unused variable n
 ```
 
-If this situation is really wanted, you should use `ignore` in order to fake a
+If this situation is really wanted, you should use `ignore`\indexop{ignore} in order to fake a
 use of the variable `n` by writing
 
 ```liquidsoap
 ignore(n)
 ```
 
-Another possibility is to assign the special variable `_`, whose purpose is to
+Another possibility is to assign the special variable `_`\indexop{\_}, whose purpose is to
 store results which are not going to be used afterwards:
 
 ```liquidsoap
@@ -823,10 +824,10 @@ _ = 2 + 2
 ### References
 
 As indicated above, by default, the value of a variable cannot be
-changed. However, one can use a _reference_ in order to be able to do this.
+changed. However, one can use a _reference_\index{references} in order to be able to do this.
 Those can be seen as memory cells, containing values of a given fixed type,
 which can be modified during the execution of the program. They are created with
-the `ref` keyword, with the initial value of the cell as argument. For instance,
+the `ref`\indexop{ref} keyword, with the initial value of the cell as argument. For instance,
 
 ```{.liquidsoap include="liq/ref1.liq" to=0}
 ```
@@ -841,7 +842,7 @@ ref(int)
 meaning that its a memory cell containing integers. On such a reference, two
 operations are available:
 
-- one can obtain the value of the reference by using the `!` keyword before the
+- one can obtain the value of the reference by using the `!`\indexop{!} keyword before the
   reference, so that `!r` denotes the value contained in the reference `r`, for
   instance
 
@@ -851,7 +852,7 @@ operations are available:
   
   declares the variable `x` as being 9 (which is 5+4),
   
-- one can change the value of the reference by using the `:=` keyword, e.g.
+- one can change the value of the reference by using the `:=`\indexop{:=} keyword, e.g.
 
   ```liquidsoap
   r := 2
@@ -896,7 +897,7 @@ error is raised.
 
 ### Loops
 
-The usual looping constructions are available in Liquidsoap. The `for` loop
+The usual looping\index{loop} constructions are available in Liquidsoap. The `for`\indexop{for} loop
 repeatedly executes a portion of code with an integer variable varying between
 two bounds, being increased by one each time. For instance, the following code
 will print the integers `1`, `2`, `3`, `4` and `5`, which are the values
@@ -909,7 +910,7 @@ In practice, such loops could be used to add a bunch of numbered files
 (e.g. `music1.mp3`, `music2.mp3`, `music3.mp3`, etc.) in a request queue for
 instance.
 
-The `while` loop repeatedly executes a portion of code, as long a condition is
+The `while`\indexop{while} loop repeatedly executes a portion of code, as long a condition is
 satisfied. For instance, the following code doubles the contents of the
 reference `n` as long as its value is below `10`:
 
@@ -923,8 +924,8 @@ and the loop is exited. The printed value is thus `16`.
 Functions {#sec:functions}
 ---------
 
-Liquidsoap is built around the notion of function: most operations are performed
-by those. For some reason, we sometimes call _operators_ the functions acting on
+Liquidsoap is built around the notion of function\index{function}: most operations are performed
+by those. For some reason, we sometimes call _operators_\index{operator} the functions acting on
 sources. Liquidsoap includes a standard library which consists of functions
 defined in the Liquidsoap language, including fairly complex operators such as
 `playlist` which plays a playlist or `crossfade` which takes care of fading
@@ -934,7 +935,7 @@ between songs.
 
 A function is a construction which takes a bunch of arguments and produces a
 result. For instance, we can define a function `f` taking two float arguments,
-prints the first and returns the result of adding twice the first to the second:
+prints the first and returns the result of adding twice the first to the second:\indexop{def}
 
 ```{.liquidsoap include="liq/fun4.liq"}
 ```
@@ -951,7 +952,7 @@ The type of this function is
 (int, int) -> int
 ```
 
-The arrow `->` means that it is a function, on the left are the types of the
+The arrow `->`\indexop{->} means that it is a function, on the left are the types of the
 arguments (here, two arguments of type `int`) and on the right is the type of
 the returned value of the function (here, `int`). In order to use this function,
 we have to apply it to arguments, as in
@@ -982,9 +983,9 @@ the variable `y` is not available after the definition.
 
 ### Handlers
 
-A typical use of functions in Liquidsoap is for _handlers_, which are functions
+A typical use of functions in Liquidsoap is for _handlers_\index{handler}, which are functions
 to be called when a particular event occurs, specifying the actions to be taken
-when it occurs. For instance, the `source.on_metadata` operator allows
+when it occurs. For instance, the `source.on_metadata`\indexop{source.on\_metadata} operator allows
 registering a handler when metadata occurs in a stream. Its type is
 
 ```
@@ -1031,14 +1032,14 @@ disconnection of users.
 
 ### Anonymous functions
 
-For concision in scripts, it is possible define a function without giving it a
+For concision in scripts, it is possible define a function\indexop{fun}\indexop{->} without giving it a
 name, using the syntax
 
 ```liquidsoap
 fun (x) -> ...
 ```
 
-This is called an _anonymous function_, and it is typically used in order to
+This is called an _anonymous function_\index{function!anonymous}, and it is typically used in order to
 specify short handlers in arguments. For instance, the above example for
 printing the title in metadatas could equivalently be rewritten as
 
@@ -1068,7 +1069,7 @@ and default values as expected.
 
 When using this syntax, on the right hand of `->` Liquidsoap expects exactly one
 expression. If you intend to use multiple ones (for instance, in order to
-perform a sequence of actions), you can use the `begin ... end`{.liquidsoap}
+perform a sequence of actions), you can use the `begin ... end`{.liquidsoap}\indexop{begin}
 syntax, which allows grouping multiple expressions as one. For instance,
 
 ```{.liquidsoap include="liq/on_meta3.liq" from=2 to=-1}
@@ -1091,6 +1092,8 @@ fun () -> ...
 ```
 
 ### Labeled arguments
+
+\index{argument!labeled}
 
 A function can have an arbitrary number of arguments, and when there are many of them it
 becomes difficult to keep track of their order and their order matter! For
@@ -1143,7 +1146,7 @@ Of course, a function can have both labeled and non-labeled arguments.
 ### Optional arguments
 
 Another useful feature is that we can give _default values_ to arguments, which
-thus become _optional_: if, when calling the function, a value is not specified
+thus become _optional_\index{argument!optional}: if, when calling the function, a value is not specified
 for such arguments, the default value will be used. For instance, if for some
 reason we tend to generally measure samples over a period of 2.5 seconds, we can
 make this become the value for the `duration` parameter:
@@ -1167,7 +1170,7 @@ samplerate(samples=132300., duration=3.)
 ```
 
 The presence of an optional argument is indicated in the type by prefixing the
-corresponding label with "`?`", so that the type of the above function is
+corresponding label with "`?`"\indexop{?}, so that the type of the above function is
 
 ```
 (samples : float, ?duration : float) -> float
@@ -1179,7 +1182,7 @@ corresponding label with "`?`", so that the type of the above function is
 
 As a more concrete example of labeled arguments, we can see that the
 type of the operator `output.youtube.live`, which outputs a video stream to
-YouTube, is
+YouTube\index{YouTube}, is
 
 ```
 (?id : string, ?video_bitrate : int, ?audio_encoder : string, ?audio_bitrate : int, ?url : string, key : string, source) -> source
@@ -1217,7 +1220,7 @@ coded as an association list, and there are quite few handlers (`on_connect`,
 ### Polymorphism
 
 Some functions can operate on values of many possible types. For instance, the
-function `list.tl`, which returns the tail of the list (the list without its
+function `list.tl`\indexop{list.tl}, which returns the tail of the list (the list without its
 first element), works on lists of integers so that it can have the type
 
 ```
@@ -1238,7 +1241,7 @@ function `list.tl` is actually given the type
 ```
 
 which means: "for whichever type you replace `'a` with, the resulting type is a
-valid type for the function". Such a function is called _polymorphic_, in the
+valid type for the function". Such a function is called _polymorphic_\index{polymorphism}, in the
 sense that it can be given multiple types: here, `'a` is not a type but rather a
 "meta-type" (the proper terminology is a _type variable_) which can be replaced
 by any regular type. Similarly, the empty list `[]` is of type `['a]`: it is a
@@ -1303,7 +1306,7 @@ function types and source types).
 ### Getters {#sec:getters}
 
 We often want to be able to dynamically modify some parameters in a script. For
-instance, consider the operator `amplify`, which takes a float and an audio
+instance, consider the operator `amplify`\indexop{amplify}, which takes a float and an audio
 source and returns the audio amplified by the given volume factor: we can expect
 its type to be
 
@@ -1338,7 +1341,7 @@ This is a function which takes no argument and returns a float (remember that a
 function can take an arbitrary number of arguments, which includes zero arguments). It is
 very close to a float excepting that each time it is called the returned value
 can change: we now have the possibility of having something like a float which
-varies over time. We like to call such a function a _float getter_, since it can
+varies over time. We like to call such a function a _float getter_\index{getter}, since it can
 be seen as some kind of object on which the only operation we can perform is get
 the value. For instance, we can define a float getter by
 
@@ -1413,7 +1416,7 @@ radio = amplify({!v}, mic)
 when the value of the reference gets changed, the amplification will get changed
 too.
 
-In practice, float getters are often created using `interactive.float` which
+In practice, float getters are often created using `interactive.float`\index{interactive variable}\index{variable!interactive} which
 creates a float value which can be modified on the telnet server (this is an
 internal server provided by Liquidsoap on which other applications can connect
 to interact with it, as detailed in [a later section](#sec:telnet)), or
@@ -1464,7 +1467,7 @@ usually perform a fade in Liquidsoap is detailed in [an ulterior
 section](#sec:transitions).
 
 Let us give another advanced example, which uses many of the above
-constructions. The standard library defines a function `metadata.getter.float`,
+constructions. The standard library defines a function `metadata.getter.float`\index{metadata!getter},
 whose type is
 
 ```
@@ -1519,8 +1522,8 @@ functions:
 
 ### Recursive functions
 
-Liquidsoap supports functions which are _recursive_, i.e., that can call
-themselves. For instance, in mathematics, the factorial function on natural
+Liquidsoap supports functions which are _recursive_\index{recursive function}\index{function!recursive}, i.e., that can call
+themselves. For instance, in mathematics, the factorial\index{factorial} function on natural
 numbers is defined as fact(n)=1×2×3×...×n, but it can also be defined
 recursively as the function such that fact(0)=1 and fact(n)=n×fact(n-1) when
 n>0: you can easily check by hand that the two functions agree on small values
@@ -1588,7 +1591,7 @@ might take some time for you to get accustomed to those.
 ### Partial evaluation
 
 The final thing to know about functions in Liquidsoap is that they support
-_partial evaluation_ of functions. This means that if you call a function, but
+_partial evaluation_\index{function!partial evaluation} of functions. This means that if you call a function, but
 do not provide all the arguments, it will return a new function expecting only
 the remaining arguments. For instance, consider the multiplication function
 
@@ -1634,7 +1637,7 @@ between them, we can do
 ```{.liquidsoap include="liq/list-print1.liq"}
 ```
 
-Here, the function `print` is of type
+Here, the function `print`\indexop{print} is of type
 
 ```
 (?newline : bool, 'a) -> unit
@@ -1661,7 +1664,7 @@ list of songs together with their duration and tempo. One way to store each song
 is as a tuple of type `string * float * float`, but there is a risk of confusion
 between the duration and the length which are both floats, and the situation
 would of course be worse if there were more fields. In order to overcome this,
-one can use a _record_ which is basically the same as a tuple, excepting that
+one can use a _record_\index{record} which is basically the same as a tuple, excepting that
 fields are named. In our case, we can store a song as
 
 ```{.liquidsoap include="liq/record-song.liq" to=-1}
@@ -1685,10 +1688,10 @@ print("The duration of the song is #{song.duration} seconds")
 ### Modules
 
 Records are heavily used in Liquidsoap in order to structure the functions of
-the standard library. We tend to call _module_ a record with only functions, but
+the standard library. We tend to call _module_\index{module} a record with only functions, but
 this is really the same as a record. For instance, all the functions related to
 lists are in the `list` module and functions such as `list.hd` are fields of
-this record. For this reason, the `def`{.liquidsoap} construction allows adding
+this record. For this reason, the `def`{.liquidsoap}\indexop{def} construction allows adding
 fields in record. For instance, the definition
 
 ```{.liquidsoap include="liq/list.last.liq"}
@@ -1696,13 +1699,13 @@ fields in record. For instance, the definition
 
 adds, in the module `list`, a new field named `last`, which is a function which
 computes the last element of a list. Another shorter syntax to perform
-definitions consists in using the `let` keyword which allows assigning a value
+definitions consists in using the `let`\indexop{let} keyword which allows assigning a value
 to a field, so that the previous example can be rewritten as
 
 ```{.liquidsoap include="liq/list.last2.liq"}
 ```
 
-If you often use the functions of a specific module, the `open` keyword allows
+If you often use the functions of a specific module, the `open`\indexop{open} keyword allows
 using its fields without having to prefix them by the module name. For instance,
 in the following example
 
@@ -1717,7 +1720,7 @@ can simply write `nth` and `length` instead of `list.nth` and `list.length`.
 ### Values with fields
 
 A unique feature of the Liquidsoap language is that it allows adding fields to
-any value. We also call them _methods_ by analogy with object-oriented
+any value. We also call them _methods_\indexop{method} by analogy with object-oriented
 programming. For instance, we can write
 
 ```{.liquidsoap include="liq/meth-song.liq" from=0 to=0}
@@ -1756,7 +1759,7 @@ will print
 
 #### Examples
 
-The `http.get` function, which retrieves a webpage over http, has the type:
+The `http.get`\indexop{http.get} function, which retrieves a webpage over http, has the type:
 
 ```
 (?headers : [string * string], ?timeout : float, string) ->
@@ -1773,7 +1776,7 @@ typical use is
 ```{.liquidsoap include="liq/http.get.liq" from=1}
 ```
 
-Another typical example is the `rms` operator, which takes a source as argument,
+Another typical example is the `rms`\index{RMS} operator, which takes a source as argument,
 and returns the same source together with an added method named `rms` which
 allows retrieving the current value for the RMS (which is a measure of sound
 intensity). The RMS of a source can thus be logged every second in a file as
@@ -1785,7 +1788,7 @@ follows (functions concerning files and threads are explained in
 
 When the return type of a function has methods, the help of Liquidsoap displays
 them in a dedicated section. For instance, every function returning a source,
-also returns methods associated to this source, such as the `skip` function
+also returns methods associated to this source, such as the `skip`\indexop{skip} function
 which allows skipping the current track (those methods are detailed in [a
 section below](#sec:source-methods)). If we ask for help about the `playlist`
 operator by typing
@@ -1821,7 +1824,7 @@ those in details for basic uses of Liquidsoap.
 ### Errors
 
 In the case where a function does not have a sensible result to return, it can raise an
-_error_. Typically, if we try to take the head of the empty list without
+_error_\index{error}. Typically, if we try to take the head of the empty list without
 specifying a default value (with the optional parameter `default`), an error will be raised.
 By default, this error will stop the script, which is usually not a desirable
 behavior. For instance, if you try to run a script containing
@@ -1836,7 +1839,7 @@ Error 14: Uncaught runtime error:
 type: not_found, message: "no default value for list.hd"
 ```
 
-This means that the error named "`not_found`" was raised, with a message
+This means that the error named "`not_found`"\indexop{not\_found} was raised, with a message
 explaining that the function did not have a reasonable default value of the head
 to provide.
 
@@ -1910,7 +1913,7 @@ error to register:
 ### Nullable values
 
 It is sometimes useful to have a default value for a type. In Liquidsoap, there
-is a special value for this, which is called `null`. Given a type `t`, we write
+is a special value for this, which is called `null`\indexop{null}. Given a type `t`, we write
 `t?` for the type of values which can be either of type `t` or be `null`: such a
 value is said to be _nullable_. For instance, we could redefine the `list.hd`
 function in order to return null (instead of raising an error) when the list is
@@ -1939,6 +1942,7 @@ default value `d`. For instance, with the above head function:
 Some other useful functions include
 
 - `null.defined`: test whether a value is null or not,
+- `null.get`: obtain the value of a nullable value supposed to be distinct from `null`,
 - `null.case`: execute a function or another, depending on whether a value is
   null or not.
 
@@ -1986,7 +1990,7 @@ core language itself. Those are presented below.
 
 ### Configuration {#sec:configuration}
 
-The main configuration options can be set by using the `set` function, which
+The main configuration\index{configuration} options can be set by using the `set`\indexop{set} function, which
 takes as arguments the name of the name of the setting (a string) and the value
 for this setting, whose type depends on the setting. These settings affect the
 overall behavior of Liquidsoap. For instance, we can have Liquidsoap use a 48kHz
@@ -2005,7 +2009,7 @@ which sets the maximum level of shown log messages to 4, the default being 3. We
 recall that the log levels are 1 for critical messages, 2 for severe issues, 3
 for important messages, 4 for information and 5 for debug messages.
 
-Dually, we can obtain the value of an argument with the `get` function, e.g.
+Dually, we can obtain the value of an argument with the `get`\indexop{get} function, e.g.
 
 ```{.liquidsoap include="liq/get.liq" from=1}
 ```
@@ -2108,7 +2112,7 @@ chapters.
 
 ### Type conversion
 
-The string representation of any value can be obtained with the `string_of`
+The string representation of any value can be obtained with the `string_of`\indexop{string\_of}
 function:
 
 ```liquidsoap
@@ -2125,7 +2129,7 @@ print(1 + int_of_string("2"))
 
 ### Files
 
-The whole contents of a file can be obtained with the function `file.contents`:
+The\index{file} whole contents of a file can be obtained with the function `file.contents`:
 
 ```{.liquidsoap include="liq/file.contents.liq"}
 ```
@@ -2150,7 +2154,7 @@ Other useful functions are
 - `file.remove`: remove a file,
 - `file.ls`: list the files present in a directory.
 
-Also, convenient functions for working on paths are present in the `file` and `path`
+Also, convenient functions for working on paths\index{path} are present in the `file` and `path`
 module:
 
 - `file.extension`: get the extension of a file,
@@ -2162,6 +2166,8 @@ module:
 and so on.
 
 ### HTTP
+
+\index{HTTP}
 
 Distant files can be retrieved over http using `http.get`. For instance, the
 following script will fetch and display the list of changes in Liquidsoap:
@@ -2182,17 +2188,19 @@ is described on details in [there](#sec:harbor).
 
 ### System
 
+\index{argument!commandline}
+
 The arguments passed on the command line to the current script can be retrieved
-using the `argv` function. Its use is illustrated in
+using the `argv`\indexop{argv} function. Its use is illustrated in
 [there](#sec:offline-processing).
 
-The current script can be stopped using the `shutdown` function which cleanly
+The current script can be stopped using the `shutdown`\indexop{shutdown} function which cleanly
 stops all the sources, and so on. In case of emergency, the application can be
-immediately stopped with the `exit` function, which allows specifying an exit
+immediately stopped with the `exit`\indexop{exit} function, which allows specifying an exit
 code (the convention is that a non-zero code means that an error occurred). The
-current script can also be restarted using `restart`.
+current script can also be restarted using `restart`\indexop{restart}.
 
-In order to execute other programs from Liquidsoap, you can use the function
+In order to execute other programs\index{process} from Liquidsoap, you can use the function
 `process.read` which executes a command and returns the text it wrote in the
 standard output. For instance, in the script
 
@@ -2225,7 +2233,10 @@ some user-contributed data is used). This is further detailed in
 
 ### Threads
 
-The function `thread.run` can be used to run a function asynchronously, meaning
+\index{thread}
+
+
+The function `thread.run` can be used to run a function asynchronously in a _thread_, meaning
 that the function will be executed in parallel to the main program and will not
 block other computations if it takes time. It takes two optional arguments:
 
@@ -2249,7 +2260,7 @@ switched between `0.` and `1.` every second by the function `change`.
 
 #### Auto-gain control
 
-A perhaps more useful variant of this is _auto-gain control_. We want to adjust
+A perhaps more useful variant of this is _auto-gain control_\index{automatic gain control}. We want to adjust
 the volume so that the output volume is always roughly -14 LUFS, which is a
 standard sound loudness measure. One way to do this is to regularly check its
 value and increase or lower the volume depending on whether we are below or above
@@ -2260,7 +2271,7 @@ the threshold:
 
 Here, we have a source `pre` which we amplify by the value of the reference
 `volume` in order to define a source `post`. On both sources, the `lufs`
-function instructs that we should measure the LUFS, which value can be obtained
+function instructs that we should measure the LUFS\index{LUFS}, which value can be obtained
 by calling the `lufs` and `lufs_momentary` methods attached to the
 sources. Regularly (10 times per second), we run the function `adjust` which
 multiplies the volume by the coefficient needed to reach -14 LUFS (to be
@@ -2269,7 +2280,7 @@ volume too abruptly, and we constrain the volume in the interval [0.01,10] in
 order to keep sane values).
 
 Of course, in practice, you do not need to implement this by hand: the operator
-`normalize` does this for you, and more efficiently than in the above
+`normalize`\indexop{normalize} does this for you, and more efficiently than in the above
 example. But it is nice to see that you could if you needed, to experiment with
 new strategies for managing the gain for instance.
 
@@ -2305,7 +2316,7 @@ time (for instance, if they modify the same reference).
 
 ### Time
 
-In case you need it, the current time can be retrieved using the `time`
+In case you need it, the current time\index{time} can be retrieved using the `time`
 function. This function returns the number of seconds since the 1st of January
 1970, which is mostly useful to measure duration by considering the difference
 between two points in time. In order to convert this into more usual time
@@ -2317,7 +2328,7 @@ record. For instance, we can print the current date with
 ```{.liquidsoap include="liq/time.liq"}
 ```
 
-As a useful variant, the function `time.up` returns the _uptime_ of the script,
+As a useful variant, the function `time.up` returns the _uptime_\index{uptime} of the script,
 i.e. the number of seconds since its execution has begun.
 
 Streams in Liquidsoap {#sec:quick-streams}
@@ -2332,13 +2343,13 @@ operators.
 
 ### Sources
 
-An operator producing a stream is called a _source_ and has a type of the form
+An operator producing a stream is called a _source_\index{source} and has a type of the form
 
 ```
 source(audio=..., video=..., midi=...)
 ```
 
-where the "`...`" indicate the _contents_ that the source can generate, i.e. the
+where the "`...`" indicate the _contents_\index{contents} that the source can generate, i.e. the
 number of channels, and their nature, for audio, video and midi data, that the
 source can generate. For instance, the `playlist` operator has (simplified) type
 
@@ -2351,7 +2362,7 @@ operators take such an argument which indicates its name, and is used in the
 logs or the telnet) as well as a string (the playlist to play) and returns a
 source (which plays the playlist...).
 
-Some sources are _fallible_, which means that they are not always available. For
+Some sources are _fallible_\index{fallibility}\index{source!fallible}, which means that they are not always available. For
 instance, the sound input from a DJ over the internet is only available when the
 DJ connects. We recall from [there](#sec:fallible) that a source can be made
 infallible with the `mksafe` operator or by using a fallback to an infallible
@@ -2362,7 +2373,7 @@ source.
 Some outputs need to send data encoded in some particular format. For instance,
 the operator which records a stream into a file, `output.file`, needs to know in
 which format we want to store the file in, such MP3, AAC, etc. This is
-specified by passing special parameters called _encoders_. For instance, the
+specified by passing special parameters called _encoders_\index{encoder}. For instance, the
 (simplified) type of `output.file` is
 
 ```
@@ -2385,7 +2396,7 @@ on](#sec:encoders).
 ### Requests
 
 Internally, Liquidsoap does not directly deal with a file, but rather with an
-abstraction of it called a _request_. The reason is that some files require some
+abstraction of it called a _request_\index{request}. The reason is that some files require some
 processing before being accessible. For instance, we cannot directly access a
 distant mp3 file: we first need to download it and make sure that it has the
 right format.
@@ -2398,7 +2409,7 @@ can add requests to play in it using `q.push`. We define a function `play`,
 which adds the file on the queue, by first creating a request from it. We then
 use `list.iter` to apply this function `play` on all the mp3 files of the
 current directory. The following script will thus play all the mp3 files in the
-current directory:
+current directory:\indexop{request.queue}
 
 ```{.liquidsoap include="liq/request.queue-ls.liq" from=1}
 ```

@@ -73,7 +73,7 @@ the possibilities are thus virtually unlimited. It does not impose a rigid
 approach for designing your radio, it can cope with all the situations described
 above, and much more.
 
-Liquidsoap itself is programmed in the OCaml programming language, but the
+Liquidsoap itself is programmed in the OCaml\index{OCaml} programming language, but the
 language you will use is not OCaml (although it was somewhat inspired of it), it
 is a new language, and it is quite different from a general-purpose programming
 language, such as Java or C. It was designed from scratch, with stream
@@ -177,7 +177,7 @@ wanted some scheduling, especially techno music at night to code better.
 
 Around that time, students had to propose and realize a "large" software project
 for one of their courses, with the whole class of around 30 students. David and
-Samuel proposed to build a complete flexible webradio system called _savonet_
+Samuel proposed to build a complete flexible webradio system called _savonet_\index{savonet}
 (an acronym of something like _Samuel and David's OCaml network_). A complete
 rewriting of every part of the streamer in OCaml was planned, with grand goals,
 so that everybody would have something to do: a new website with so many
@@ -245,22 +245,27 @@ chapter](#chap:language). We then detail the various ways to generate a webradio
 ([in there](#chap:workflow)) and a video stream ([in
 there](#chap:video)). Finally, for interested readers, we give details about the
 internals of the language and the production of streams in
-[there](#chap:streaming). The book ends with the list of frequently asked
+[there](#chap:streaming).
+
+<!--
+The book ends with the list of frequently asked
 questions of [this chapter](#chap:faq).
+-->
 
 ### How to get help
 
 You are reading the book and still have questions? There are many ways to get in
-touch with the community and obtain help to get your problem solved:
+touch with the community and obtain help\index{help} to get your problem solved:
 
 1. the [Liquidsoap website](https://www.liquidsoap.info/) contains an extensive
   up-to-date documentation and tutorials about specific points,
-2. the [Liquidsoap slack workspace](https://liquidsoapworkspace.slack.com/) is a
+2. the [Liquidsoap slack workspace](https://liquidsoapworkspace.slack.com/)\index{slack} is a
   public chat on where you can have instantaneous discussions,
 3. the [Liquidsoap mailing-list](savonet-users@lists.sf.net) is there if you
   would rather discuss by mail (how old are you?),
-4. the [Liquidsoap github page](https://github.com/savonet/liquidsoap/issues) is
-  the place to report bugs,
+4. the [Liquidsoap github
+  page](https://github.com/savonet/liquidsoap/issues)\index{github} is the place
+  to report bugs,
 5. there is also a starting [Liquidsoap discussion
    board](https://github.com/savonet/liquidsoap/discussions).
 
@@ -283,11 +288,12 @@ the book.
 
 The authors of the book you have in your hands are the two main current
 developers of Liquidsoap.
-
-*Samuel Mimram* is a professor in computer science in École polytechnique,
-France. His main research topics are type theory, category theory and rewriting.
-
-*Romain Beauxis* is a software engineer based in New Orleans.
+*Samuel Mimram* obtained his PhD in computer science
+2009 and is currently professor in computer science in École polytechnique,
+France.
+<!-- His main research topics are type theory, category theory and rewriting. -->
+*Romain Beauxis* obtained his PhD in computer science in 2009 and is currently a
+software engineer based in New Orleans.
 
 ### Thanks
 

@@ -42,7 +42,7 @@ toc: true
 
 !include "streaming.md"
 
-!include "faq.md"
+<!-- !include "faq.md" -->
 
 !include "bibliography.md"
 

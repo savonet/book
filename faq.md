@@ -90,3 +90,7 @@ Runtime errors
 #### not_found
 
 example of a `list.hd([])`
+
+#### internal errors
+
+examples of an `http.get` on an non-existent url

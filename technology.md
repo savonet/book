@@ -52,7 +52,7 @@ Sound consists in regular vibrations of the ambient air, going back and forth,
 which you perceive through the displacements of the tympanic membrane that they
 induce in your ear. In order to be represented in a computer, such a sound is
 usually captured by a microphone, which also has a membrane, and is represented
-by samples, corresponding to the successive positions of the membrane of the
+by samples\index{sample}, corresponding to the successive positions of the membrane of the
 microphone. In general, sound is sampled at 44.1 kHz, which means that samples
 are captured 44100 times per second, and indicate the position of the membrane,
 which is represented by a floating point number, conventionally between -1
@@ -81,7 +81,7 @@ the 2 channels and 1 minute of sound is 44100×2×2×60 bytes, which is roughly
 
 ### Compression
 
-Because of the large quantities of data involved, sound is typically compressed,
+Because of the large quantities of data involved, sound is typically compressed\index{compressor},
 especially if you want to send it over the internet where the bandwidth,
 i.e. the quantity of information you can send in a given period of time,
 matters: it is not unlimited and it costs money. To give you an idea, a typical
@@ -91,7 +91,7 @@ which you can send CD quality audio to roughly 70 listeners only.
 One way to compress audio consists in using the standard tools from coding and
 information theory: if something occurs often then encode it with a small
 sequence of bytes (this is how compression formats such as zip work for
-instance). The _flac_ format uses this principle and generally achieves
+instance). The _FLAC_\index{FLAC} format uses this principle and generally achieves
 compression to around 65% of the original size. This compression format is
 _lossless_, which means that if you compress and then decompress an audio file,
 you will get back to the exact same file you started with.
@@ -108,8 +108,8 @@ under a certain frequency so that all audio data below that threshold can be
 encoded in mono, and so on. Most compression formats are _destructive_: they
 remove some information in the original signal in order for it to be
 smaller. The most well-known are mp3, opus and aac: the one you want to use is a
-matter of taste and support on the user-end. The mp3 format is the most
-widespread, the opus format has the advantage of being open-source and
+matter of taste and support on the user-end. The mp3\index{MP3} format is the most
+widespread, the Opus\index{Opus} format has the advantage of being open-source and
 patent-free, has a good quality/bandwidth radio and is reasonably supported by
 modern browsers but hardware support is almost nonexistent, the aac format is
 proprietary so that good free encoders are more difficult to find (because they
@@ -126,8 +126,8 @@ will heavily depend on the actual audio and is thus more difficult to predict,
 by the perceived quality is higher.
 
 As a side note, we were a bit imprecise above when speaking of a "file format"
-and we should distinguish between two things: the _codec_ which is the algorithm
-we used to compress the audio data, and the _container_ which is the file format
+and we should distinguish between two things: the _codec_\index{codec} which is the algorithm
+we used to compress the audio data, and the _container_\index{container} which is the file format
 used to store the compressed data. This is why one generally speaks of ogg/opus:
 ogg is the container and opus is the codec. A container can usually embed
 streams encoded with various codecs (e.g. ogg can also contain flac or vorbis
@@ -139,7 +139,7 @@ information (metadata, subtitles, etc.).
 
 ### Metadata
 
-Most audio streams are equipped with _metadata_ which are textual information
+Most audio streams are equipped with _metadata_\index{metadata} which are textual information
 describing the contents of the audio. A typical music file will contain, as
 metadata, the title, the artist, the album name, the year of recording, and so
 on. Custom metadata are also useful to indicate the loudness of the file, the
@@ -178,7 +178,7 @@ servers in order to handle large amounts of simultaneous connections.
 
 ### Icecast
 
-Historically, Icecast was the main open-source server used in order to serve
+Historically, Icecast\index{Icecast} was the main open-source server used in order to serve
 streams over the internet. On a first connection, the client starts by buffering
 audio (in order to be able to cope with possible slowdowns of the network):
 Icecast therefore begins by feeding it up as fast as possible and then sends the
@@ -193,6 +193,8 @@ connect simultaneously.
 
 ### HLS {#sec:HLS}
 
+\index{HLS}
+
 Until recently, the streaming model as offered by Icecast was predominant, but
 it suffers from two main drawbacks. Firstly, the connection has to be kept
 between the client and the server for the whole duration of the stream, which
@@ -206,7 +208,7 @@ bandwidth-related costs, because each connection can induce a different
 response.
 
 For these reasons, new standards such as HLS (for _HTTP Live Stream_) or
-MPEG-DASH (for _Dynamic Adaptive Streaming over HTTP_) have emerged, where the
+DASH\index{DASH} (for _Dynamic Adaptive Streaming over HTTP_) have emerged, where the
 stream is provided as a rolling playlist of small files called segments: a
 playlist typically contains the last minute of audio split into segments of 2
 seconds. Moreover, the playlist can indicate multiple versions of the stream
@@ -226,7 +228,7 @@ well supported on old clients, although this tends to be less and less the case.
 Finally, we would like to mention that, nowadays, streaming is more and more
 being delegated to big online platforms, such as YouTube or Twitch, because of
 their ease of use, both in terms of setup and of user experience. Those
-generally use another protocol, called RTMP (_Real-Time Messaging Protocol_),
+generally use another protocol, called RTMP\index{RTMP} (_Real-Time Messaging Protocol_),
 which is more suited to transmitting live streams, where it is more important to
 keep the latency low (i.e. transmit the information as close as possible to the
 instant where it happened) than keep its integrity (dropping small parts of the
@@ -242,7 +244,7 @@ give examples of such below.
 
 A typical radio starts with one or more _playlists_, which are lists of audio
 files. These can be stored in various places: they can either be on a local hard
-drive or on some distant server, and are identified using a URI (for _Uniform
+drive or on some distant server, and are identified using a URI\index{URI} (for _Uniform
 Resource Identifier_) which can be a path to a local file or something of the
 form `http://some/server/file.mp3` which indicates that the file should be
 accessed using the HTTP protocol (some other protocols should also be
@@ -281,7 +283,7 @@ performed on realtime sources.
 ### Synchronization
 
 In order to provide samples at a regular pace, a source of sound has an
-_internal clock_ which will tick regularly: each soundcard has a clock, your
+_internal clock_\index{clock} which will tick regularly: each soundcard has a clock, your
 computer has a clock, the live streams are generated by things which have
 clocks. Now, suppose that you have two soundcards generating sound at 44100 Hz,
 meaning that their internal clocks both tick at 44100 Hz. Those are not
@@ -302,7 +304,7 @@ Audio processing {#sec:audio-processing}
 
 As explained in [the above section](#sec:audio-streams), various files have
 various sampling rates. For instance, suppose that your radio is streaming at 48
-kHz and that you want to play a file at 44.1 kHz. You will have to _resample_
+kHz and that you want to play a file at 44.1 kHz. You will have to _resample_\index{resampling}
 your file, i.e. change its sampling rate, which, in the present case, means that
 you will have to come up with new samples. There are various simple strategies
 for this such as copying the sample closest to a missing one, or doing a linear
@@ -320,7 +322,7 @@ to adjust its volume in order to have roughly the same audio loudness between
 tracks: if they come from different sources (such as two different albums by two
 different artists) this is generally not the case.
 
-A strategy to fix that is to use _automatic gain control_: the program can
+A strategy to fix that is to use _automatic gain control_\index{automatic gain control}: the program can
 regularly measure the current audio loudness based, say, on the previous second
 of sound, and increase or decrease the volume depending on the value of the
 current level compared to the target one. This has the advantage of being easy
@@ -333,7 +335,7 @@ Another strategy for music consists in pre-computing the loudness of each
 file. It can be performed each time a song is about to be played, but it is much
 more efficient to compute this in advance and store it as a metadata: the stream
 generator can then adjust the volume on a per-song basis based on this
-information. The standard for this way of proceeding is _ReplayGain_ and there
+information. The standard for this way of proceeding is _ReplayGain_\index{ReplayGain} and there
 are a few efficient tools to achieve this task. It is also more natural than
 basic gain control, because it takes in account the way our ears perceive sound
 in order to compute loudness.
@@ -341,7 +343,7 @@ in order to compute loudness.
 At this point, we should also indicate that there is a subtlety in the way we
 measure volume (and loundness). It can either be measured _linearly_, i.e. we
 indicate the amplification coefficient by which we should multiply the sound, or
-in _decibels_. The reason for having the two is that the first is more
+in _decibels_\index{decibel}. The reason for having the two is that the first is more
 mathematically pleasant, whereas the second is closer to the way we perceive the
 sound. The relationship between linear _l_ and decibel _d_ measurements is not
 easy, the formulas relating the two are _d_=20 log~10~(_l_) and
@@ -360,7 +362,7 @@ samples of the sound by 0.25, which amounts to dividing them by 4.
 
 ### Transitions between songs
 
-In order to ease the transition between songs, one generally uses _crossfading_,
+In order to ease the transition between songs, one generally uses _crossfading_\index{crossfading},
 which consists in fading out one song (progressively lowering its volume to 0)
 while fading in the next one (progressively increasing its volume from 0). A
 simple approach can be to crossfade for, say, 3 seconds between the end of a
@@ -381,14 +383,14 @@ The final thing you want to do is to give your radio an appreciable and
 recognizable sound. This can be achieved by applying a series of sound effects
 such as
 
-- a _compressor_ which gives a more uniform sound by amplifying quiet sounds,
-- an _equalizer_ which gives a signature to your radio by amplifying differently
+- a _compressor_\index{compressor} which gives a more uniform sound by amplifying quiet sounds,
+- an _equalizer_\index{equalizer} which gives a signature to your radio by amplifying differently
   different frequency ranges (typically, simplifying a bit, you want to insist
   on bass if you play mostly lounge music in order to have a warm sound, or on
   treble if you have voices in order for them to be easy to understand),
-- a _limiter_ which lowers the sound when there are high-intensity peaks (we
+- a _limiter_\index{limiter} which lowers the sound when there are high-intensity peaks (we
   want to avoid clipping),
-- a _gate_ which reduce very low level sound in order for silence to be really
+- a _gate_\index{gate} which reduce very low level sound in order for silence to be really
   silence and not low noise (in particular if you capture a microphone),
 - and so on.
 
@@ -454,7 +456,7 @@ be quickly notified in case of a problem).
 The above way of interacting works in _pull mode_: the stream generators asks an
 external program for information, such as the next song to be played. Another
 desirable workflow is in _push mode_, where the program adds information
-whenever it feels like. This is typically the case for _request queues_ which
+whenever it feels like. This is typically the case for _request queues_\index{queue} which
 are a variant of playlists, where an external programs can add songs whenever it
 feels like: those will be played one, in the order where they were
 inserted. This is typically used for interactive websites: whenever a user asks
@@ -465,7 +467,7 @@ or virtual devices consisting of push buttons and sliders, that one can use in
 order to switch between audio sources, change the volume of a stream, and so
 on. The device generally notifies the stream generator when some control gets
 changed, which should then react accordingly. The commonly used standard
-nowadays for communicating with controllers is called OSC (_Open Sound
+nowadays for communicating with controllers is called OSC\index{OSC} (_Open Sound
 Control_).
 
 Video streams {#sec:video-streams}
@@ -512,7 +514,7 @@ We have seen that there is quite a few compressed formats available for audio
 and the situation is the same for video, but the video codecs generally involve
 many configuration options exploiting specificities of video, such as the fact
 two consecutive images in a video are usually quite similar. Fortunately, most
-of the common formats are handled by high-level libraries such as _FFmpeg_. This
+of the common formats are handled by high-level libraries such as _FFmpeg_\index{FFmpeg}. This
 solves the problem for decoding, but for encoding we are still left with many
 parameters to specify, which can have a large impact on the quality of the
 encoded video and on the speed of the compression (finding the good balance is
