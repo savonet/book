@@ -18,15 +18,20 @@ jobs:
       run: |
         make
         pdflatex book.tex
+    - name: Build ebook
+      run: make ebook.zip
     - name: Build cover
       run: |
         make -C cover
         cp cover/cover.pdf .
+        cp cover/cover-ebook.jpg .
     - uses: actions/upload-artifact@v2
       with:
         name: book
         path: |
           book.pdf
           cover.pdf
+          ebook.zip
+          cover-ebook.jpg
     - name: Test scripts
       run: docker build . -f .github/docker/Dockerfile.build
