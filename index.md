@@ -1,1 +1,2 @@
+\addcontentsline{toc}{chapter}{Index}
 \printindex
