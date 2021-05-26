@@ -257,7 +257,7 @@ questions of [this chapter](#chap:faq).
 You are reading the book and still have questions? There are many ways to get in
 touch with the community and obtain help\index{help} to get your problem solved:
 
-1. the [Liquidsoap website](https://www.liquidsoap.info/) contains an extensive
+1. the [Liquidsoap website](https://liquidsoap.info/) contains an extensive
   up-to-date documentation and tutorials about specific points,
 2. the [Liquidsoap slack workspace](https://liquidsoapworkspace.slack.com/)\index{slack} is a
   public chat on where you can have instantaneous discussions,
@@ -282,7 +282,8 @@ opening an issue on [the dedicated
 bugtracker](https://github.com/savonet/book/issues), but you can also reach us
 by mail at `sam@liquidsoap.info` and `romain@liquidsoap.info`. Please include
 page numbers and text excerpts if your comment applies to a particular point of
-the book.
+the book. The version you are holding in your hands was compiled on \today, you
+can expect frequent revisions to fix found issues.
 
 ### The authors
 

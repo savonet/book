@@ -1,6 +1,6 @@
 MD = $(wildcard *.md)
 LIQ = $(wildcard liq/*.liq)
-PANDOC = pandoc --bibliography=papers.bib --filter=pandoc-include --filter=pandoc-replace
+PANDOC = pandoc --bibliography=papers.bib --filter=pandoc-include --filter=pandoc-replace -V today="`LC_TIME=en_US date '+%A %d, %Y'`"
 
 all: fig book.pdf language.dtd
 
