@@ -242,10 +242,9 @@ chapter](#chap:quickstart) what everybody wants to start with: setting up a
 simple webradio station. Before, going to more advanced uses, we first need to
 understand what we can do in this language, and this is the purpose of [this
 chapter](#chap:language). We then detail the various ways to generate a webradio
-([in there](#chap:workflow)) and a video stream ([in
-there](#chap:video)). Finally, for interested readers, we give details about the
-internals of the language and the production of streams in
-[there](#chap:streaming).
+in [there](#chap:workflow) and a video stream in [there](#chap:video). Finally,
+for interested readers, we give details about the internals of the language and
+the production of streams in [there](#chap:streaming).
 
 <!--
 The book ends with the list of frequently asked
