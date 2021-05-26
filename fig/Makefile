@@ -13,4 +13,5 @@ clean:
 	pdflatex $<
 
 %.png: %.pdf
-	convert -density 150 $< $@
+	# convert -density 150 $< $@
+	pdftoppm -png $< > $@
