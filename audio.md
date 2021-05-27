@@ -237,7 +237,7 @@ request. For instance, suppose that we have a script called `next-song`, which
 echoes on the standard output the next song to be played on the standard
 output. A degenerate example of such a script, using the shell, could be
 
-```{.bash include="liq/next-song"}
+```{include="liq/next-song"}
 ```
 
 which always returns `test.mp3` as song to be played, but of course you could
@@ -1040,7 +1040,7 @@ in [there](#sec:telnet), and defined instead
 The interactive boolean is a sort of reference whose value can be changed over
 the telnet by issuing commands such as "`var.set r1 = true`", which sets the
 value of the boolean named `r1` to `true`. Therefore, we can switch to radio 1
-by typing the command\index{interactive}\index{telnet}
+by typing the command\index{interactive variable}\index{telnet}
 
 ```
 echo "var.set r1 = true" | telnet localhost 1234

@@ -122,7 +122,7 @@ it is often useful to better grasp the language, learn design patterns and
 tricks, and add functionalities. Its location on your system is indicated in the
 variable `configure.libdir` and can be obtained by typing
 
-```bash
+```
 liquidsoap --check "print(configure.libdir)"
 ```
 
@@ -2019,14 +2019,14 @@ parameter labeled `default` which is the value which is to be returned if the
 setting does not exist. You can obtain the list of all available settings, as
 well as their default value with the command
 
-```bash
+```
 liquidsoap --conf-descr
 ```
 
 and help on a particular setting can be obtained with `--conf-descr-key`: for
 instance,
 
-```bash
+```
 liquidsoap --conf-descr-key frame.duration
 ```
 

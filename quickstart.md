@@ -264,12 +264,12 @@ on a soundcard using the pulseaudio library,
 we obtain the following error:
 
 ```
-At line 1, char 5-27:
+At line 1, char 4-27:
 Error 7: Invalid value: That source is fallible
 ```
 
 This means that Liquidsoap has detected that the source declared at line 1 from
-character 5 to character 27 (i.e., the `input.http`) is fallible. We could
+character 4 to character 27, i.e. the `input.http`, is fallible. We could
 simply ignore this warning, by passing the parameter `fallible=true`{.liquidsoap} to the
 `output.pulseaudio`{.liquidsoap} operator, but the proper way to fix this consists in having
 a fallback to a local file:
