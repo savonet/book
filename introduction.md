@@ -301,8 +301,9 @@ The advent of Liquidsoap and this book would not have been possible without the
 numerous contributors over the years, the first of them being David Baelde who
 was a leading creator and designer of the language, but also the students of the
 MIM1 (big up to Florent Bouchez, Julien Cristau, Stéphane Gimenez and Sattisvar
-Tandabany), Gilles Pietri, Clément Renard and Vincent Tabard (who also designed
-the logo). Many thanks also to the many people who helped to improve the language
-by reporting bugs or suggesting ideas, and to the Radio France team who where
-enthusiastic about the project and motivated some new developments (hello Maxime
-Bugeia, Youenn Piolet and others).
+Tandabany), and our fellow users Gilles Pietri, Clément Renard and Vincent
+Tabard (who also designed the logo), as well as all the regulars of slack and the
+mailing-list. Many thanks also to the many people who helped to improve the
+language by reporting bugs or suggesting ideas, and to the Radio France team who
+where enthusiastic about the project and motivated some new developments (hello
+Maxime Bugeia, Youenn Piolet and others).
