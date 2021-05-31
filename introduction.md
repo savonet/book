@@ -289,7 +289,7 @@ can expect frequent revisions to fix found issues.
 The authors of the book you have in your hands are the two main current
 developers of Liquidsoap.
 *Samuel Mimram* obtained his PhD in computer science
-2009 and is currently professor in computer science in École polytechnique,
+2009 and is currently a Professor in computer science in École polytechnique,
 France.
 <!-- His main research topics are type theory, category theory and rewriting. -->
 *Romain Beauxis* obtained his PhD in computer science in 2009 and is currently a
