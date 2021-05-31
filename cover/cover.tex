@@ -11,6 +11,7 @@ marklength=0in,
 \usepackage{setspace}
 \usepackage{moresize}
 \usepackage{style}
+\usepackage{changepage}
 
 \definecolor{Purple}{HTML}{8A2BE2}
 
@@ -73,7 +74,17 @@ marklength=0in,
           \vspace{5mm}
 
           \begin{onehalfspace}
-            \input{abstract}
+            \begin{adjustwidth}{1cm}{1cm}
+              \input{abstract}
+
+              \vspace{1cm}
+
+              \emph{The authors of the book are the two main current developers
+                of Liquidsoap. Samuel Mimram is a Professor in computer science
+                in École polytechnique in France and Romain Beauxis and is a
+                software engineer based in New Orleans. Both obtained their PhD
+                in computer science in 2009.}
+            \end{adjustwidth}
           \end{onehalfspace}
 
           \vspace{60mm}
