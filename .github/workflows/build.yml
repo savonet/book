@@ -6,7 +6,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install packages
-      run: sudo apt-get install pandoc pandoc-citeproc texlive texlive-fonts-extra imagemagick poppler-utils ocaml-nox ocaml-findlib libyojson-ocaml-dev dune
+      run: sudo apt-get install pandoc pandoc-citeproc texlive texlive-fonts-extra imagemagick poppler-utils pdf2svg ocaml-nox ocaml-findlib libyojson-ocaml-dev dune
     - name: Build pandoc filters
       run: |
         git clone https://github.com/smimram/ocaml-pandoc

@@ -1,4 +1,4 @@
-all: cover.pdf cover-ebook.jpg
+all: cover.pdf cover-ebook.jpg cover-ebook.svg
 
 cover.pdf: abstract
 
@@ -8,3 +8,7 @@ cover-ebook.jpg: cover-ebook.pdf
 
 %.pdf: %.tex
 	pdflatex $<
+
+%.svg: %.pdf
+	@echo "Generating $@..."
+	@pdf2svg $< $@
