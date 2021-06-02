@@ -1439,7 +1439,7 @@ once into a standardized textual representation in JSON\index{JSON} format:
 ```{.liquidsoap include="liq/log-songs2.liq" from=1 to=3}
 ```
 
-#### Logging next track
+#### Logging the next track
 
 It is sometimes convenient to store the metadata for the next song to be played,
 for instance to announce it on a website. This is difficult in general because
