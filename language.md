@@ -131,10 +131,13 @@ Writing scripts
 
 ### Choosing an editor
 
-Scripts in Liquidsoap can be written in any editor\index{editor}, although Emacs is the
-preferred editor, as being the only editor with specific Liquidsoap support
-(syntax coloration and indentation). Some other tools, described below, can also
-be useful in order to learn Liquidsoap or elaborate scripts.
+Scripts in Liquidsoap can be written in any text editor\index{editor}, but
+things are more convenient if there is some specific support. We have developed
+a mode for the Emacs editor which adds syntax coloration and indentation when
+editing Liquidsoap files. User-contributed support for Liquidsoap is also
+available for popular editors such as [Visual Studio
+Code](https://github.com/vittee/vscode-liquidsoap) or
+[vim](https://github.com/mcfiredrill/vim-liquidsoap).
 
 ### Documentation of operators
 
@@ -148,7 +151,7 @@ liquidsoap -h operator
 ```
 
 This documentation is also available [on the
-website](https://www.liquidsoap.info/doc-dev/reference.html).
+website](https://liquidsoap.info/doc-dev/reference.html).
 
 ### Interactive mode
 
