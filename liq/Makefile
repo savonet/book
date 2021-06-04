@@ -50,7 +50,7 @@ youtube-key facebook-key twitch-key:
 check:
 	@rm -f failed
 	@$(MAKE) $(CHECKS)
-	@if [ -e failed ]; then echo "Some tests failed!!!"; echo; cat failed exit 1; fi
+	@if [ -e failed ]; then echo "Some tests failed!!!"; echo; cat "failed"; exit 1; fi
 
 check-%: %.liq
 	@echo -n "Checking $(basename $<)..."
