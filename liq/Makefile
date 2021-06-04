@@ -47,12 +47,14 @@ testsrc.webm:
 youtube-key facebook-key twitch-key:
 	touch $@
 
-check: $(CHECKS)
+check:
+	@rm -f failed
+	@$(MAKE) $(CHECKS)
+	@if [ -e failed ]; then echo "Some tests failed!!!"; echo; cat failed exit 1; fi
 
 check-%: %.liq
 	@echo -n "Checking $(basename $<)..."
-	@LIQ_LILV=false LIQ_LADSPA=false LIQ_DSSI=false $(LIQUIDSOAP) --check $< || exit 1
-	@echo " ok."
+	@if LIQ_LILV=false LIQ_LADSPA=false LIQ_DSSI=false $(LIQUIDSOAP) --check $< ; then echo " ok." ; else echo "$<" >> "failed" ; echo " failed!" ; fi
 
 docker-shell:
 	docker run -it --entrypoint /bin/bash savonet/liquidsoap:main
