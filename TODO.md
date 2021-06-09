@@ -1,0 +1,2 @@
+- speak about %ifencoder and %else
+- the `active_source` type should be removed (see #1671)
