@@ -1,3 +1,3 @@
 #!./liquidsoap
 s = buffer(input.alsa())
-output.pulseaudio(s)
+output.pulseaudio(fallible=true, s)
