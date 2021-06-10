@@ -5934,9 +5934,9 @@ if the time discrepancy evolves slowly.
 
 #### Deactivating clocks
 
-Although we do not recommend it, in some situation it is possible to solve clock
-conflicts by deactivating the clock of a particular operators, often an input
-one. For instance, the script
+Although we do not recommend it, in some situations it is possible to solve
+clock conflicts by deactivating the clock of a particular operator, often an
+input one. For instance, the script
 
 ```{.liquidsoap include="liq/bad/clock_safe.liq" from=1}
 ```
