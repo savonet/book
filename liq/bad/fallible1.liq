@@ -1,3 +1,3 @@
 #!/usr/bin/env liquidsoap
-s = input.http("http://...")
+s = buffer(input.http("http://..."))
 output.pulseaudio(s)

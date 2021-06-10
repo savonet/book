@@ -3,7 +3,7 @@
 LIQUIDSOAP="liquidsoap"
 if [ "$USER" = "smimram" ]; then
     # Testing git version
-    LIQUIDSOAP="/home/smimram/prog/savonet/liquidsoap/src/liquidsoap /home/smimram/prog/savonet/liquidsoap/libs/pervasives.liq"
+    LIQUIDSOAP="/home/smimram/prog/savonet/liquidsoap/src/liquidsoap --no-stdlib /home/smimram/prog/savonet/liquidsoap/libs/stdlib.liq"
 fi
 
 $LIQUIDSOAP --no-deprecated $*

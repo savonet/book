@@ -225,9 +225,20 @@ with the ALSA\index{ALSA} library. This means that you should be able to hear yo
 ```{.liquidsoap include="liq/mic.liq" from=1}
 ```
 
-We need to use `buffer` here to avoid synchronization issues, this should be
-detailed in [a later section](#sec:clocks-ex), and you can hear that there is a
-slight delay between your voice and the output due to the buffering.
+The ALSA input and the output each have their own way of synchronizing with
+time: in our terminology, we say that they have different _clocks_, see [a later
+section](#sec:clocks-ex). This will be detected by Liquidsoap an a script such
+as
+
+```liquidsoap
+output(input.alsa())
+```
+
+will be rejected. This is the reason why we need to use the `buffer` operator
+here which will compute part of the input stream in advance (1 second by
+default) and will therefore be able to cope with small discrepancies in the way
+the operators synchronize. If you try the above example, you can hear that there
+is a slight delay between your voice and the output due to the buffering.
 
 ### Fallible sources and fallbacks {#sec:fallible}
 
@@ -244,7 +255,9 @@ we are sure are going to be available. This can be achieved by using the
 ```
 
 This means that `s` will have the same contents as `stream` if it is available,
-and as `emergency` otherwise.
+and as `emergency` otherwise. The `input.http` operator has its own way of
+synchronizing, which is why we need to user the `buffer` operator, as mentioned
+in previous section.
 
 #### Fallibility detection
 
@@ -254,9 +267,9 @@ we will not unexpectedly have nothing to stream at some point. We did not see
 this up to now because `output` is an advanced operator which automatically uses
 silence as fallback, because it is primarily intended for quick and dirty
 checking of the stream.  However, if we use the primitive functions for
-outputting audio, we will be able to observe this behavior. For
-instance, if we try to use the operator `output.pulseaudio`, which plays a source
-on a soundcard using the pulseaudio library,
+outputting audio, we will be able to observe this behavior. For instance, if we
+try to use the operator `output.pulseaudio`, which plays a source on a soundcard
+using the pulseaudio library,
 
 ```{.liquidsoap include="liq/bad/fallible1.liq" from=1}
 ```

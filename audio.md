@@ -136,8 +136,8 @@ operator which records when songs were played and can indicate when a song was
 last played. When called, it returns a record with two functions:
 
 - `add` which records that a song with given metadata has just been played,
-- `last` which returns when a song with given metadata was last played (in
-  seconds).
+- `last` which returns how long ago a song with given metadata was last played,
+  in seconds.
 
 We can use this to reject, in a playlist, all the songs which have been played
 less than 1 hour (= 3600 seconds) ago as follows:
@@ -201,6 +201,31 @@ available most of the time. If not, it might generate unnecessary traffic and
 pollute the logs: in this case, it is perhaps better to inverse the paradigm and
 use the `input.harbor` operator described below, which allows the distant stream
 to connect to Liquidsoap.
+
+The `input.http` operator has its own way of synchronizing, which will quite
+often conflict with the synchronization of other operators: Liquidsoap will
+detect that the operators have different "clocks", as explained
+[below](#sec:clocks-ex). For instance, if you try to execute
+
+```{.liquidsoap include="liq/bad/input.http.liq" from=1}
+```
+
+you will get the error 
+
+```
+Error 10: A source cannot belong to two clocks (input.ffmpeg[], pulseaudio[]).
+```
+
+indicating this. The solution consists in using the `buffer` operator and
+replace the first line by
+
+```{.liquidsoap include="liq/input.http2.liq" from=1 to=-1}
+```
+
+which will enforce that some of the stream is computed in advance (1 second by
+default) and the script will be able to cope with synchronization discrepancies.
+
+#### HLS streams
 
 Streams in HLS format are quite different from the above ones: they consist of a
 rolling playlist of short audio segments, as explained in
@@ -5906,6 +5931,35 @@ full. Alternatively, you can use `buffer.adaptative` which tries to slow down
 the source if it is too fast or speed it up if it is too slow. This means that
 the pitch of the source will also be changed, but this is generally not audible
 if the time discrepancy evolves slowly.
+
+#### Deactivating clocks
+
+Although we do not recommend it, in some situation it is possible to solve clock
+conflicts by deactivating the clock of a particular operators, often an input
+one. For instance, the script
+
+```{.liquidsoap include="liq/bad/clock_safe.liq" from=1}
+```
+
+will not be accepted because the input and the output have different clocks,
+which are respectively `alsa` and `pulseaudio`. As indicated above, the standard
+way of dealing with this situation is by replacing the first line by
+
+```{.liquidsoap include="liq/clock_safe.liq" from=1 to=1}
+```
+
+However, there is another possibility: we can tell the `input.alsa` operator not
+to use its own clock, by passing the argument `clock_safe=false` to it.
+
+```{.liquidsoap include="liq/clock_safe2.liq" from=1 to=1}
+```
+
+In this case, the output is the only operator with its own clock and will thus
+be responsible for the synchronization. This avoids using a buffer, and thus
+lowers latencies, which can be nice in a situation as above where we have a
+microphone, but this also means that we are likely to hear some glitches in the
+audio at some point, because the input might not be in perfect sync with the
+output.
 
 #### Dealing with clocks
 

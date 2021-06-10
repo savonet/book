@@ -116,7 +116,7 @@ generated the three `sine` stream generators!
 
 Although the core of Liquidsoap is written in OCaml, many of the functions of
 Liquidsoap are written in the Liquidsoap language itself. Those are defined in
-the `pervasives.liq` script, which is loaded by default and includes all the
+the `stdlib.liq` script, which is loaded by default and includes all the
 libraries. You should not be frightened to have a look at the standard library,
 it is often useful to better grasp the language, learn design patterns and
 tricks, and add functionalities. Its location on your system is indicated in the
