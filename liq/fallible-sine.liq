@@ -1,3 +1,3 @@
 #!./liquidsoap
 s = sine()
-print(s.fallible())
+print(s.fallible)
