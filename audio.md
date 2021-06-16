@@ -202,29 +202,6 @@ pollute the logs: in this case, it is perhaps better to inverse the paradigm and
 use the `input.harbor` operator described below, which allows the distant stream
 to connect to Liquidsoap.
 
-The `input.http` operator has its own way of synchronizing, which will quite
-often conflict with the synchronization of other operators: Liquidsoap will
-detect that the operators have different "clocks", as explained
-[below](#sec:clocks-ex). For instance, if you try to execute
-
-```{.liquidsoap include="liq/bad/input.http.liq" from=1}
-```
-
-you will get the error 
-
-```
-Error 10: A source cannot belong to two clocks (input.ffmpeg[], pulseaudio[]).
-```
-
-indicating this. The solution consists in using the `buffer` operator and
-replace the first line by
-
-```{.liquidsoap include="liq/input.http2.liq" from=1 to=-1}
-```
-
-which will enforce that some of the stream is computed in advance (1 second by
-default) and the script will be able to cope with synchronization discrepancies.
-
 #### HLS streams
 
 Streams in HLS format are quite different from the above ones: they consist of a

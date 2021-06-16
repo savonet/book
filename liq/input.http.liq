@@ -1,3 +1,3 @@
 #!./liquidsoap
 s = input.http("https://icecast.radiofrance.fr/fip-hifi.aac")
-output(buffer(s))
+output(s)

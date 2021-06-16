@@ -255,9 +255,7 @@ we are sure are going to be available. This can be achieved by using the
 ```
 
 This means that `s` will have the same contents as `stream` if it is available,
-and as `emergency` otherwise. The `input.http` operator has its own way of
-synchronizing, which is why we need to user the `buffer` operator, as mentioned
-in previous section.
+and as `emergency` otherwise.
 
 #### Fallibility detection
 
