@@ -2086,7 +2086,7 @@ so that passwords are not shown in the main script.
 
 Liquidsoap embeds a preprocessor which allows including or not part of the code
 depending on some conditions. For instance, the following script will print
-something only if the function `input.alsa` is defined:
+something depending on whether the function `input.alsa` is defined or not:
 
 ```{.liquidsoap include="liq/ifdef.liq" from=1}
 ```
@@ -2104,6 +2104,17 @@ achieved with
 
 ```{.liquidsoap include="liq/ifencoder.liq" from=2}
 ```
+
+Finally, the command `%ifversion` can be used to execute some code
+conditionally, depending on the version of Liquidsoap:
+
+```{.liquidsoap include="liq/ifversion.liq" from=1}
+```
+
+This is quite useful in order to provide a script which is compatible with
+multiple versions of Liquidsoap (note that this functionality was only
+introduced in version 2.0, and thus unfortunately cannot be used in order to
+ensure backward compatibility with versions earlier than this).
 
 Standard functions {#sec:stdlib}
 ------------------
