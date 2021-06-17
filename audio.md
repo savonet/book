@@ -6019,8 +6019,8 @@ time:
 
 (the kernel changes the core we use over time in order to better distribute the
 heat, but there is only one core used at a given time). Now, let us assign
-different clocks to the outputs, by changing the clock of the second output,
-which will not be the default one anymore:
+different clocks to the outputs, by changing the clock of the source of the
+second output, which will not be the default one anymore:
 
 ```{.liquidsoap include="liq/clock-parallel-encodings2.liq" from=1}
 ```
