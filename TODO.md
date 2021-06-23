@@ -6,3 +6,5 @@
   <https://github.com/savonet/liquidsoap/issues/1687>
 - mentionner les autres images docker comme
   <https://github.com/PhasecoreX/docker-liquidsoap>
+- les problèmes de seek FFmpeg devraient être ok
+  <https://github.com/savonet/liquidsoap/issues/1706>
