@@ -1,3 +1,3 @@
 def once(s)
-  sequence([s, fail()])
+  sequence([s, source.fail()])
 end

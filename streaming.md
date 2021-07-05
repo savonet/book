@@ -1076,7 +1076,7 @@ Or to use `mksafe`\indexop{mksafe} which is defined by
 
 and will play blank in case the input source is down.
 
-The "worse" source with respect to fallibility is given by the operator `fail`\indexop{fail}, which creates a source which
+The "worse" source with respect to fallibility is given by the operator `source.fail`\indexop{source.fail}, which creates a source which
 is never ready. This is sometimes useful in order to code elaborate
 operators. For instance, the operator `once`\indexop{once} is defined from the `sequence`
 operator (which plays one track from each source in a list) by

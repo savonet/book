@@ -15,7 +15,7 @@ def insert_jingle(m)
     log.info("Inserting jingle")
     jingles
   else
-    fail()
+    source.fail()
   end
 end
 s = prepend(s, insert_jingle)
