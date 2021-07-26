@@ -678,7 +678,7 @@ passing the argument `g` and controls how often keyframes are inserted (we
 insert one keyframe every `g` frames). A typical default value is 12, which
 allows easy seeking in videos, but for video streams this value can be increased
 in order to decrease the size of the video. The habit for streaming is to have a
-keyframe every 2 minutes or less, which means setting `g=50` at most for the
+keyframe every 2 seconds or less, which means setting `g=50` at most for the
 default framerate of 25 images per second.
 
 We now detail the two most popular codecs H.264 and VP9, but there are [many
