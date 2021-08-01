@@ -19,3 +19,4 @@
   ```
 
 - les settings (#1722)
+- `--conf-descr` renommé en `--list-settings`
