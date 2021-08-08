@@ -1084,7 +1084,7 @@ operator (which plays one track from each source in a list) by
 ```{.liquidsoap include="liq/once.liq"}
 ```
 
-Another operator which is related to fallibility is `max_duration` which makes a
+Another operator which is related to fallibility is `max_duration`\indexop{max\_duration} which makes a
 source unavailable after some fixed amount of time.
 
 ### Clocks {#sec:clocks}
