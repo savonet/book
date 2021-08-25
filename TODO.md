@@ -24,3 +24,4 @@
 - playlists only have given number of requests in advance and not time anymore
   (#1791)
 - JSON changed a bit, see #1824.
+- dtmf detection
