@@ -25,3 +25,4 @@
   (#1791)
 - JSON changed a bit, see #1824.
 - dtmf detection
+- files in lang were renamed
