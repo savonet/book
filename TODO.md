@@ -26,3 +26,6 @@
 - JSON changed a bit, see #1824.
 - dtmf detection
 - files in lang were renamed
+- mention `output.youtube.live`
+- regexps #1881
+- cons notation for lists

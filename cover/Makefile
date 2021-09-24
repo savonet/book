@@ -1,5 +1,8 @@
 all: cover.pdf cover-ebook.jpg cover-ebook.svg
 
+clean:
+	rm -f *.aux *.log cover.pdf cover-ebook.jpg cover-ebook.svg
+
 cover.pdf: abstract
 
 cover-ebook.jpg: cover-ebook.pdf
