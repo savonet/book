@@ -1,3 +1,4 @@
+- liquidsoap-full is deprecated
 - the `active_source` type should be removed (see #1671), rework the explanation
   of active sources
 - `self_sync` for `input.ffmpeg`, see
