@@ -2,7 +2,7 @@
 
 This repository contains the source for _the Liquidsoap book_ which is available
 
-- [online](book.pdf), or
+- [online](http://www.liquidsoap.info/book/book.pdf), or
 - [on Amazon](https://www.amazon.com/dp/B095PVTYR3).
 
 You can
