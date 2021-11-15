@@ -70,10 +70,10 @@ docker-run:
 	$(PANDOC) --filter=pandoc-crossref -s $< -o $@
 
 site: web.pdf
-	mkdir -p public
-	cp web.pdf public/book.pdf
+	mkdir -p site/public
+	cp web.pdf site/public/book.pdf
 	$(MAKE) -C cover cover-ebook.svg
-	cp cover/cover-ebook.svg public/book.svg
+	cp cover/cover-ebook.svg site/public/book.svg
 	$(MAKE) -C site
 
 .PHONY: fig scripts site

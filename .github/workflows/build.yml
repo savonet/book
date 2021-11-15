@@ -41,7 +41,6 @@ jobs:
       if: ${{ github.ref == 'refs/heads/main' }}
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./public
-        allow_empty_commit: true
+        publish_dir: ./site/public
     - name: Test scripts
       run: docker build . -f .github/docker/Dockerfile.build
