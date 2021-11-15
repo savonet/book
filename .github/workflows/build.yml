@@ -25,7 +25,8 @@ jobs:
         make -C cover
         cp cover/cover.pdf .
         cp cover/cover-ebook.jpg .
-    - uses: actions/upload-artifact@v2
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
       with:
         name: book
         path: |
@@ -33,5 +34,12 @@ jobs:
           cover.pdf
           ebook.zip
           cover-ebook.jpg
+    - name: Generate pages
+      run: make site
+    - name: Deploy pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./site
     - name: Test scripts
       run: docker build . -f .github/docker/Dockerfile.build

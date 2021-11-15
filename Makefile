@@ -69,9 +69,10 @@ docker-run:
 %.tex %.pdf: %.md liquidsoap.xml
 	$(PANDOC) --filter=pandoc-crossref -s $< -o $@
 
-upload: web.pdf
-	if [ ! -e savonet ] ; then git clone git@github.com:savonet/book.git savonet; fi
-	cp web.pdf savonet/book.pdf
-	cd savonet && git ci . -m "Update book." && git push
+site: web.pdf
+	cp web.pdf site/book.pdf
+	$(MAKE) -C cover cover-ebook.svg
+	cp cover/cover-ebook.svg site/book.svg
+	$(MAKE) -C site
 
-.PHONY: fig scripts
+.PHONY: fig scripts site
