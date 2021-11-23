@@ -1,3 +1,3 @@
 #!/usr/bin/env liquidsoap
-set("frame.video.framerate", 24)
+settings.frame.video.framerate.set(24)
 output.dummy(sine())

@@ -1835,15 +1835,15 @@ of the decoders the configuration key
 For instance, for the mad decoder (mad is a library to decode mp3 files) we have
 
 ```liquidsoap
-set("decoder.mime_types.mad", ["audio/mpeg","audio/MPA"])
-set("decoder.file_extensions.mad", ["mp3","mp2","mp1"])
+settings.decoder.mime_types.mad.set(["audio/mpeg","audio/MPA"])
+settings.decoder.file_extensions.mad.set(["mp3","mp2","mp1"])
 ```
 
 Finally, the configuration key `decoder.priorities.*` specify the priority of
 the decoder. For instance,
 
 ```liquidsoap
-set("decoder.priorities.mad", 1)
+settings.decoder.priorities.mad.set(1)
 ```
 
 The decoders with higher priorities are tried first, and the first decoder which
@@ -1986,7 +1986,7 @@ resolving and decoding requests.
   dedicated configuration key
   
   ```liquidsoap
-  set("request.metadata_decoders.duration", true)
+  settings.request.metadata_decoders.duration.set(true)
   ```
   
   The reason they are not enabled is that they can take quite some time to
@@ -1997,7 +1997,7 @@ resolving and decoding requests.
   44.1 kHz). The following configuration key sets the list of converters:
   
   ```liquidsoap
-  set("audio.converter.samplerate.converters", 
+  settings.audio.converter.samplerate.converters.set(
       ["ffmpeg","libsamplerate","native"])
   ```
   

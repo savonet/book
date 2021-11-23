@@ -1,3 +1,3 @@
 #!/usr/bin/env liquidsoap
-set("frame.duration", 0.12)
+settings.frame.duration.set(0.12)
 output.dummy(sine())

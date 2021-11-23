@@ -1,5 +1,5 @@
 #!./liquidsoap
-set("server.telnet", true)
+server.telnet()
 q = request.queue(id="reqs")
 p = playlist(id="main", "~/Music")
 radio = fallback(track_sensitive=false, [q, p])

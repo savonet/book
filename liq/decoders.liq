@@ -1,2 +1,2 @@
 #!./liquidsoap
-print(get(default=[], "decoder.decoders"))
+print(settings.decoder.decoders())

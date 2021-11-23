@@ -1,5 +1,5 @@
 #!./liquidsoap
-set("sandbox", true)
+settings.sandbox.set(true)
 def auth(login)
   p = process.run(rodirs=["/users"], rwdirs=[], network=false,
         "./harbor-auth \

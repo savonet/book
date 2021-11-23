@@ -1,2 +1,2 @@
 #!/usr/bin/env liquidsoap
-set("log.level", 4)
+settings.log.level.set(4)

@@ -1,6 +1,6 @@
 #!/usr/bin/env liquidsoap
 fade_duration  = 5.
-frame_duration = get(default=1., "frame.duration")
+frame_duration = settings.frame.duration()
 v = ref(0.)
 
 def volume ()

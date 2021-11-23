@@ -1470,8 +1470,8 @@ usually perform a fade in Liquidsoap is detailed in [an ulterior
 section](#sec:transitions).
 
 Let us give another advanced example, which uses many of the above
-constructions. The standard library defines a function `metadata.getter.float`\index{metadata!getter},
-whose type is
+constructions. The standard library defines a function
+`metadata.getter.float`\index{metadata!getter}, whose type is
 
 ```
 (float, string, source('a)) -> source('a) * (() -> float)
@@ -1993,17 +1993,24 @@ core language itself. Those are presented below.
 
 ### Configuration {#sec:configuration}
 
-The main configuration\index{configuration} options can be set by using the `set`\indexop{set} function, which
-takes as arguments the name of the name of the setting (a string) and the value
-for this setting, whose type depends on the setting. These settings affect the
-overall behavior of Liquidsoap. For instance, we can have Liquidsoap use a 48kHz
-samplerate for audio (the default being 44.1kHz) by adding the following command
-at the beginning of our script:
+The main configuration\index{configuration} options are accessed through
+functions whose name are prefixed by `settings`. These settings affect the
+overall behavior of Liquidsoap. Given a setting, we can obtain its value by
+applying it to `()` and we can change its value by using the `set` method. For
+instance, the samplerate used for audio in Liquidsoap is controlled by the
+`settings.frame.audio.samplerate` setting. We can thus display its current value
+with
+
+```{.liquidsoap include="liq/samplerate-get-print.liq" from=1}
+```
+
+and change its value to 48kHz (the default being 44.1kHz) by adding the
+following command at the beginning of our script:
 
 ```{.liquidsoap include="liq/set.liq" from=1}
 ```
 
-or we can increase the verbosity of the log messages with
+Or we can increase the verbosity of the log messages with
 
 ```{.liquidsoap include="liq/set2.liq" from=1}
 ```
@@ -2012,37 +2019,25 @@ which sets the maximum level of shown log messages to 4, the default being 3. We
 recall that the log levels are 1 for critical messages, 2 for severe issues, 3
 for important messages, 4 for information and 5 for debug messages.
 
-Dually, we can obtain the value of an argument with the `get`\indexop{get} function, e.g.
-
-```{.liquidsoap include="liq/get.liq" from=1}
-```
-
-As you can see, in addition to the name of the setting, this function takes a
-parameter labeled `default` which is the value which is to be returned if the
-setting does not exist. You can obtain the list of all available settings, as
-well as their default value with the command
+You can obtain the list of all available settings, as well as their default
+value with the command
 
 ```
-liquidsoap --conf-descr
+liquidsoap --list-settings
 ```
 
-and help on a particular setting can be obtained with `--conf-descr-key`: for
-instance,
+For instance, the documentation about the `frame.duration` setting is
 
 ```
-liquidsoap --conf-descr-key frame.duration
-```
-
-will print
-
-```
-# Tentative frame duration in seconds
+### Tentative frame duration in seconds
 
 Audio samplerate and video frame rate constrain the possible frame
-durations. This setting is used as a hint for the duration, when
-`frame.audio.size` is not provided.
+durations.This setting is used as a hint for the duration, when
+'frame.audio.size'is not provided.Tweaking frame duration is tricky but
+needed when dealing with latencyor getting soundcard I/O correctly
+synchronized with liquidsoap.
 
-    set("frame.duration", 0.04)
+settings.frame.duration.set(0.04)
 ```
 
 The value `0.04` at the bottom indicates the default value.

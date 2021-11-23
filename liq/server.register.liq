@@ -1,6 +1,6 @@
 #!./liquidsoap
 rap = sine(880.) rock = sine(440.) techno = sine(220.) server.harbor()
-set("server.telnet", true)
+server.telnet()
 selected = ref("techno")
 def on_select(x)
   selected := x

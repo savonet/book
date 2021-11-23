@@ -1,2 +1,2 @@
 #!/usr/bin/env liquidsoap
-set("frame.audio.channels", 1)
+settings.frame.audio.channels.set(1)

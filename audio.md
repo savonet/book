@@ -288,13 +288,14 @@ of the playlist when it becomes empty.
 
 In an interactive playlist, the operator asks for the next song. But in some
 situations, instead of this passive way of proceeding (you are asked for songs),
-you would rather have an active way of proceeding (you inform the operator of the
-new files to play when you have some). Typically, if you have a website where users can
-request songs, you would like to be able to put the requested song in a playlist
-at the moment the user requests it. This is precisely the role of the
-`request.queue`\indexop{request.queue} operator, which maintains a list of songs to be played in a
-_queue_\index{queue} (the songs are played in the order they are pushed). A typical setup
-involving this operator would be the following:
+you would rather have an active way of proceeding (you inform the operator of
+the new files to play when you have some). Typically, if you have a website
+where users can request songs, you would like to be able to put the requested
+song in a playlist at the moment the user requests it. This is precisely the
+role of the `request.queue`\indexop{request.queue} operator, which maintains a
+list of songs to be played in a _queue_\index{queue} (the songs are played in
+the order they are pushed). A typical setup involving this operator would be the
+following:
 
 ```{.liquidsoap include="liq/request.queue.liq" from=1}
 ```
@@ -647,11 +648,11 @@ security and think thoroughly about who should be having access to this
 server. The fact that the server is programmed in OCaml makes it quite unlikely
 that an exploit such as a buffer overflow is possible, but one never knows.
 
-First, the list of IPs which are allowed to connect to harbor can be changed with
-the following setting:
+First, the list of IPs which are allowed to connect to harbor can be changed
+with the following setting:
 
 ```liquidsoap
-set("harbor.bind_addrs", ["0.0.0.0"])
+settings.harbor.bind_addrs.set(["0.0.0.0"])
 ```
 
 It takes as argument a list of allowed IPs, the default one `0.0.0.0` meaning
@@ -963,13 +964,14 @@ will behave like the above one:
 
 ### Switching and time predicates
 
-Another way of selecting a source among multiple ones is the `switch`\indexop{switch}
-operator. It takes as argument a list, whose elements are pairs consisting of a
-predicate and a source. Here, each _predicate_\index{predicate} is function taking no argument an
-returning a boolean (it is of type `() -> bool`) indicating whether the
-corresponding source should be played or not: a typical predicate is `{8h-10h}`
-which is true when the current time is between 8h and 10h. The `switch` operator
-will select and play the first source whose predicate returns `true`.
+Another way of selecting a source among multiple ones is the
+`switch`\indexop{switch} operator. It takes as argument a list, whose elements
+are pairs consisting of a predicate and a source. Here, each
+_predicate_\index{predicate} is function taking no argument an returning a
+boolean (it is of type `() -> bool`) indicating whether the corresponding source
+should be played or not: a typical predicate is `{8h-10h}` which is true when
+the current time is between 8h and 10h. The `switch` operator will select and
+play the first source whose predicate returns `true`.
 
 For instance, supposing that we have two different playlists for night and day,
 we could alternate between those depending on the hour with
@@ -1679,9 +1681,9 @@ of the function.
 
 ### Skipping tracks
 
-Every source has a method `skip`\indexop{skip} whose purpose is to skip the current track and go
-to the next one. For instance, if our main source is `s`, we can hear the first
-5 seconds of each track of `s` with
+Every source has a method `skip`\indexop{skip} whose purpose is to skip the
+current track and go to the next one. For instance, if our main source is `s`,
+we can hear the first 5 seconds of each track of `s` with
 
 ```{.liquidsoap include="liq/source.skip.liq" from=2}
 ```
@@ -1709,21 +1711,19 @@ example here.
 
 ### Seeking tracks {#sec:seeking}
 
-Every source has a method `seek`\indexop{seek} which takes as argument a number of second and
-goes forward this number of seconds. It returns the number of seconds
-effectively seeked: it might happen that the source cannot be seeked (if it
-is a live stream for instance), in which case the function will always return 0,
-or we might not be able to seek the given amount of time if we are near an end
-of track. For instance, the following script will seek forward 5 seconds every 3
-second:
+Every source has a method `seek`\indexop{seek} which takes as argument a number
+of second and goes forward this number of seconds. It returns the number of
+seconds effectively seeked: it might happen that the source cannot be seeked (if
+it is a live stream for instance), in which case the function will always return
+0, or we might not be able to seek the given amount of time if we are near an
+end of track. For instance, the following script will seek forward 5 seconds
+every 3 second:
 
 ```{.liquidsoap include="liq/seek0.liq" from=1}
 ```
 
-The first line instructs to use the mad decoder for mp3 files, because it has
-better support for seeking than the default decoder FFmpeg. It is possible to
-give a negative argument to `seek`, in which case it will try to seek backward
-in time.
+It is possible to give a negative argument to `seek`, in which case it will try
+to seek backward in time.
 
 ### End of tracks
 
@@ -2845,7 +2845,7 @@ A first way to modify such variables is through the telnet server. It can be
 started by adding
 
 ```liquidsoap
-set("server.telnet", true)
+server.telnet()
 ```
 
 add the beginning of the script. We can then connect to the telnet server by
@@ -3010,7 +3010,7 @@ protocol. Each of the sliders has an OSC address, which looks like
 software, you should first enter the IP address of the machine you want to
 communicate with (in our case, the machine where Liquidsoap is running) and the
 port on which we want to communicate (Liquidsoap uses 7777 by default, this can
-be changed by setting the `osc.port` parameter). The function
+be changed by modifying the `osc.port` configuration). The function
 `interactive.float` takes an `osc` parameter which can be used to specify an OSC
 controller to listen to: when set, the variable will change when the
 corresponding controller updates its value. For instance, the script
@@ -4399,11 +4399,12 @@ commands. For instance,
 
 Following this practice should make your script pretty secure, but there is no
 way to be 100% sure that a corner case was not missed. In order to further
-improve security, Liquidsoap provides the possibility to _sandbox_\index{sandbox} processes,
-which means running them in a special environment which checks whether the
-directories the program reads from and writes to are allowed ones, whether it is
-allowed to use the network, and so on. In order to use this, one should set the
-`sandbox` configuration key as follows:
+improve security, Liquidsoap provides the possibility to
+_sandbox_\index{sandbox} processes, which means running them in a special
+environment which checks whether the directories the program reads from and
+writes to are allowed ones, whether it is allowed to use the network, and so
+on. In order to use this, one should set the `sandbox` configuration key as
+follows:
 
 ```{.liquidsoap include="liq/sandbox.liq"}
 ```
@@ -4599,22 +4600,22 @@ the scripts.
 
 #### Configuration
 
-In order to start the server, one should begin by setting the `server.telnet`
-configuration key to `true`:
+In order to start the server, one should begin by calling the `server.telnet`
+function:
 
 ```liquidsoap
-set("server.telnet", true)
+server.telnet()
 ```
 
-Other related configuration keys can be set:
+Related configuration keys can be set:
 
-- `server.telnet.bind_addr`: the IPs from which the telnet server accepts
-  commands (`"127.0.0.1"` by default, which means that only the local host can
-  connect to the server, for security reasons),
-- `server.telnet.port`: the port on which the server is listening (`1234` by
-  default),
-- `server.timeout`: timeout for read and write operations (30 seconds by
-  default), if nothing happens for this duration the client is disconnected
+- `settings.server.telnet.bind_addr`: the IPs from which the telnet server
+  accepts commands (`"127.0.0.1"` by default, which means that only the local
+  host can connect to the server, for security reasons),
+- `settings.server.telnet.port`: the port on which the server is listening
+  (`1234` by default),
+- `settings.server.timeout`: timeout for read and write operations (30 seconds
+  by default), if nothing happens for this duration the client is disconnected
   (setting this to a negative value disables timeout).
   
 #### A running example
@@ -5286,12 +5287,12 @@ Because of this, extra-care should be taken when exposing harbor. An external
 firewall should preferably be used, but the following configuration options can
 help:
 
-- `harbor.bind_addrs`: list of IP addresses on which harbor should listen
-  (default is `["0.0.0.0"]` which means any address),
-- `harbor.max_connections`: maximum number of connections per port (default is 2
-  in order to mitigate the possibility of DDoS attacks),
-- `harbor.ssl.certificate` and `harbor.ssl.private_key` should also be set if
-  you want to use https connections.
+- `settings.harbor.bind_addrs`: list of IP addresses on which harbor should
+  listen (default is `["0.0.0.0"]` which means any address),
+- `settings.harbor.max_connections`: maximum number of connections per port
+  (default is 2 in order to mitigate the possibility of DDoS attacks),
+- `settings.harbor.ssl.certificate` and `settings.harbor.ssl.private_key` should
+  also be set if you want to use https connections.
 
 Monitoring and testing
 ----------------------
@@ -5372,10 +5373,10 @@ Alternatively, metrics can be exposed using the webserver with
 #### Prometheus
 
 If you need a more robust way of storing and exploring metrics, Liquidsoap has
-support for the [Prometheus](https://prometheus.io/)\index{Prometheus} tool, which is dedicated to
-this task. Suppose that we have two sources named `radio1` and `radio2` for
-which we want to export the RMS. We first need to declare that we want to use
-Prometheus and declare the port we want to run the server on:
+support for the [Prometheus](https://prometheus.io/)\index{Prometheus} tool,
+which is dedicated to this task. Suppose that we have two sources named `radio1`
+and `radio2` for which we want to export the RMS. We first need to declare that
+we want to use Prometheus and declare the port we want to run the server on:
 
 ```{.liquidsoap include="liq/prometheus.liq" from=2 to=3}
 ```
@@ -5442,8 +5443,8 @@ default, the logs are printed on the standard output when you run a script. You
 can also have them written to a file with
 
 ```liquidsoap
-set("log.file", false)
-set("log.file.path", "/tmp/liquidsoap.log")
+log.file.set(false)
+log.file.path.set("/tmp/liquidsoap.log")
 ```
 
 where the second line specifies the file those should be written to. A typical
@@ -5471,7 +5472,7 @@ By default, only messages with importance up to 3 are displayed, and this can be
 changed by setting the `log.level` configuration:
 
 ```liquidsoap
-set("log.level", 5)
+log.level.set(5)
 ```
 
 You can log at various levels using the functions `log.critical`, `log.severe`,
@@ -5802,10 +5803,7 @@ Some methods allow performing actions on the source.
   ```{.liquidsoap include="liq/seek.liq" from=1}
   ```
   
-  Namely, after 10 seconds of playing, we seek 10 seconds backwards. Here, we
-  are giving high priority to the mad library to decode mp3 files, because the
-  FFmpeg library, which is currently used by default, does not handle seeking
-  very well.
+  Namely, after 10 seconds of playing, we seek 10 seconds backwards.
 
 - `skip`: skip to the next track.
 - `shutdown`: deactivate a source.

@@ -70,9 +70,9 @@ operator which reads from the webcam:
 The format used by Liquidsoap for videos can be changed by setting the following
 configuration keys:
 
-- `frame.video.width`: width of videos (in pixels),
-- `frame.video.height`: height of videos (in pixels),
-- `frame.video.framerate`: number of images per seconds.
+- `settings.frame.video.width`: width of videos (in pixels),
+- `settings.frame.video.height`: height of videos (in pixels),
+- `settings.frame.video.framerate`: number of images per seconds.
 
 The default format for images is 1280×720 pixels at 25 images per seconds which
 corresponds to the 720p (or _HD ready_) format. You can switch to 1080p (or

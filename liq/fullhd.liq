@@ -1,3 +1,3 @@
 #!/usr/bin/env liquidsoap
-set("frame.video.width",  1980)
-set("frame.video.height", 1080)
+settings.frame.video.width.set(1980)
+settings.frame.video.height.set(1080)

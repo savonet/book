@@ -1,4 +1,4 @@
 #!/usr/bin/env liquidsoap
-set("server.telnet", true)
+server.telnet()
 s = playlist(id="music", "~/Music")
 output(s)

@@ -1,5 +1,5 @@
 #!./liquidsoap
-set("frame.duration", 1.)
+settings.frame.duration.set(1.)
 s = playlist("~/Music")
 s = amplify({random.float()}, s)
 output(s)

@@ -1,5 +1,5 @@
 #!./liquidsoap
-set("server.telnet", true)
+server.telnet()
 sources = ref([])
 def play(pl)
   s = mksafe(playlist("playlists/#{pl}"))

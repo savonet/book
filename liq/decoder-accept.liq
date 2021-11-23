@@ -1,3 +1,3 @@
 #!./liquidsoap
-set("log.level", 5)
+log.level.set(5)
 output(single("test.mp3"))

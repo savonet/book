@@ -1,3 +1,2 @@
-#!/usr/bin/env liquidsoap
-set("frame.audio.samplerate", 48000)
-
+#!./liquidsoap
+settings.frame.audio.samplerate.set(48000)

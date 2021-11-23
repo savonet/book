@@ -1,5 +1,5 @@
 #!./liquidsoap
-set("server.telnet", true)
+server.telnet()
 playlist = playlist("~/Music")
 queue1   = request.queue(id="q1")
 queue2   = request.queue(id="q2")
