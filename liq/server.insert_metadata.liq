@@ -2,4 +2,4 @@
 set("server.telnet", true)
 s = playlist("~/Music")
 s = server.insert_metadata(id="src", s)
-s.on_metadata(fun(m) -> print(json_of(m))); output(s)
+s.on_metadata(fun(m) -> print(json.stringify(m))); output(s)

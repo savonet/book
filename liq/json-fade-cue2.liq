@@ -1,4 +1,4 @@
 #!./liquidsoap
 song = process.read("./next-song-json")
-song = of_json(default=[("","")], song)
+song = json.parse(default=[("","")], song)
 print("song: #{list.rev(song)}")

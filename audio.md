@@ -1435,7 +1435,7 @@ extracts the artist and the title, and appends those to the file
 `/tmp/songs`. We then run the method `on_track` of our `music` source to
 register this function to be called when there is a new track and that's it! By
 the way, if you want a quick and effective way of logging the metadata, we
-advise the use the `json_of` function, which will convert all the metadata at
+advise the use the `json.stringify` function, which will convert all the metadata at
 once into a standardized textual representation in JSON\index{JSON} format:
 
 ```{.liquidsoap include="liq/log-songs2.liq" from=1 to=3}
@@ -4453,7 +4453,7 @@ In order to exchange data with other programs (via `process.run`, files, and so
 on), the preferred way for formatting data is _JSON_\index{JSON}, which is a standard way of
 representing structured data (consisting of records, arrays, etc.) and is
 supported by most modern languages. You can obtain the JSON representation of
-any Liquidsoap value with the function `json_of`, which takes a value as
+any Liquidsoap value with the function `json.stringify`, which takes a value as
 argument and returns its JSON representation. For instance, here is the way some
 Liquidsoap values are converted to JSON:
 
@@ -4469,11 +4469,11 @@ Liquidsoap  `[("f", 1), ("b", 4)]`  `{x=1, y="a"}`
 ----------  ----------------------  --------------------
 JSON        `{"f": 1, "b": 4}`      `{"x": 1, "y": "a"}`
 
-The default output of `json_of` is designed to be pleasant to read for
+The default output of `json.stringify` is designed to be pleasant to read for
 humans. If you want to have a small representation (without useless spaces and
 newlines), you can pass the argument `compact=true` to the function.
 
-Conversely, JSON values can be converted to Liquidsoap using the `of_json`
+Conversely, JSON values can be converted to Liquidsoap using the `json.parse`
 function whose type is
 
 ```
@@ -4506,8 +4506,8 @@ The following script uses `request.dynamic` which will call a function
 
 - uses `process.read` to obtain the output of the external script
   `next-song-json`,
-- uses `of_json` with `default=[("","")]` in order to parse this JSON as a list
-  of pairs of strings,
+- uses `json.parse` with `default=[("","")]` in order to parse this JSON as a
+  list of pairs of strings,
 - extracts the parameters of the song from the returned list,
 - returns a request from the song annotated with cue and fade parameters.
 

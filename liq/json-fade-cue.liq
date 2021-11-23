@@ -2,7 +2,7 @@
 set("decoder.priorities.mad", 15) #1546
 def next_song()
   song     = process.read("./next-song-json")
-  song     = of_json(default=[("","")], song)
+  song     = json.parse(default=[("","")], song)
   file     = song["file"]
   cue_in   = song["cue_in"]
   cue_out  = song["cue_out"]

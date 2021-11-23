@@ -265,7 +265,7 @@ touch with the community and obtain help\index{help} to get your problem solved:
 4. the [Liquidsoap github
   page](https://github.com/savonet/liquidsoap/issues)\index{github} is the place
   to report bugs,
-5. there is also a starting [Liquidsoap discussion
+5. there is also a [Liquidsoap discussion
    board](https://github.com/savonet/liquidsoap/discussions).
 
 Please remember to be kind, most of the people there are doing this on their
@@ -281,8 +281,9 @@ opening an issue on [the dedicated
 bugtracker](https://github.com/savonet/book/issues), but you can also reach us
 by mail at `sam@liquidsoap.info` and `romain@liquidsoap.info`. Please include
 page numbers and text excerpts if your comment applies to a particular point of
-the book. The version you are holding in your hands was compiled on \today, you
-can expect frequent revisions to fix found issues.
+the book (or, better, make pull requests). The version you are holding in your
+hands was compiled on \today, you can expect frequent revisions to fix found
+issues.
 
 ### The authors
 

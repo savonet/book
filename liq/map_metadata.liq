@@ -7,4 +7,4 @@ def update_metadata(m)
   ]
 end
 s = map_metadata(update_metadata, s)
-s.on_metadata(fun (m) -> print(json_of(m))); output(s)
+s.on_metadata(fun (m) -> print(json.stringify(m))); output(s)

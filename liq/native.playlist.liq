@@ -1,4 +1,4 @@
 #!./liquidsoap
 s = playlist(native=true, "~/Music")
-s.on_track(fun (m) -> print(json_of(m)))
+s.on_track(fun (m) -> print(json.stringify(m)))
 output(s)

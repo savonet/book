@@ -1,6 +1,6 @@
 #!./liquidsoap
 def f(x)
-  print("#{x} => #{json_of(x)}")
+  print("#{x} => #{json.stringify(x)}")
 end
 f(())
 f(true)
@@ -12,6 +12,6 @@ f((12,1.2))
 f([("f",1),("b",4)])
 f({x=1, y="a"})
 # f(sine())
-f(ref(3))
+# f(ref(3))
 # f(%mp3)
-f(fun () -> 5)
+# f(fun () -> 5)
