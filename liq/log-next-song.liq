@@ -5,5 +5,5 @@ def log_next(r)
   true
 end
 
-radio = playlist("~/Music", length=40., check_next=log_next)
+radio = playlist("~/Music", check_next=log_next)
 output(radio) server.harbor() log.level.set(5)

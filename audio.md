@@ -1455,13 +1455,10 @@ using a playlist, this can be achieved as follows:
 Here, we are (ab)using the `check_next` argument which specifies a function
 which is called in order to validate the next song: we register our `log_next`
 function which always validates the next song (it always returns `true`), but
-logs the metadata of the song in between. By default, the duration of a song is
-not computed precisely and estimated to 30 seconds (this can be changed with the
-`default_duration` parameter of `playlist`). We use the `length` parameter to
-request that we always have at least 40 seconds of estimated remaining duration
-(instead of 10 by default), which forces the `playlist` operator to always
-prepare one song in advance, which will be validated by our `log_next` function,
-thus providing us with its metadata.
+logs the metadata of the song in between. This works because, by default, the
+`playlist` operator always loads one song in advance (this number can be changed
+with the `prefetch` parameter), which will be validated by our `log_next`
+function, thus providing us with its metadata.
 
 #### Adding jingles on metadata
 
