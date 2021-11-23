@@ -9,7 +9,11 @@ f(23)
 f(2.4)
 f([2,3,4])
 f((12,1.2))
-f([("f",1),("b",4)])
+l = [("f",1),("b",4)]
+f(l)
+l = [("f",1),("b",4)]
+let json.stringify (j : [(string * int)] as json.object) = l
+print("#{l} => #{j}")
 f({x=1, y="a"})
 # f(sine())
 # f(ref(3))

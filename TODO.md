@@ -24,11 +24,10 @@
 - `dtmf.detect`
 - playlists only have given number of requests in advance and not time anymore
   (#1791)
-- JSON changed a quite bit, see #1824 and
-  <https://www.liquidsoap.info/doc-dev/json.html>.
 - dtmf detection
 - files in lang were renamed
 - mention `output.youtube.live`
 - regexps #1881
 - cons notation for lists
 - interactive unit (#2075)
+- patterns for records, etc.

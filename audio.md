@@ -1435,10 +1435,11 @@ extracts the artist and the title, and appends those to the file
 `/tmp/songs`. We then run the method `on_track` of our `music` source to
 register this function to be called when there is a new track and that's it! By
 the way, if you want a quick and effective way of logging the metadata, we
-advise the use the `json.stringify` function, which will convert all the metadata at
-once into a standardized textual representation in JSON\index{JSON} format:
+advise the use the `metadata.json.stringify` function, which will convert all
+the metadata at once into a standardized textual representation in
+JSON\index{JSON} format:
 
-```{.liquidsoap include="liq/log-songs2.liq" from=1 to=3}
+```{.liquidsoap include="liq/log-songs2.liq" from=2 to=4}
 ```
 
 #### Logging the next track
@@ -4450,12 +4451,16 @@ of users.
 ### JSON
 
 In order to exchange data with other programs (via `process.run`, files, and so
-on), the preferred way for formatting data is _JSON_\index{JSON}, which is a standard way of
-representing structured data (consisting of records, arrays, etc.) and is
-supported by most modern languages. You can obtain the JSON representation of
-any Liquidsoap value with the function `json.stringify`, which takes a value as
-argument and returns its JSON representation. For instance, here is the way some
-Liquidsoap values are converted to JSON:
+on), the preferred way for formatting data is _JSON_\index{JSON}, which is a
+standard way of representing structured data (consisting of records, arrays,
+etc.) and is supported by most modern languages.
+
+#### Converting to JSON
+
+You can obtain the JSON representation of any Liquidsoap value with the function
+`json.stringify`, which takes a value as argument and returns its JSON
+representation. For instance, here is the way some Liquidsoap values are
+converted to JSON:
 
 Liquidsoap `()` `true` `"abc"` `23` `2.4`
 ---------- ---- ------ ------- ---- -----
@@ -4467,25 +4472,56 @@ JSON       `[2, 3, 4]` `[12, 1.2]`
 
 Liquidsoap  `[("f", 1), ("b", 4)]`  `{x=1, y="a"}`
 ----------  ----------------------  --------------------
-JSON        `{"f": 1, "b": 4}`      `{"x": 1, "y": "a"}`
+JSON        `[["f", 1], ["b", 4]]`  `{"x": 1, "y": "a"}`
 
 The default output of `json.stringify` is designed to be pleasant to read for
 humans. If you want to have a small representation (without useless spaces and
-newlines), you can pass the argument `compact=true` to the function.
+newlines), you can pass the argument `compact=true` to the
+function. Alternatively, one can also use the syntax
 
-Conversely, JSON values can be converted to Liquidsoap using the `json.parse`
-function whose type is
-
-```
-(default : 'a, string) -> 'a
+```liquidsoap
+let json.stringify j = data
 ```
 
-It takes a string containing the JSON representation of a value and a `default`
-value, which is used both in order to determine the expected type for the value
-and to have a value to return by default in the case where the JSON data does
-not have the right type.
+to convert `data` as a JSON string and store it in variable `j`. This syntax
+moreover allows parsing an associative list as a JSON object (instead of a list
+of pairs) by specifying the type together with the annotation "`as object`". For
+instance,
 
-#### Parsing song requests
+```{.liquidsoap include="liq/json.stringify-as-object.liq" from=1 to=-1}
+```
+
+will store the JSON object
+
+```
+{"f": 1, "b": 4}
+```
+
+into `j` instead of the associative list shown above.
+
+It is possible to create abstract JSON objects using the function `json()` on
+which we will be able to incrementally add fields using the `add` method (or
+remove using the `remove` method). For instance,
+
+```{.liquidsoap include="liq/json.liq" from=1}
+```
+
+will print
+
+```
+{"artist": "myself", "title": "my song"}
+```
+
+#### Parsing JSON data
+
+Conversely, JSON values can be converted to Liquidsoap using the syntax
+
+```liquidsoap
+let json.parse x = json
+```
+
+which parses the string `json` as JSON data and assigns the result to `x`: this
+resulting value will be a record whose fields correspond to the JSON data.
 
 For instance, suppose that we have a script `next-song-json` which returns, in
 JSON format, the next song to be played along with cue in and out points and
@@ -4506,71 +4542,17 @@ The following script uses `request.dynamic` which will call a function
 
 - uses `process.read` to obtain the output of the external script
   `next-song-json`,
-- uses `json.parse` with `default=[("","")]` in order to parse this JSON as a
-  list of pairs of strings,
-- extracts the parameters of the song from the returned list,
+- uses `let json.parse` to parse this JSON as a record (whose fields will be
+  `file`, `cue_in`, `cue_out`, `fade_in` and `fade_out`),
+- extracts the parameters of the song from the returned record,
 - returns a request from the song annotated with cue and fade parameters.
 
 The cue and fade parameters are then applied by using the operators `cue_cut`,
 `fade.in` and `fade.out` because we annotated the parameters with the metadata
 expected by those operators.
 
-```{.liquidsoap include="liq/json-fade-cue.liq" from=2}
+```{.liquidsoap include="liq/json-fade-cue.liq" from=1}
 ```
-
-#### Influence of the `default` argument
-
-Note that the typing provided by `default` is important. Here, we parse the data
-with
-
-```{.liquidsoap include="liq/json-fade-cue2.liq" from=1 to=-1}
-```
-
-where the default value `[("","")]` is a list of pairs of strings and thus
-indicates that we want to parse it in this way, so that the returned value on
-the above input is
-
-```liquidsoap
-[("file", "test.mp3"),
- ("cue_in", "1.1"), ("cue_out","239."),
- ("fade_in","2.5"), ("fade_out","3.2")]
-```
-
-If we had parsed the JSON data as
-
-```{.liquidsoap include="liq/json-fade-cue3.liq" from=1 to=-1}
-```
-
-the default value `[("", 0.)]` would indicate that we want to parse it as a list
-of pairs of a string and a float, and we would have had the following Liquidsoap
-value as a result:
-
-```liquidsoap
-[("cue_in",1.1), ("cue_out",239.), ("fade_in",2.5), ("fade_out",3.2)]
-```
-
-Note that the fade parameters are given in floats instead of strings as in
-previous example, and that the field `file` is not present because there is no
-sensible way to parse it as a float.
-
-Alternatively, we could also parse the JSON data as a record
-
-```{.liquidsoap include="liq/json-fade-cue4.liq" from=1 to=-1}
-```
-
-which would give rise to the following record as result
-
-```liquidsoap
-{file="test.mp3", cue_in=1.1, cue_out=239., fade_in=2.5, fade_out=3.2}
-```
-
-and could therefore be used in order to provide the following alternative
-definition of the `next_song` function:
-
-```{.liquidsoap include="liq/json-fade-cue5.liq" from=2 to=-3}
-```
-
-which is more structured and natural.
 
 ### Watching files
 

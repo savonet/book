@@ -1,15 +1,11 @@
 #!./liquidsoap
-set("decoder.priorities.mad", 15) #1546
 def next_song()
-  song     = process.read("./next-song-json")
-  song     = json.parse(default=[("","")], song)
-  file     = song["file"]
-  cue_in   = song["cue_in"]
-  cue_out  = song["cue_out"]
-  fade_in  = song["fade_in"]
-  fade_out = song["fade_out"]
-  song = "annotate:liq_cue_in=#{cue_in},liq_cue_out=#{cue_out},\
-          liq_fade_in=#{fade_in},liq_fade_out=#{fade_out}:#{file}"
+  json     = process.read("./next-song-json")
+  let json.parse song = json
+  song = "annotate:\
+          liq_cue_in=#{song.cue_in},liq_cue_out=#{song.cue_out},\
+          liq_fade_in=#{song.fade_in},liq_fade_out=#{song.fade_out}:\
+          #{song.file}"
   log.important("Next song is #{song}")
   request.create(song)
 end
