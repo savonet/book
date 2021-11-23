@@ -225,42 +225,10 @@ coefficient `a`.
 
 However, some sources are _active_ which means that they are responsible for
 asking data. This is typically the case for outputs such as to a soundcard
-(e.g. `output.alsa`) or to a file (e.g. `output.file`). For instance, the
-(simplified) type of `output.alsa` is
-
-```
-(source(audio=pcm('a), video='b, midi='c)) -> active_source(audio=pcm('a), video='b, midi='c)
-```
-
-We see that it takes a source as input (the one to be played) and returns an
-active source: the returned source is the same as the input source, but the type
-indicates that it is active, as witnessed by the `active_source`\indexop{active\_source} instead of the
-usual `source`.
-
-Perhaps surprisingly, some inputs are also tagged as active, because they are
-proactive. For instance, in the source `input.alsa`, we do not have control over
-the rate at which the data is produced, the soundcard sends us regularly audio
-data, and is responsible for the synchronization, and its type is
-
-```
-(...) -> active_source(audio=pcm('a), video='b, midi='c)
-```
-
-Any active source is a particular case of a source, so that we can feed the
-result of `input.alsa` to an operator requiring a source, such as `amplify`
-whose type is
-
-```
-({float}, source(audio=pcm('a), video='b, midi='c)) -> source(audio=pcm('a), video='b, midi='c)
-```
-
-as in the script
-
-```{.liquidsoap include="liq/alsa-amplify.liq" from=1}
-```
-
-(namely, `mic` is of type `active_source` and `amplify` requires an argument of
-type `source`, which does not cause any problem).
+(e.g. `output.alsa`) or to a file (e.g. `output.file`). Perhaps surprisingly,
+some inputs are also active: for instance, in the `input.alsa` source, we do not
+have control over the rate at which the data is produced, the soundcard
+regularly sends us audio data, and is responsible for the synchronization.
 
 This way of functioning means that if a source is not connected to an active
 source, its stream will not be produced. For instance, consider the following
@@ -465,7 +433,7 @@ stores a stream into a file: this operator needs to know the kind of file we
 want to produce. The (simplified) type of this operator is
 
 ```
-(format('a), string, source('a)) -> active_source('a)
+(format('a), string, source('a)) -> unit
 ```
 
 We see that the second argument is the name of the file and the third argument
