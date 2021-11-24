@@ -340,7 +340,10 @@ docker run -it -v /dev/snd:/dev/snd --privileged savonet/liquidsoap:main liquids
 
 This single line should work on any computer on which Docker is installed: no
 need to install opam, various libraries, or Liquidsoap, it will automatically
-download for you an image where all this is pre-installed.
+download for you an image where all this is pre-installed (if it does not work,
+this probably means that docker does not have the rights to access the sound
+device located at `/dev/snd`, in which case passing the additional option
+`--group-add=audio` should help).
 
 Libraries used by Liquidsoap
 ----------------------------
