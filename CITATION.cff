@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "The book can be cited as below."
+authors:
+- family-names: "Mimram"
+  given-names: "Samuel"
+  orcid: "https://orcid.org/0000-0002-0767-2569"
+- family-names: "Beauxis"
+  given-names: "Romain"
+title: "The Liquidsoap book"
+version: 1.0
+date-released: 2021-11-23
+url: "https://github.com/savonet/book"
+preferred-citation:
+  type: book
+  authors:
+  - family-names: "Mimram"
+    given-names: "Samuel"
+    orcid: "https://orcid.org/0000-0002-0767-2569"
+  - family-names: "Beauxis"
+    given-names: "Romain"
+  doi: "10.0000/00000"
+  title: "The Liquidsoap book"
+  year: 2021
