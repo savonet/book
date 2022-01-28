@@ -1971,9 +1971,13 @@ We could take this opportunity to insert a jingle in between the tracks:
 ```{.liquidsoap include="liq/cross3.liq" from=3 to=-2}
 ```
 
-(we suppose there that `jingle` is a playlist of jingles). Or we could to all
-the three at once. Namely, suppose that we have a jingle and we want to achieve
-the following:
+where we suppose that `jingle` is a playlist of jingles (the notation
+`(x:source)` above means that we impose that `x` should have the type
+`source`,i.e. a source without methods; this is unfortunately necessary above
+for now, because Liquidsoap otherwise thinks that the function `f` operates on
+sources with methods and is not accepted as a valid argument for the `cross`
+function). Or we could to all the three at once. Namely, suppose that we have a
+jingle and we want to achieve the following:
 
 - we begin by fading out `a` for 3 seconds,
 - after 1 second, we start playing the jingle (say that it lasts for 3 seconds),

@@ -9,7 +9,7 @@ def to_live(a, b)
     ])
 end
 def to_music(a, b)
-  sequence([single("jingle.mp3"), b])
+  sequence([(single("jingle.mp3"):source), b])
 end
 radio = fallback(track_sensitive=false, transition_length=5.,
                  transitions=[to_live, to_music], [live, music])
