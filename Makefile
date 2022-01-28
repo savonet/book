@@ -42,6 +42,10 @@ book.html: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
 	@$(PANDOC) -s --syntax-definition=liquidsoap.xml --filter=pandoc-pdf2png --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
 	@sed -i 's/<head>/<head><meta http-equiv="content-type" content="text\/html; charset=UTF-8"\/>/' $@
 
+book.rst: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
+	@echo "Generating $@..."
+	@$(PANDOC) -s --syntax-definition=liquidsoap.xml --filter=pandoc-pdf2png --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
+
 ebook.zip: fig book.html
 	zip $@ book.html fig/*.png
 
