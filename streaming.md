@@ -2044,7 +2044,8 @@ folders and files. All the files referred to here are in the `src` directory of
 the source, where all the code lies. The main folders are
 
 - language:
-  - `lang/`: the definition of language and all the builtin operators,
+  - `lang/`: the definition of language,
+  - `builtins/`: all the builtin operators,
   - `stream/`: internal representation and manipulation of streams using frames,
 - operators:
   - `operators/`: where most operators such as sound processing are,
@@ -2066,10 +2067,17 @@ The most important files are the following ones:
 
 File | Description
 -----|------------
-`lang/lang_types.ml` | Types of the language
-`lang/lang_values.ml` | Expressions of the language
+`lang/parser.mly` | Syntax of the language
+`lang/term.ml` | Internal representation of programs
+`lang/values.ml` | Values computed by programs
+`lang/types.ml` | Types of the language
+`lang/typing.ml` | Operations on types
+`lang/typechecking.ml` | Typechecking of programs
+`lang/evaluation.ml` | Execution of programs
+`lang/runtime.ml` | Handling of errors
 `lang/lang.ml` | High-level operations on the language
 `stream/frame.ml` | Definition of frames for streams
+`stream/content.ml` | Internal contents of frames
 `sources.ml` | Definition of sources
 `clock.ml` | Definition of clocks
 `request.ml` | Definition of requests
