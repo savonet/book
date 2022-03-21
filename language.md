@@ -876,6 +876,24 @@ r : ref(int) = ref(5)
 # !r;;
 - : int = 2
 ```
+Symbols required for using references are "=", ":=" and "!"
+
+"=" will define the reference and set the data type of the reference as it is inferred.
+":=" will set the value of the reference
+"!" will retrieve the value of the reference
+
+for example:
+```
+#declares the reference and subsequently the data type (in this case, string)
+x = ref("mystring")
+
+#sets the value
+x := ("a new string")
+
+#accesses the value
+print(!x)
+```
+
 
 Note that the type of a reference is fixed: once `r` is declared to be a
 reference to an integer, as above, one can only put integers into it, so that
@@ -897,6 +915,8 @@ contains an integer. However, on the second line, we try to assign a string to `
 which would only be possible if `r` was a reference to a string, i.e., of type
 `ref(string)`. Since `r` cannot have both types `ref(int)` and `ref(string)`, an
 error is raised.
+
+
 
 ### Loops
 
