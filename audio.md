@@ -3148,8 +3148,8 @@ and aac with
 ```{.liquidsoap include="liq/output.icecast3.liq" from=2}
 ```
 
-Here, first define a function `out` which acts as `output.icecast` where the
-common parameters have been specified, in order not to have to repeat them for
+Here, first define a function `out` which acts as `output.icecast`, where the
+common parameters have been specified in order not to have to repeat them for
 each output, and then we define the various outputs. Note that it is absolutely
 not a problem that a given source is encoded multiple times (excepting perhaps
 that it requires some cpu resources).
