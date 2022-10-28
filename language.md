@@ -1591,6 +1591,7 @@ directly as recursive functions than by using `for` or `while`, although it
 might take some time for you to get accustomed to those.
 -->
 
+<!--
 ### Partial evaluation
 
 The final thing to know about functions in Liquidsoap is that they support
@@ -1653,6 +1654,8 @@ partial evaluation, we would have had to write
 ```
 
 which is somewhat more heavy.
+
+-->
 
 <!-- this is a source of errors (e.g. `list.hd([1,2,3])`) which are however
  easily detected by typing -->

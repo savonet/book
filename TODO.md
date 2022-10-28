@@ -29,3 +29,5 @@
 - interactive unit (#2075)
 - patterns for records, etc.
 - [new time API](https://github.com/savonet/liquidsoap/discussions/2179#discussioncomment-2062023)
+- `output.harbor`
+- video resizing, etc.
