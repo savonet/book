@@ -1,6 +1,8 @@
 all: index.html
 	mkdir -p public
-	cp $< public/
+	cp *.html *.css public/
 
 %.html: %.md
-	pandoc -s $< -o $@
+	pandoc -s $< --css pandoc.css -o $@
+
+.PHONY: all

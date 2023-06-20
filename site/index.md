@@ -7,7 +7,7 @@ book_ which covers in details the language and the process of building a
 radio. It complements the online documentation by providing a homogeneous and
 progressive presentation of Liquidsoap.
 
-[![The Liquidsoap book](book.svg){height=600px}](https://www.amazon.com/dp/B095PVTYR3)
+[![The Liquidsoap book](book.svg){height=600px .center}](https://www.amazon.com/dp/B095PVTYR3)
 
 It can be [ordered from Amazon](https://www.amazon.com/dp/B095PVTYR3) (or [read
 online](book.pdf)).
