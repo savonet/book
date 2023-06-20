@@ -134,7 +134,7 @@
 </defs>
 <g id="surface1">
 <g clip-path="url(#clip1)" clip-rule="nonzero">
-<path style=" stroke:none;fill-rule:nonzero;fill:rgb(95.411682%,91.685486%,98.861694%);fill-opacity:1;" d="M 0 640.003906 L 401.5 640.003906 L 401.5 -2.398438 L 0 -2.398438 Z M 0 640.003906 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(95.411682%,91.685486%,98.861694%);fill-opacity:1;" d="M 0 640.003906 L 400 640.003906 L 400 0 L 0 0 Z M 0 640.003906 "/>
 </g>
 <g style="fill:rgb(0%,0%,0%);fill-opacity:1;">
   <use xlink:href="#glyph0-1" x="46.65" y="122.544"/>
