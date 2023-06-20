@@ -32,6 +32,7 @@ web.pdf: web.tex
 	@echo "Generating $@..."
 	pdflatex web.tex
 	makeindex web.idx
+	pdflatex web.tex
 
 book.epub book.txt: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
 	@echo "Generating $@..."
