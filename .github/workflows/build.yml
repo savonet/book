@@ -2,7 +2,7 @@ name: CI
 on: [push]
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Install packages
@@ -17,6 +17,7 @@ jobs:
     - name: Build book
       run: |
         make
+        pdflatex book.tex
         pdflatex book.tex
     - name: Build ebook
       run: make ebook.zip
