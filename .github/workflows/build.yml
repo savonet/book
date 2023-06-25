@@ -19,13 +19,13 @@ jobs:
         make
         pdflatex book.tex
         pdflatex book.tex
-    - name: Build ebook
-      run: make ebook.zip
     - name: Build cover
       run: |
         make -C cover
         cp cover/cover.pdf .
         cp cover/cover-ebook.jpg .
+    - name: Build ebook
+      run: make book.epub
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
@@ -33,10 +33,13 @@ jobs:
         path: |
           book.pdf
           cover.pdf
-          ebook.zip
+          book.epub
           cover-ebook.jpg
     - name: Generate pages
-      run: make site
+      run: |
+        make site
+        cp book.pdf site/public
+        cp book.epub site/public
     - name: Deploy pages
       uses: peaceiris/actions-gh-pages@v3
       with:

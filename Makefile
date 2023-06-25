@@ -36,7 +36,8 @@ web.pdf: web.tex
 
 book.epub book.txt: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
 	@echo "Generating $@..."
-	@$(PANDOC) -s --syntax-definition=liquidsoap.xml --filter=pandoc-pdf2png --toc --toc-depth=2 --top-level-division=chapter --css=epub.css -V links-as-notes=true $< -o $@
+	@$(MAKE) -C cover --no-print-directory
+	@$(PANDOC) -s --syntax-definition=liquidsoap.xml --filter=pandoc-pdf2png --toc --toc-depth=2 --top-level-division=chapter --css=epub.css --epub-cover-image cover/cover-ebook.jpg -V links-as-notes=true $< -o $@
 
 book.html: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
 	@echo "Generating $@..."

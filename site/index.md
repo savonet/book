@@ -10,5 +10,5 @@ progressive presentation of Liquidsoap.
 [![The Liquidsoap book](book.svg){height=600px .center}](https://www.amazon.com/dp/B095PVTYR3)
 
 It can be [ordered from Amazon](https://www.amazon.com/dp/B095PVTYR3) (or [read
-online](book.pdf)).
+online](book.pdf) or [read using an epub reader](book.epub)).
 
