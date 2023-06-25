@@ -9,6 +9,9 @@ progressive presentation of Liquidsoap.
 
 [![The Liquidsoap book](book.svg){height=600px .center}](https://www.amazon.com/dp/B095PVTYR3)
 
-It can be [ordered from Amazon](https://www.amazon.com/dp/B095PVTYR3) (or [read
-online](book.pdf) or [read using an epub reader](book.epub)).
+It can be
+
+- [ordered from Amazon](https://www.amazon.com/dp/B095PVTYR3)
+- [read in pdf](book.pdf)
+- [read in epub](book.epub)
 
