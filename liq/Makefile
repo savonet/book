@@ -54,7 +54,7 @@ check:
 
 check-%: %.liq
 	@echo -n "Checking $(basename $<)..."
-	@if LIQ_LILV=false LIQ_LADSPA=false LIQ_DSSI=false $(LIQUIDSOAP) --check $< ; then echo " ok." ; else echo "$<" >> "failed" ; echo " failed!" ; fi
+	@if LIQ_LILV=false LIQ_LADSPA=false LIQ_DSSI=false $(LIQUIDSOAP) --unsafe --check $< ; then echo " ok." ; else echo "$<" >> "failed" ; echo " failed!" ; fi
 
 docker-shell:
 	docker run -it --entrypoint /bin/bash savonet/liquidsoap:main
