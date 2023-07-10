@@ -377,6 +377,7 @@ Those libraries add support for various things:
   (e.g. an application on your phone),
 - `ocaml-ssl`: SSL support for connecting to secured websites (using the https
   protocol),
+- `ocaml-tls`: similar to `ocaml-ssl`,
 - `ocurl`: downloading files over http,
 - `osx-secure-transport`: SSL support via OSX's SecureTransport,
 - `yojson`: parsing JSON data (useful to exchange data with other applications).
@@ -392,9 +393,9 @@ Those libraries add support for using soundcards for playing and recording sound
 - `ocaml-portaudio`: soundcard input and output,
 - `ocaml-pulseaudio`: soundcard input and output.
 
-Among those, ALSA is very low level and is probably the one you want to use in
-order to minimize latencies. Other support a wider variety of soundcards and
-usages.
+Among those, pulseaudio is a safe default bet. ALSA is very low level and is
+probably the one you want to use in order to minimize latencies. Other libraries
+support a wider variety of soundcards and usages.
 
 Other outputs:
 
@@ -427,7 +428,7 @@ Those add support for sound manipulation:
 - `ocaml-opus`: Ogg/Opus encoding and decoding,
 - `ocaml-shine`: fixed-point MP3 encoding,
 - `ocaml-speex`: Ogg/Speex encoding and decoding,
-- `ocaml-taglib`: MP3 metadata decoding,
+- `ocaml-taglib`: metadata decoding,
 - `ocaml-vorbis`: Ogg/Vorbis encoding and decoding.
 
 ### Playlists
@@ -447,7 +448,18 @@ Other video-related libraries:
 - `camlimages`: decoding of various image formats,
 - `gd4o`: rendering of text,
 - `ocaml-frei0r`: video effects,
+- `ocaml-imagelib`: decoding of various image formats,
 - `ocaml-sdl`: display, text rendering and image formats.
+
+### Memory
+
+Memory usage is sometimes an issue with some scripts:
+
+- `ocaml-jemalloc`: support for jemalloc memory allocator which can avoid memory
+  fragmentation and lower the memory footprint,
+- `ocaml-memtrace`: support for tracing memory allocation in order to understand
+  where memory consumption comes from,
+- `ocaml-mem_usage`: detailed memory usage information.
 
 ### Runtime dependencies
 
@@ -459,4 +471,3 @@ compilation:
 - `curl`: downloading files with `http`, `https` and `ftp` protocols,
 - `ffmpeg`: external input and output, `replay_gain`, level computation, and more,
 - `youtube-dl`: YouTube video and playlist downloading support.
-
