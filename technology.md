@@ -227,12 +227,14 @@ well supported on old clients, although this tends to be less and less the case.
 
 Finally, we would like to mention that, nowadays, streaming is more and more
 being delegated to big online platforms, such as YouTube or Twitch, because of
-their ease of use, both in terms of setup and of user experience. Those
-generally use another protocol, called RTMP\index{RTMP} (_Real-Time Messaging Protocol_),
+their ease of use, both in terms of setup and of user experience. Those often
+use another protocol, called RTMP\index{RTMP} (_Real-Time Messaging Protocol_),
 which is more suited to transmitting live streams, where it is more important to
 keep the latency low (i.e. transmit the information as close as possible to the
 instant where it happened) than keep its integrity (dropping small parts of the
-audio or video is considered acceptable).
+audio or video is considered acceptable). This protocol is quite old (it dates
+back to the days where Flash was used to make animation on webpages) and tends
+to be phased out in favor of HLS.
 
 Audio sources {#sec:audio-sources}
 -------------
