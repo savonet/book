@@ -258,8 +258,9 @@ touch with the community and obtain help\index{help} to get your problem solved:
 
 1. the [Liquidsoap website](https://liquidsoap.info/) contains an extensive
   up-to-date documentation and tutorials about specific points,
-2. the [Liquidsoap slack workspace](https://liquidsoapworkspace.slack.com/)\index{slack} is a
-  public chat on where you can have instantaneous discussions,
+2. the [Liquidsoap discord
+  chat](http://chat.liquidsoap.info)\index{discord}\index{chat} is a public chat
+  on where you can have instantaneous discussions,
 3. the [Liquidsoap mailing-list](savonet-users@lists.sf.net) is there if you
   would rather discuss by mail (how old are you?),
 4. the [Liquidsoap github
