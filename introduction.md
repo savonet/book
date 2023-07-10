@@ -267,7 +267,11 @@ touch with the community and obtain help\index{help} to get your problem solved:
   page](https://github.com/savonet/liquidsoap/issues)\index{github} is the place
   to report bugs,
 5. there is also a [Liquidsoap discussion
-   board](https://github.com/savonet/liquidsoap/discussions).
+   board](https://github.com/savonet/liquidsoap/discussions)
+6. we regularly organize a workshop called
+   [Liquidshop](http://www.liquidsoap.info/liquidshop/) where you can discuss
+   with creators and users of Liquidsoap; the videos of the presentations are
+   also made available afterward.
 
 Please remember to be kind, most of the people there are doing this on their
 free time!
