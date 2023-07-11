@@ -1,5 +1,5 @@
 #!./liquidsoap
-log.level.set(5) video.frame.width.set(640) video.frame.height.set(360) %include "ffmpeg-effect3.liq"
+log.level := 5; video.frame.width := 640; video.frame.height := 360; %include "ffmpeg-effect3.liq"
 s = single("lf.mp4")
 s = myfilter(s)
 output.file(fallible=true,

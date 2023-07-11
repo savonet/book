@@ -1,1 +1,1 @@
-settings.sandbox.set(true)
+settings.sandbox := true

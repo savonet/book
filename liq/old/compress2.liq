@@ -1,5 +1,5 @@
 #!./liquidsoap
-# log.level.set(5)
+# log.level := 5
 interactive.harbor()
 # s = playlist("~/Music")
 s = single("/home/smimram/Music/albums/Gonzales/Gonzales - solo piano/09 Paristocrats.mp3")

@@ -1,5 +1,5 @@
 #!/usr/bin/env liquidsoap
-log.level.set(5)
+log.level := 5
 s = blank(id="BLANK")
 s = normalize(id="NORMALIZE", s)
 output(s)

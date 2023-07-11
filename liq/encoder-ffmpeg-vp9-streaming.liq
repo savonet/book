@@ -1,5 +1,5 @@
 #!./liquidsoap
-log.level.set(5) s = single("lf.mp4") output.file(
+log.level := 5; s = single("lf.mp4") output.file(
 %ffmpeg(format="webm",
         %audio(codec="libopus", samplerate=48000, b="128k"),
         %video(codec="libvpx-vp9", width=854, height=480, g=75,

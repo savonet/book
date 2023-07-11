@@ -1,5 +1,5 @@
 #!./liquidsoap
-video.frame.width.set(640) video.frame.height.set(360) %include "ffmpeg-effect3.liq"
+video.frame.width := 640; video.frame.height := 360; %include "ffmpeg-effect3.liq"
 def myfilter'(s)
   s = ffmpeg.raw.encode.audio_video(%ffmpeg(%audio.raw, %video.raw), s)
   s = myfilter(s)

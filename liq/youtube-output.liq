@@ -1,5 +1,5 @@
 #!./liquidsoap
-log.level.set(5)
+log.level := 5
 radio = playlist("~/Music")
 video = single("image.jpg")
 radio = mux_video(video=video, radio)

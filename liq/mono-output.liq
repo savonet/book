@@ -1,4 +1,4 @@
 #!./liquidsoap -i
-log.level.set(5)
+log.level := 5
 s = single("test.mp3")
 output( (s : source(audio=pcm(mono))) )

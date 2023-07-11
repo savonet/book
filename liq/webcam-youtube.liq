@@ -1,5 +1,5 @@
 #!./liquidsoap
-log.level.set(5)
+log.level := 5
 # s = input.v4l2()
 # s = mux_audio(audio=input(), s)
 s = single("video.mkv")

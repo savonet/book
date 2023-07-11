@@ -1,5 +1,5 @@
 #!./liquidsoap
-log.level.set(5)
+log.level := 5
 s = playlist("videos.playlist")
 s = video.fade.out(duration=1., s)
 s = video.fade.in (duration=1., s)

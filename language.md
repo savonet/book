@@ -824,7 +824,7 @@ store results which are not going to be used afterwards:
 _ = 2 + 2
 ```
 
-### References
+### References {#sec:references}
 
 As indicated above, by default, the value of a variable cannot be
 changed. However, one can use a _reference_\index{reference} in order to be able to do this.
@@ -2040,11 +2040,11 @@ core language itself. Those are presented below.
 
 The main configuration\index{configuration} options are accessed through
 functions whose name are prefixed by `settings`. These settings affect the
-overall behavior of Liquidsoap. Given a setting, we can obtain its value by
-applying it to `()` and we can change its value by using the `set` method. For
-instance, the samplerate used for audio in Liquidsoap is controlled by the
-`settings.frame.audio.samplerate` setting. We can thus display its current value
-with
+overall behavior of Liquidsoap. Each setting is a reference: this means that,
+given a setting, we can obtain its value by applying it to `()` and we can
+change its value by using the `:=` syntax. For instance, the samplerate used for
+audio in Liquidsoap is controlled by the `settings.frame.audio.samplerate`
+setting. We can thus display its current value with
 
 ```{.liquidsoap include="liq/samplerate-get-print.liq" from=1}
 ```
@@ -2082,7 +2082,7 @@ durations.This setting is used as a hint for the duration, when
 needed when dealing with latencyor getting soundcard I/O correctly
 synchronized with liquidsoap.
 
-settings.frame.duration.set(0.04)
+settings.frame.duration := 0.04
 ```
 
 The value `0.04` at the bottom indicates the default value.

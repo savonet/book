@@ -1,5 +1,5 @@
 #!./liquidsoap
-log.level.set(5)
+log.level := 5
 radio = playlist("~/Music")
 def handle_metadata(m)
   h = http.post(

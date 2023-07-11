@@ -1,5 +1,5 @@
 #!./liquidsoap
-log.level.set(5)
+log.level := 5
 s = sine(duration=5.)
 m = sine(500.)
 def f(a, b)

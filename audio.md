@@ -652,7 +652,7 @@ First, the list of IPs which are allowed to connect to harbor can be changed
 with the following setting:
 
 ```liquidsoap
-settings.harbor.bind_addrs.set(["0.0.0.0"])
+settings.harbor.bind_addrs := ["0.0.0.0"]
 ```
 
 It takes as argument a list of allowed IPs, the default one `0.0.0.0` meaning
@@ -5447,8 +5447,8 @@ default, the logs are printed on the standard output when you run a script. You
 can also have them written to a file with
 
 ```liquidsoap
-log.file.set(false)
-log.file.path.set("/tmp/liquidsoap.log")
+log.file := false
+log.file.path := "/tmp/liquidsoap.log"
 ```
 
 where the second line specifies the file those should be written to. A typical
@@ -5476,7 +5476,7 @@ By default, only messages with importance up to 3 are displayed, and this can be
 changed by setting the `log.level` configuration:
 
 ```liquidsoap
-log.level.set(5)
+log.level := 5
 ```
 
 You can log at various levels using the functions `log.critical`, `log.severe`,
