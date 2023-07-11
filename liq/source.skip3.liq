@@ -1,4 +1,4 @@
-#!/usr/bin/env liquidsoap
+#!./liquidsoap
 s = playlist("~/Music")
 def skipper(~protocol, ~headers, ~data, uri)
   s.skip()
