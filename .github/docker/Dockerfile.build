@@ -1,4 +1,4 @@
-FROM savonet/liquidsoap:main
+FROM savonet/liquidsoap:rolling-release-v2.2.x
 
 USER root
 
