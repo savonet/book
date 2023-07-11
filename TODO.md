@@ -35,7 +35,4 @@
 - progress bar on videos (#3149).
 - stereotool
 
-- references are now getters with a set!
-  - mention this in functions and records sections
-  - replace all ! with ()
 - update error messages (we now have localization)

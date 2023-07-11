@@ -2370,20 +2370,42 @@ time (for instance, if they modify the same reference).
 
 ### Time
 
-In case you need it, the current time\index{time} can be retrieved using the `time`
-function. This function returns the number of seconds since the 1st of January
-1970, which is mostly useful to measure duration by considering the difference
-between two points in time. In order to convert this into more usual time
-notations you can use the functions `time.local` and `time.utc` which extract
-the usual information (year, month, day, hour, etc.), respectively according to
-the current time zone and the Greenwich median time, and return those in a
-record. For instance, we can print the current date with
+In case you need it, the current time\index{time} can be retrieved using the
+`time` function. This function returns the number of seconds since the 1st of
+January 1970, which is mostly useful to measure duration by considering the
+difference between two points in time. For instance, we can compute the time
+taken by the execution of a function `f` with
 
-```{.liquidsoap include="liq/time.liq"}
+```{.liquidsoap include="liq/time-duration.liq" from=2}
 ```
 
-As a useful variant, the function `time.up` returns the _uptime_\index{uptime} of the script,
-i.e. the number of seconds since its execution has begun.
+which stores the time before and after the execution of `f` and displays the
+difference. As a useful variant, the function `time.up` returns the
+_uptime_\index{uptime} of the script, i.e. the number of seconds since the
+beginning of its execution.
+
+In order to retrieve time in more usual notations, you can use the functions
+`time.local` and `time.utc` which return a record containing the usual
+information (year, month, day, hour, etc.), respectively according to the
+current time zone and the Greenwich median time. For instance, we can print the
+current date with
+
+```{.liquidsoap include="liq/time.liq" from=1}
+```
+
+If you do not need to manipulate time components and only print time, this can
+also be more conveniently done with the `time.string` function which takes a
+string as argument and replaces `%Y` by the year, `%m` by the month and so on,
+so that we can do
+
+```{.liquidsoap include="liq/time2.liq" from=1}
+```
+
+Finally, we mention here that the time zone can be retrieved and changed with
+the `time.zone` function:
+
+```{.liquidsoap include="liq/time.zone.liq" from=1}
+```
 
 Streams in Liquidsoap {#sec:quick-streams}
 ---------------------

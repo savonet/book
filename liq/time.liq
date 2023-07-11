@@ -1,2 +1,3 @@
+#!./liquidsoap
 t = time.local()
-print("The current date is #{t.year+1900}-#{t.mon}-#{t.mday}.")
+print("The current date is #{t.year}-#{t.month}-#{t.day}.")
