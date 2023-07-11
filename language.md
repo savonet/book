@@ -367,8 +367,8 @@ will print `The number 0.663455738438 is random.` (at least it did last time I
 tried).
 
 The string representation of any value in Liquidsoap can be obtained using the
-function `string_of`\indexop{string\_of}, e.g. `string_of(5)`{.liquidsoap} is `"5"`. Some other
-useful string-related function are
+function `string`\indexop{string}, e.g. `string(5)`{.liquidsoap} is `"5"`. Some
+other useful string-related function are
 
 - `string.length`: compute the length of a string
   ```
@@ -2166,11 +2166,11 @@ chapters.
 
 ### Type conversion
 
-The string representation of any value can be obtained with the `string_of`\indexop{string\_of}
-function:
+The string representation of any value can be obtained with the
+`string`\indexop{string} function:
 
 ```liquidsoap
-print(string_of([1,2,3]))
+print(string([1,2,3]))
 ```
 
 Most expected type conversion function are implemented with names of the form
