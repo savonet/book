@@ -827,10 +827,10 @@ _ = 2 + 2
 ### References
 
 As indicated above, by default, the value of a variable cannot be
-changed. However, one can use a _reference_\index{references} in order to be able to do this.
+changed. However, one can use a _reference_\index{reference} in order to be able to do this.
 Those can be seen as memory cells, containing values of a given fixed type,
 which can be modified during the execution of the program. They are created with
-the `ref`\indexop{ref} keyword, with the initial value of the cell as argument. For instance,
+the `ref`\indexop{ref} function, with the initial value of the cell as argument. For instance,
 
 ```{.liquidsoap include="liq/ref1.liq" to=0}
 ```
@@ -839,23 +839,24 @@ declares that `r` is a reference which contains `5` as initial value. Since `5`
 is an integer (of type `int`), the type of the reference `r` will be
 
 ```
-ref(int)
+(() -> int).{set : (int) -> unit}
 ```
 
-meaning that its a memory cell containing integers. On such a reference, two
-operations are available:
+It might be difficult for you to read right now (the syntax for curly brackets
+will be explained in [functions' section](#sec:functions) and [records'
+section](#sec:records) below), but all you need to know is that it indicates
+that, on such a reference, two operations are available:
 
-- one can obtain the value of the reference by using the `!`\indexop{!} keyword before the
-  reference, so that `!r` denotes the value contained in the reference `r`, for
-  instance
+- one can obtain the value of the reference `r` by writing `r()`, for instance
 
   ```liquidsoap
-  x = !r + 4
+  x = r() + 4
   ```
   
   declares the variable `x` as being 9 (which is 5+4),
   
-- one can change the value of the reference by using the `:=`\indexop{:=} keyword, e.g.
+- one can change the value of the reference by using the `:=`\indexop{:=}
+  keyword, e.g.
 
   ```liquidsoap
   r := 2
@@ -868,12 +869,12 @@ interactive session:
 
 ```
 # r = ref(5);;
-r : ref(int) = ref(5)
-# !r;;
+r : (() -> int).{set : (int) -> unit} = <fun>.{set=<fun>}
+# r();;
 - : int = 5
 # r := 2;;
 - : unit = ()
-# !r;;
+# r();;
 - : int = 2
 ```
 
@@ -881,22 +882,21 @@ Note that the type of a reference is fixed: once `r` is declared to be a
 reference to an integer, as above, one can only put integers into it, so that
 the script
 
-```{.liquidsoap include="liq/bad/ref.liq"}
+```{.liquidsoap include="liq/bad/ref.liq" from=1}
 ```
 
 will raise the error
 
 ```
-Error 5: this value has type ref(int)
-but it should be a subtype of ref(string)
+Error 5: this value has type string
+but it should be a subtype of int
 ```
 
 which can be explained as follows. On the first line, the declaration `r =
-ref(5)`{.liquidsoap} implies that `r` is of type `ref(int)` since it initially
-contains an integer. However, on the second line, we try to assign a string to `r`,
-which would only be possible if `r` was a reference to a string, i.e., of type
-`ref(string)`. Since `r` cannot have both types `ref(int)` and `ref(string)`, an
-error is raised.
+ref(5)`{.liquidsoap} implies that `r` is a reference to an `int` since it
+initially contains `5` which is an integer. However, on the second line, we try
+to assign a string to `r`, which would only be possible if `r` was a reference
+to a string.
 
 ### Loops
 
@@ -921,7 +921,7 @@ reference `n` as long as its value is below `10`:
 ```
 
 The variable `n` will thus successively take the values `1`, `2`, `4`, `8` and
-`16`, at which point the looping condition `!n < 10` is not satisfied anymore
+`16`, at which point the looping condition `n() < 10` is not satisfied anymore
 and the loop is exited. The printed value is thus `16`.
 
 Functions {#sec:functions}
@@ -1078,6 +1078,7 @@ syntax, which allows grouping multiple expressions as one. For instance,
 ```{.liquidsoap include="liq/on_meta3.liq" from=2 to=-1}
 ```
 
+<!--
 #### Anonymous function with no arguments
 
 You will see that it is quite common to use anonymous functions with no
@@ -1093,6 +1094,7 @@ instead of
 ```liquidsoap
 fun () -> ...
 ```
+-->
 
 ### Labeled arguments
 
@@ -1376,7 +1378,14 @@ which is somewhat heavy, we have introduced the alternative syntax
 {e}
 ```
 
-for it.
+for it. It can be thought of as a variant of the expression `e` which will be
+evaluated each time it is used instead of being evaluated once. Its use is
+illustrated below.
+
+Finally, we should mention an important fact. Since the value of a reference `r`
+can be queried by writing `r()`, any reference can be considered as a getter:
+this is the function which, when queried, will return the contents of the
+reference!
 
 #### Variations on a volume
 
@@ -1413,11 +1422,25 @@ More interestingly, we can use the value of a float reference `v` for
 amplification:
 
 ```liquidsoap
-radio = amplify({!v}, mic)
+radio = amplify({v()}, mic)
 ```
 
 when the value of the reference gets changed, the amplification will get changed
-too.
+too. Moreover, since any reference can be considered as a getter, as mentioned
+above, this can be written in an even simpler way:
+
+```liquidsoap
+radio = amplify(v, mic)
+```
+
+However, we need to use the above syntax if we want to manipulate the value of
+the reference. For instance,
+
+```liquidsoap
+radio = amplify({2 * v()}, mic)
+```
+
+will amplify by twice the value of `v`.
 
 In practice, float getters are often created using `interactive.float`\index{interactive variable}\index{variable!interactive} which
 creates a float value which can be modified on the telnet server (this is an
@@ -1819,6 +1842,25 @@ This indicates that the returned source has a `reload` method, which allows
 reloading the playlist, possibly specifying a new file, as well as the `skip`
 method described above. If you try at home, you will see that they are actually
 many more methods.
+
+### References
+
+You should now be able to fully understand the type given to references. We
+recall for instance that the type of `ref(5)` is
+
+```
+(() -> int).{set : (int) -> unit}
+```
+
+This means that such a reference consists of a function of type `() -> int`,
+taking no argument and returning an integer (the current value of the
+reference), together with a method `set` of type `(int) -> unit`, which takes as
+argument an integer (and, when called, modifies the value of the reference
+according to the argument). Since a reference `r` can be considered as a
+function, this explains why we have been writing `r()` to get its value. In
+order to modify its value, say set it to 7, we can call the method `set` and
+write `r.set(7)`{.liquidsoap}. In fact, the syntax `r := 7`{.liquidsoap} is
+simply a shorthand for this.
 
 Advanced values
 ---------------

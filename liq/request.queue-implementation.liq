@@ -2,9 +2,9 @@
 def request.queue(~id="", ~queue=[])
   queue = ref(queue)
   def next()
-    if not list.is_empty(!queue) then
-      r      = list.hd(!queue)
-      queue := list.tl(!queue)
+    if not list.is_empty(queue()) then
+      r      = list.hd(queue())
+      queue := list.tl(queue())
       log.info(label=id, "Next song will be #{request.uri(r)}.")
       r
     else
@@ -13,7 +13,7 @@ def request.queue(~id="", ~queue=[])
   end
   def push(r)
     log.info(label=id, "Pushing request #{r} on the queue.")
-    queue := list.append(!queue, [r])
+    queue := list.append(queue(), [r])
   end
   s = request.dynamic(next)
   s.{push=push}

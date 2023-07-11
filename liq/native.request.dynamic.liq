@@ -1,8 +1,8 @@
 #!./liquidsoap
 files = ref(list.shuffle(playlist.files("~/Music")))
 def next_song()
-  f = list.hd(!files)
-  files := list.tl(!files)
+  f = list.hd(files())
+  files := list.tl(files())
   print("Next song: #{f}")
   request.create(f)
 end

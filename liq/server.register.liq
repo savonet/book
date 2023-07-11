@@ -10,8 +10,8 @@ server.register(usage="select <rap/rock/techno>",
                 description="Switch between our music sources.",
                 "select", on_select)
 radio = switch(track_sensitive=false, [
-  ({!selected == "rap"},    rap),
-  ({!selected == "rock"},   rock),
-  ({!selected == "techno"}, techno)
+  ({selected() == "rap"},    rap),
+  ({selected() == "rock"},   rock),
+  ({selected() == "techno"}, techno)
 ])
 output(radio)

@@ -5,5 +5,5 @@ def metadata.getter.float(init, metadata, s)
     if s != "" then x := float_of_string(s) end
   end
   source.on_metadata(s, f)
-  {!x}
+  {x()}
 end
