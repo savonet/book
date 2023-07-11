@@ -1661,7 +1661,7 @@ A typical use of this is when providing arguments which are functions. For
 instance, if we want to print all the elements of a list without new lines
 between them, we can do
 
-```{.liquidsoap include="liq/list-print1.liq"}
+```{.liquidsoap include="liq/list-print1.liq" from=1}
 ```
 
 Here, the function `print`\indexop{print} is of type

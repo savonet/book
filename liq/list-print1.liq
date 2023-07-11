@@ -1,1 +1,2 @@
-list.iter(print(newline=false), [1, 2, 3])
+#!./liquidsoap
+list.iter(fun(x) -> print(newline=false, x), [1, 2, 3])
