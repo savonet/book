@@ -3319,47 +3319,43 @@ which would make the stream of the `radio` source available at the url
 
 ### File output
 
-The next output we are going to see is the file output which, as you would expect,
-is performed by the operator `output.file`\indexop{output.file}. It takes three arguments: the
-encoding format, the name of the file, and the source we want to encode in the
-file. For instance, we can encode a source `s` in the mp3 file `out.mp3` with
+The next output we are going to see is the file output which, as you would
+expect, is performed by the operator
+`output.file`\indexop{output.file}\index{file!output}. It takes three arguments:
+the encoding format, the name of the file, and the source we want to encode in
+the file. For instance, we can encode a source `s` in the mp3 file `out.mp3`
+with
 
 ```{.liquidsoap include="liq/output.file.liq" from=2}
 ```
 
-The file name can contain special substrings which will automatically be replaced:
-
-- some strings stand for the current time: `%Y` (year), `%m` (month), `%d`
-  (day), `%H` (hour), `%M` (minute), `%S` (second), `%w` (weekday), `%z`
-  (timezone),
-- because of the above replacements, `%` is a special character: if you want to
-  write `%` in a filename, you should write `%%` instead,
-- some strings stand for the current metadata of the source: `$(title)` is the
-  title, `$(artist)` is the artist, `$(album)` is the album, and so on.
-
-For instance, when archiving a radio stream, it is useful to have the current
-time in the filename in order not to overwrite the file if the script is
-restarted:
+The name of the file can be a string getter, which will dynamically generate the
+filename. This is particularly useful in conjunction with `time.string` in order
+to generate a name based on current time, for instance when archiving a radio
+stream as in the following example:
 
 ```{.liquidsoap include="liq/output.file2.liq" from=2}
 ```
 
-The parameters `reopen_when` and `reopen_on_metadata` are particularly useful in
-association to this mechanism in order to generate multiple files. The parameter
-`reopen_when` allows to regenerate a new file (with an updated filename) when a
-predicate is true. For instance, we can generate an archive per hour with:
+This mechanism is particularly useful when used in conjunction with the
+reopening mechanism: when the method `reopen` is called, the current file is
+closed and a new file is created. In order to make a new archive file every
+hour, one can thus do
 
 ```{.liquidsoap include="liq/output.file3.liq" from=2}
 ```
 
-Here, the predicate `{0m}` given for the `reopen_when` argument is true whenever
-the current minute is 0, i.e. at the beginning of every hour: we will thus
-change file at the beginning of every hour. Also note that the path of the
-archive file contains a directory which depends on the current date: Liquidsoap
-will take care of creating the required directories for us. Similarly, when the
-argument `reopen_on_metadata` is set to `true`, the file will be updated when
-some new track begins. For instance, we can create a new file for each track
-with the current date, artist and title with:
+or, if you insist in reopening at the beginning of every hour,
+
+```{.liquidsoap include="liq/output.file3b.liq" from=2}
+```
+
+A similar mechanism can be used to change the file name according to
+metadata. In the following example, the name of the file is stored in a
+reference. We then use `on_metadata` to register a handler on the stream which,
+when there is new metadata, updates the filename accordingly and reopens the
+file. It will thus create a new file for each track, whose name is determined by
+the metadata.
 
 ```{.liquidsoap include="liq/output.file4.liq" from=2}
 ```

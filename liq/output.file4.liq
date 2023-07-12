@@ -1,4 +1,9 @@
 #!./liquidsoap
 radio = mksafe(playlist("~/Music")) radio = source.run(radio, every=2., {radio.skip()})
-output.file(%mp3, "archive/%Y-%m-%d/$(artist) - $(title).mp3", radio,
-            reopen_on_metadata=true)
+filename = ref("archive/default.mp3")
+f = output.file(%mp3, filename, radio)
+def handle_metadata(m)
+  filename := "archive/#{m['artist']} - #{m['title']}.mp3"
+  f.reopen()
+end
+radio.on_metadata(handle_metadata)
