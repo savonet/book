@@ -1,4 +1,4 @@
-#!./liquidsoap
+#!./liquidsoap --safe
 live = source.available(sine(), {time() mod 5. <= 1.})
 emergency = chop(every=2., sine(880.))
 music = playlist("~/Music")

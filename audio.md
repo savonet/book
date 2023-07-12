@@ -955,6 +955,7 @@ track insensitive fallback operator, but it will also skip the current track of
 the `music` source after switching to the `live` source, so that we will begin
 on a fresh track when switching back again to `music`.
 
+<!--
 For didactic purposes, let us provide another way of implementing this. The
 `on_leave` method of a source allows registering a function which is to be
 called when the source is not used anymore. We can use this to enforce skipping
@@ -963,6 +964,7 @@ will behave like the above one:
 
 ```{.liquidsoap include="liq/fallback.skip-on_leave.liq" from=5 to=-1}
 ```
+-->
 
 ### Switching and time predicates
 
