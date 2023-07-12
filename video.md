@@ -36,7 +36,7 @@ Liquidsoap. There are currently two of them:
 
 The videos can even be directly be pulled from YouTube with the `youtube-dl`\indexop{youtube-dl}
 protocol, which requires that you have installed the
-[`youtube-dl`](https://youtube-dl.org/) program:
+[`yt-dlp`](https://github.com/yt-dlp/yt-dlp) program:
 
 ```{.liquidsoap include="liq/play-video-yt.liq" from=1}
 ```
@@ -110,8 +110,7 @@ intensity) in hexadecimal.
 ### Images
 
 Images can be used as sources just as video files: they are accepted by
-operators such as `single`, `playlist`, etc. However, if you try the following
-simple script
+operators such as `single`, `playlist`, etc. For instance,
 
 ```{.liquidsoap include="liq/image.liq" from=1}
 ```
