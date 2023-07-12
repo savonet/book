@@ -2,10 +2,8 @@
 radio         = playlist("~/Music")
 jingle_player = request.player()
 radio         = add(normalize=false, [jingle_player, radio])
-def jingles(~protocol, ~headers, ~data, uri)
-  log.important("Serving #{uri}")
-  let (uri, args) = url.split(uri)
-  n = list.assoc(default="", "number", args)
+def jingles(r)
+  n = r.query["number"]
   if n != "" then
     jingle_player.play(request.create("jingle#{n}.mp3"))
     http.response(data="Playing jingle.")
@@ -14,5 +12,5 @@ def jingles(~protocol, ~headers, ~data, uri)
                   data=file.contents("jingles.html"))
   end
 end
-harbor.http.register("/jingles", jingles)
+harbor.http.register.simple("/jingles", jingles)
 output(radio)
