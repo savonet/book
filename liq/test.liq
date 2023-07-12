@@ -1,7 +1,6 @@
 #!./liquidsoap
-def handler(_, response)
-  response.content_type("text; charset=UTF-8")
-  response.data("This is my answer!")
+def handler(request)
+  http.response(data="Request: #{request}")
 end
-harbor.http.register(port=8000, method="GET", "/test.*", handler)
+harbor.http.register.simple("/test", handler)
 output.dummy(sine())
