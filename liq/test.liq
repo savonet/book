@@ -1,5 +1,7 @@
 #!./liquidsoap
-s1 = single("jo.mp4")
-s2 = single("webcam.mkv")
-s = add([s1, s2])
-output.audio_video(s)
+def handler(_, response)
+  response.content_type("text; charset=UTF-8")
+  response.data("This is my answer!")
+end
+harbor.http.register(port=8000, method="GET", "/test.*", handler)
+output.dummy(sine())
