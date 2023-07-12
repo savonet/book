@@ -500,9 +500,9 @@ also use Liquidsoap protocols. In our example, we can implement the protocol as
 ```{.liquidsoap include="liq/add_protocol2.liq" from=1 to=-3}
 ```
 
-We use the `add_protocol` to register our protocol `artist`, where the function
-`artist_protocol`, which returns the list of files corresponding to a request,
-simply returns the list of all the files printed by the command
+We use the `protocol.add` function to register our protocol `artist`, where the
+function `artist_protocol`, which returns the list of files corresponding to a
+request, simply returns the list of all the files printed by the command
 `find_by_artist`. The `doc` parameter is free form documentation for the
 protocol and the `syntax` parameter provides an illustration of a typical
 request using this protocol (both are only for documentation purposes). Once

@@ -1766,7 +1766,7 @@ Some of those protocols are built in the language such as
 - `annotate` to add metadata.
 
 Some other protocols are defined in the standard library (in the file `protocols.liq`)
-using the `add_protocol` function which registers a new protocol. This function
+using the `protocol.add` function which registers a new protocol. This function
 takes as argument a function `proto` of type
 
 ```
@@ -1780,10 +1780,10 @@ which indicates how to perform the resolution: this function takes as arguments
 - the URI to resolve,
 
 and returns a list of URI it resolves to. Additionally, the function
-`add_protocol` takes arguments to document the function (`syntax` describes the
-URI accepted by this protocol and `doc` is freeform description of the
-protocol) as well as indicate whether the protocol is `static` or not and
-whether the files it produces are `temporary` or not.
+`protocol.add` takes arguments to document the function (`syntax` describes the
+URI accepted by this protocol and `doc` is freeform description of the protocol)
+as well as indicate whether the protocol is `static` or not and whether the
+files it produces are `temporary` or not.
 
 #### Request leaks
 
