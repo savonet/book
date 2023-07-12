@@ -22,10 +22,13 @@ Each source\index{source} has a number of channels of
 
 - _audio_ data: containing sound,
 - _video_ data: containing animated videos,
-- _midi_ data: containing notes to be played (typically, by a synthesizer).
+- _midi_ data: containing notes to be played (typically, by a synthesizer),
+- _metadata_: containing information about the current track (typically, title,
+  artist, etc.),
+- _track marks_: indicating when a track is ending.
 
-The last kind of data is much less used in practice in Liquidsoap, so that we
-will mostly forget about it. Moreover, each of those channels can either contain
+The midi data is much less used in practice in Liquidsoap, so that we will
+mostly forget about it. The audio and video channels can either contain
 
 - _raw_ data: this data is in an internal format (usually obtained by decoding
   compressed files), suitable for manipulation by operators within Liquidsoap,
@@ -35,12 +38,12 @@ will mostly forget about it. Moreover, each of those channels can either contain
 
 In practice, users manipulate sources handling raw data most of the time since
 most operations are not available on encoded data, even very basic ones such as
-changing the volume or performing transitions between tracks. Encoded data was
-introduced starting from version 2.0 of Liquidsoap and we have seen in [an
-earlier section](#sec:encoded-streams) that it is however useful to avoid
-encoding a stream multiple times in the same format, e.g. when sending the same
-encoded stream to multiple icecast instances, or both to icecast and in HLS,
-etc.
+changing the volume or performing transitions between tracks. Support for
+encoded data was introduced starting from version 2.0 of Liquidsoap and we have
+seen in [an earlier section](#sec:encoded-streams) that it is mostly useful to
+avoid encoding a stream multiple times in the same format, e.g. when sending the
+same encoded stream to multiple icecast instances, or both to icecast and in
+HLS, etc.
 
 The type of sources is of the form
 
