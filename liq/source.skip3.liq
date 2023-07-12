@@ -1,8 +1,8 @@
 #!./liquidsoap
 s = playlist("~/Music")
-def skipper(~protocol, ~headers, ~data, uri)
+def skipper(_)
   s.skip()
   http.response(data="The current song was skipped!")
 end
-harbor.http.register(port=8000, "skip", skipper)
+harbor.http.register.simple(port=8000, "/skip", skipper)
 output(s)

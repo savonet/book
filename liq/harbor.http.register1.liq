@@ -1,6 +1,6 @@
 #!./liquidsoap
-def answer(~protocol, ~headers, ~data, uri)
+def answer(_)
   http.response(content_type="text/plain", data="It works!")
 end
-harbor.http.register("/test", answer)
+harbor.http.register.simple("/test", answer)
 output.dummy(blank())
