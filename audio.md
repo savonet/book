@@ -378,17 +378,18 @@ will consist in downloading the file in the appropriate way, but not
 only. Liquidsoap supports many protocols and even the possibility of adding your
 own.
 
-For instance, the `youtube-dl` protocol allows the use of the `youtube-dl`\indexop{youtube-dl}
-program in order to download files from YouTube.
+For instance, the `youtube-dl` protocol allows the use of the
+`youtube-dl`\indexop{youtube-dl} program (or its more recent alternative
+`yt-dlp`) in order to download files from YouTube.
 
 ```{.liquidsoap include="liq/youtube-dl.liq" from=1 to=-1}
 ```
 
 when playing such a file, we need to do more than simply connect to some
 particular location over the internet, and have to do tricky stuff in order to
-fetch the video from YouTube. Similarly, the `say`\indexop{say} protocol uses the
-text-to-speech software `text2wave` provided by the festival project in order to
-synthesize speech. For instance,
+fetch the video from YouTube. Similarly, the `say`\indexop{say} protocol uses
+text-to-speech software (either `pico2wave`, or `gtts`, or `text2wave` provided
+by the festival project) in order to synthesize speech. For instance,
 
 ```{.liquidsoap include="liq/say.liq" from=1 to=-1}
 ```
