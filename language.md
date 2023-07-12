@@ -2289,7 +2289,6 @@ some user-contributed data is used). This is further detailed in
 
 \index{thread}
 
-
 The function `thread.run`\indexop{thread.run} can be used to run a function asynchronously in a _thread_, meaning
 that the function will be executed in parallel to the main program and will not
 block other computations if it takes time. It takes two optional arguments:
@@ -2340,18 +2339,11 @@ new strategies for managing the gain for instance.
 
 #### Conditional execution
 
-
-Another useful function is `thread.when`, which executes a function when a
 Another useful function is `thread.when`\indexop{thread.when}, which executes a
-predicate (a boolean getter, of type `{bool}`) becomes true. By default, the
 function when a predicate (a boolean getter, of type `{bool}`) becomes true. By
-value of the predicate is checked every second, this can be changed with the
 default, the value of the predicate is checked every half second, this can be
-`every` parameter. For instance, suppose that we have a file named "`song`"
 changed with the `every` parameter. For instance, suppose that we have a file
-containing the path to a song, and we want that each time we change the contents
 named "`song`" containing the path to a song, and we want that each time we
-of this file, the new song is played. This can be achieved as follows:
 change the contents of this file, the new song is played. This can be achieved
 as follows:
 
