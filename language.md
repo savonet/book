@@ -2372,7 +2372,7 @@ time at the beginning of every hour as follows:
 ```
 
 Namely, the condition `0m` is true when the minute of the current time is zero,
-i.e. we are the beginning of the hour: when this is the case we push in the
+i.e. we are the beginning of the hour: when this is the case we push in the
 queue a request to say the current time. Note that even though the condition is
 checked very regularly, the function `read_time` is called only once at the
 beginning of every hour: this is because, by default, `thread.when` waits for
