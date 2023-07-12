@@ -1,4 +1,5 @@
 #!./liquidsoap
-log.level := 5
-s = input.http("https://icecast.radiofrance.fr/fip-hifi.aac?id=liq")
-output(s)
+s1 = single("jo.mp4")
+s2 = single("webcam.mkv")
+s = add([s1, s2])
+output.audio_video(s)
