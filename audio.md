@@ -4483,7 +4483,10 @@ JSON        `[["f", 1], ["b", 4]]`  `{"x": 1, "y": "a"}`
 The default output of `json.stringify` is designed to be pleasant to read for
 humans. If you want to have a small representation (without useless spaces and
 newlines), you can pass the argument `compact=true` to the
-function. Alternatively, one can also use the syntax
+function.
+
+<!--
+Alternatively, one can also use the syntax
 
 ```liquidsoap
 let json.stringify j = data
@@ -4504,6 +4507,7 @@ will store the JSON object
 ```
 
 into `j` instead of the associative list shown above.
+-->
 
 It is possible to create abstract JSON objects using the function `json()` on
 which we will be able to incrementally add fields using the `add` method (or
