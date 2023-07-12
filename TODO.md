@@ -19,10 +19,9 @@
 
 - les settings (#1722)
 - `--conf-descr` renommé en `--list-settings`
-- `dtmf.detect`
+- `dtmf.detect` dtmf detection
 - playlists only have given number of requests in advance and not time anymore
   (#1791)
-- dtmf detection
 - mention `output.youtube.live`
 - regexps #1881
 - cons notation for lists

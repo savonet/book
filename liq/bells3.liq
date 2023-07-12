@@ -1,4 +1,4 @@
-#!./liquidsoap
+#!./liquidsoap --safe
 s = request.player()
 output(s)
 def new()

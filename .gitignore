@@ -12,6 +12,7 @@
 *.out
 *.pdf
 *.toc
+*.rst
 language.dtd
 book.html
 book.tex

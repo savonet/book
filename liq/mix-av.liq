@@ -1,5 +1,5 @@
 #!./liquidsoap
 s1 = single("test.mp4")
 s2 = single("test.mp4")
-s = mux_audio(audio=drop_video(s1), drop_audio(s2))
-output.audio_video(s)
+s = source.mux.audio(audio=source.drop.video(s1), source.drop.audio(s2))
+output(s)

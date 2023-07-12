@@ -1,7 +1,9 @@
 #!./liquidsoap
 s = normalize(playlist("~/Music")) wet = interactive.float("wet", min=0., max=1., 1.) interactive.harbor() s0 = s
-compress = compress(attack=100., release=200., threshold=-20.,
-                    ratio=6., gain=7.)
+def compress(s)
+  compress(attack=100., release=200., threshold=-20., ratio=6.,
+           gain=7., s)
+end
 s = add(normalize=false, [
   compress(filter.iir.eq.low     (frequency=200.,        s)),
   compress(filter.iir.eq.low_high(low=200., high=800.,   s)),

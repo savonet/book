@@ -481,9 +481,10 @@ will print a list of files such as
 
 We are going to define a new protocol named `artist` so that, when playing a
 file such as `artist:Halliday`, Liquidsoap will run the above command in order
-to find a song. This can be done by using the `add_protocol`\indexop{add\_protocol} operator: its first
-mandatory argument is the name of the protocol (here, `artist`) and the second
-one is a function which takes as arguments
+to find a song. This can be done by using the
+`protocol.add`\indexop{protocol.add} operator: its first mandatory argument is
+the name of the protocol (here, `artist`) and the second one is a function which
+takes as arguments
 
 - a function `rlog` to log the resolution process (you can use it to print
   whatever is useful for you to debug problems during the generation of the file),
@@ -499,9 +500,9 @@ also use Liquidsoap protocols. In our example, we can implement the protocol as
 ```{.liquidsoap include="liq/add_protocol2.liq" from=1 to=-3}
 ```
 
-We use the `add_protocol` to register our protocol `artist`, where the function
-`artist_protocol`, which returns the list of files corresponding to a request,
-simply returns the list of all the files printed by the command
+We use the `protocol.add` function to register our protocol `artist`, where the
+function `artist_protocol`, which returns the list of files corresponding to a
+request, simply returns the list of all the files printed by the command
 `find_by_artist`. The `doc` parameter is free form documentation for the
 protocol and the `syntax` parameter provides an illustration of a typical
 request using this protocol (both are only for documentation purposes). Once
@@ -954,6 +955,7 @@ track insensitive fallback operator, but it will also skip the current track of
 the `music` source after switching to the `live` source, so that we will begin
 on a fresh track when switching back again to `music`.
 
+<!--
 For didactic purposes, let us provide another way of implementing this. The
 `on_leave` method of a source allows registering a function which is to be
 called when the source is not used anymore. We can use this to enforce skipping
@@ -962,6 +964,7 @@ will behave like the above one:
 
 ```{.liquidsoap include="liq/fallback.skip-on_leave.liq" from=5 to=-1}
 ```
+-->
 
 ### Switching and time predicates
 
@@ -3400,9 +3403,9 @@ follows:
 The first thing we need to do here is to generate a video stream. Fancy ways to
 achieve this are detailed in [this chapter](#chap:video). Here, we simply take
 an image `image.jpg`, generate a `video` stream from it and add it to the
-`radio` stream using the `mux_video` operator. Note that if you wanted to stream
-a video `video.mp4` instead of a static image, you could simply replace the
-second line by\indexop{output.url}
+`radio` stream using the `source.mux.video` operator. Note that if you wanted to
+stream a video `video.mp4` instead of a static image, you could simply replace
+the second line by\indexop{output.url}
 
 ```liquidsoap
 video = single("video.mp4")
@@ -4476,7 +4479,10 @@ JSON        `[["f", 1], ["b", 4]]`  `{"x": 1, "y": "a"}`
 The default output of `json.stringify` is designed to be pleasant to read for
 humans. If you want to have a small representation (without useless spaces and
 newlines), you can pass the argument `compact=true` to the
-function. Alternatively, one can also use the syntax
+function.
+
+<!--
+Alternatively, one can also use the syntax
 
 ```liquidsoap
 let json.stringify j = data
@@ -4497,6 +4503,7 @@ will store the JSON object
 ```
 
 into `j` instead of the associative list shown above.
+-->
 
 It is possible to create abstract JSON objects using the function `json()` on
 which we will be able to incrementally add fields using the `add` method (or
@@ -4962,7 +4969,7 @@ https. This can be achieved with the functions `http.get`\indexop{http.get} whic
 argument and returns the contents of the served page as a string. For instance,
 you can display the changelog for Liquidsoap with
 
-```{.liquidsoap include="liq/https.get.liq"}
+```{.liquidsoap include="liq/https.get.liq" from=1}
 ```
 
 The value returned by the function `http.get` also features the following
@@ -5028,7 +5035,7 @@ local host. This means that a file
 will be available at the url
 
 ```
-http://localhost:8000/dir/file.mp3
+http://localhost:8000/music/dir/file.mp3
 ```
 
 The option `browse=true` makes it so that, for a directory, the list of files it
@@ -5053,38 +5060,39 @@ be specified manually with the `content_type` argument of `harbor.http.static`.
 #### Serving dynamic webpages
 
 The full power of the harbor server can be used through the
-`harbor.http.register` function, which allows serving http requests with
+`harbor.http.register.simple` function, which allows serving http requests with
 dynamically generated answers. It takes as arguments
 
 - `port`: the port of the server (`8000` by default),
 - `method`: the kind of request we want to handle (`"GET"`, `"POST"`, etc.,
   default being `"GET"`),
-- the url we want to serve,
-- the serving function.
+- the path we want to serve,
+- the serving function, aka the handler for requests.
 
-This last function generates the answer for the request. Its type is
+This last handler function generates the answer (typically, a webpage) for a
+request. The argument of the handler is a record describing the request. Its
+main fields are
 
-```
-(protocol : string, headers : [string * string], data : string, string) -> {string}
-```
-
-which indicates that it receives as arguments
-
-- `protocol`: the protocol for the request (e.g. `"HTTP/1.1"`),
-- `headers`: the headers for the request,
+- `headers`: a list of headers for the request,
 - `data`: the input data (for POST requests),
-- the uri we are serving,
+- `method`: the method used to issued the request (`"GET"`, `"POST"`, etc.),
+- `path`: the path on which the request was made,
+- `query`: the arguments passed on the url.
 
-and returns a string which is the http answer. This answer has to follow a
-particular format specified by the http protocol, and is usually generated by
-`http.response` which takes as argument the protocol (HTTP/1.1 by default), the
-status code (200 by default), the headers (none by default), the content type
-and the data of the answer, and properly formats it. For instance, in the script
+For instance, if we go to `http://localhost:8000/test?a=2&b=3`, the `path` will
+be `"/test"` and the `query` will be the list `[("a","2"),("b","3")]`. The
+handler returns a string which is the http answer (to be precise, this is a
+string getter because the answer might be very long and thus split in
+parts). This answer has to follow a particular format specified by the http
+protocol, and is usually generated by `http.response` which takes as argument
+the protocol (HTTP/1.1 by default), the status code (200 by default), the
+headers (none by default), the content type and the data of the answer, and
+properly formats it. For instance, in the script
 
 ```{.liquidsoap include="liq/harbor.http.register1.liq" from=1 to=-1}
 ```
 
-we register the function `answer` on the uri `/test` which, when called, simply
+we register the function `answer` on the path `/test` which, when called, simply
 prints `It works!` as answer. You can test it by browsing the url
 
 ```
@@ -5096,6 +5104,28 @@ HTML:
 
 ```{.liquidsoap include="liq/harbor.http.register2.liq" from=1 to=-1}
 ```
+
+The variant `harbor.http.register.simple.regexp` allows registering at once a
+handler on every matching a regular expression. For instance, in the following
+example, we register a handler on every path _starting_ with `/test`:
+
+```{.liquidsoap include="liq/harbor.http.register3.liq" from=1 to=-1}
+```
+
+so that if we go to
+
+```
+http://localhost:8000/test123
+```
+
+we will see the message
+
+```
+We are serving /test123.
+```
+
+In practice, the handler will often check the path and provide an answer
+depending on it.
 
 #### Skipping tracks
 
@@ -5129,7 +5159,7 @@ the following script shows the metadata of our `radio` source encoded in JSON:
 We begin by declaring a reference `last_metadata` which contains the metadata
 for the last played track. Then, we register a callback so that whenever a new
 track occurs in `radio` we change the value of `last_metadata` according to its
-metadata. And finally, we register at the url `/metadata` a function which
+metadata. And finally, we register at the path `/metadata` a function which
 returns a JSON encoding of the last metadata we have seen. As usual, the
 metadata can be retrieved by browsing at
 
@@ -5148,12 +5178,13 @@ which will provide an answer of the following form:
 }
 ```
 
-This can be used with AJAX backends to fetch the current metadata of our radio.
+This could then used by an AJAX backends to fetch the current metadata of our
+radio.
 
 #### Enqueuing tracks
 
 We can also make use of the arguments of the serving function. For instance, we
-want that whenever we go to an url of the form
+want that, whenever we go to an url of the form
 
 ```
 http://localhost:8000/play?file=test.mp3&title=La%20bohème
@@ -5170,26 +5201,17 @@ space. This can be achieved as follows:\index{queue}\indexop{request.queue}
 ```
 
 We begin by declaring that our radio consists of a requests queue with a
-fallback on a default playlist. We then register the function `play` on the uri
-`/play`. When we access the above url, this function will receive
-
-```
-/play?file=test.mp3&title=La%20bohème
-```
-
-as `uri` argument. It uses `url.split` to split it into a pair consisting
-of the uri part (`/play`) and a list of arguments:
+fallback on a default playlist. We then register the function `play` on the path
+`/play`. We can then obtain the arguments of the query as the `query` field of
+the request which, in the case of the above url will be the following list of
+arguments:
 
 ```
 [("file", "test.mp3), ("title", "La bohème")]
 ```
 
-This function also takes care of decoding the url (`%20` was changed into a
-space in the title). Incidentally, if you need to decode an url without
-splitting it, you can use the `url.decode` function (and conversely, the
-function `url.encode` encodes a string into an url). Finally, the function
-pushes the corresponding request into the queue and answers that this has been
-performed.
+Finally, the function pushes the corresponding request into the queue and
+answers that this has been performed.
 
 Here, we validate the request by ensuring that the corresponding file
 exists. Generally, you should always validate data coming from users (even if
@@ -5262,7 +5284,7 @@ following script:
 ```
 
 Here, we suppose that we already have a `radio` source. We begin by adding a
-queue `jingle_queue` on top of the radio. We then serve the url `/jingles` with
+queue `jingle_queue` on top of the radio. We then serve the path `/jingles` with
 function `jingles`: if there is a `number` argument, we play the file
 `jingleN.mp3` where `N` is the number passed as argument, otherwise we simply
 display the page `jingles.html`.
@@ -5271,10 +5293,25 @@ Since we use a request queue, we cannot play two jingles at once: if we press
 multiple buttons at once, the jingles will be played sequentially. If instead of
 jingles you have some sound effects (for instance, laughter, clapping, etc.),
 you might want to play the files immediately. This can be achieved by using
-`request.player`\indexop{request.player} instead of `request.queue` to play the jingles (and the method
-to play them is then `play` instead of `push`).
+`request.player`\indexop{request.player} instead of `request.queue` to play the
+jingles (and the method to play them is then `play` instead of `push`).
 
-<!-- liq/harbor.http.register-jingles.liq -->
+#### Low-level API
+
+An alternative API for handling requests, more in the node/express style, is
+provided by the function `harbor.http.register` (note that there is no `.simple`
+in the end). The arguments are pretty similar to those of
+`harbor.http.register.simple` excepting that the handler now takes to arguments:
+
+- the request as before, and
+- a response record whose fields can be called to build the answer.
+
+A typical handler will first call the field `content_type` of the response to
+set the content type and then make a calls to the field `data` in order to
+output data:
+
+```{.liquidsoap include="liq/harbor.http.register.nosimple.liq" from=1 to=-1}
+```
 
 #### Limitations and configuration
 

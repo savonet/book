@@ -1,4 +1,5 @@
 #!./liquidsoap
-log.level := 5
-s = input.http("https://icecast.radiofrance.fr/fip-hifi.aac?id=liq")
-output(s)
+v = video.fill(color=0xff0000, blank())
+a = sine()
+s = source.mux.video(video=v, a)
+output.audio_video(s)

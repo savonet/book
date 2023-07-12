@@ -22,10 +22,13 @@ Each source\index{source} has a number of channels of
 
 - _audio_ data: containing sound,
 - _video_ data: containing animated videos,
-- _midi_ data: containing notes to be played (typically, by a synthesizer).
+- _midi_ data: containing notes to be played (typically, by a synthesizer),
+- _metadata_: containing information about the current track (typically, title,
+  artist, etc.),
+- _track marks_: indicating when a track is ending.
 
-The last kind of data is much less used in practice in Liquidsoap, so that we
-will mostly forget about it. Moreover, each of those channels can either contain
+The midi data is much less used in practice in Liquidsoap, so that we will
+mostly forget about it. The audio and video channels can either contain
 
 - _raw_ data: this data is in an internal format (usually obtained by decoding
   compressed files), suitable for manipulation by operators within Liquidsoap,
@@ -35,12 +38,12 @@ will mostly forget about it. Moreover, each of those channels can either contain
 
 In practice, users manipulate sources handling raw data most of the time since
 most operations are not available on encoded data, even very basic ones such as
-changing the volume or performing transitions between tracks. Encoded data was
-introduced starting from version 2.0 of Liquidsoap and we have seen in [an
-earlier section](#sec:encoded-streams) that it is however useful to avoid
-encoding a stream multiple times in the same format, e.g. when sending the same
-encoded stream to multiple icecast instances, or both to icecast and in HLS,
-etc.
+changing the volume or performing transitions between tracks. Support for
+encoded data was introduced starting from version 2.0 of Liquidsoap and we have
+seen in [an earlier section](#sec:encoded-streams) that it is mostly useful to
+avoid encoding a stream multiple times in the same format, e.g. when sending the
+same encoded stream to multiple icecast instances, or both to icecast and in
+HLS, etc.
 
 The type of sources is of the form
 
@@ -379,14 +382,14 @@ of the list given as argument to `add` must all be sources with both audio and
 video.
 
 If you insist on adding a video channel to a source which does not have one, you
-should use the dedicated function `mux_video`\index{mux}, whose type is
+should use the dedicated function `source.mux.video`\index{mux}, whose type is
 
 ```
 (video : source(audio=none, video='a, midi=none), source(audio='b, video=none, midi='c)) -> source(audio='b, video='a, midi='c)
 
 ```
 
-(and the function `mux_audio` can similarly be used to add audio to a source
+(and the function `source.mux.audio` can similarly be used to add audio to a source
 which does not have that). However, since this function is much less well-known
 than `add`, we like to leave the possibility for the user to use both most of
 the time, as indicated above. Note however that the following variant of the above
@@ -1763,7 +1766,7 @@ Some of those protocols are built in the language such as
 - `annotate` to add metadata.
 
 Some other protocols are defined in the standard library (in the file `protocols.liq`)
-using the `add_protocol` function which registers a new protocol. This function
+using the `protocol.add` function which registers a new protocol. This function
 takes as argument a function `proto` of type
 
 ```
@@ -1777,10 +1780,10 @@ which indicates how to perform the resolution: this function takes as arguments
 - the URI to resolve,
 
 and returns a list of URI it resolves to. Additionally, the function
-`add_protocol` takes arguments to document the function (`syntax` describes the
-URI accepted by this protocol and `doc` is freeform description of the
-protocol) as well as indicate whether the protocol is `static` or not and
-whether the files it produces are `temporary` or not.
+`protocol.add` takes arguments to document the function (`syntax` describes the
+URI accepted by this protocol and `doc` is freeform description of the protocol)
+as well as indicate whether the protocol is `static` or not and whether the
+files it produces are `temporary` or not.
 
 #### Request leaks
 
@@ -2049,8 +2052,8 @@ the source, where all the code lies. The main folders are
   - `stream/`: internal representation and manipulation of streams using frames,
 - operators:
   - `operators/`: where most operators such as sound processing are,
-  - `conversions/`: conversion operators such as `mean`, `drop_audio`,
-  `mux_audio`, etc.
+  - `conversions/`: conversion operators such as `mean`, `source.drop.audio`,
+  `source.mux.audio`, etc.
 - inputs and outputs:
   - `io/`: libraries performing both input and output such as
   alsa,
