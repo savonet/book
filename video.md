@@ -161,11 +161,12 @@ generate a video stream from it. The script
 ```{.liquidsoap include="liq/cover.liq" from=1 to=-1}
 ```
 
-defines an audio source `a` from our music library, generates a video track `v` from its
-covers with `video.cover`, adds it to the sound track `a` (with `mux_video`,
-detailed below) and plays the result. It is important here that we use `mksafe`
-around `video.cover` in order to play black by default: the source will not be
-available when the track has no cover!
+defines an audio source `a` from our music library, generates a video track `v`
+from its covers with `video.cover`, adds it to the sound track `a` (with
+`source.mux.vide`\indexop{source.mux.video}, detailed below) and plays the
+result. It is important here that we use `mksafe` around `video.cover` in order
+to play black by default: the source will not be available when the track has no
+cover!
 
 #### Playlists
 
@@ -305,13 +306,14 @@ be a square!
 \index{mux}
 
 Given an audio source `a` and a video source `v`, one can combine them in order
-to make a source `s` with both audio and video with the `mux_audio` and
-`mux_video` operators, which respectively add audio and video to a source, by
+to make a source `s` with both audio and video with the `source.mux.audio` and
+`source.mux.video` operators. Namely, in
 
 ```{.liquidsoap include="liq/mux_audio.liq" from=2 to=-1}
 ```
 
-or
+the `source.mux.audio` replaces the audio channel of the source `v` by the one of
+the source `a`. And we can similarly replace the video channel with
 
 ```{.liquidsoap include="liq/mux_video.liq" from=2 to=-1}
 ```
@@ -322,13 +324,12 @@ playlist of image files with
 ```{.liquidsoap include="liq/audio-video-playlists.liq" from=1 to=-1}
 ```
 
-The "opposite" of the muxing functions are the functions `drop_audio` and
-`drop_video`, which respectively remove the audio and video channels from a video
-track. For instance, if we have two sources `s1` and `s2` with both audio and
-video, we can create a source `s` with the audio from `s1` and the video from
-`s2` by
+The "opposite" of the muxing functions are the functions `source.drop.audio` and
+`source.drop.video`, which respectively remove the audio and video channels from
+a source. For instance, we can remove the video channel of a an audio+video
+source `s` with
 
-```{.liquidsoap include="liq/mix-av.liq" from=3 to=-1}
+```{.liquidsoap include="liq/source.drop.video.liq" from=2 to=-1}
 ```
 
 ### (Cross)fading

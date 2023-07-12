@@ -1,6 +1,6 @@
 #!./liquidsoap
 s = playlist("~/Music")
-s = mux_video(video=blank(), s)
+s = source.mux.video(video=blank(), s)
 s = rms(s)
 rms = s.rms
 s = bpm(s)

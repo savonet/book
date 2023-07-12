@@ -3407,9 +3407,9 @@ follows:
 The first thing we need to do here is to generate a video stream. Fancy ways to
 achieve this are detailed in [this chapter](#chap:video). Here, we simply take
 an image `image.jpg`, generate a `video` stream from it and add it to the
-`radio` stream using the `mux_video` operator. Note that if you wanted to stream
-a video `video.mp4` instead of a static image, you could simply replace the
-second line by\indexop{output.url}
+`radio` stream using the `source.mux.video` operator. Note that if you wanted to
+stream a video `video.mp4` instead of a static image, you could simply replace
+the second line by\indexop{output.url}
 
 ```liquidsoap
 video = single("video.mp4")

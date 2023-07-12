@@ -1,5 +1,5 @@
 #!./liquidsoap
-s = mux_audio(audio=blank(), single("photo.jpg"))
+s = source.mux.audio(audio=blank(), single("photo.jpg"))
 s = video.sepia(s)
 # s = video.invert(s)
 # s = video.opacity(0.5, s)

@@ -2,7 +2,7 @@
 log.level := 5
 radio = playlist("~/Music")
 video = single("image.jpg")
-radio = mux_video(video=video, radio)
+radio = source.mux.video(video=video, radio)
 ykey  = string.trim(file.contents("youtube-key"))
 url   = "rtmp://a.rtmp.youtube.com/live2/#{ykey}"
 enc   = %ffmpeg(format="flv",

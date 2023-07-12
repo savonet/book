@@ -382,14 +382,14 @@ of the list given as argument to `add` must all be sources with both audio and
 video.
 
 If you insist on adding a video channel to a source which does not have one, you
-should use the dedicated function `mux_video`\index{mux}, whose type is
+should use the dedicated function `source.mux.video`\index{mux}, whose type is
 
 ```
 (video : source(audio=none, video='a, midi=none), source(audio='b, video=none, midi='c)) -> source(audio='b, video='a, midi='c)
 
 ```
 
-(and the function `mux_audio` can similarly be used to add audio to a source
+(and the function `source.mux.audio` can similarly be used to add audio to a source
 which does not have that). However, since this function is much less well-known
 than `add`, we like to leave the possibility for the user to use both most of
 the time, as indicated above. Note however that the following variant of the above
@@ -2052,8 +2052,8 @@ the source, where all the code lies. The main folders are
   - `stream/`: internal representation and manipulation of streams using frames,
 - operators:
   - `operators/`: where most operators such as sound processing are,
-  - `conversions/`: conversion operators such as `mean`, `drop_audio`,
-  `mux_audio`, etc.
+  - `conversions/`: conversion operators such as `mean`, `source.drop.audio`,
+  `source.mux.audio`, etc.
 - inputs and outputs:
   - `io/`: libraries performing both input and output such as
   alsa,
