@@ -481,9 +481,10 @@ will print a list of files such as
 
 We are going to define a new protocol named `artist` so that, when playing a
 file such as `artist:Halliday`, Liquidsoap will run the above command in order
-to find a song. This can be done by using the `add_protocol`\indexop{add\_protocol} operator: its first
-mandatory argument is the name of the protocol (here, `artist`) and the second
-one is a function which takes as arguments
+to find a song. This can be done by using the
+`protocol.add`\indexop{protocol.add} operator: its first mandatory argument is
+the name of the protocol (here, `artist`) and the second one is a function which
+takes as arguments
 
 - a function `rlog` to log the resolution process (you can use it to print
   whatever is useful for you to debug problems during the generation of the file),
