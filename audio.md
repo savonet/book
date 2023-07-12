@@ -4966,7 +4966,7 @@ https. This can be achieved with the functions `http.get`\indexop{http.get} whic
 argument and returns the contents of the served page as a string. For instance,
 you can display the changelog for Liquidsoap with
 
-```{.liquidsoap include="liq/https.get.liq"}
+```{.liquidsoap include="liq/https.get.liq" from=1}
 ```
 
 The value returned by the function `http.get` also features the following
