@@ -387,7 +387,7 @@ program in order to download files from YouTube.
 when playing such a file, we need to do more than simply connect to some
 particular location over the internet, and have to do tricky stuff in order to
 fetch the video from YouTube. Similarly, the `say`\indexop{say} protocol uses the
-text-to-speech software `text2wav` provided by the festival project in order to
+text-to-speech software `text2wave` provided by the festival project in order to
 synthesize speech. For instance,
 
 ```{.liquidsoap include="liq/say.liq" from=1 to=-1}

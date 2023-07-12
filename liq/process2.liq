@@ -1,4 +1,4 @@
-#!/usr/bin/env liquidsoap
+#!./liquidsoap
 s = single("process:wav,echo 'Hello world!' | text2wave > $(output)")
-s = audio_to_stereo(s)
+s = stereo(s)
 output(s)
