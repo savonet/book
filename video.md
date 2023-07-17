@@ -123,7 +123,7 @@ no audio as follows, and you should then see the image:
 ```{.liquidsoap include="liq/image2.liq" from=1}
 ```
 
-Here, `(x:source(audio=none))` means that we constrain `x` to be a source with no
+Here, `(x:source(audio=none,...))` means that we constrain `x` to be a source with no
 audio, this mechanism is explained in more details in [there](#sec:source-type). In
 order for you to avoid thinking of those subtleties, the standard library
 provides the `image`\indexop{image} operator which does this for you and conveniently creates a

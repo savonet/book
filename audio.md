@@ -2716,19 +2716,20 @@ you are most likely to use them for video.
 
 A last possibility to handle your sound is to use software dedicated to
 producing high quality radio sound, such as _[Stereo
-Tool](https://www.stereotool.com/)_\index{Stereo Tool}. If you want to do so, you can use the
-`pipe` operator which allow exchanging audio data with external software through
-the standard input and output and is detailed in [a later
-section](#sec:pipe). Typically, one would use it to handle a source `s` with
-Stereo Tool as follows:
+Tool](https://www.stereotool.com/)_\index{Stereo Tool}, which is supported
+through the `stereotool` function. This software is proprietary and you need a
+license key to operate (a free version is available though, but it will
+introduce regular beeps in the stream). Typically, one would use it to handle a
+source `s` with Stereo Tool as follows:
 
-```{.liquidsoap include="liq/stereotool.liq" from=2 to=-1}
+```{.liquidsoap include="liq/stereotool2.liq" from=2 to=-1}
 ```
 
-The `process` argument gives the program we want to run along with its options
-(here, you should replace `/usr/bin/stereo_tool_cmd_64` by the actual path where
-the Stereo Tool binary is located, `myradio.sts` by your configuration file and
-`seckey` by your actual license key).
+Above, you should replace the path to the Stereo Tool library, the license key
+and the preset (usually, a file ending with the `.sts` extension) by actual
+values. Beware, a current limitation is that the processed audio signal is
+slightly delayed (roughly between 50 and 100 ms), because the operator has an
+internal processing buffer..
 
 ### Playing with parameters
 
@@ -3333,9 +3334,9 @@ with
 ```
 
 The name of the file can be a string getter, which will dynamically generate the
-filename. This is particularly useful in conjunction with `time.string` in order
-to generate a name based on current time, for instance when archiving a radio
-stream as in the following example:
+filename. This is particularly useful in conjunction with
+`time.string`\indexop{time.string} in order to generate a name based on current
+time, for instance when archiving a radio stream as in the following example:
 
 ```{.liquidsoap include="liq/output.file2.liq" from=2}
 ```
@@ -3371,7 +3372,7 @@ server. For instance, in the script
 ```{.liquidsoap include="liq/output.file5.liq" from=2}
 ```
 
-The function `on_file` is called each time an archive file is created. Here, we
+the function `on_file` is called each time an archive file is created. Here, we
 call a command to simply copy this file to the `/radio/backup` directory, but a
 more realistic application would for instance upload it on an ftp server or so.
 
@@ -4266,14 +4267,20 @@ script:
 #### External decoders/encoders {#sec:pipe}
 
 If JACK is not available, a more basic way of interacting with external tools is
-by the `pipe`\indexop{pipe} operator, which runs the program specified in the `process`
-argument, writes audio to the standard input of the program and reads the audio
-from the standard output of the program. Both input and output are supposed to
-be encoded in wav format. We have already seen this illustrated in
-[there](#sec:stereo-tool) in order to use _Stereo Tool_\index{Stereo Tool} to perform mastering:
+by the `pipe`\indexop{pipe} operator, which runs the program specified in the
+`process` argument, writes audio to the standard input of the program and reads
+the audio from the standard output of the program. Both input and output are
+supposed to be encoded in wav format. For instance, instead of using the _Stereo
+Tool_\index{Stereo Tool} library (as explained in [there](#sec:stereo-tool)),
+you could also use the binary to process your sound as follows to perform
+mastering:
 
 ```{.liquidsoap include="liq/stereotool.liq" from=2 to=-1}
 ```
+
+(where you should replace `/usr/bin/stereo_tool_cmd_64` by the actual path where
+the Stereo Tool binary is located, `myradio.sts` by your configuration file, and
+`seckey` by your actual license key).
 
 By default, the `pipe` operator launches a new process on each new
 track. However, this does not play well with Stereo Tool which needs to be run
