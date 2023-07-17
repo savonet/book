@@ -2394,7 +2394,7 @@ taken by the execution of a function `f` with
 ```
 
 which stores the time before and after the execution of `f` and displays the
-difference. As a useful variant, the function `time.up` returns the
+difference. As a useful variant, the function `time.up`\indexop{time.up} returns the
 _uptime_\index{uptime} of the script, i.e. the number of seconds since the
 beginning of its execution.
 
@@ -2408,7 +2408,7 @@ current date with
 ```
 
 If you do not need to manipulate time components and only print time, this can
-also be more conveniently done with the `time.string` function which takes a
+also be more conveniently done with the `time.string`\indexop{time.string} function which takes a
 string as argument and replaces `%Y` by the year, `%m` by the month and so on,
 so that we can do
 
@@ -2416,7 +2416,7 @@ so that we can do
 ```
 
 Finally, we mention here that the time zone can be retrieved and changed with
-the `time.zone` function:
+the `time.zone`\indexop{time.zone} function:
 
 ```{.liquidsoap include="liq/time.zone.liq" from=1}
 ```

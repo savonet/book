@@ -1,5 +1,6 @@
 #!./liquidsoap
 radio = mksafe(playlist("~/Music"))
-output.file(%mp3,
+f = output.file(%mp3,
             {time.string("archive/%Y-%m-%d/%H-%M-%S.mp3")},
-            radio, reopen_when={0m})
+            radio)
+thread.when({0m}, f.reopen)
