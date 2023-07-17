@@ -3376,7 +3376,7 @@ server. For instance, in the script
 ```{.liquidsoap include="liq/output.file5.liq" from=2}
 ```
 
-The function `on_file` is called each time an archive file is created. Here, we
+the function `on_file` is called each time an archive file is created. Here, we
 call a command to simply copy this file to the `/radio/backup` directory, but a
 more realistic application would for instance upload it on an ftp server or so.
 
