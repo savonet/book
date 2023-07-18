@@ -2722,7 +2722,7 @@ license key to operate (a free version is available though, but it will
 introduce regular beeps in the stream). Typically, one would use it to handle a
 source `s` with Stereo Tool as follows:
 
-```{.liquidsoap include="liq/stereotool2.liq" from=2 to=-1}
+```{.liquidsoap include="liq/stereotool2.liq" from=3 to=-2}
 ```
 
 Above, you should replace the path to the Stereo Tool library, the license key
