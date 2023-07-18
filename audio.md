@@ -1523,9 +1523,9 @@ playing track. For instance, we can read the song which we have just played with
 ### Rewriting metadata
 
 If you want to systematically modify the metadata, you can use the
-`map_metadata`\indexop{map\_metadata} function which will modify the metadata of a source: it takes as
-argument a function and a source, and uses the function to systematically change
-the metadata. The type of the function is
+`metadata.map`\indexop{metadata.map} function which will modify the metadata of
+a source: it takes as argument a function and a source, and uses the function to
+systematically change the metadata. The type of the function is
 
 ```
 ([string * string]) -> [string * string]
