@@ -821,7 +821,7 @@ passed on into Liquidsoap streams (e.g. when using the `playlist`
 operator). They are also used by output operators such as `output.icecast` to
 provide information about the currently playing song to the listener. In
 scripts, you can trigger a function when metadata is present with `on_metadata`,
-transform the metadata with `map_metadata` and add new metadata with
+transform the metadata with `metadata.map` and add new metadata with
 `insert_metadata`. For instance, you can print the metadata contained in tracks:
 
 ```{.liquidsoap include="liq/print-metadata.liq" from=1}
