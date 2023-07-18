@@ -345,6 +345,8 @@ which is a formal way of stating the above explanation.
 
 ### Adding and removing channels
 
+\TODO{this has been changed, we only have audio now!!!}
+
 As a final remark on the design of our typing system, one could wonder why the
 type of the source returned by the `sine` operator is
 
@@ -363,8 +365,10 @@ those are always quite useless (they are blank). The reason is mainly because of
 the following pattern. Suppose that you want to generate a blue screen with a
 sine wave as sound. You would immediately write something like this\indexop{add}
 
+<!--
 ```{.liquidsoap include="liq/blue-sine.liq" from=1}
 ```
+-->
 
 We create the source `a` which is the sine wave, the source `b` which is the
 blue screen (obtained by taking the output of `blank`, which is black and mute,
