@@ -3361,9 +3361,12 @@ example could also be rewritten by regularly launching a thread as follows:
 ```{.liquidsoap include="liq/output.file3b.liq" from=2}
 ```
 
-As a variant, when the argument `reopen_on_metadata` is set to `true`, the file
-will be updated when some new track begins. For instance, we can create a new
-file for each track with the current date, artist and title with:
+A similar mechanism can be used to change the file name according to
+metadata. In the following example, the name of the file is stored in a
+reference. We then use the `reopen_on_metadata` argument to register a handler
+on the stream which, when there is new metadata, updates the filename
+accordingly and returns `true`, which instructs to reopen the file. It will thus
+create a new file for each track, whose name is determined by the metadata.
 
 ```{.liquidsoap include="liq/output.file4.liq" from=2}
 ```
