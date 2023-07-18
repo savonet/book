@@ -1531,7 +1531,6 @@ is displayed. For instance, with
 
 you will only see one every minute.
 
-
 <!--
 #### The `clock` operator
 
