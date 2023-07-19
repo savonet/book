@@ -500,7 +500,8 @@ returns the resulting stream. Usually this function
   - `ffmpeg.filter.audio.input`
   - `ffmpeg.filter.video.input`
 
-  to input from some stream,
+  to input from some stream (note that those function operate on audio / video
+  tracks, not sources),
 - processes the stream using one or more `ffmpeg.filter.*` functions,
 - outputs the result using one of the operators
 
