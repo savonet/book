@@ -288,7 +288,8 @@ by mail at `sam@liquidsoap.info` and `romain@liquidsoap.info`. Please include
 page numbers and text excerpts if your comment applies to a particular point of
 the book (or, better, make pull requests). The version you are holding in your
 hands was compiled on \today, you can expect frequent revisions to fix found
-issues.
+issues. Those will be made available
+[online](<http://www.liquidsoap.info/book/>).
 
 ### The authors
 

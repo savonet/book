@@ -21,6 +21,7 @@ header-includes: |
   \usepackage{titlepic}
   \titlepic{\vspace{3cm}\includegraphics[width=3cm]{img/logo.pdf}\vspace{-3cm}}
   \usepackage{perpage}\MakePerPage{footnote}
+  \urlstyle{tt}
 numbersections: true
 secnumdepth: 1
 toc-depth: 1
