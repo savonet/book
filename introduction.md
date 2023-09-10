@@ -221,7 +221,7 @@ useful.
 
 The language has gone through some major changes since its beginning and
 maintaining full backward-compatibility was impossible. In this book, we assume
-that you have a version of Liquidsoap which is at least 2.2. Most examples
+that you have a version of Liquidsoap which is at least \liqversion. Most examples
 could easily be adapted to work with earlier versions though, at the cost of
 making minor changes.
 

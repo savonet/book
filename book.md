@@ -19,9 +19,10 @@ header-includes: |
   \usepackage{cleveref}
   \usepackage{makeidx}\makeindex
   \usepackage{titlepic}
-  \titlepic{\vspace{3cm}\includegraphics[width=3cm]{img/logo.pdf}\vspace{-3cm}}
+  \titlepic{\vspace{4cm}\includegraphics[width=3cm]{img/logo.pdf}\vspace{-3cm}\vfill\footnotesize For Liquidsoap version \liqversion\\This book was compiled on \today}
   \usepackage{perpage}\MakePerPage{footnote}
   \urlstyle{tt}
+  \newcommand{\liqversion}{2.2}
 numbersections: true
 secnumdepth: 1
 toc-depth: 1
