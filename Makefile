@@ -34,7 +34,7 @@ web.pdf: web.tex
 	makeindex web.idx
 	pdflatex web.tex
 
-book.epub book.txt: book.md $(MD) $(LIQ) epub.css liquidsoap.xml
+book.epub book.txt: book.md $(MD) $(LIQ) epub.css liquidsoap.xml replacements
 	@echo "Generating $@..."
 	@$(MAKE) -C cover --no-print-directory
 	@$(PANDOC) -s --syntax-definition=liquidsoap.xml --filter=pandoc-pdf2png --toc --toc-depth=2 --top-level-division=chapter --css=epub.css --epub-cover-image cover/cover-ebook.jpg -V links-as-notes=true $< -o $@
@@ -63,6 +63,12 @@ fig:
 check:
 	$(MAKE) -C liq $@
 
+replacements: replacements.in
+	@echo "Generating $@..."
+	@cat $< > $@
+	@echo "VERSION 2.2" >> $@
+	@echo "TODAY `date +'%d %B %Y'`" >> $@
+
 docker-test:
 	docker build . -f .github/docker/Dockerfile.build
 
@@ -82,4 +88,4 @@ site: web.pdf
 	cp cover/cover-ebook.svg site/public/book.svg
 	$(MAKE) -C site
 
-.PHONY: fig scripts site
+.PHONY: fig scripts site replacements

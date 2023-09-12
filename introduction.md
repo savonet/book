@@ -221,7 +221,7 @@ useful.
 
 The language has gone through some major changes since its beginning and
 maintaining full backward-compatibility was impossible. In this book, we assume
-that you have a version of Liquidsoap which is at least \liqversion. Most examples
+that you have a version of Liquidsoap which is at least VERSION. Most examples
 could easily be adapted to work with earlier versions though, at the cost of
 making minor changes.
 
@@ -287,7 +287,7 @@ bugtracker](https://github.com/savonet/book/issues), but you can also reach us
 by mail at `sam@liquidsoap.info` and `romain@liquidsoap.info`. Please include
 page numbers and text excerpts if your comment applies to a particular point of
 the book (or, better, make pull requests). The version you are holding in your
-hands was compiled on \today, you can expect frequent revisions to fix found
+hands was compiled on TODAY, you can expect frequent revisions to fix found
 issues. Those will be made available
 [online](<http://www.liquidsoap.info/book/>).
 
