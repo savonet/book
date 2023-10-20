@@ -177,48 +177,6 @@ installing `liquidsoap-plugin-flac` will add support for the flac lossless audio
 format or `liquidsoap-plugin-all` will install all available plugins (which
 might be a good idea if you are not sure about which you are going to need).
 
-<!--
-\TODO{apparently, cutting edge packages are not maintained anymore}
-
-On Ubuntu and Debian, you can also have access to the packages which are
-automatically built for the latest version. This allows for quick testing of the
-latest features, but we do not recommend them for production purposes. In order
-to have access to those, first install the repository signing key:
-
-```
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 20D63CCDDD0F62C2
-```
-
-and then add the following source for Ubuntu:
-
-```
-echo deb http://deb.liquidsoap.info/ubuntu bionic main | sudo tee -a /etc/apt/sources.list
-```
-
-The above line is for the Bionic version of Ubuntu, if you are on Debian/testing
-or Debian/stretch, replace `ubuntu` by `debian` and `bionic` by `testing` or `stretch`.
-
-Finally, update your packages list:
-
-```
-sudo apt update
-```
-
-You can now see the list of available packages:
-```
-apt-cache show liquidsoap
-```
-
-Package names are of the form: `liquidsoap-<commit>` or
-`liquidsoap-<branch>`. _commit_ is an identifier for the last modification
-and _branch_ are used to develop features (the default branch being named 
-`master`). For instance, to install the latest `master`, you can do:
-
-```
-sudo apt install liquidsoap-master
-```
--->
-
 ### macOS
 
 No binaries are provided for macOS, the preferred method is opam, see above.
