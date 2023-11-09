@@ -9,9 +9,12 @@ def myfilter(s) =
     v = ffmpeg.filter.negate(graph, v)
     v = ffmpeg.filter.video.output(graph, v)
 
-    s = source.mux.track.audio(audio=a, s)
-    s = source.mux.track.video(video=v, s)
-    s
+    source({
+      audio = a,
+      video = v,
+      metadata = track.metadata(a),
+      track_marks = track.track_marks(a)
+    })
   end
   ffmpeg.filter.create(mkfilter)
 end
