@@ -30,4 +30,5 @@
 - `output.harbor`
 - video resizing, etc.
 
-- progress bar on videos (#3149).
+- progress bar on videos [#3149](https://github.com/savonet/liquidsoap/discussions/3149).
+- script pour les covers [#3509](https://github.com/savonet/liquidsoap/discussions/3509)
