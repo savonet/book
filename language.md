@@ -53,7 +53,7 @@ function which describes the shape we want for the transition) and so on.
 
 The unique feature of Liquidsoap is that it allows the manipulation of _sources_
 which are functions which will generate streams. These streams typically consist
-of stereo audio data, but we do restrict to this: they can contain audio with
+of stereo audio data, but we do not restrict to this: they can contain audio with
 arbitrary number of channels, they can also contain an arbitrary number of video
 channels, and also MIDI channels (there is limited support for sound synthesis).
 
