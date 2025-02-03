@@ -83,4 +83,3 @@ Rewrote our internal JSON parser/renderer
 Removed support for partial application
 Video images are now canvas
 Images can now generate blank audio if needed, no need to add mux_audio(audio=blank(),image) anymore
->>>>>>> 205f429d84feb465702749592be8f74d67620fd1
