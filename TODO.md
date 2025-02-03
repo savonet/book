@@ -34,3 +34,6 @@
 - script pour les covers [#3509](https://github.com/savonet/liquidsoap/discussions/3509)
 
 - using chatGPT
+- ffmpeg filters : https://github.com/savonet/liquidsoap/discussions/3554
+- move metadata from one track : https://github.com/savonet/liquidsoap/discussions/3555
+- ?? operator : https://github.com/savonet/liquidsoap/discussions/3535
