@@ -16,6 +16,7 @@ replace-headers: no
 subparagraph: yes
 header-includes: |
   \usepackage{url}
+  \usepackage{hyperref}
   \usepackage{style}
   \usepackage{cleveref}
   \usepackage{makeidx}\makeindex
