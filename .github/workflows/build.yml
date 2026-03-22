@@ -19,6 +19,7 @@ jobs:
         sudo dune install --prefix /usr/local -p pandoc-crossref
         sudo dune install --prefix /usr/local -p pandoc-include
         sudo dune install --prefix /usr/local -p pandoc-replace
+        sudo dune install --prefix /usr/local -p pandoc-pdf2png
     - name: Build book
       run: |
         make
