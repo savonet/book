@@ -4,7 +4,7 @@ Full workflow of a radio station {#chap:workflow}
 This chapter explains in details the main tools and techniques in order to setup
 a webradio. It essentially follows [the introductory chapter](#sec:radio),
 but gives much more details about techniques and parameters one can use to
-achieve his goals.
+achieve their goals.
 
 Inputs {#sec:inputs}
 ------
@@ -228,7 +228,7 @@ TODO: the format is optional and usually well detected, the list of supported fo
 
 ### Interactive playlists {#sec:request.dynamic}
 
-Instead of having a static playlist, you might want to use you own script to
+Instead of having a static playlist, you might want to use your own script to
 generate the song which should be played next (e.g. you might fetch requests
 from users from the web or a database, or you might have a neural network
 deciding for you which song is the best to be played next). In order to proceed
@@ -252,8 +252,7 @@ song as follows:
 
 Here, our `next` function executes the above script `next-song`, using the
 function `process.read.lines` which returns the list of lines returned by the
-script. We then take the first line with `list.hd` and create a request from
-from it using `request.create`. As a variant, suppose that the next song to be
+script. We then take the first line with `list.hd` and create a request from it using `request.create`. As a variant, suppose that the next song to be
 played is present in a file named `song`. We can play it as follows:
 
 ```{.liquidsoap include="liq/request.dynamic2.liq" from=1 to=-1}

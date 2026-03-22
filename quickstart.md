@@ -227,7 +227,7 @@ with the ALSA\index{ALSA} library. This means that you should be able to hear yo
 
 The ALSA input and the output each have their own way of synchronizing with
 time: in our terminology, we say that they have different _clocks_, see [a later
-section](#sec:clocks-ex). This will be detected by Liquidsoap an a script such
+section](#sec:clocks-ex). This will be detected by Liquidsoap and a script such
 as
 
 ```liquidsoap
@@ -444,7 +444,7 @@ are not going to use this one now but still want to change the password) and for
 administrative interface. By default, all three are `hackme`, and we will use
 that in our examples, but, again, you should change them in order not to be
 hacked. Have a look at other parameters though, they are interesting too!
-Once the configuration modified, you should the restart Icecast with the command
+Once the configuration is modified, you should restart Icecast with the command
 
 ```
 sudo /etc/init.d/icecast2 restart
@@ -506,7 +506,7 @@ can add the line
 ```{.liquidsoap include="liq/output.icecast2.liq" from=2}
 ```
 
-By the way, support for aac is not built in in the default installation. If you
+By the way, support for aac is not built into the default installation. If you
 get the message
 
 ```

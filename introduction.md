@@ -37,7 +37,7 @@ have a warm sound and to give the radio a unique color.
 
 Finally, the rule number one of a webradio is that _it should never fail_. We
 want to ensure that if, for some reason, the stream we are usually relaying is
-not available, or the external harddisk on which our mp3 files are stored is
+not available, or the external hard disk on which our mp3 files are stored is
 disconnected, an emergency playlist will be played, so that we do not simply
 kick off our beloved listeners. More difficult, if the microphone of the speaker
 is unplugged, the soundcard will not be aware of it and will provide us with
@@ -74,19 +74,19 @@ approach for designing your radio, it can cope with all the situations described
 above, and much more.
 
 Liquidsoap itself is programmed in the OCaml\index{OCaml} programming language, but the
-language you will use is not OCaml (although it was somewhat inspired of it), it
+language you will use is not OCaml (although it was somewhat inspired by it), it
 is a new language, and it is quite different from a general-purpose programming
 language, such as Java or C. It was designed from scratch, with stream
 generation in mind, trying to follow the principle formulated by Allan Kay:
 _simple things should be simple, complex things should be possible_. This means
 that we had in mind that our users are not typically experienced programmers,
 but rather people enthusiastic about music or willing to disseminate
-information, and we wanted a language as accessible as possible, were a basic
+information, and we wanted a language as accessible as possible, where a basic
 script should be easy to write and simple to understand, where the functions
 have reasonable default values, where the errors are clearly located and
 explained. Yet, we provide most things needed for handling sound (in particular,
 support for the wide variety of file formats, protocols, sound plugins, and so
-on) as well as more advanced functions which ensure that one can cope up with
+on) as well as more advanced functions which ensure that one can cope with
 complex setups (e.g. through callbacks and references).
 
 It is also designed to be very robust, since we want our radios to stream
@@ -94,7 +94,7 @@ forever and not have our stream crash after a few weeks because of a rare case
 which is badly handled. For this reason, before running a script, the Liquidsoap
 compiler performs many in-depth checks on it, in order to ensure that everything
 will go on well. Most of this analysis is performed using _typing_, which
-offer very strong guarantees.
+offers very strong guarantees.
 
 - We ensure that the data passed to function is of the expected form. For
   instance, the user cannot pass a string to a function expecting an integer.
@@ -197,11 +197,11 @@ playlists but not live shows, and added speech-synthetized metadata information
 at the end of requests.
 
 Later on, the two main developers were joined by Romain Beauxis who was doing
-his PhD at the same place as David, and was also a radio enthusiastic: he was
+his PhD at the same place as David, and was also a radio enthusiast: he was
 part of _Radio Pi_, the radio of École Centrale in Paris, which was soon
 entirely revamped and enhanced thanks to Liquidsoap. Over the recent year, he
 has become the main maintainer (taking care of the releases) and developer of
-Liquidsoap (adding, among other, support for FFmpeg in the language).
+Liquidsoap (adding, among others, support for FFmpeg in the language).
 
 About this book
 ---------------
@@ -229,17 +229,17 @@ making minor changes.
 
 This book is intended to be read mostly sequentially, excepting perhaps [this
 chapter](#chap:language), where we present the whole language in details, which
-can be skimmed trough at first. It is meant as a way of learning Liquidsoap, not
+can be skimmed through at first. It is meant as a way of learning Liquidsoap, not
 as a 500+ pages references manual: should you need details about the arguments
 of a particular operator, you are advised to have a look at the online
 documentation.
 
-We explain the technological challenges that we have face in order to produce
+We explain the technological challenges that we have faced in order to produce
 multimedia streams in [this chapter](#chap:technology) and are addressed by
 Liquidsoap. The means of installing the software are described in [this
 chapter](#chap:installation). We then describe in [this
 chapter](#chap:quickstart) what everybody wants to start with: setting up a
-simple webradio station. Before, going to more advanced uses, we first need to
+simple webradio station. Before going to more advanced uses, we first need to
 understand what we can do in this language, and this is the purpose of [this
 chapter](#chap:language). We then detail the various ways to generate a webradio
 in [there](#chap:workflow) and a video stream in [there](#chap:video). Finally,
@@ -260,7 +260,7 @@ touch with the community and obtain help\index{help} to get your problem solved:
   up-to-date documentation and tutorials about specific points,
 2. the [Liquidsoap discord
   chat](http://chat.liquidsoap.info)\index{discord}\index{chat} is a public chat
-  on where you can have instantaneous discussions,
+  where you can have instantaneous discussions,
 3. the [Liquidsoap mailing-list](savonet-users@lists.sf.net) is there if you
   would rather discuss by mail (how old are you?),
 4. the [Liquidsoap github
@@ -295,7 +295,7 @@ issues. Those will be made available
 
 The authors of the book you have in your hands are the two main current
 developers of Liquidsoap.
-*Samuel Mimram* obtained his PhD in computer science
+*Samuel Mimram* obtained his PhD in computer science in
 2009 and is currently a Professor in computer science in École polytechnique,
 France.
 <!-- His main research topics are type theory, category theory and rewriting. -->
@@ -312,5 +312,5 @@ Tandabany), and our fellow users Gilles Pietri, Clément Renard and Vincent
 Tabard (who also designed the logo), as well as all the regulars of slack and the
 mailing-list. Many thanks also to the many people who helped to improve the
 language by reporting bugs or suggesting ideas, and to the Radio France team who
-where enthusiastic about the project and motivated some new developments (hello
+were enthusiastic about the project and motivated some new developments (hello
 Maxime Bugeia, Youenn Piolet and others).

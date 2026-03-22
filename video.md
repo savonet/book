@@ -34,7 +34,7 @@ Liquidsoap. There are currently two of them:
 - `output.graphics` which uses the library provided by OCaml in order to display
   graphical data.
 
-The videos can even be directly be pulled from YouTube with the `youtube-dl`\indexop{youtube-dl}
+The videos can even be directly pulled from YouTube with the `youtube-dl`\indexop{youtube-dl}
 protocol, which requires that you have installed the
 [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) program:
 
@@ -51,7 +51,7 @@ can be played with\indexop{playlist}
 ```{.liquidsoap include="liq/play-video2.liq" from=1}
 ```
 
-Generally, the video will be generated form a playlist using the `playlist`
+Generally, the video will be generated from a playlist using the `playlist`
 operator or from user's request using `request.queue` operator. Those were
 already presented in [there](#sec:inputs), nothing changes for video.
 
@@ -78,7 +78,7 @@ The default format for images is 1280×720 pixels at 25 images per seconds which
 corresponds to the 720p (or _HD ready_) format. You can switch to 1080p (or
 _Full HD_) format with
 
-```{.liquidsaop include="liq/full-hd.liq"}
+```{.liquidsoap include="liq/full-hd.liq"}
 ```
 
 Remember that processing video data in realtime is very costly. Reducing the
