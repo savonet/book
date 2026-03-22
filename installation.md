@@ -144,25 +144,16 @@ below.
 
 #### Updating libraries
 
-If you also need a recent version of the libraries in the Liquidsoap ecosystem,
-you can download all the libraries at once by typing
+If you also need a cutting-edge version of a library in the Liquidsoap ecosystem
+(say, `ocaml-ffmpeg`), you can clone it and pin it directly with opam:
 
 ```
-git clone https://github.com/savonet/liquidsoap-full.git
-cd liquidsoap-full
-make init
-make update
-```
-
-You can then update a given library (say, `ocaml-ffmpeg`) by going in its
-directory and pinning it with opam, e.g.
-
-```
+git clone https://github.com/savonet/ocaml-ffmpeg.git
 cd ocaml-ffmpeg
 opam pin add .
 ```
 
-(and answer yes if you are asked questions).
+Opam will automatically detect the dependency and rebuild Liquidsoap.
 
 Using binaries
 --------------
@@ -187,8 +178,8 @@ features included. You can also inspect a running installation with
 ### Linux
 
 Official packages from the [Liquidsoap release
-page](https://github.com/savonet/liquidsoap/releases) are available for Debian
-and Ubuntu (see the supported releases table in the [versions
+page](https://github.com/savonet/liquidsoap/releases) are available for Debian,
+Ubuntu, and Alpine (see the supported releases table in the [versions
 section](#sec:versions)). When using these packages on Debian, you will also
 need to enable the [deb-multimedia.org](https://www.deb-multimedia.org/)
 repositories, which provide up-to-date libraries including `fdk-aac` support in
@@ -249,12 +240,12 @@ immutable links to release assets, use
 
 ### Supported operating systems for pre-built binaries
 
-| OS      | Supported releases                                         | Architectures       | Notes                                                                              |
-|---------|------------------------------------------------------------|---------------------|------------------------------------------------------------------------------------|
-| Debian  | stable (`trixie`), testing (`forky`)                       | `amd64`, `arm64`    | `.deb` packages require [deb-multimedia.org](https://www.deb-multimedia.org/)      |
-| Ubuntu  | LTS (`resolute`), latest (`plucky`)                        | `amd64`, `arm64`    |                                                                                    |
-| Alpine  | `edge`                                                     | `x86_64`, `aarch64` |                                                                                    |
-| Windows | N/A                                                        | 64-bit              | `.zip` archive                                                                     |
+| OS      | Supported releases                   | Architectures       | Notes                            |
+|---------|--------------------------------------|---------------------|----------------------------------|
+| Debian  | stable (`trixie`), testing (`forky`) | `amd64`, `arm64`    | needs [deb-multimedia.org](https://www.deb-multimedia.org/) repo |
+| Ubuntu  | LTS (`resolute`), latest (`plucky`)  | `amd64`, `arm64`    |                                  |
+| Alpine  | `edge`                               | `x86_64`, `aarch64` |                                  |
+| Windows | N/A                                  | 64-bit              | `.zip` archive                   |
 
 ### Supported FFmpeg versions
 
@@ -320,125 +311,98 @@ device located at `/dev/snd`, in which case passing the additional option
 Libraries used by Liquidsoap
 ----------------------------
 
-We list below some of the libraries which can be used by Liquidsoap. They are
-detected during the compilation of Liquidsoap and, in this case, support for the
-libraries is added. We recall that a library `ocaml-something` can be installed
-via opam with
+All names below refer to **opam package names** — install any of them with
+`opam install <name>` and Liquidsoap will be automatically rebuilt with the
+corresponding feature enabled. The full list of what is compiled into a
+particular binary can be queried with `liquidsoap --build-config`.
 
-```
-opam install something
-```
-
-which will automatically trigger a rebuild of Liquidsoap, as explained in [the
-above section](#sec:opam).
+Some libraries are always required and compiled in automatically: `camomile`
+(metadata charset recoding), `curl` (HTTP downloads), `metadata` (tag reading),
+`mem_usage` (memory reporting), and `magic-mime` (file-type detection by
+content). The libraries listed below are all optional.
 
 ### General
 
-Those libraries add support for various things:
-
-- `camomile`: charset recoding in metadata (those are generally encoded in UTF-8
-  which can represent all characters, but older files used various encodings for
-  characters which can be converted),
-- `ocaml-inotify`: getting notified when a file changes (e.g. for reloading a
-  playlist when it has been updated),
-- `ocaml-magic`: file type detection (e.g. this is useful for detecting that a
-  file is an MP3 even if it does not have the `.mp3` extension),
-- `ocaml-lo`: OSC (Open Sound Control) support for controlling the radio
-  (changing the volume, switching between sources) via external interfaces
-  (e.g. an application on your phone),
-- `ocaml-ssl`: SSL support for connecting to secured websites (using the https
-  protocol),
-- `ocaml-tls`: similar to `ocaml-ssl`,
-- `ocurl`: downloading files over http,
-- `osx-secure-transport`: SSL support via OSX's SecureTransport,
-- `yojson`: parsing JSON data (useful to exchange data with other applications).
+- `inotify`: filesystem watch — reload playlists automatically when a file
+  changes (Linux only; macOS uses a native equivalent),
+- `lo`: OSC (Open Sound Control) support via liblo, for controlling Liquidsoap
+  from phone apps or hardware controllers,
+- `osc-unix`: pure-OCaml OSC alternative to `lo`,
+- `ssl`: SSL/TLS support for `https://` connections,
+- `tls-liquidsoap`: pure-OCaml TLS alternative to `ssl`,
+- `irc-client-unix`: IRC chat output,
+- `sqlite3`: SQLite database support (useful for playlist logging and history),
+- `yaml`: YAML data parsing.
 
 ### Input / output
 
-Those libraries add support for using soundcards for playing and recording sound:
+Soundcard input and output:
 
-- `ocaml-alsa`: soundcard input and output with ALSA,
-- `ocaml-ao`: soundcard output using AO,
-- `ocaml-ffmpeg`: input and output over various devices,
-- `ocaml-gstreamer`: input and output over various devices,
-- `ocaml-portaudio`: soundcard input and output,
-- `ocaml-pulseaudio`: soundcard input and output.
+- `alsa`: ALSA — the low-level Linux soundcard interface, lowest latency,
+- `ao`: AO — a cross-platform output-only library,
+- `portaudio`: PortAudio — cross-platform input and output,
+- `pulseaudio`: PulseAudio — the standard Linux audio server.
 
-Among those, pulseaudio is a safe default bet. ALSA is very low level and is
-probably the one you want to use in order to minimize latencies. Other libraries
-support a wider variety of soundcards and usages.
+Network and device I/O:
 
-Other outputs:
+- `ffmpeg`: input and output via FFmpeg (files, network streams, devices),
+- `bjack`: JACK support for low-latency interconnection between audio programs,
+- `srt`: transport over the network using the SRT protocol.
 
-- `ocaml-cry`: output to icecast servers,
-- `ocaml-bjack`: Jack support for virtually connecting audio programs,
-- `ocaml-lastfm`: Last.fm scrobbling (this website basically records the songs
-  you have listened),
-- `ocaml-srt`: transport over network using SRT protocol.
+Icecast/Shoutcast streaming output is always compiled in (via the `cry`
+library, which is a required dependency).
 
 ### Sound processing
 
-Those add support for sound manipulation:
-
-- `ocaml-dssi`: sound synthesis plugins,
-- `ocaml-ladspa`: sound effect plugins,
-- `ocaml-lilv`: sound effect plugins,
-- `ocaml-samplerate`: samplerate conversion in audio files,
-- `ocaml-soundtouch`: pitch shifting and time stretching.
+- `dssi`: DSSI sound synthesis plugins,
+- `ladspa`: LADSPA audio effect plugins,
+- `lilv`: LV2 audio plugin support via Lilv,
+- `samplerate`: high-quality sample rate conversion,
+- `soundtouch`: pitch shifting and time stretching.
 
 ### Audio file formats
 
-- `ocaml-faad`: AAC decoding,
-- `ocaml-fdkaac`: AAC+ encoding,
-- `ocaml-ffmpeg`: encoding and decoding of various formats,
-- `ocaml-flac`: Flac encoding and decoding,
-- `ocaml-gstreamer`: encoding and decoding of various formats,
-- `ocaml-lame`: MP3 encoding,
-- `ocaml-mad`: MP3 decoding,
-- `ocaml-ogg`: Ogg containers,
-- `ocaml-opus`: Ogg/Opus encoding and decoding,
-- `ocaml-shine`: fixed-point MP3 encoding,
-- `ocaml-speex`: Ogg/Speex encoding and decoding,
-- `ocaml-taglib`: metadata decoding,
-- `ocaml-vorbis`: Ogg/Vorbis encoding and decoding.
-
-### Playlists
-
-- `ocaml-xmlplaylist`: support for playlist formats based on XML.
+- `faad`: AAC decoding,
+- `fdkaac`: AAC-LC/HE-AAC encoding via the Fraunhofer FDK library,
+- `ffmpeg`: encoding and decoding of all FFmpeg-supported formats,
+- `flac`: native FLAC encoding and decoding,
+- `lame`: MP3 encoding via LAME,
+- `mad`: MP3 decoding via MAD,
+- `ogg`: Ogg container support,
+- `opus`: Ogg/Opus encoding and decoding,
+- `shine`: fixed-point MP3 encoding (useful on low-power devices),
+- `speex`: Ogg/Speex encoding and decoding,
+- `vorbis`: Ogg/Vorbis encoding and decoding.
 
 ### Video
 
-Video conversion:
-
-- `ocaml-ffmpeg`: video conversion,
-- `ocaml-gavl`: video conversion,
-- `ocaml-theora`: Ogg/Theora encoding and decoding.
-
-Other video-related libraries:
-
-- `camlimages`: decoding of various image formats,
-- `gd4o`: rendering of text,
-- `ocaml-frei0r`: video effects,
-- `ocaml-imagelib`: decoding of various image formats,
-- `ocaml-sdl`: display, text rendering and image formats.
+- `ffmpeg`: video decoding, encoding, scaling and filtering,
+- `theora`: Ogg/Theora video encoding and decoding,
+- `camlimages`: decoding of common image formats (JPEG, PNG, GIF, …),
+- `frei0r`: frei0r video effect plugins,
+- `gd`: text and image rendering via the GD library,
+- `graphics`: simple display via the OCaml Graphics library,
+- `sdl-liquidsoap`: SDL2 display, font rendering, and image loading (meta-package
+  that pulls the correct versions of `tsdl`, `tsdl-ttf`, and `tsdl-image`).
 
 ### Memory
 
-Memory usage is sometimes an issue with some scripts:
+- `jemalloc`: jemalloc allocator — reduces memory fragmentation on long-running
+  scripts,
+- `memtrace`: memory allocation tracing for diagnosing leaks.
 
-- `ocaml-jemalloc`: support for jemalloc memory allocator which can avoid memory
-  fragmentation and lower the memory footprint,
-- `ocaml-memtrace`: support for tracing memory allocation in order to understand
-  where memory consumption comes from,
-- `ocaml-mem_usage`: detailed memory usage information.
+### Monitoring
+
+- `prometheus-liquidsoap`: exposes Liquidsoap metrics (sources, outputs, buffer
+  levels, etc.) as a Prometheus endpoint for scraping by monitoring systems.
 
 ### Runtime dependencies
 
-Those optional dependencies can be used by Liquidsoap if installed, they are
-detected at runtime and do not require any particular support during
-compilation:
+These are used by Liquidsoap at runtime if present on the system; they do not
+affect compilation:
 
-- `awscli`: `s3://` and `polly://` protocol support for Amazon web servers,
-- `curl`: downloading files with `http`, `https` and `ftp` protocols,
-- `ffmpeg`: external input and output, `replay_gain`, level computation, and more,
-- `youtube-dl`: YouTube video and playlist downloading support.
+- `ffmpeg` CLI: used by some operators for external processing (e.g. ReplayGain
+  analysis),
+- `awscli`: enables the `s3://` and `polly://` protocols for Amazon Web Services,
+- `yt-dlp` (or `youtube-dl`): enables downloading from YouTube and other
+  video platforms via the `youtube://` protocol.
