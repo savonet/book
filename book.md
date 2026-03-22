@@ -23,6 +23,7 @@ header-includes: |
   \usepackage{titlepic}
   \titlepic{\vspace{3cm}\includegraphics[width=3cm]{img/logo.pdf}\vspace{-3cm}}
   \usepackage{perpage}\MakePerPage{footnote}
+  \usepackage{pifont}
   \urlstyle{tt}
 numbersections: true
 secnumdepth: 1

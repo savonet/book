@@ -781,31 +781,6 @@ of writing the above to generate a sine through FFmpeg would thus be
 ```{.liquidsoap include="liq/input.ffmpeg.liq" from=1 to=-1}
 ```
 
-#### GStreamer input {#sec:gstreamer-input}
-
-Finally, another very general possibility for input is to use the
-`input.gstreamer.audio` operator in order to use the GStreamer\index{GStreamer}
-library to generate audio. The generation itself is described through a
-_pipeline_ which consists in a sequence of GStreamer operators separated by
-"`!`": a pipeline "`a ! b`" means that the output of operator "`a`" should be
-fed to operator "`b`". We refer the reader to the documentation of the library
-for more information about it. In Liquidsoap, the pipeline can be passed in the
-argument labeled `pipeline`, as expected. For instance, we can generate a sine
-wave (again) with
-
-```{.liquidsoap include="liq/input.gstreamer.liq" from=1 to=-1}
-```
-
-where we use the operator `audiotestsrc` to generate a sine, which we pipe to
-the `audioamplify` operator to change its volume. Similarly, we can play the
-file `test.mp3` with
-
-```{.liquidsoap include="liq/input.gstreamer2.liq" from=1 to=-1}
-```
-
-In practice, no one would use the above example as is, because Liquidsoap
-already has builtin support for using GStreamer to decode files...
-
 #### JACK input
 
 If the other program has support for it, it is possible to use JACK with the
@@ -3845,90 +3820,9 @@ instance,
 ```{.liquidsoap include="liq/encoder-fdkaac.liq" from=2 to=-1}
 ```
 
-### GStreamer
-
-The `%gstreamer` encoder can be used to encode streams using the GStreamer\index{GStreamer}
-multimedia framework, which handles many formats, and can provide effects and
-more on the stream. It is quite useful, although its support in Liquidsoap should
-be considered as much less mature than the FFmpeg encoder, which fulfills
-similar purposes, and is presented next.
-
-The parameters of the `%gstreamer` encoder are
-
-- `channels`: the number of audio channels (2 by default),
-- `log`: the log level of GStreamer between 0 (no message) and 9 (very very
-  verbose), default is 5.
-
-In GStreamer, _pipelines_ describe sequences of GStreamer operators to be
-applied, separated by `!`, see also [there](#sec:gstreamer-input). Those are
-specified by three further parameters of the encoder:
-
-- `audio`: the audio pipeline (default is `"lamemp3enc"`, the LAME mp3 encoder),
-- `video`: the video pipeline (default is `"x264enc"`, the x264 H.264 encoder),
-- `muxer`: the muxer which takes care of encapsulating both audio and video
-  streams (default is `"mpegtsmux"`, which performs MPEG-TS encapsulation).
-
-If the `audio` pipeline is not empty then the number of audio channels specified
-by the `channels` parameter is expected, and if the `video` pipeline is not
-empty then one video channel is expected.
-
-For instance, we can encode a source in mp3 with
-
-```{.liquidsoap include="liq/encoder-gstreamer-1.liq" from=2 to=-1}
-```
-
-The metadata of the encoded is passed to the pipeline element named `"metadata"`
-(the name can be changed with the `metadata` parameter of `%gstreamer`) using
-the "tag setter" API. We can thus encode our stream in mp3 with tags using
-
-```{.liquidsoap include="liq/encoder-gstreamer-2.liq" from=2 to=-1}
-```
-
-or in Vorbis with tags using
-
-```{.liquidsoap include="liq/encoder-gstreamer-3.liq" from=2 to=-1}
-```
-
-Encoding a video in H.264 with mp3 audio encapsulated in MPEG transport stream
-is performed with
-
-```{.liquidsoap include="liq/encoder-gstreamer-4.liq" from=2 to=-1}
-```
-
-and in Ogg/Vorbis+Theora with
-
-```{.liquidsoap include="liq/encoder-gstreamer-5.liq" from=2 to=-1}
-```
-
-The `audio`, `video` and `muxer` are combined internally to form one (big)
-GStreamer pipeline which will handle the whole encoding. For instance, with
-previous example, the generated pipeline is indicated with the following debug
-message:
-
-```
-[encoder.gstreamer:5] GStreamer encoder pipeline: appsrc name="audio_src" block=true caps="audio/x-raw, format=S16LE, layout=interleaved, channels=2, rate=44100" format=time max-bytes=40960 ! queue ! audioconvert ! audioresample ! vorbisenc ! muxer. appsrc name="video_src" block=true caps="video/x-raw, format=I420, width=1280, height=720, framerate=25/1, pixel-aspect-ratio=1/1" format=time blocksize=3686400 max-bytes=40960 ! queue ! videoconvert ! videoscale add-borders=true ! videorate ! theoraenc ! muxer. oggmux name=muxer ! appsink name=sink sync=false emit-signals=true
-```
-
-For advanced users, the `pipeline` argument can be used to directly specify the
-whole pipeline. In this case, the parameter `has_video` is used to determine
-whether the stream has video or not (video is assumed by default). For instance,
-mp3 encoding can also be performed with
-
-```{.liquidsoap include="liq/encoder-gstreamer-pipeline.liq" from=2 to=-1}
-```
-
-Beware that, when using the `%gstreamer` encoder, you should consider that the
-stream you are encoding is infinite (or could be). This means that not all
-containers (and muxers) will work. For instance, the AVI and MP4 containers need
-to write in their header some information that is only known with finite
-streams, such as the total time of the stream. These containers are usually not
-suitable for streaming, which is the main purpose of Liquidsoap.
-
 ### FFmpeg {#sec:ffmpeg-encoder}
 
-The `%ffmpeg`\index{FFmpeg} encoder is a "meta-encoder", just like the GStreamer one: it uses
-the versatile FFmpeg library in order to encode in various formats, including
-the ones presented above, but also many more. The general syntax is
+The `%ffmpeg`\index{FFmpeg} encoder is a versatile meta-encoder that uses the FFmpeg library to encode in a wide variety of formats, including the ones presented above, but also many more. The general syntax is
 
 ```liquidsoap
 %ffmpeg(format="<format>", ...)

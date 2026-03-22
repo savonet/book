@@ -414,9 +414,8 @@ not found the silver bullet yet. Those implementations are
 - `video.add_text.native`: the native implementation. It always works and does
   not rely on any external library, but uses a hand-made, hard-coded, low-fi
   font.
-- `video.add_text.sdl` / `video.add_text.gd` / `video.add_text.gstreamer` /
-  `video.add_text.ffmpeg`: synthesize the text using SDL, GD, GStreamer and
-  FFmpeg libraries.
+- `video.add_text.sdl` / `video.add_text.gd` / `video.add_text.ffmpeg`:
+  synthesize the text using SDL, GD, or FFmpeg libraries.
   
 For instance,
 
