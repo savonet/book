@@ -235,9 +235,9 @@ before deploying them in production.
 
 | Branch  | Latest release | Supported | Rolling Release         |
 |---------|----------------|-----------|-------------------------|
-| `2.5.x` | 🚧 (in dev)   | 🚧        | `main` branch           |
-| `2.4.x` | 2.4.2          | ✅        | `rolling-release-v2.4.x` |
-| `2.3.x` | 2.3.3          | ❌        | —                       |
+| `2.5.x` | (in dev)       | (dev)     | `main` branch           |
+| `2.4.x` | 2.4.2          | \ding{51} | `rolling-release-v2.4.x` |
+| `2.3.x` | 2.3.3          | \ding{55} | —                       |
 
 ### Rolling releases
 
