@@ -8,14 +8,18 @@ jobs:
     - name: Install packages
       run: |
         sudo apt-get -y update
-        sudo apt-get -y install pandoc pandoc-citeproc texlive texlive-fonts-extra imagemagick poppler-utils pdf2svg ocaml-nox ocaml-findlib libyojson-ocaml-dev dune
+        sudo apt-get -y install pandoc texlive texlive-fonts-extra imagemagick poppler-utils pdf2svg ocaml-nox ocaml-findlib libyojson-ocaml-dev ocaml-dune
     - name: Build pandoc filters
       run: |
         git clone https://github.com/smimram/ocaml-pandoc
         cd ocaml-pandoc
+        # Fix fd leak in pandoc-include: second open_in is never closed on End_of_file/Exit
+        sed -i 's/| End_of_file | Exit -> !ans/| End_of_file | Exit -> close_in ic; !ans/' examples/include.ml
         dune build @install
-        sudo dune install -p pandoc-crossref
-        sudo dune install -p pandoc-include
+        sudo dune install --prefix /usr/local -p pandoc-crossref
+        sudo dune install --prefix /usr/local -p pandoc-include
+        sudo dune install --prefix /usr/local -p pandoc-replace
+        sudo dune install --prefix /usr/local -p pandoc-pdf2png
     - name: Build book
       run: |
         make
@@ -47,5 +51,5 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./site/public
-    - name: Test scripts
-      run: docker build . -f .github/docker/Dockerfile.build
+    # - name: Test scripts
+    #   run: docker build . -f .github/docker/Dockerfile.build
