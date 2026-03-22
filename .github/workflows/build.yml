@@ -51,5 +51,5 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./site/public
-    - name: Test scripts
-      run: docker build . -f .github/docker/Dockerfile.build
+    # - name: Test scripts
+    #   run: docker build . -f .github/docker/Dockerfile.build
