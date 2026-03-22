@@ -236,6 +236,34 @@ f : (int) -> int
 meaning that `x` is a floating point number and `f` is a function taking an
 integer as argument and returning an integer.
 
+### Code comments
+
+\index{comment}
+
+The most common form of comment is the _single-line comment_: anything from a
+`#` character to the end of the line is ignored by the interpreter:
+
+```liquidsoap
+# This is a comment
+x = 1  # so is this
+```
+
+_Multi-line comments_ are delimited by `#<` and `>#` and can span multiple
+lines. They also nest, making it easy to comment out blocks that already contain
+comments:
+
+```liquidsoap
+#< This is a comment >#
+
+#<
+  This is a top-level comment
+
+  #<
+    This is a nested comment
+  >#
+>#
+```
+
 Basic values {#sec:basic-values}
 ------------
 
@@ -366,6 +394,58 @@ print("The number #{random.float()} is random.")
 will print `The number 0.663455738438 is random.` (at least it did last time I
 tried).
 
+#### Raw strings {#sec:raw-strings}
+
+\index{string!raw}
+
+When a string should be taken verbatim — without any interpolation or escape
+processing — use the _raw string_ syntax `{|...|}`\index{string!raw}:
+
+```liquidsoap
+print({|no interpolation: #{expr} here|})
+```
+
+will print `no interpolation: #{expr} here`.
+
+If the content itself contains `|}`, use a delimited form `{id|...|id}` where
+`id` is any sequence of lowercase letters and underscores:
+
+```liquidsoap
+print({foo|this |} is fine|foo})
+```
+
+will print `this |} is fine`. The opening `{id|` and closing `|id}` must use
+the same `id`.
+
+#### Escape sequences {#sec:escape-sequences}
+
+\index{string!escape sequences}
+
+Liquidsoap strings follow the most common lexical conventions from C, JavaScript,
+and JSON. The following escape sequences are recognized:
+
+------------- ------------------------------------------------------------------
+`\a`          Alert (Beep, Bell)
+`\b`          Backspace
+`\e`          Escape character
+`\f`          Formfeed, Page Break
+`\n`          Newline (Line Feed)
+`\r`          Carriage Return
+`\t`          Horizontal Tab
+`\v`          Vertical Tab
+`\\`          Backslash
+`\/`          Forward slash
+`\'`          Single quotation mark
+`\"`          Double quotation mark
+`\nnn`        Byte with value _nnn_ in octal
+`\xhh`        Byte with value _hh_ in hexadecimal
+`\uhhhh`      UTF-8 code point _hhhh_ in hexadecimal
+------------- ------------------------------------------------------------------
+
+Note that `\nnn` is an _octal_ escape (as in C, Ruby, JavaScript and Python),
+unlike OCaml where it is decimal. The function `string.quote`\indexop{string.quote}
+returns a JSON-compatible quoted string.
+
 The string representation of any value in Liquidsoap can be obtained using the
 function `string`\indexop{string}, e.g. `string(5)`{.liquidsoap} is `"5"`. Some
 other useful string-related function are
@@ -390,30 +470,51 @@ other useful string-related function are
 - `string.quote`: escape shell special characters (you should always use this
   when passing strings to external programs).
 
-Finally, some functions operate on _regular expressions_\index{regular expression}, which describe some
-shapes for strings:
+#### Regular expressions {#sec:regexp}
 
-- `string.match`: test whether a string matches a regular expression,
-- `string.replace`: replace substrings matching a regular expression.
+\index{regular expression}
 
-A regular expression `R` or `S` is itself a string where some characters have a
-particular meaning:
+Since version 2.1.0, the recommended way to work with regular expressions is via
+the `regexp` operator or the `r/.../` syntactic sugar. The `r/.../` form is
+particularly convenient because backslashes do not need to be escaped:
 
-- `.` means "any character",
-- `R*` means "any number of times something of the form `R`",
-- `R|S` means "something of the form `R` or of the for `S`",
+```liquidsoap
+# Using the regexp operator:
+r = regexp(flags=["g", "i"], "foo([\\w])+bar")
 
-other characters represent themselves (and special characters such as `.`, `*`
-or `.` have to be escaped, which means that `\.` represents the character
-`.`). An example is worth a thousand words: we can test whether a string `fname`
-corresponds to the name of an image file with
+# Using the r/../ syntactic sugar:
+r = r/foo([\w])bar/gi
+```
+
+The available flags are:
+
+- `i`: case-insensitive match,
+- `g`: substitute all matches, not just the first,
+- `s`: `.` matches all characters including newlines,
+- `m`: `^` and `$` match at newline boundaries, not only at string boundaries.
+
+Regular expression objects expose the following methods:
+
+- `test(s)`: returns `true` if `s` matches the expression,
+- `exec(s)`: returns a list of matches of the form `[(index, match), ...]`, with
+  named groups available as the `groups` field,
+- `replace(fn, s)`: replace matched substrings of `s` using function `fn`,
+- `split(s)`: split `s` on substrings matching the expression.
+
+For example, we can test whether a string `fname` corresponds to an image file with
 
 ```{.liquidsoap include="liq/string.match.liq" from=2 to=-1}
 ```
 
-Namely, this function will test if `fname` matches the regular expression
-`.*\.png|.*\.jpg` which means "any number of any character followed by `.png` or
-any number of any character followed by `.jpg`".
+Named groups are also supported in `exec`:
+
+```liquidsoap
+r/(foo)(?<gno>gni)?/g.exec("foogni")
+# Returns: [(2, "gni"), (1, "foo"), (0, "foogni")].{groups = [("gno", "gni")]}
+```
+
+The older functions `string.match`\indexop{string.match} and
+`string.replace`\indexop{string.replace} remain available for simple cases.
 
 ### Booleans
 
@@ -624,19 +725,21 @@ empty list). Other useful functions are
   - : [int] = [1, 3, 2, 4, 5]
   ```
 
-<!--
-\SM{explain splats}
+Elements of a list can also be extracted using _splat_ patterns\index{list!splat} with `let`:
 
 ```
-let [x, _, z, ...t] = [1,2,3,4]
-x : int = 1
-z : int = 3
-t : [int] = [4]
+# list.hd([1, 4, 5]);;
+let [x, _, z, ...t] = [1, 2, 3, 4]
+# x = 1, z = 3, t = [4]
+```
 
+Here, `_` ignores a value, and `...t` captures all remaining elements as a list.
+Lists can similarly be constructed using spreads:
+
+```liquidsoap
 x = [1, ...[2, 3, 4], 5, ...[6, 7]]
-x : [int] = [1, 2, 3, 4, 5, 6, 7]
+# x = [1, 2, 3, 4, 5, 6, 7]
 ```
--->
   
 ### Tuples
 
@@ -1843,6 +1946,37 @@ reloading the playlist, possibly specifying a new file, as well as the `skip`
 method described above. If you try at home, you will see that they are actually
 many more methods.
 
+### Optional fields {#sec:optional-fields}
+
+\index{record!optional field}
+
+Sometimes a function needs to accept a record that may or may not have a
+particular field. There are two ways to handle this.
+
+The first uses the `x.foo ?? default` syntax, which evaluates to the field value
+when it is present or to the default otherwise:
+
+```liquidsoap
+# Adds 1 to x, or options.add if that field is present
+def f(x, options) =
+  x + (options.add ?? 1)
+end
+```
+
+The type of this function reflects the optional field with `?`:
+
+```
+f : (int, 'a.{add? : int}) -> int = <fun>
+```
+
+The second approach uses the `x?.foo` safe-navigation operator, which returns
+the field value or `null` when the field is absent. It can be chained and works
+with method calls:
+
+```liquidsoap
+x?.fn(123, "aabb")?.field
+```
+
 ### References
 
 You should now be able to fully understand the type given to references. We
@@ -1861,6 +1995,97 @@ function, this explains why we have been writing `r()` to get its value. In
 order to modify its value, say set it to 7, we can call the method `set` and
 write `r.set(7)`{.liquidsoap}. In fact, the syntax `r := 7`{.liquidsoap} is
 simply a shorthand for this.
+
+Patterns {#sec:patterns}
+--------
+
+\index{pattern}
+
+_Patterns_ are a concise way to extract values from structured data such as
+lists, tuples, and records. We have already seen the basic form `let (n, x, s) =
+t` for tuples. More generally, patterns can be combined arbitrarily.
+
+### Tuple patterns
+
+Tuple patterns destructure each element positionally. The special placeholder
+`_` ignores a value:
+
+```liquidsoap
+let (x, y, _, z) = (123, "aabbcc", true, 3.14)
+# x = 123, y = "aabbcc", z = 3.14
+```
+
+### List patterns
+
+List patterns support forward captures, an optional spread (`...var`) to collect
+remaining elements, and backward captures for the tail:
+
+```liquidsoap
+# Exact match:
+let [x, y, z] = [1, 2, 3]
+
+# Forward with spread:
+let [x, y, ...z] = [1, 2, 3, 4]
+# x = 1, y = 2, z = [3, 4]
+
+# Ignoring a position:
+let [_, x, ...z] = [1, 2, 3, 4]
+# x = 2, z = [3, 4]
+
+# Backward capture:
+let [..., t, u, v] = [1, 2, 3, 4, 5]
+# t = 3, u = 4, v = 5
+```
+
+The spread `..._` can be written simply as `...`.
+
+### Record and module patterns
+
+Record patterns extract named fields. A spread captures the remaining fields as
+a record:
+
+```liquidsoap
+let {foo, bar} = {foo = 123, bar = "baz", gni = true}
+# foo = 123, bar = "baz"
+
+let {foo, bar, ...x} = {foo = 123, bar = "baz", gni = true}
+# foo = 123, bar = "baz", x = {gni = true}
+```
+
+Module patterns additionally capture the base value alongside the fields:
+
+```liquidsoap
+let v.{foo, bar} = "aabbcc".{foo = 123, bar = "baz"}
+# v = "aabbcc", foo = 123, bar = 456
+```
+
+Optional fields can be captured with `?`, yielding `null` when absent:
+
+```liquidsoap
+let {foo?} = ()
+# foo = null
+
+let {foo?} = {foo = 123}
+# foo = 123
+```
+
+### Patterns in function arguments
+
+Patterns are also valid directly in function argument positions:
+
+```liquidsoap
+# Destructure a labeled argument:
+def f(~x:{gno}) =
+  gno + 1
+end
+# f : (x : 'a.{gno : int}) -> int
+
+# Destructure a list argument:
+def f([a, b]) =
+  a + b
+end
+# f : (['a]) -> 'a
+```
 
 Advanced values
 ---------------
@@ -2518,3 +2743,70 @@ The main functions in order to create and manipulate audio streams are
   requests and will play them in the order they were received.
 
 Their use is detailed in next chapter.
+
+Script caching {#sec:caching}
+--------------
+
+\index{caching}
+
+Type-checking a Liquidsoap script can be slow because it must also type-check
+the standard library. To avoid repeating this work on every run, Liquidsoap
+caches the result of type-checking. On the second and subsequent executions of
+the same script, the cache is used instead of re-running the type-checker,
+which can be **100× faster**. The difference in startup logs is visible:
+
+Without caching:
+```
+[startup:3] stdlib hash computation: 0.03s
+[startup:3] Typechecking stdlib: 3.37s
+[startup:3] Typechecking main script: 0.00s
+```
+
+With caching:
+```
+[startup:3] Loading stdlib from cache!
+[startup:3] stdlib cache retrieval: 0.10s
+```
+
+In addition to speed, loading from cache also significantly reduces memory
+usage, typically from around 375 MB down to 80 MB.
+
+Scripts can be cached ahead of time without executing them using the
+`--cache-only` flag, which is useful when building Docker images or packaging
+deployments. Caching can be disabled with `--no-cache` or by setting the
+environment variable `LIQ_CACHE` to anything other than `1` or `true`.
+
+### Cache locations
+
+There are two cache locations:
+
+- _System cache_: shared across all scripts and users, used for the standard
+  library. On Unix, typically `/var/cache/liquidsoap`.
+- _User cache_: specific to the user running the script. On Unix, typically
+  `$HOME/.cache/liquidsoap`.
+
+The current cache directory can be retrieved at runtime with
+`liquidsoap.cache(mode="user")` or `liquidsoap.cache(mode="system")`.
+
+### Cache maintenance and security
+
+A maintenance routine deletes cache files older than 10 days and caps the
+cache at 200 files. It can be triggered manually with
+`liquidsoap.cache.maintenance(mode=<mode>)`.
+
+Cache files are **not encrypted**. User cache files may contain secrets such as
+passwords embedded in your scripts. It is therefore important to:
+
+- pass secrets via environment variables rather than hardcoding them,
+- ensure that cache files have restricted permissions (the default is `0o600`
+  for user cache files).
+
+### Cache environment variables
+
+The cache behavior can be tuned with the following environment variables:
+
+- `LIQ_CACHE`: disable caching when set to anything other than `1` or `true`,
+- `LIQ_CACHE_SYSTEM_DIR` / `LIQ_CACHE_USER_DIR`: override the cache directories,
+- `LIQ_CACHE_MAX_DAYS`: maximum age of a cache file before it is eligible for
+  deletion (default: 10 days),
+- `LIQ_CACHE_MAX_FILES`: maximum number of cache files to keep (default: 200).
