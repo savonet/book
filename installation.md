@@ -12,7 +12,7 @@ Automated building using opam {#sec:opam}
 -----------------------------
 
 The recommended method to install Liquidsoap is by using the [package manager
-opam](http://opam.ocaml.org/)\index{opam}. This program, which is available on all major
+opam](https://opam.ocaml.org/)\index{opam}. This program, which is available on all major
 distributions and architectures, makes it easy to build programs written in
 OCaml by installing the required dependencies (the libraries the program needs
 to be compiled) and managing consistency between various versions (in
@@ -24,23 +24,17 @@ libraries are actively maintained.
 
 ### Installing opam
 
-The easiest way to install opam on any achitecture is by running the command
-
-```
-sh <(curl -sL https://git.io/fjMth)
-```
-
-or by installing the `opam` package with the package manager of your
-distribution, e.g., for Ubuntu,
+The easiest way to install opam is by following the instructions on the [opam
+install page](https://opam.ocaml.org/doc/Install.html), or by installing the
+`opam` package with the package manager of your distribution, e.g., for
+Ubuntu,
 
 ```
 sudo apt install opam
 ```
 
-or by downloading the binaries from [the opam
-website](http://opam.ocaml.org/doc/Install.html). In any case, you should ensure
-that you have at least the version 2.0.0 of opam: the version number can be
-checked by running `opam --version`.
+In any case, you should ensure that you have at least version **2.1** of opam:
+the version number can be checked by running `opam --version`.
 
 If you are installing opam for the first time, you should initialize the list of
 opam packages with
@@ -51,11 +45,18 @@ opam init
 
 You can answer yes to all the questions it asks (if it complains about the
 absence of `bwrap`, either install it or add the flag `--disable-sandboxing` to
-the above command line). Next thing, you should install a recent version of the
-OCaml compiler by running
+the above command line). Next, you should install a supported version of the
+OCaml compiler. Not all versions are supported; you can run
 
 ```
-opam switch create 4.13.0
+opam info liquidsoap-lang
+```
+
+to find out which OCaml versions are compatible. Then create a switch for your
+chosen version:
+
+```
+opam switch create <ocaml version>
 ```
 
 It does take a few minutes, because it compiles OCaml, so get prepared to have a
@@ -63,42 +64,47 @@ coffee.
 
 ### Installing Liquidsoap
 
-Once this is done, a typical installation of Liquidsoap with support for mp3
-encoding/decoding and Icecast is done by executing:
+Once this is done, a typical installation of Liquidsoap with most expected
+features is done by executing:
 
 ```
-opam depext  taglib mad lame cry samplerate liquidsoap
-opam install taglib mad lame cry samplerate liquidsoap
+opam install ffmpeg liquidsoap
 ```
 
-The first line (`opam depext ...`) takes care of installing the required
-external dependencies, i.e., the libraries we are relying on, but did not
-develop by ourselves. Here, we want to install the dependencies required by
-`taglib` (the library to read tags in audio files), `mad` (to decode mp3),
-`lame` (to encode mp3), `cry` (to stream to Icecast), `samplerate` (to resample
-audio) and finally `liquidsoap`. The second line (`opam install ...`) actually
-install the libraries and programs. Here also, the compilation takes some time
-(around a minute on a recent computer).
+This installs `liquidsoap` along with the optional `ffmpeg` package, which
+provides most of the expected functionalities (encoding, decoding, metadata
+support, etc.) out of the box. Starting with opam 2.1, external dependencies
+(system libraries) are handled automatically — opam will ask for your permission
+to install them or guide you through the process.
 
 Most of Liquidsoap's dependencies are only optionally installed by opam. For
-instance, if you want to enable ogg/vorbis encoding and decoding after you've already
-installed Liquidsoap, you should install the `vorbis` library by executing:
+instance, if you want to enable ogg/vorbis encoding and decoding after you've
+already installed Liquidsoap, you should install the `vorbis` library by
+executing:
 
 ```
-opam depext  vorbis
 opam install vorbis
 ```
 
 Opam will automatically detect that this library can be used by Liquidsoap and
-will recompile it which will result in adding support for this format in
-Liquidsoap. The list of all optional dependencies that you may enable in
-Liquidsoap can be obtained by typing
+will recompile it, resulting in added support for this format. The list of all
+optional dependencies that you may enable in Liquidsoap can be obtained by
+typing
 
 ```
 opam info liquidsoap
 ```
 
 and is detailed below.
+
+**Note for macOS users**: when using [Homebrew](https://brew.sh/), you may need
+to add the following to your shell configuration so that opam can find the
+installed libraries:
+
+```
+export CPATH=/opt/homebrew/include
+export LIBRARY_PATH=/opt/homebrew/lib
+```
 
 ### Installing the cutting-edge version
 
@@ -132,6 +138,10 @@ git pull
 opam upgrade liquidsoap
 ```
 
+As an alternative to pinning from source, rolling release binaries are available
+for upcoming versions — see [the section on versions and releases](#sec:versions)
+below.
+
 #### Updating libraries
 
 If you also need a recent version of the libraries in the Liquidsoap ecosystem,
@@ -161,129 +171,133 @@ If you want to avoid compiling Liquidsoap, or if opam is not working on your
 platform, the easiest way is to use precompiled binaries of Liquidsoap, if
 available.
 
+Binary packages and docker images are provided in two flavors:
+
+- The main `liquidsoap` packages are compiled with all available features and
+  functions. This is a good starting point for general-purpose development.
+- Packages and images labelled `-minimal` are compiled without extra libraries
+  and with a limited set of essential optional features. These are recommended
+  for production if they meet your needs, as they reduce size, memory usage, and
+  the chance of issues from unused optional dependencies.
+
+Each binary build comes with a corresponding `*.config` file listing all
+features included. You can also inspect a running installation with
+`liquidsoap --build-config`.
+
 ### Linux
 
-There are packages for Liquidsoap in most Linux distributions. For instance, in
-Ubuntu or Debian, the installation can be performed by running
+Official packages from the [Liquidsoap release
+page](https://github.com/savonet/liquidsoap/releases) are available for Debian
+and Ubuntu (see the supported releases table in the [versions
+section](#sec:versions)). When using these packages on Debian, you will also
+need to enable the [deb-multimedia.org](https://www.deb-multimedia.org/)
+repositories, which provide up-to-date libraries including `fdk-aac` support in
+FFmpeg.
 
-```
-sudo apt install liquidsoap
-```
-
-which will install the `liquidsoap` package, containing the main binaries. It
-comes equipped with most essential features, but you can install plugins in the
-packages `liquidsoap-plugin-...` to have access to more libraries; for instance,
-installing `liquidsoap-plugin-flac` will add support for the flac lossless audio
-format or `liquidsoap-plugin-all` will install all available plugins (which
-might be a good idea if you are not sure about which you are going to need).
+Your distribution may also carry its own `liquidsoap` package (e.g. via
+`sudo apt install liquidsoap`), though these may lag behind the latest release.
 
 ### macOS
 
-No binaries are provided for macOS, the preferred method is opam, see above.
+No pre-built binaries are provided for macOS. The preferred installation method
+is opam, as described above.
 
 ### Windows
 
 Pre-built binaries are provided on the [releases
-pages](https://github.com/savonet/liquidsoap/releases) in a file with a name of
+page](https://github.com/savonet/liquidsoap/releases) in a file with a name of
 the form `liquidsoap-vN.N.N-win64.zip`. It contains directly the program, no
 installer is provided at the moment.
+
+Versions and releases {#sec:versions}
+---------------------
+
+### Semantic versioning
+
+Liquidsoap releases follow semantic versioning:
+
+```
+<major_version>.<minor_version>.<bugfix_version>
+```
+
+- `major_version` is bumped for major changes (paradigm shifts, major
+  implementation changes). Versions with different major numbers **are**
+  incompatible.
+- `minor_version` is bumped for minor changes (new operators, renames, new
+  modules). Versions with different minor numbers **may be** incompatible.
+- `bugfix_version` is bumped for bugfix releases. Only-bugfix-version changes
+  **should be** compatible.
+
+We strongly recommend maintaining a staging environment to test new versions
+before deploying them in production.
+
+### Current release status
+
+| Branch  | Latest release | Supported | Rolling Release         |
+|---------|----------------|-----------|-------------------------|
+| `2.5.x` | 🚧 (in dev)   | 🚧        | `main` branch           |
+| `2.4.x` | 2.4.2          | ✅        | `rolling-release-v2.4.x` |
+| `2.3.x` | 2.3.3          | ❌        | —                       |
+
+### Rolling releases
+
+A rolling release is a snapshot of a current, unpublished release — it may
+become the next stable or bugfix release for a given major/minor version. Rolling
+release assets may be updated, added, or removed at any time. For permanent,
+immutable links to release assets, use
+[liquidsoap-release-assets](https://github.com/savonet/liquidsoap-release-assets/releases).
+
+### Supported operating systems for pre-built binaries
+
+| OS      | Supported releases                                         | Architectures       | Notes                                                                              |
+|---------|------------------------------------------------------------|---------------------|------------------------------------------------------------------------------------|
+| Debian  | stable (`trixie`), testing (`forky`)                       | `amd64`, `arm64`    | `.deb` packages require [deb-multimedia.org](https://www.deb-multimedia.org/)      |
+| Ubuntu  | LTS (`resolute`), latest (`plucky`)                        | `amd64`, `arm64`    |                                                                                    |
+| Alpine  | `edge`                                                     | `x86_64`, `aarch64` |                                                                                    |
+| Windows | N/A                                                        | 64-bit              | `.zip` archive                                                                     |
+
+### Supported FFmpeg versions
+
+Liquidsoap supports the last two major releases of FFmpeg. Currently, this means
+versions **7** and **8**.
 
 Building from source
 --------------------
 
-In some cases, it is necessary to build directly from source (e.g., if opam is
-not supported on your exotic architecture or if you want to modify the source
-code of Liquidsoap). This can be a difficult task, because Liquidsoap relies on
-an up-to-date version of the OCaml compiler, as well as a bunch of OCaml
-libraries and, for most of them, corresponding C library dependencies.
+Building Liquidsoap from source is intended for developers who need to modify
+the code or work on platforms not covered by the available binaries or opam.
+It requires an up-to-date OCaml compiler and a number of OCaml libraries and
+their C library dependencies.
 
-### Installing external dependencies
-
-In order to build Liquidsoap, you first need to install the following OCaml
-libraries: `ocamlfind`, `sedlex`, `menhir`, `pcre` and `camomile`. You can
-install those using your package manager
-
-```
-sudo apt install ocaml-findlib libsedlex-ocaml-dev menhir libpcre-ocaml-dev libcamomile-ocaml-dev
-```
-
-(as you can remark, OCaml packages for Debian or Ubuntu often bear names of the
-form `libxxx-ocaml-dev`), or using opam
-
-```
-opam install ocamlfind sedlex menhir pcre camomile
-```
-
-or from source.
-
-### Getting the sources of Liquidsoap
-
-The sources of Liquidsoap, along with the required additional OCaml libraries we
-maintain can be obtained by downloading the main git repository, and then run
-scripts which will download the submodules corresponding to the various
-libraries:
-
-```
-git clone https://github.com/savonet/liquidsoap-full.git
-cd liquidsoap-full
-make init
-make update
-```
-
-<!--
-Alternatively, they bundled in the [`liquidsoap-<version>-full.tar.bz2` archive
-on the release page](https://github.com/savonet/liquidsoap/releases).
--->
-
-### Installing
-
-Next, you should copy the file `PACKAGES.default` to `PACKAGES` and possibly
-edit it: this file specifies which features and libraries are going to be
-compiled, you can add/remove those by uncommenting/commenting the corresponding
-lines. Then, you can generate the `configure` scripts:
-
-```
-./bootstrap
-```
-
-and then run them:
-
-```
-./configure
-```
-
-This script will check that whether the required external libraries are
-available, and detect the associated parameters. It optionally takes parameters
-such as `--prefix` which can be used to specify in which directory the
-installation should be performed. You can now build everything
-
-```
-make
-```
-
-and then proceed to the installation
-
-```
-make install
-```
-
-You may need to be root to run the above command in order to have the right to
-install in the usual directories for libraries and binaries.
+For detailed and up-to-date build instructions, please refer to the [online
+build documentation](https://www.liquidsoap.info/doc-dev/build.html).
 
 Docker image
 ------------
 
-[Docker](https://www.docker.com/)\index{Docker} images are provided as `savonet/liquidsoap`:
-these are Debian-based images with Liquidsoap pre-installed (and not much more
-in order to have a file as small as possible), which you can use to easily and
-securely deploy scripts using it. The tag `main` always contains the latest
-version, and is automatically generated after each modification.
+[Docker](https://www.docker.com/)\index{Docker} images are provided as `savonet/liquidsoap`
+on [Docker Hub](https://hub.docker.com/r/savonet/liquidsoap). These are
+Debian-based images with Liquidsoap pre-installed (kept minimal for size), which
+you can use to easily and securely deploy scripts.
+
+Images are tagged with:
+
+- a release version (e.g. `v2.4.2`) — note these may be updated,
+- a git commit SHA (e.g. `a24bf49`) — these are permanent,
+- a rolling-release tag (e.g. `rolling-release-v2.4.x`) — tracks the latest
+  snapshot for that branch.
+
+For example, to pull release `2.4.2`:
+
+```
+docker pull savonet/liquidsoap:v2.4.2
+```
 
 We refer the reader to the Docker documentation for the way such images can be
 used. For instance, you can have a shell on such an image with
 
 ```
-docker run -it --entrypoint /bin/bash savonet/liquidsoap:main
+docker run -it --entrypoint /bin/bash savonet/liquidsoap:v2.4.2
 ```
 
 By default, the docker image does not have access to the soundcard of the local
@@ -293,7 +307,7 @@ computer inside the image. For instance, you can play a sine (see
 [there](#sec:sound-sine)) by running:
 
 ```
-docker run -it -v /dev/snd:/dev/snd --privileged savonet/liquidsoap:main liquidsoap 'output.alsa(sine())'
+docker run -it -v /dev/snd:/dev/snd --privileged savonet/liquidsoap:v2.4.2 liquidsoap 'output.alsa(sine())'
 ```
 
 This single line should work on any computer on which Docker is installed: no
@@ -312,8 +326,7 @@ libraries is added. We recall that a library `ocaml-something` can be installed
 via opam with
 
 ```
-sudo opam depext  something
-sudo opam install something
+opam install something
 ```
 
 which will automatically trigger a rebuild of Liquidsoap, as explained in [the
@@ -377,7 +390,7 @@ Those add support for sound manipulation:
 
 - `ocaml-faad`: AAC decoding,
 - `ocaml-fdkaac`: AAC+ encoding,
-- `ocaml-ffmepg`: encoding and decoding of various formats,
+- `ocaml-ffmpeg`: encoding and decoding of various formats,
 - `ocaml-flac`: Flac encoding and decoding,
 - `ocaml-gstreamer`: encoding and decoding of various formats,
 - `ocaml-lame`: MP3 encoding,
