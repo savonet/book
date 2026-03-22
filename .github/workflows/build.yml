@@ -4,11 +4,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Install packages
       run: |
         sudo apt-get -y update
-        sudo apt-get -y install pandoc pandoc-citeproc texlive texlive-fonts-extra imagemagick poppler-utils pdf2svg ocaml-nox ocaml-findlib libyojson-ocaml-dev dune
+        sudo apt-get -y install pandoc texlive texlive-fonts-extra imagemagick poppler-utils pdf2svg ocaml-nox ocaml-findlib libyojson-ocaml-dev ocaml-dune
     - name: Build pandoc filters
       run: |
         git clone https://github.com/smimram/ocaml-pandoc
@@ -29,7 +29,7 @@ jobs:
     - name: Build ebook
       run: make book.epub
     - name: Upload artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: book
         path: |
