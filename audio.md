@@ -724,7 +724,7 @@ A full-fledged website based on this library, called _Webcaster_, [is
 available](https://webcast.github.io/webcaster/). It provides a web interface which
 looks like this:
 
-![Webcaster](img/webcaster.png)\
+![](img/webcaster.png)
 
 As you can see, it allows performing simple DJ interventions, by mixing between
 two playlists and the microphone input. And should you need more, [the source
@@ -1233,7 +1233,7 @@ is continuously true. In case it helps, we have illustrated in the following
 figure an example of a predicate `p` over time (below) and the resulting
 predicate `predicate.once(p)` over time (above):
 
-![predicate.once](fig/predicate-once.pdf)\
+![](fig/predicate-once.pdf)
 
 This means that `predicate.once({00m-15m})` is a predicate which is true once
 between in the first quarter of every hour, and can thus be used to play on
@@ -1741,7 +1741,7 @@ of the first track should be progressively lowered and the one of the second
 progressively increased, in such a way that we hear the two during the
 transition:
 
-![Transition](fig/transition.pdf)\
+![](fig/transition.pdf)
 
 Note that, as figured in the graph above, we don't necessarily want the duration
 of the transition to be the same for all tracks: for instance, the transition
@@ -1811,7 +1811,7 @@ functions). Finally, the parameter `type` controls the shape of the fade: it can
 respectively be `"lin"`, `"sin"`, `"log"` and `"exp"` which will respectively
 change the shape of the fade as follows:
 
-![Fading shapes](fig/fade-shapes.pdf)\
+![](fig/fade-shapes.pdf)
 
 The default shape is linear (it is the simplest), but the sine fade tends to be
 the smoother for the ear. For instance, the script
@@ -1839,7 +1839,7 @@ The `fade_out`, `fade_in` and `duration` parameters of `crossfade` control the
 length in seconds of the fade out, fade in and the total duration of the
 transition as figured below:
 
-![Fading durations](fig/transition-durations.pdf)\
+![](fig/transition-durations.pdf)
 
 In this example, we have a fade out time of 2 seconds, a fade in time of 3
 seconds and a fade duration of 4 seconds, which corresponds to the following
@@ -1850,7 +1850,7 @@ script:
 
 The default values are 3 seconds for fade in and out and 5 seconds for fade:
 
-![Fading durations](fig/transition-default.pdf)\
+![](fig/transition-default.pdf)
 
 The total duration should always be strictly longer than the one of the fades,
 otherwise the fades will not be complete and you will hear abrupt changes in the
@@ -1862,7 +1862,7 @@ volume. For instance, with a fade in and out of 3 seconds and a fade duration of
 
 we will have the following incomplete transitions:
 
-![Fading durations](fig/transition-short.pdf)\
+![](fig/transition-short.pdf)
 
 The fade duration can be changed by setting the `liq_cross_duration` metadata
 (and the name of the metadata can be changed in the `override_duration`
@@ -1888,16 +1888,16 @@ brutal (i.e. loud) music. In details the transitions are as follows:
   `medium` parameter) and the loudness are comparable (their difference is below
   the value specified by the `margin` parameter), we apply a regular transition:
   
-  ![Fading durations](fig/transition-default.pdf)\
+  ![](fig/transition-default.pdf)
   
 - if both tracks are very loud (both are above the value specified by the `high`
   parameter), we apply no transition:
   
-  ![Fading durations](fig/transition-no.pdf)\
+  ![](fig/transition-no.pdf)
   
 - if the first track is not loud and the second one is, we only fade the first
 
-  ![Fading durations](fig/transition-left.pdf)\
+  ![](fig/transition-left.pdf)
   
   and dually if the first one is loud and the second one is not.
 
@@ -1963,7 +1963,7 @@ jingle and we want to achieve the following:
 
 Graphically, this would look like the following:
 
-![Transition with jingle](fig/transition-jingle.pdf)\
+![](fig/transition-jingle.pdf)
 
 This can be achieved by the following function which is basically adding the old
 source faded out, the jingle and the new source faded in:
@@ -2343,7 +2343,7 @@ The useful parameters of gate are
 The following pictures both the amplitude of the sound (the squiggling curve)
 and the answer of the gate (the thick curve):
 
-![Gating](fig/gate.pdf)\
+![](fig/gate.pdf)
 
 The internal state of the operator can be observed by the exported method `gate`
 which provides a value between 0 and 1 indicating whether the gate is "closed"
@@ -2364,7 +2364,7 @@ We have indicated that all the audio samples should have a value between -1 and
 manually with `amplify` or in an automated way with `normalize`, it might happen
 that we obtain samples above 1 or below -1:
 
-![Clipping](fig/clipping1.pdf)\
+![](fig/clipping1.pdf)
 
 This is not a problem per se: Liquidsoap is perfectly able to handle such values
 for the samples. However, when we send such a signal to an output, it will be
@@ -2372,7 +2372,7 @@ _clipped_\index{clipping}: all the values above 1 will be changed to 1 and all t
 -1 will be changed to -1, in order to conform to the standard range for
 samples. Our signal will then look like this
 
-![Clipping](fig/clipping2.pdf)\
+![](fig/clipping2.pdf)
 
 As you can see, this operation is not particularly subtle and, as a matter of
 fact it has quite a bad effect on sound. If you want to test it you can try the script
@@ -2401,7 +2401,7 @@ effects, which leave the signal untouched when it is not very loud, and
 progressively lowers when it gets loud. Graphically, the output level given the
 input level is represented in the following figure:
 
-![Compressor](fig/compressor.pdf)\
+![](fig/compressor.pdf)
 
 We can observe that below the _threshold_ the output is the same as the input
 (the curve on the bottom left is a diagonal), and that above the threshold, the
@@ -2426,7 +2426,7 @@ This operator has a number of useful parameters:
   natural),
 - the `knee` (in dB) controls the width of the smoothing around the threshold:
 
-  ![Compressor knee](fig/compressor-knee.pdf)\
+  ![](fig/compressor-knee.pdf)
 
 - the `window` (in ms) used to smoothen the computation of the input level,
 - the `lookahead` (in ms), i.e. how much time we look at the signal in the
@@ -2471,14 +2471,14 @@ some frequencies of the input signal. There are three main types:
 Ideal filters would have a frequency response as indicated in the following
 figures:
 
-![Filters](fig/filter.pdf)\
+![](fig/filter.pdf)
 
 For instance, a low-pass filter would keep all the frequencies below the cutoff
 exactly as they were in the original signal, and keep none above. In practice,
 the transition between kept and removed frequencies is smother and the actual
 filter response of a low-pass filter is rather like this:
 
-![First-order low pass filter](fig/filter-lp-fo.pdf)\
+![](fig/filter-lp-fo.pdf)
 
 (to be precise, this is the response of a first-order low pass filter, as
 implemented in the `filter.rc` operator, with a cutoff frequency of
@@ -2496,7 +2496,7 @@ operators such as
 For comparison, the frequency response of `filter.iir.eq.low` with a cutoff
 frequency of 1000 Hz is
   
-![First-order low pass filter](fig/filter-lp-biquad.pdf)\
+![](fig/filter-lp-biquad.pdf)
 
 You can observe that it is much sharper than the first-order one, and thus
 closer to the ideal filter. The functions `filter.rc` and `filter` are
@@ -2729,7 +2729,7 @@ remember is that
 Graphically, the relationship between the linear amplitude and the gain in
 decibels is pictured below in both ways:
 
-![Linear vs decibels](fig/lin-dB.pdf)\
+![](fig/lin-dB.pdf)
 
 In Liquidsoap, the functions `lin_of_dB` and `dB_of_lin` can be used to convert
 between the two: the first converts decibels in linear units and the second does
@@ -2927,7 +2927,7 @@ webpage like
 
 <!-- \begin{center}\includegraphics{img/interactive1.png}\end{center} -->
 
-![Interactive variables webpage](img/interactive1.png) \
+![](img/interactive1.png)
 
 where we can edit in realtime the value of the interactive variable (of course
 if we had many variables we would have one line for each of them). If we specify
@@ -2943,7 +2943,7 @@ a = interactive.float("main_volume", description="Our volume",
 
 the webpage will change to
 
-![Interactive variables webpage](img/interactive2.png) \
+![](img/interactive2.png)
 
 In this way you easily get access to a convenient interface for setting your
 parameters, and their values can be stored on the long run by using
@@ -2958,7 +2958,7 @@ setting up two interactive variables `f` and `g` for the frequency and the gain
 
 and tweaking them using the interactive variables webpage which looks like
 
-![Interactive variables webpage](img/interactive3.png)\
+![](img/interactive3.png)
 
 Once the right values found, they will be stored in the `bb.params` files, but
 you could then hardcode them in your script for more resiliency.
@@ -2976,7 +2976,7 @@ interactive variables for us. For instance, given a source `s`, the script
 
 will give rise to the following interface
 
-![Interactive variables webpage](img/interactive4.png)\
+![](img/interactive4.png)
 
 which allows to easily set up the multiband compressor using our ears and our
 mouse. The _wet_ parameter allows to compare the output with and without
@@ -4149,7 +4149,7 @@ For instance, in order to shape the sound of our radio, we might want to use
 providing a multiband equalizer, a multiband compressor, a limiter, a spectrum
 analyzer and various other useful tools along with a graphical interface:
 
-![JAMin](img/jamin.png) \
+![](img/jamin.png)
 
 In order to do so, our script might look like this:
 
@@ -4162,7 +4162,7 @@ output it to Icecast. Finally, using an external tool such as QjackCtl we need
 to connect the output we created to JAMin, as well as the output of JAMin to our
 script:
 
-![JACK example](img/jack-ex.png) \
+![](img/jack-ex.png)
 
 #### External decoders/encoders {#sec:pipe}
 
@@ -4621,7 +4621,7 @@ http://localhost:8000/telnet
 to the function `server.harbor`). If you point your browser at this page, you
 should see a web emulation of the telnet server which looks like this:
 
-![Web interface for telnet server](img/server.harbor.png)\
+![](img/server.harbor.png)
 
 #### Generic commands
 
@@ -5176,7 +5176,7 @@ http://localhost:8000/jingles
 
 When we go there, we see three buttons like this
 
-![Jingle buttons](img/jingle-buttons.png)\
+![](img/jingle-buttons.png)
 
 Moreover, if we click on the button "Jingle 3", the page will fetch the url
 
@@ -5463,7 +5463,7 @@ is an infinite medium-pitched sine. We play the source `s` which is `s1` with a
 fallback on `s2`. If you listen to it, you will hear 2 seconds of high frequency
 sine and then medium frequency sine:
 
-![Testing fallback](fig/test-fallback.pdf)\
+![](fig/test-fallback.pdf)
 
 This can be particularly handy if you want to test faded transitions in fallback
 for instance. If you want to vary the kind of sound, the operators `square` and
@@ -5488,7 +5488,7 @@ Our main source `s` consists of a request queue `q` with a fallback on a
 mid-pitched sine. After 2 seconds, we push on the request queue a high-pitch
 sine for 3 seconds. The frequency of what we hear will thus be
 
-![Testing queue](fig/test-queue.pdf)\
+![](fig/test-queue.pdf)
 
 As a variant on sines, the `metronome`\indexop{metronome} operator is sometimes useful: it
 generates sine beeps at fixed rate (one every second, or 60 bpm, by
@@ -5593,7 +5593,7 @@ a source available or not depending on a condition. For instance, in the script
 we have a live source `live` with a fallback to a playlist. We use a thread to
 make the `live` source available only 5 seconds every 10 seconds:
 
-![Switching availability](fig/test-live.pdf)\
+![](fig/test-live.pdf)
 
 Another way to achieve this is as follows:
 
@@ -5936,7 +5936,7 @@ encodings of two different video files:
 If we have a look at the CPU usage, we see that only one core is used at a given
 time:
 
-![Encoding with one clock](img/encoding1.png)\
+![](img/encoding1.png)
 
 (the kernel changes the core we use over time in order to better distribute the
 heat, but there is only one core used at a given time). Now, let us assign
@@ -5949,7 +5949,7 @@ second output, which will not be the default one anymore:
 We see that we now often use two cores simultaneously, which makes the encoding
 twice as fast:
 
-![Encoding with multiple clocks](img/encoding2.png)\
+![](img/encoding2.png)
 
 Here, things are working well because the two encoders encode different sources
 (`a` and `b`). If they encode a common source, it can still be done by using a
