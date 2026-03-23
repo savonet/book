@@ -60,7 +60,7 @@ and 1. In the figure below, the position of the membrane is represented by the
 continuous black curve and the successive samples correspond to the grayed
 rectangles:
 
-![Sampling](fig/sampling.pdf)\
+![](fig/sampling.pdf)
 
 The way this data is represented is a matter of convention and many of those can
 be found in "nature":

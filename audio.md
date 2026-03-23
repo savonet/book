@@ -1799,7 +1799,7 @@ beginning of tracks and progressively decrease the volume from 1 to 0 at the end
 of tracks: these operations are respectively called _fading in_\index{fade} and _fading out_
 and their effect on the volume can be pictured as follows:
 
-![Fading in and out](fig/fade-in-out.pdf)\
+![](fig/fade-in-out.pdf)
 
 The operators `fade.in` and `fade.out` respectively fade in and out every track
 of the source given as argument. The `duration` parameter controls the duration

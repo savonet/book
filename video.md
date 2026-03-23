@@ -382,7 +382,7 @@ instance,
 
 will generate a video such as
 
-![Test video](img/testsrc.png){width=300px}\
+![](img/testsrc.png){width=300px}
 
 The pattern displayed can be changed by passing the parameter `pattern` whose
 value can be `"testsrc"` (the default value), `"testsrc2"`, `"smptebars"` or
@@ -430,7 +430,7 @@ following prints the current volume\index{RMS} and BPM\index{BPM} of a song:
 
 and here is the output:
 
-![Volume and BPM](img/vol-bpm.png){width=300px} \
+![](img/vol-bpm.png){width=300px}
 
 The position parameters are also getters, so that the position of the text can
 also be customized over time. For instance, the following will add a text moving
