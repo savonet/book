@@ -25,9 +25,6 @@ header-includes: |
   \usepackage{perpage}\MakePerPage{footnote}
   \usepackage{pifont}
   \urlstyle{tt}
-  \usepackage{caption}
-  \captionsetup[figure]{labelformat=empty,textformat=empty}
-  \setlength{\textfloatsep}{0pt}
 numbersections: true
 secnumdepth: 1
 toc-depth: 1
