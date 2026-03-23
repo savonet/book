@@ -16,8 +16,6 @@ jobs:
       run: |
         git clone https://github.com/smimram/ocaml-pandoc
         cd ocaml-pandoc
-        # Fix fd leak in pandoc-include: second open_in is never closed on End_of_file/Exit
-        sed -i 's/| End_of_file | Exit -> !ans/| End_of_file | Exit -> close_in ic; !ans/' examples/include.ml
         dune build @install
         sudo dune install --prefix /usr/local -p pandoc-crossref
         sudo dune install --prefix /usr/local -p pandoc-include
