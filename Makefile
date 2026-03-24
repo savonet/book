@@ -65,7 +65,7 @@ check:
 
 replacements: replacements.in
 	@echo "Generating $@..."
-	@chmod +w $@
+	@-chmod +w $@
 	@cat $< > $@
 	@echo "VERSION 2.5" >> $@
 	@echo "TODAY `date +'%d %B %Y'`" >> $@
