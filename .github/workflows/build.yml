@@ -48,6 +48,7 @@ jobs:
         cp book.pdf site/public
         cp book.epub site/public
     - name: Deploy pages
+      if: github.ref == 'refs/heads/main'
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
