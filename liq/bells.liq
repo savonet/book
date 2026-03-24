@@ -1,6 +1,6 @@
 #!./liquidsoap
-d = source.dynamic()
 sines = ref([])
+d = source.dynamic(fun () -> add(normalize=false, sines()))
 output(d)
 
 def new()
@@ -12,8 +12,6 @@ def new()
            random.float(min=200., max=1000.))
   sines := list.add((s:source), sines())
   log.important("Sine added, there are #{list.length(sines())}.")
-  # Update the dynamic source
-  d.set(add(normalize=false, sines()))
 end
 # Add a new sine from time to time
 thread.run(every={random.float(min=0., max=2.)}, new)

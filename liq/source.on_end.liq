@@ -5,6 +5,6 @@ def speaker(t, m)
   title = m["title"]
   q.push.uri("say:Last song was #{title}")
 end
-s = source.on_end(delay=10., s, speaker)
+s.on_position(remaining=true, position=10., synchronous=false, speaker)
 s = add([q, s])
 output(s)

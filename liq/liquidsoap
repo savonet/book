@@ -6,4 +6,4 @@ if [ "$USER" = "smimram" ]; then
     LIQUIDSOAP="/home/smimram/prog/savonet/liquidsoap/liquidsoap --unsafe"
 fi
 
-$LIQUIDSOAP --no-deprecated $*
+$LIQUIDSOAP --disable-deprecated $*

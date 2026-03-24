@@ -1,4 +1,4 @@
 #!./liquidsoap
 s = mksafe(playlist("videos.playlist"))
-output.graphics(s)
+output.sdl(s)
 output.pulseaudio(s)

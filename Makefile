@@ -65,9 +65,11 @@ check:
 
 replacements: replacements.in
 	@echo "Generating $@..."
+	@chmod +w $@
 	@cat $< > $@
-	@echo "VERSION 2.2" >> $@
+	@echo "VERSION 2.5" >> $@
 	@echo "TODAY `date +'%d %B %Y'`" >> $@
+	@chmod -w $@
 
 docker-test:
 	docker build . -f .github/docker/Dockerfile.build

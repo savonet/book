@@ -33,7 +33,7 @@ Ubuntu,
 sudo apt install opam
 ```
 
-In any case, you should ensure that you have at least version **2.1** of opam:
+In any case, you should ensure that you have at least version 2.1 of opam:
 the version number can be checked by running `opam --version`.
 
 If you are installing opam for the first time, you should initialize the list of
@@ -73,17 +73,17 @@ opam install ffmpeg liquidsoap
 
 This installs `liquidsoap` along with the optional `ffmpeg` package, which
 provides most of the expected functionalities (encoding, decoding, metadata
-support, etc.) out of the box. Starting with opam 2.1, external dependencies
-(system libraries) are handled automatically — opam will ask for your permission
+support, etc.) out of the box. External dependencies
+(system libraries) are handled automatically by opam: it will ask for your permission
 to install them or guide you through the process.
 
 Most of Liquidsoap's dependencies are only optionally installed by opam. For
-instance, if you want to enable ogg/vorbis encoding and decoding after you've
-already installed Liquidsoap, you should install the `vorbis` library by
+instance, if you want to enable ogg/vorbis encoding and decoding after you have
+already installed Liquidsoap, you should install the `opus` library by
 executing:
 
 ```
-opam install vorbis
+opam install opus
 ```
 
 Opam will automatically detect that this library can be used by Liquidsoap and
@@ -97,7 +97,9 @@ opam info liquidsoap
 
 and is detailed below.
 
-**Note for macOS users**: when using [Homebrew](https://brew.sh/), you may need
+#### Note for macOS users
+
+When using [Homebrew](https://brew.sh/), you may need
 to add the following to your shell configuration so that opam can find the
 installed libraries:
 
@@ -200,58 +202,6 @@ page](https://github.com/savonet/liquidsoap/releases) in a file with a name of
 the form `liquidsoap-vN.N.N-win64.zip`. It contains directly the program, no
 installer is provided at the moment.
 
-Versions and releases {#sec:versions}
----------------------
-
-### Semantic versioning
-
-Liquidsoap releases follow semantic versioning:
-
-```
-<major_version>.<minor_version>.<bugfix_version>
-```
-
-- `major_version` is bumped for major changes (paradigm shifts, major
-  implementation changes). Versions with different major numbers **are**
-  incompatible.
-- `minor_version` is bumped for minor changes (new operators, renames, new
-  modules). Versions with different minor numbers **may be** incompatible.
-- `bugfix_version` is bumped for bugfix releases. Only-bugfix-version changes
-  **should be** compatible.
-
-We strongly recommend maintaining a staging environment to test new versions
-before deploying them in production.
-
-### Current release status
-
-| Branch  | Latest release | Supported | Rolling Release         |
-|---------|----------------|-----------|-------------------------|
-| `2.5.x` | (in dev)       | (dev)     | `main` branch           |
-| `2.4.x` | 2.4.2          | \ding{51} | `rolling-release-v2.4.x` |
-| `2.3.x` | 2.3.3          | \ding{55} | —                       |
-
-### Rolling releases
-
-A rolling release is a snapshot of a current, unpublished release — it may
-become the next stable or bugfix release for a given major/minor version. Rolling
-release assets may be updated, added, or removed at any time. For permanent,
-immutable links to release assets, use
-[liquidsoap-release-assets](https://github.com/savonet/liquidsoap-release-assets/releases).
-
-### Supported operating systems for pre-built binaries
-
-| OS      | Supported releases                   | Architectures       | Notes                            |
-|---------|--------------------------------------|---------------------|----------------------------------|
-| Debian  | stable (`trixie`), testing (`forky`) | `amd64`, `arm64`    | needs [deb-multimedia.org](https://www.deb-multimedia.org/) repo |
-| Ubuntu  | LTS (`resolute`), latest (`plucky`)  | `amd64`, `arm64`    |                                  |
-| Alpine  | `edge`                               | `x86_64`, `aarch64` |                                  |
-| Windows | N/A                                  | 64-bit              | `.zip` archive                   |
-
-### Supported FFmpeg versions
-
-Liquidsoap supports the last two major releases of FFmpeg. Currently, this means
-versions **7** and **8**.
-
 Building from source
 --------------------
 
@@ -308,10 +258,140 @@ this probably means that docker does not have the rights to access the sound
 device located at `/dev/snd`, in which case passing the additional option
 `--group-add=audio` should help).
 
+Versions and releases {#sec:versions}
+---------------------
+
+In order to be as clear as possible on the evolution of Liquidsoap, it uses semantic versioning, which means that each number in the version has a different meaning. Namely, version identifiers consist of three numbers and are of the form
+
+```
+<major_version>.<minor_version>.<bugfix_version>
+```
+
+They are handled as follows.
+
+- `major_version` is bumped for major changes (paradigm shifts, major
+  implementation changes). Versions with different major numbers *are*
+  incompatible.
+- `minor_version` is bumped for minor changes (new operators, renames, new
+  modules). Versions with different minor numbers *may be* incompatible.
+- `bugfix_version` is bumped for bugfix releases. Only-bugfix-version changes
+  *should be* compatible.
+
+We strongly recommend maintaining a staging environment to test new versions
+before deploying them in production.
+
+### Current release status
+
+The current release status is the following one:
+
+| Branch  | Latest release | Supported | Rolling Release          |
+|---------|----------------|-----------|--------------------------|
+| `2.5.x` | (in dev)       | (dev)     | `main` branch            |
+| `2.4.x` | 2.4.2          | \ding{51} | `rolling-release-v2.4.x` |
+| `2.3.x` | 2.3.3          | \ding{55} | —                        |
+
+This means that all developments and new features are brought to the 2.5.x branch, but we still support 2.4.x versions in order to let our users adapt their scripts to the new features and language improvements.
+
+### Rolling releases
+
+A rolling release is a snapshot of a current, unpublished release — it may
+become the next stable or bugfix release for a given major/minor version. Rolling
+release assets may be updated, added, or removed at any time. For permanent,
+immutable links to release assets, use
+[liquidsoap-release-assets](https://github.com/savonet/liquidsoap-release-assets/releases).
+
+### Supported operating systems for pre-built binaries
+
+| OS      | Supported releases                   | Architectures       | Notes                            |
+|---------|--------------------------------------|---------------------|----------------------------------|
+| Debian  | stable (`trixie`), testing (`forky`) | `amd64`, `arm64`    | needs [deb-multimedia.org](https://www.deb-multimedia.org/) repo |
+| Ubuntu  | LTS (`resolute`), latest (`plucky`)  | `amd64`, `arm64`    |                                  |
+| Alpine  | `edge`                               | `x86_64`, `aarch64` |                                  |
+| Windows | N/A                                  | 64-bit              | `.zip` archive                   |
+
+### Supported FFmpeg versions
+
+Liquidsoap supports the last two major releases of FFmpeg. Currently, this means
+versions 7 and 8.
+
+Editor support {#sec:editors}
+--------------
+
+Writing Liquidsoap scripts is much more pleasant with a properly configured
+editor. The Liquidsoap project provides tooling for syntax highlighting,
+code formatting, and more.
+
+### VSCode
+
+The VSCode editor is one of the most popular these days. Support for Liquidsoap is most easily added by installing the [savonet.vscode-liquidsoap](https://marketplace.visualstudio.com/items?itemName=savonet.vscode-liquidsoap) extension from the VSCode marketplace. It provides syntax highlighting and automatic code formatting with no additional configuration needed -- just install and start writing.
+
+### Emacs
+
+We also support the Emacs editors (which, historically, was our editor of choice). A mode dedicated to Liquidsoap is provided directly with our code base. If you are using the opam installation method, it can simply be installed with
+
+```bash
+opam install liquidsoap-mode
+```
+
+### Neovim
+
+For Neovim, syntax highlighting is available via
+[`nvim-treesitter`](https://github.com/nvim-treesitter/nvim-treesitter), which has
+built-in support for Liquidsoap. Install the plugin with your plugin manager
+(e.g. [`lazy.nvim`](https://github.com/folke/lazy.nvim) or
+[`vim-plug`](https://github.com/junegunn/vim-plug)), then add to your config:
+
+```lua
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = { "liquidsoap" },
+  highlight = { enable = true }
+}
+```
+
+Code formatting requires `liquidsoap-prettier` to be installed (see below) and
+[`formatter.nvim`](https://github.com/mhartington/formatter.nvim). Once both are
+installed, add to your config:
+
+```lua
+require("formatter").setup {
+  filetype = {
+    liquidsoap = {
+      require("formatter.filetypes.liquidsoap").liquidsoap_prettier
+    }
+  }
+}
+```
+
+With this in place, `:Format` will reformat the current buffer. You can also
+map it to a key, for instance:
+
+```lua
+vim.keymap.set("n", "<leader>f", ":Format<CR>")
+```
+
+If your version of Neovim does not automatically detect `.liq` files, add this
+to your config:
+
+```
+autocmd BufNewFile,BufRead *.liq set filetype=liquidsoap
+```
+
+### Code formatter
+
+The code formatter is available as a standalone `liquidsoap-prettier` binary,
+which can be used with any editor or integrated into CI:
+
+```
+liquidsoap-prettier --write /path/to/script.liq
+```
+
+A [pre-commit hook wrapper](https://github.com/savonet/pre-commit-liquidsoap)
+is also available if you want to automatically format scripts on every commit.
+
 Libraries used by Liquidsoap
 ----------------------------
 
-All names below refer to **opam package names** — install any of them with
+All names below refer to *opam package names* — install any of them with
 `opam install <name>` and Liquidsoap will be automatically rebuilt with the
 corresponding feature enabled. The full list of what is compiled into a
 particular binary can be queried with `liquidsoap --build-config`.
@@ -373,6 +453,10 @@ library, which is a required dependency).
 - `shine`: fixed-point MP3 encoding (useful on low-power devices),
 - `speex`: Ogg/Speex encoding and decoding,
 - `vorbis`: Ogg/Vorbis encoding and decoding.
+
+### Playlists
+
+- `xmlplaylist`: support for playlist formats based on XML.
 
 ### Video
 

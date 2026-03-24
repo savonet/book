@@ -10,5 +10,5 @@ def handle_metadata(m)
     log.important("Failed to update metadata.")
   end
 end
-radio.on_track(handle_metadata)
+radio.on_track(synchronous=false, handle_metadata)
 output(radio)

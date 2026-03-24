@@ -1,6 +1,5 @@
 #!./liquidsoap
 radio = playlist("~/Music")
-radio = insert_metadata(radio)
 def set_metadata(request)
   log.important("Inserting metadata: #{request.query}")
   radio.insert_metadata(request.query)

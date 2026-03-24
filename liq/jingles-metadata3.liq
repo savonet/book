@@ -17,6 +17,6 @@ def insert_jingle(m)
     p.signal()
   end
 end
-s.on_track(insert_jingle)
+s.on_track(synchronous=false, insert_jingle)
 s = switch([(p,jingles), ({true},s)])
 output(s)

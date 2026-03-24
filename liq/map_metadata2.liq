@@ -5,4 +5,4 @@ def update_metadata(m) =
   [("title", title)]
 end
 s = metadata.map(update_metadata, s)
-s.on_metadata(fun (m) -> print("Title: #{m['title']}")); thread.run(every=2., s.skip); output(s)
+s.on_metadata(synchronous=true, fun (m) -> print("Title: #{m['title']}")); thread.run(every=2., s.skip); output(s)

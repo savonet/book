@@ -1,5 +1,6 @@
 #!/usr/bin/env liquidsoap
 s   = playlist(loop=false, "~/Music")
-s   = clock(sync="none", s)
+clock.assign_new(sync="none", [s])
 fmt = %ffmpeg(format="mp3", %audio.copy)
-output.file(fallible=true, on_stop=shutdown, fmt, "/tmp/music.mp3", s)
+o   = output.file(fallible=true, fmt, "/tmp/music.mp3", s)
+o.on_stop(synchronous=false, shutdown)

@@ -332,6 +332,251 @@ source `s` with
 ```{.liquidsoap include="liq/source.drop.video.liq" from=2 to=-1}
 ```
 
+### Multitrack: demuxing and remuxing tracks {#sec:multitrack}
+
+\index{multitrack}\index{tracks}
+
+Since Liquidsoap 2.2, every stream is made up of _tracks_: named components such
+as `audio`, `video`, `metadata` and `track_marks`. Most of the time this is
+invisible — you just connect sources and operators and everything flows through
+together. But sometimes you need to reach inside a source and work on one
+component independently: replace the audio of a video file with a music bed,
+strip the metadata from a stream before passing it on, combine audio from one
+source with video from another, or preserve multiple audio languages from a
+single file into the output. The multitrack API gives you the tools to do this.
+
+Importantly, decoding and encoding multiple tracks requires the FFmpeg bindings.
+Without them, decoders and outputs are limited to at most one `audio` and one
+`video` track. Track manipulation operators (`source.tracks`, `source({...})`,
+etc.) work regardless, but you will only be able to read and write multi-track
+files if FFmpeg support is compiled in.
+
+The operators `source.mux.audio` and `source.mux.video` shown earlier are
+convenient shorthands for the most common cases, but the underlying mechanism
+is more general and composes freely.
+
+#### Demuxing and remuxing
+
+`source.tracks(s)` splits a source into a record of its individual tracks,
+which you can then bind to variables and work with independently:
+
+```{.liquidsoap include="liq/video-source-tracks.liq" from=2}
+```
+
+To rebuild a source from a set of tracks, pass a record to `source({...})`:
+
+```{.liquidsoap include="liq/video-source-rebuild.liq" from=3}
+```
+
+#### Replacing a track
+
+A common need is to keep the video from one source but replace its audio —
+for instance to overlay a music bed or a commentary track. You can do this
+by taking the tracks of each source and combining them:
+
+```{.liquidsoap include="liq/video-replace-audio.liq" from=3}
+```
+
+The `.{field = value}` syntax extends a record with a new or replaced field,
+so this reads: "take all the tracks of `v`, but override the audio track with
+the one from `music`".
+
+#### Removing a track
+
+Sometimes a track is unwanted. For instance, `track_marks` controls where one
+track ends and the next begins; if you are assembling a continuous stream from
+several sources you may want to suppress the track boundaries from an
+intermediate source to avoid unexpected skips. Removing a track uses standard
+record destructuring:
+
+```{.liquidsoap include="liq/video-remove-track.liq" from=2}
+```
+
+The `track_marks=_` discards that field, and `...tracks` captures the rest.
+
+#### Multiple tracks of the same kind
+
+Some files, such as a movie in MKV format with several dubbed audio languages,
+contain more than one track of the same type. Liquidsoap names them
+`audio`, `audio_2`, `audio_3`, etc. (and similarly for video, subtitles, etc.).
+You can encode all of them simultaneously using an `%ffmpeg` encoder with
+multiple stream descriptors:
+
+```liquidsoap
+%ffmpeg(%audio.copy, %audio_2(...), %video.copy)
+```
+
+An important consequence of this is that *the expected content-type drives what
+the decoder looks for*. If your encoder requests `audio_2`, Liquidsoap will ask
+every file in the source to provide a second audio track. When using a `playlist`,
+any file that does not have at least two audio tracks will be rejected by the
+decoder and skipped. This is usually what you want (a dubbed-audio playlist should
+only contain files that actually have both languages), but it is worth keeping in
+mind when debugging unexpected skips.
+
+#### Custom track names in encoders
+
+When all your tracks are named `audio`, `audio_2`, etc., Liquidsoap knows their
+content type automatically. But sometimes you want to give tracks meaningful
+names in the encoder — for instance `%audio_en` for English audio and
+`%audio_fr` for French:
+
+```{.liquidsoap include="liq/video-multi-audio.liq" from=2}
+```
+
+Liquidsoap determines the content type of a custom-named track by the following
+rules, in order of priority:
+
+1. A track named `%foo.copy` is always a passthrough copy — no content inference needed.
+2. If the track has an `audio_content` or `video_content` parameter, that declares the type explicitly.
+3. If the track name contains `audio` or `video` (e.g. `%audio_en`, `%director_cut_video`), the type is inferred from the name.
+4. If the codec is hardcoded (e.g. `codec="aac"` implies audio), the codec is used to determine the type.
+
+Note that these names are internal to Liquidsoap. The FFmpeg encoder identifies
+tracks by position, not by name, so after writing to a file and reading it back
+the tracks will again be named `audio`, `audio_2`, `video`, etc. in the order
+they were declared.
+
+#### Track-level operators
+
+Some operators work directly on individual tracks rather than on whole sources.
+For instance, `track.audio.mean` converts a stereo audio track to mono, and
+`track.ffmpeg.encode.audio` encodes an audio track inline:
+
+```{.liquidsoap include="liq/video-track-audio-mean.liq" from=2}
+```
+
+Track-level operators are listed under the `Track` section in the API reference.
+
+#### A note on clocks and inline encoding
+
+When you encode a track inline (e.g. with `track.ffmpeg.encode.audio`), the
+result runs on a new clock since FFmpeg inline encoding is not synchronous with the
+main streaming loop. This means you cannot reuse `metadata` and
+`track_marks` from the original source, because they belong to a different clock
+and will cause a clock conflict:
+
+```{.liquidsoap include="liq/video-inline-encode-conflict.liq" from=2}
+```
+
+Instead, derive `metadata` and `track_marks` from the encoded track itself,
+using `track.metadata` and `track.track_marks`:
+
+```{.liquidsoap include="liq/video-inline-encode.liq" from=2}
+```
+
+### Subtitles {#sec:subtitles}
+
+\index{subtitles}
+
+Since Liquidsoap 2.5, subtitles are a dedicated content type, on a par with
+audio and video. This means subtitle tracks participate fully in the multitrack
+system: they can be demuxed from a source, remixed with other tracks, processed
+by operators, and encoded into output files — the same way you would handle an
+audio or video track.
+
+Typical use cases include archiving a live stream with burned-in captions,
+remuxing a video file from one container to another while preserving subtitles,
+translating or censoring subtitle text on the fly, or dynamically injecting
+captions from an external source such as a speech-recognition service.
+
+#### Decoding subtitles
+
+The simplest case is a standalone SubRip (`.srt`) file, which Liquidsoap
+supports natively without requiring FFmpeg:
+
+```{.liquidsoap include="liq/subtitles-decode-srt.liq" from=1}
+```
+
+When working with media containers such as MKV files that bundle audio, video,
+and subtitles together, FFmpeg decoding is used instead. This supports
+text-based codecs (SubRip, ASS/SSA, WebVTT, MOV text):
+
+```{.liquidsoap include="liq/subtitles-decode-ffmpeg.liq" from=1}
+```
+
+Bitmap-based subtitle formats (DVD/VOBSUB, PGS/Blu-ray, DVB) store subtitles
+as images rather than text. They cannot be decoded into text by Liquidsoap and
+can only be copied or burned into the video (see below).
+
+Once decoded, each subtitle entry carries `text`, `format` (`"text"` or
+`"ass"`), a `forced` flag, and timing information (`absolute_start_time`,
+`absolute_end_time` in seconds).
+
+#### Reacting to subtitles
+
+The `on_subtitle` method lets you execute a callback each time a subtitle is about to be
+displayed. This is useful for logging, forwarding captions to an external
+service, or triggering other actions in sync with the subtitle timeline:
+
+```{.liquidsoap include="liq/subtitles-on_subtitle.liq" from=2 to=-1}
+```
+
+#### Transforming subtitles
+
+`subtitles.map` lets you inspect and modify every subtitle entry passing through
+a source. This is the right tool for tasks like censoring words, reformatting
+text, converting between `"text"` and `"ass"` dialogue format, or simply
+dropping unwanted entries. The callback receives the subtitle record and returns
+a record of fields to update, an empty record `{}` to leave it unchanged, or
+`null` to drop it entirely:
+
+```{.liquidsoap include="liq/subtitles-map.liq" from=2 to=-1}
+```
+
+#### Inserting subtitles dynamically
+
+Sometimes you want to add subtitles to a source that does not already have them
+— for instance when injecting live captions from a speech-recognition engine, or
+overlaying chapter markers on a stream. `subtitles.insert` adds an
+`insert_subtitle` method to the source; a new subtitle track is created
+automatically if the source does not have one:
+
+```{.liquidsoap include="liq/subtitles-insert.liq" from=2 to=-1}
+```
+
+#### Multiple subtitle tracks
+
+A single source can carry several subtitle tracks simultaneously — for instance
+subtitles in different languages. Like audio tracks, they are named `subtitles`,
+`subtitles_2`, `subtitles_3`, etc. This follows the same convention as multiple
+audio or video tracks in the multitrack system:
+
+```{.liquidsoap include="liq/subtitles-multiple.liq" from=2 to=-1}
+```
+
+#### Encoding and copying subtitles with FFmpeg
+
+When writing to a file or stream, you need to tell Liquidsoap how to encode the
+subtitle track. The `%subtitle` encoder re-encodes subtitle content into the
+format expected by the container. Supported codecs depend on the container:
+`subrip` and `ass` for Matroska, `webvtt` for WebM, `mov_text` for MP4:
+
+```{.liquidsoap include="liq/subtitles-encode.liq" from=2}
+```
+
+If you do not need to modify the subtitles and simply want to remux them from
+one container to another, `%subtitle.copy` passes the encoded data through
+without re-encoding, saving CPU and avoiding any quality loss. It is also the
+only option for bitmap-based subtitles, since those cannot be decoded to text:
+
+```{.liquidsoap include="liq/subtitles-copy.liq" from=2}
+```
+
+#### Burning subtitles into video
+
+Some delivery targets — HLS streams, older players, or formats that do not
+support separate subtitle tracks — require subtitles to be permanently composited
+into the video itself. `track.video.add` overlays a subtitle track onto a video
+track, rendering each subtitle image at the correct position and time:
+
+```{.liquidsoap include="liq/subtitles-burn.liq" from=2}
+```
+
+Since the subtitles become part of the video pixels, this is irreversible: the
+original text cannot be recovered from the output. It also requires re-encoding
+the video, which is more CPU-intensive than copying.
+
 ### (Cross)fading
 
 \index{crossfading}
@@ -681,8 +926,7 @@ in order to decrease the size of the video. The habit for streaming is to have a
 keyframe every 2 seconds or less, which means setting `g=50` at most for the
 default framerate of 25 images per second.
 
-We now detail the two most popular codecs H.264 and VP9, but there are [many
-other ones](https://ffmpeg.org/ffmpeg-codecs.html).
+We now detail the two most popular codecs H.264 (aka AVC) and VP9, but there are [many other ones](https://ffmpeg.org/ffmpeg-codecs.html). Also note that there are alternative versions of those codecs, namely H.265 (aka HEVC) and AV1, which are better but less widely supported, with which you might also want to experiment with. Also note that VP9 and AV1 are completely royalty-free, but H.264 used to be the de facto standard which has more support (in particular on low-end devices such as smartphones, although this is less and less true).
 
 #### H.264
 
@@ -761,7 +1005,7 @@ and if you are on budget with respect to CPU and bandwidth:
 ```{.liquidsoap include="liq/encoder-ffmpeg-vp9-streaming.liq" from=2 to=-1}
 ```
 
-The successor of VP9 is AV1\index{AV1} and is under heavy development and diffusion. It can
+The successor of VP9 is AV1\index{AV1}, which is more efficient, and is now gaining popularity. It can
 be used through the FFmpeg codec `libaom-av1` which essentially takes the same
 parameters as `libvpx-vp9`.
 

@@ -5,5 +5,5 @@ def handle_metadata(m)
         headers=[("Content-Type", "application/json; charset=UTF-8")],
         "http://our.website.com/update_metadata.php")
 end
-radio.on_track(fun(m) -> thread.run({handle_metadata(m)}))
+radio.on_track(synchronous=false, handle_metadata)
 output(radio)

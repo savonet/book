@@ -4,6 +4,6 @@ def metadata.getter.float(init, metadata, s)
     s = m[metadata]
     if s != "" then x := float_of_string(s) end
   end
-  source.on_metadata(s, f)
+  s.on_metadata(synchronous=true, f)
   {x()}
 end

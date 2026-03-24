@@ -7,4 +7,4 @@ def update_metadata(m)
   ]
 end
 s = metadata.map(update_metadata, s)
-s.on_metadata(fun (m) -> print(metadata.json.stringify(m))); output(s)
+s.on_metadata(synchronous=true, fun (m) -> print(metadata.json.stringify(m))); output(s)

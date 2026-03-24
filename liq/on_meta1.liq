@@ -3,5 +3,5 @@ radio = playlist("~/Music")
 def handle_metadata(m) =
   print(m["title"])
 end
-source.on_metadata(radio, handle_metadata)
+radio.on_metadata(synchronous=true, handle_metadata)
 output(radio)

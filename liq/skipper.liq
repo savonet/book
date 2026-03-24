@@ -1,4 +1,4 @@
 #!./liquidsoap
 s = playlist("~/Music")
-s = skipper(every=3., s)
+thread.run(every=3., {s.skip()})
 output(s)
