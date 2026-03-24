@@ -9,7 +9,7 @@ def playlist(~randomize=true, ~reload=true, p)
       request.create(song)
     else
       if reload then l := playlist.files(p) end
-      null()
+      null
     end
   end
   request.dynamic(next)

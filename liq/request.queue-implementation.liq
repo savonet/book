@@ -8,7 +8,7 @@ def request.queue(~id="", ~queue=[])
       log.info(label=id, "Next song will be #{request.uri(r)}.")
       r
     else
-      null()
+      null
     end
   end
   def push(r)

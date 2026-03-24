@@ -2212,8 +2212,7 @@ whose type would be
 ```
 
 since it takes as argument a list whose elements are of type `'a` and returns a
-list whose elements are `'a` or `null`. As it can be observed above, the null
-value is created with `null()`.
+list whose elements are `'a` or `null`.
 
 In order to use a nullable value, one typically uses the construction `x ?? d`
 which is the value `x` excepting when it is null, in which case it is the
