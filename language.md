@@ -132,12 +132,7 @@ Writing scripts
 ### Choosing an editor
 
 Scripts in Liquidsoap can be written in any text editor\index{editor}, but
-things are more convenient if there is some specific support. We have developed
-a mode for the Emacs editor which adds syntax coloration and indentation when
-editing Liquidsoap files. User-contributed support for Liquidsoap is also
-available for popular editors such as [Visual Studio
-Code](https://github.com/vittee/vscode-liquidsoap) or
-[vim](https://github.com/mcfiredrill/vim-liquidsoap).
+things are more convenient if there is some specific support. There are modes which add such support for most major editors such as [VSCode](https://marketplace.visualstudio.com/items?itemName=savonet.vscode-liquidsoap), Emacs (provided with Liquidsoap), or vim. See [there](#sec:editors) for more details.
 
 ### Documentation of operators
 
@@ -257,10 +252,7 @@ comments:
 
 #<
   This is a top-level comment
-
-  #<
-    This is a nested comment
-  >#
+  #< This is a nested comment >#
 >#
 ```
 
@@ -399,7 +391,7 @@ tried).
 \index{string!raw}
 
 When a string should be taken verbatim — without any interpolation or escape
-processing — use the _raw string_ syntax `{|...|}`\index{string!raw}:
+processing — you should use the _raw string_ syntax `{|...|}`\index{string!raw}:
 
 ```liquidsoap
 print({|no interpolation: #{expr} here|})
@@ -2001,14 +1993,17 @@ Patterns {#sec:patterns}
 
 \index{pattern}
 
-_Patterns_ are a concise way to extract values from structured data such as
-lists, tuples, and records. We have already seen the basic form `let (n, x, s) =
-t` for tuples. More generally, patterns can be combined arbitrarily.
+_Patterns_ are a concise way to extract values from structured data such as lists, tuples, and records, and assign them to variables. For instance, we have already seen the basic form
+
+```liquidsoap
+let (n, x, s) = t
+```
+
+for tuples: given a triplet `t` of values, it states that we should call `n` (resp. `x`, resp. `s`) the first (resp. second, resp. third) element before executing the rest of the code. More generally, patterns can be combined arbitrarily.
 
 ### Tuple patterns
 
-Tuple patterns destructure each element positionally. The special placeholder
-`_` ignores a value:
+Tuple patterns destructure each element positionally. The special placeholder `_` ignores a value:
 
 ```liquidsoap
 let (x, y, _, z) = (123, "aabbcc", true, 3.14)
@@ -2017,27 +2012,40 @@ let (x, y, _, z) = (123, "aabbcc", true, 3.14)
 
 ### List patterns
 
-List patterns support forward captures, an optional spread (`...var`) to collect
-remaining elements, and backward captures for the tail:
+List patterns can be used in order to name the elements of a list, similarly as for tuples. For instance, we can name the three elements of a list with three elements as follows:
 
 ```liquidsoap
-# Exact match:
 let [x, y, z] = [1, 2, 3]
-
-# Forward with spread:
-let [x, y, ...z] = [1, 2, 3, 4]
-# x = 1, y = 2, z = [3, 4]
-
-# Ignoring a position:
-let [_, x, ...z] = [1, 2, 3, 4]
-# x = 2, z = [3, 4]
-
-# Backward capture:
-let [..., t, u, v] = [1, 2, 3, 4, 5]
-# t = 3, u = 4, v = 5
+# x = 1, y = 2, z = 3
 ```
 
-The spread `..._` can be written simply as `...`.
+In the case where we do not know in advance the precise length of the list (which is the usual situation), we can use a *spread*, which is a pattern of the form `...var`, which will collect the list of the remaining elements. For instance, in
+
+```liquidosap
+let [x, y, ...l] = [1, 2, 3, 4]
+# x = 1, y = 2, l = [3, 4]
+```
+
+we state that we want to call `x` and `y` the two first elements, and `l` the tail of the list. This can also be combined with other patterns such as place holders:
+
+```liquidsoap
+let [_, x, ...l] = [1, 2, 3, 4]
+# x = 2, l = [3, 4]
+```
+
+In case, we do not care about the remaining elements, we can simply use the pattern `...` (without a variable name:
+
+```liquidsoap
+let [x, ...] = [1, 2 ,3]
+# x = 1
+```
+
+Spreads also work "backwards", i.e. we can capture the last elements of a list as follows:
+
+```liquidsoap
+let [...l, x, y] = [1, 2, 3, 4, 5]
+# l = [1, 2, 3], x = 4, y = 5
+```
 
 ### Record and module patterns
 
@@ -2071,7 +2079,7 @@ let {foo?} = {foo = 123}
 
 ### Patterns in function arguments
 
-Patterns are also valid directly in function argument positions:
+Patterns are also valid directly in function argument positions. For instance,
 
 ```liquidsoap
 # Destructure a labeled argument:
@@ -2137,6 +2145,8 @@ we could equivalently write
 
 ```{.liquidsoap include="liq/list.hd-catch.liq" to=-1}
 ```
+
+which states that we should return `0` if the call to `list.hd` raises an error.
 
 The name and message associated to an error can respectively be retrieved using
 the functions `error.kind` and `error.message`, e.g. we can write
@@ -2749,11 +2759,15 @@ Script caching {#sec:caching}
 
 \index{caching}
 
-Type-checking a Liquidsoap script can be slow because it must also type-check
-the standard library. To avoid repeating this work on every run, Liquidsoap
+When Liquidsoap starts, it parses and type-checks your script along with the
+entire standard library before running it. As the standard library has grown
+(currently around 2000 functions), this phase can take several seconds on a
+cold start and consume significant memory.
+
+To avoid repeating this work on every run, since version 2.3.0, Liquidsoap
 caches the result of type-checking. On the second and subsequent executions of
 the same script, the cache is used instead of re-running the type-checker,
-which can be **100× faster**. The difference in startup logs is visible:
+which can be *100× faster*. The difference is visible in startup logs:
 
 Without caching:
 ```
@@ -2771,12 +2785,14 @@ With caching:
 In addition to speed, loading from cache also significantly reduces memory
 usage, typically from around 375 MB down to 80 MB.
 
+#### Caching ahead of time
+
 Scripts can be cached ahead of time without executing them using the
 `--cache-only` flag, which is useful when building Docker images or packaging
 deployments. Caching can be disabled with `--no-cache` or by setting the
 environment variable `LIQ_CACHE` to anything other than `1` or `true`.
 
-### Cache locations
+#### Cache locations
 
 There are two cache locations:
 
@@ -2788,20 +2804,20 @@ There are two cache locations:
 The current cache directory can be retrieved at runtime with
 `liquidsoap.cache(mode="user")` or `liquidsoap.cache(mode="system")`.
 
-### Cache maintenance and security
+#### Cache maintenance and security
 
 A maintenance routine deletes cache files older than 10 days and caps the
 cache at 200 files. It can be triggered manually with
 `liquidsoap.cache.maintenance(mode=<mode>)`.
 
-Cache files are **not encrypted**. User cache files may contain secrets such as
+Cache files are *not encrypted*. User cache files may contain secrets such as
 passwords embedded in your scripts. It is therefore important to:
 
 - pass secrets via environment variables rather than hardcoding them,
 - ensure that cache files have restricted permissions (the default is `0o600`
   for user cache files).
 
-### Cache environment variables
+#### Cache environment variables
 
 The cache behavior can be tuned with the following environment variables:
 
@@ -2810,3 +2826,38 @@ The cache behavior can be tuned with the following environment variables:
 - `LIQ_CACHE_MAX_DAYS`: maximum age of a cache file before it is eligible for
   deletion (default: 10 days),
 - `LIQ_CACHE_MAX_FILES`: maximum number of cache files to keep (default: 200).
+
+#### Monitoring memory usage
+
+As indicated above, caching should reduce the memory consumption of Liquidsoap.
+If you are low on memory, and script caching is not available for some reason,
+you can still instruct Liquidsoap
+to run the OCaml memory compaction algorithm before starting, which recovers
+most of the type-checking memory:
+
+```liquidsoap
+settings.init.compact_before_start := true
+```
+
+If you want to monitor precisely memory consumption, Liquidsoap ships with `runtime.memory()` to inspect it from within a script:
+
+```liquidsoap
+print(runtime.memory().pretty)
+# {
+#   process_virtual_memory="419 GB",
+#   process_physical_memory="389 MB",
+#   process_private_memory="72 MB",
+#   process_swapped_memory="0 B"
+# }
+```
+
+The useful figure is `process_private_memory`: memory exclusive to this
+Liquidsoap process. The `process_physical_memory` figure (reported by `top` as
+RSS) includes shared memory from dynamic libraries and will look much higher
+than the memory your process actually owns.
+
+If memory consumption is a concern, compile Liquidsoap without optional
+components you do not use. The FFmpeg bindings in particular add a significant
+chunk of shared memory due to the many libraries they pull in. Any optional
+component not needed in your script can be safely omitted from the build to
+reduce the footprint.

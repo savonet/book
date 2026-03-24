@@ -3,6 +3,6 @@ music = playlist("~/Music")
 jingles = playlist("jingles")
 radio = switch([
     ({00m-15m}, once(jingles)),
-    ({true}, music)
+    ({true}, (music : source))
   ])
 output(radio)

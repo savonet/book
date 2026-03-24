@@ -60,8 +60,12 @@ produce stereo as expected on its output.
 
 #### Clock errors
 
-Read about [clocks](clocks.html) for the errors `a source cannot belong to two
-clocks` and `cannot unify two nested clocks`.
+Read about [clocks](#sec:clocks) and [clock conflicts](#sec:clocks-ex) for
+errors such as `clock X has multiple synchronization sources` (two operators
+with their own latency control active at the same time) and `This source may
+control its own latency and cannot be used with this operator` (a hardware
+source passed to an operator like `crossfade` or `stretch` that requires a
+stable clock).
 
 
 #### Example of a type error due to contents mismatch

@@ -16,11 +16,12 @@ print(newline=false, "Encoding #{infile} to #{outfile}... ")
 # Play the file once
 s = once(single(infile))
 # We use a clock with disabled synchronization
-s = clock(sync="none", s)
+clock.assign_new(sync="none", [s])
 # Function called at the end of encoding
 def stop()
   print("done!")
   shutdown()
 end
 # Encode the file
-output.file(%wav, outfile, fallible=true, on_stop=stop, s)
+o = output.file(%wav, outfile, fallible=true, s)
+o.on_stop(synchronous=true, stop)

@@ -7,4 +7,4 @@ enc = %ffmpeg(format="flv",
               %video(codec="libx264", width=854, height=480,
                      b="800k", g=50, preset="veryfast"))
 output.url(fallible=true, url=url, enc, s)
-thread.run(every=1., {print(clock.status.seconds())})
+thread.run(every=1., {print(time.up())})

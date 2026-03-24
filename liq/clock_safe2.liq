@@ -1,3 +1,3 @@
 #!./liquidsoap
-s = input.alsa(clock_safe=false)
+s = input.alsa(self_sync=false)
 output.pulseaudio(s)

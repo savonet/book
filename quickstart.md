@@ -25,8 +25,8 @@ soundcard. When running this program, you should hear the expected well-known
 sound and see lots of lines looking like this:
 
 ```
-2021/02/18 15:20:44 >>> LOG START
-2021/02/18 15:20:43 [main:3] Liquidsoap 2.0.0
+2026/03/24 10:11:44 >>> LOG START
+2026/03/24 10:11:32 [main:3] Liquidsoap 2.5.0
 ...
 ```
 
@@ -101,7 +101,7 @@ then play it. The above code is thus equivalent to
 
 ### Parameters
 
-In order to investigate further the possible variations on our example, let us
+Let us investigate further the possible variations on our example and
 explore the parameters of the `sine` operator. In order to obtain
 detailed help about this operator, we can type, in a console,
 
@@ -135,7 +135,7 @@ documentation](https://www.liquidsoap.info/doc-dev/reference.html)).
 
 It begins with a description of the operator, followed by its type\index{type}, category and
 arguments\index{argument} (or parameters). There is also a section for methods, which is not shown above, but
-we simply ignore it for now, it will be detailed in [a subsequent
+we simply ignore it for now, as it will be detailed in [a subsequent
 section](#sec:records). Here, we see in the type that it is a function, because
 of the presence of the arrow "`->`"\indexop{->}: the type of the arguments is indicated on
 the left of the arrow and the type of the output is indicated on the right. More
@@ -148,7 +148,7 @@ arguments are indicated in the type and detailed in the following `Parameters` s
   displayed in the logs,
 - the second is a float labeled `amplitude`: this controls how loud the
   generated sine wave will be,
-- the third is a float with no label: the frequency of the sine wave.
+- the third is a float with no label: this is the frequency of the sine wave.
 
 All three arguments are optional, which means that a default value is provided
 and will be used if it is not specified. This is indicated in the type by the
@@ -193,7 +193,7 @@ directory, we can play it with
 ```
 
 As usual, the operator `playlist` has a number of interesting optional
-parameters which can be discovered with `liquidsoap -h playlist`. For instance, by
+parameters which can be discovered by typing `liquidsoap -h playlist`. For instance, by
 default, the files are played in a random order, but if we want to play them as
 indicated in the list we should pass the argument `mode="normal"`{.liquidsoap} to
 `playlist`. Similarly, if we want to reload the playlist whenever it is changed,
@@ -249,7 +249,7 @@ subject to technical difficulties (e.g. it gets disconnected from the internet
 for a short period of time). In this case, we generally want to fall back to
 another source, typically an emergency playlist consisting of local files which
 we are sure are going to be available. This can be achieved by using the
-`fallback`\indexop{fallback} operator which plays the first available source in a list of sources:
+`fallback`\indexop{fallback} operator which plays the first source which ready to generate a stream in a list of sources:
 
 ```{.liquidsoap include="liq/fallback.liq" from=1}
 ```
@@ -518,7 +518,6 @@ this means that you did not enable it. In order to do so in an opam
 installation, you should type
 
 ```
-opam depext  fdkaac
 opam install fdkaac
 ```
 

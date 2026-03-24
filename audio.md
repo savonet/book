@@ -563,24 +563,12 @@ card 0: PCH [HDA Intel PCH], device 3: HDMI 0 [HDMI 0]
 so that if I want to input from HDMI (the second one listed above), I should use
 `hw:0,3` as `device` parameter.
 
-By default, the ALSA operators have an internal buffer in order to be able to
-cope with small delays induced by the soundcard and the computer. However, you
-can set the `bufferize` parameter to `false` in order to avoid that in order to
-reduce latencies. For instance, if you are lucky, you can hear your voice
-almost in realtime, with some flanger effect added just for fun:
+The ALSA operators use a single Liquidsoap frame as their internal buffer by
+default, which provides low-latency operation. For instance, you can hear your
+voice almost in realtime, with some flanger effect added just for fun:
 
-```{.liquidsoap include="liq/alsa-realtime.liq" from=1}
+```{.liquidsoap include="liq/alsa-flanger.liq" from=1}
 ```
-
-Beware that by reducing the buffers, you are likely to hear audio glitches due
-to the fact that blank is inserted when audio data is not ready soon enough. In
-this case, you should also see the following in the logs
-
-```
-Underrun! You may minimize them by increasing the buffer size.
-```
-
-which indicates that you should buffer in order to avoid defects in the audio.
 
 ### Distant inputs with harbor {#sec:input.harbor}
 
@@ -1221,7 +1209,7 @@ As a last remark, if we want to play the jingle exactly at the top of the hour,
 and interrupt the currently playing song if necessary, it is enough to add
 `track_sensitive=false` to the `switch` operator:
 
-```{.liquidsoap include="liq/jingles-once6.liq" from=3 to=-1}
+```{.liquidsoap include="liq/jingles-once5.liq" from=3 to=-1}
 ```
 
 #### Jingles at fixed time: alternative approach
@@ -1403,9 +1391,37 @@ the stream. In both cases, the method takes as argument a function of type
 This function will itself be called with the metadata as argument when a track
 or metadata occurs.
 
+The `synchronous` parameter controls when the callback runs relative to the
+streaming loop, and must always be specified explicitly:
+
+- `synchronous=false`: the callback is dispatched to a background thread
+  and does not block the streaming loop. Use this for slow operations such as
+  HTTP requests or database writes:
+
+  ```{.liquidsoap include="liq/on-track-async.liq" from=2}
+  ```
+- `synchronous=true`: the callback runs inline in the streaming loop. It
+  must complete very quickly, otherwise the loop falls behind and you will see
+  catchup errors in the logs. Use this only for fast work like setting a flag
+  or updating a local variable:
+  
+  ```{.liquidsoap include="liq/on-track-sync.liq" from=2}
+  ```
+
+If unsure, you should rather use the asynchronous variant.
+
+The method `on_position` can be used to trigger a callback at a specific
+position within the track. It receives as argument both the position (as a float) and the
+current track metadata. For instance, to be notified when 30 seconds remain:
+
+```{.liquidsoap include="liq/on-position.liq" from=2}
+```
+
+(the `position` argument specifies the number of seconds in the track where the callback should be called, and `remaining` specifies whether we should count from the beginning or to the end of the track).
+
 #### Logging tracks
 
-We can for instance use this mechanism to log every song which has gone on air:
+We can use the `on_track` mechanism to log every song which has gone on air:
 
 ```{.liquidsoap include="liq/log-songs.liq" from=1 to=-1}
 ```
@@ -1419,7 +1435,7 @@ advise the use the `metadata.json.stringify` function, which will convert all
 the metadata at once into a standardized textual representation in
 JSON\index{JSON} format:
 
-```{.liquidsoap include="liq/log-songs2.liq" from=2 to=4}
+```{.liquidsoap include="liq/log-songs2.liq" from=2 to=5}
 ```
 
 #### Logging the next track
@@ -1542,26 +1558,23 @@ indicated below.
 
 ### Inserting tracks and metadata
 
-If you want to insert tracks or metadata at any point in a source, you can use
-`insert_metadata`\indexop{insert\_metadata}: this operator takes a source as argument and returns the same
-source with a new method `insert_metadata` whose type is
+Every source exposes an `insert_metadata` method whose type is
 
 ```
 (?new_track : bool, [string * string]) -> unit
 ```
 
 It takes an argument labeled `new_track` to indicate if some track should be
-inserted along with the metadata (by default, it is not the case) and the metadata itself, and inserts
-the metadata into the stream. For instance, suppose that we have a source `s` and
-we want to set the title and artist metadata to "Liquidsoap" every minute. This
-can be achieved by
+inserted along with the metadata (by default, it is not the case) and the
+metadata itself, and inserts the metadata into the stream. For instance, suppose
+that we have a source `s` and we want to set the title and artist metadata to
+"Liquidsoap" every minute. This can be achieved by
 
 ```{.liquidsoap include="liq/insert_metadata.liq" from=2 to=-1}
 ```
 
-Here, we add the ability to insert metadata in the source `s` with the operator
-`insert_metadata`, and we then use `thread.run` to regularly call a function
-which will insert metadata by calling `s.insert_metadata`.
+Here, we use `thread.run` to regularly call a function which will insert
+metadata by calling `s.insert_metadata` directly on the source.
 
 Similarly, we can add a telnet command to change the title metadata of a source `s` by
 
@@ -1768,28 +1781,31 @@ to do so, we would rather avoid directly editing the music files, and simply add
 metadata indicating the time at which we should begin and stop playing the files:
 these are commonly referred to as the _cue in_\index{cue point} and the _cue out_ points.
 
-The `cue_cut`\indexop{cue\_cut} operator takes a source and cuts each track according to the cue
-points which are stored in the metadata. By default, the metadata `liq_cue_in`
-and `liq_cue_out` are used for cue in and cue out points (the name of the
-metadata can be changed with the `cue_in_metadata` and `cue_out_metadata`
-parameters of `cue_cut`), and are supposed to be specified in seconds relative
-to the beginning of the track. Negative cue points are ignored and if the cue
-out point is earlier than the cue in point then only the cue in point is kept.
+Liquidsoap uses the metadata `liq_cue_in` and `liq_cue_out` to specify cue
+points, in seconds relative to the beginning of the track. Cueing is applied
+automatically during request resolution: when a file-based source (such as
+`playlist` or `single`) resolves a request, it reads these metadata and seeks
+to the correct position before starting playback. There is no need to add any
+explicit operator to handle cueing.
 
-For instance, in the following example, we use the `prefix` argument of
-`playlist` to set `liq_cue_in` to `3` and `liq_cue_out` to `9.5` for every
-track of the playlist:
+For instance, we can use the `prefix` argument of `playlist` to set
+`liq_cue_in` to `3.` and `liq_cue_out` to `9.5` for every track:
 
-```{.liquidsoap include="liq/cue_cut.liq" from=2}
+```{.liquidsoap include="liq/cue-points.liq" from=1 to=-1}
 ```
 
 We will thus play every song of the playlist for 6.5 seconds, starting at
-second 3. In practice, the metadata for cue points would either be hardcoded in
-the files or added for each file with `annotate` in the playlist. In a more
-elaborate setup, a `request.dynamic` setup would typically also use `annotate`
-in order to indicate the cue points, which would be fetched by your own
-scheduling back-end (for instance, the cue points could be stored in a database
-containing all the songs).
+second 3. Cueing can be disabled on a per-source basis if needed:
+
+```{.liquidsoap include="liq/cue-points2.liq" from=1 to=-1}
+```
+
+In practice, the metadata for cue points would either be hardcoded in the files
+or added for each file with `annotate` in the playlist. In a more elaborate
+setup, a `request.dynamic` setup would typically also use `annotate` in order to
+indicate the cue points, which would be fetched by your own scheduling back-end
+(for instance, the cue points could be stored in a database containing all the
+songs).
 
 ### Fading
 
@@ -1991,6 +2007,74 @@ parameter of `cross` controls how much time in advance we should have to perform
 the transition: if the remaining time of the current track is below this value,
 we simply don't apply any transition.
 
+### Autocue {#sec:autocue}
+
+\index{autocue}
+
+Finding the right crossfade duration for each track manually is tedious: a fast
+track needs a shorter fade than a slow one, and some tracks start or end
+abruptly. Since Liquidsoap 2.2.5, an _autocue_ mechanism is available which
+automatically analyzes the beginning and end of each track for silence or energy
+and sets the `liq_cross_duration`, `liq_fade_in` and `liq_fade_out` metadata
+accordingly, so that `crossfade` can use them without any manual tuning.
+
+Autocue requires the FFmpeg bindings. To enable it, simply call
+
+```liquidsoap
+enable_autocue_metadata()
+```
+
+before your source. For instance,
+
+```{.liquidsoap include="liq/autocue.liq" from=1}
+```
+
+That's all. The `crossfade` operator picks up the metadata set by autocue
+automatically. Per-track overrides still work: annotating a file with
+`liq_cross_duration` will take precedence over the computed value.
+
+#### CPU usage (important)
+
+Autocue performs audio analysis on each track at request
+resolution time. This analysis causes a noticeable CPU and memory peak for every
+track, which can be problematic on resource-constrained systems or with large
+music libraries. Whenever possible, prefer _pre-processing_ your files: run the
+analysis once offline (for example with `ffmpeg` or a dedicated loudness tool),
+store the results as metadata directly in the files, and let Liquidsoap read them
+without recomputing. This keeps runtime overhead minimal and avoids spikes
+during live operation.
+
+#### Custom autocue implementations
+
+Liquidsoap uses its built-in autocue implementation by default. If you want to
+use a different analysis engine — for instance one backed by a dedicated loudness
+tool or a remote service — you can register it with `autocue.register`:
+
+```{.liquidsoap include="liq/autocue.register.liq" from=1 to=-1}
+```
+
+The callback receives the file path and two metadata dictionaries: `file_metadata`
+holds tags embedded in the file itself, and `request_metadata` holds annotations
+attached to the request (e.g. via the `annotate:` protocol or a playlist prefix).
+It must return a nullable record which is computed from those metadata.
+Returning `null` signals that this implementation has no result for the given file.
+
+The returned record has four required fields — `cue_in`, `cue_out`, `fade_in`, and
+`fade_out` (all in seconds) — and several optional ones: `amplify` (a gain string,
+e.g. `"-3 dB"`), `fade_in_type` / `fade_out_type` (curve shape, e.g. `"lin"`,
+`"log"`), `fade_in_curve` / `fade_out_curve` (curve parameter), `start_next` (when
+to start the next track, in seconds from the beginning), and `extra_metadata`
+(arbitrary key/value pairs to inject into the track metadata).
+
+When multiple implementations are registered, `settings.autocue.preferred`
+controls which one is selected: if the named implementation is available it will
+be used, otherwise Liquidsoap picks whichever registered implementation is
+available:
+
+```liquidsoap
+settings.autocue.preferred := "my-autocue"
+```
+
 ### Transitions between different sources
 
 The operators which allow switching between different sources (`switch`,
@@ -2163,19 +2247,19 @@ reach a standard volume. If we assume that our files are tagged in this
 (standard) way, we can use the `amplify` operator to apply the gain correction
 as follows:
 
-```{.liquidsoap include="liq/replaygain.liq" from=1 to=-1}
+```{.liquidsoap include="liq/normalize_track_gain.liq" from=1 to=-1}
 ```
 
-For convenience, the amplification by this metadata is defined in the standard
-library as the `replaygain` operator, so that we can even simply write
+For convenience, the `normalize_track_gain` operator (which handles both
+`replaygain_track_gain` and `r128_track_gain` / EBU R128 metadata uniformly) is
+the recommended way to apply gain correction:
 
-```{.liquidsoap include="liq/replaygain2.liq" from=1 to=-1}
+```{.liquidsoap include="liq/normalize_track_gain2.liq" from=1 to=-1}
 ```
 
-If not all your files are tagged with ReplayGain metadata you can use the
-command
+If not all your files are tagged with ReplayGain metadata you can use
 
-```{.liquidsoap include="liq/replaygain3.liq" from=1 to=1}
+```{.liquidsoap include="liq/normalize_track_gain3.liq" from=1 to=1}
 ```
 
 to instruct Liquidsoap to compute it for every played file: for each file, it
@@ -2185,18 +2269,18 @@ you want instead to perform it on a per-file basis, you can use the protocol
 `replaygain:` which instructs to compute the ReplayGain of a file, with the same
 method. For instance,
 
-```{.liquidsoap include="liq/replaygain4.liq" from=1 to=-1}
+```{.liquidsoap include="liq/normalize_track_gain4.liq" from=1 to=-1}
 ```
 
 will play the file `test.mp3`, computing its ReplayGain beforehand, and
 correcting its volume. Incidentally, we recall that the `prefix` parameter of
 playlists can be used add this protocol to all the files in the playlist:
 
-```{.liquidsoap include="liq/replaygain5.liq" from=1 to=-1}
+```{.liquidsoap include="liq/normalize_track_gain5.liq" from=1 to=-1}
 ```
 
 The operation of computing the ReplayGain for a given file is a bit costly so
-that we strongly advice to perform it once for all for your music files instead
+that we strongly advise to perform it once for all for your music files instead
 of using the above mechanisms.
 
 #### Normalization
@@ -3124,7 +3208,7 @@ them different mountpoint names. For instance, if we have a `rock` and a
 `techno` stream, we can encode both of them, and encode each of them both in mp3
 and aac with
 
-```{.liquidsoap include="liq/output.icecast3.liq" from=2}
+```{.liquidsoap include="liq/output.icecast3.liq" from=3}
 ```
 
 Here, first define a function `out` which acts as `output.icecast`, where the
@@ -3219,15 +3303,15 @@ Some useful arguments of the `output.file.hls` operator are the following.
   disabled by default because some players assume that there will be one stream,
   and thus stop when they see metadata.
 - `on_file_change`: this specifies a function which can be used to execute an
-  action when a file is created or removed, which can typically to upload
-  segments to a webserver when they are created and remove them when they are
-  not in use anymore. This function takes an argument labeled `state` and the
-  name of the file concerned. The `state` is a string which can be
-  
-  - `"opened"`: we have opened the file to start writing on it,
-  - `"closed"`: we have finished writing to the file (and it could thus be
-    uploaded to a server),
-  - `"removed"`: we have removed the file (and it could thus be removed from the
+  action when a file is created, updated, or deleted, which can typically be
+  used to upload segments to a webserver when they are created and remove them
+  when they are not in use anymore. This function takes an argument labeled
+  `state` and the name of the file concerned. The `state` is a string which
+  can be
+
+  - `"created"`: a new segment file has been created,
+  - `"updated"`: the playlist file has been updated,
+  - `"deleted"`: a segment file has been deleted (and could be removed from the
     server).
   
   A simple example of such a function would be
@@ -3822,7 +3906,7 @@ instance,
 
 ### FFmpeg {#sec:ffmpeg-encoder}
 
-The `%ffmpeg`\index{FFmpeg} encoder is a versatile meta-encoder that uses the FFmpeg library to encode in a wide variety of formats, including the ones presented above, but also many more. The general syntax is
+The `%ffmpeg`\index{FFmpeg} encoder is a versatile meta-encoder that uses the FFmpeg library to encode in a wide variety of formats, including the ones presented above, but also many more. (Note: GStreamer support was removed in Liquidsoap 2.3.0; FFmpeg covers the same use cases.) The general syntax is
 
 ```liquidsoap
 %ffmpeg(format="<format>", ...)
@@ -4460,9 +4544,9 @@ The following script uses `request.dynamic` which will call a function
 - extracts the parameters of the song from the returned record,
 - returns a request from the song annotated with cue and fade parameters.
 
-The cue and fade parameters are then applied by using the operators `cue_cut`,
-`fade.in` and `fade.out` because we annotated the parameters with the metadata
-expected by those operators.
+The cue and fade parameters are then applied automatically: `liq_cue_in` and
+`liq_cue_out` are processed during request resolution, while `liq_fade_in` and
+`liq_fade_out` are read by `fade.in` and `fade.out`.
 
 ```{.liquidsoap include="liq/json-fade-cue.liq" from=1}
 ```
@@ -4606,8 +4690,7 @@ which will launch the `reqs.skip` command on the telnet server.
 
 If you like web interfaces more than old shell programs, you can add\indexop{server.hoarbor}\index{harbor}
 
-```liquidsoap
-server.harbor()
+```{.liquidsoap include="liq/server.harbor.liq" from=1 to=-1}
 ```
 
 in your script, and the telnet server will be available on your browser at the
@@ -5755,211 +5838,173 @@ Some methods allow performing actions on the source.
 ### Clocks {#sec:clocks-ex}
 
 In order to avoid synchronization issues, Liquidsoap maintains
-_clocks_\index{clock}, which handle how the time is flowing for operators. Their
-behavior and usefulness is detailed in [there](#sec:clocks), let us simply
-mention the two main causes of discrepancies between time flow between
-operators.
+_clocks_\index{clock}, which handle how time flows for operators. Their general
+role is described in [there](#sec:clocks), and we focus here on the practical
+situations where clocks require your attention.
 
-1. When performing an output (e.g. with `output.alsa`, `output.pulseaudio`,
-   etc.) the speed at which the stream is generated is handled by the underlying
-   library (ALSA, Pulseaudio, etc.). For this reason, all the different
-   libraries have their own clock. In a script such as
-   
-   ```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=1}
-   ```
-   
-   the source `s` would be played at two different rates, which would result in
-   audio glitches. Liquidsoap detects this situation when the script is starting
-   and issues the error
-   
-   ```
-   A source cannot belong to two clocks (alsa[], pulseaudio[]).
-   ```
-   
-   which that you are trying to animate the source `s` with both the `alsa`
-   clock and the `pulseaudio` clock, which is forbidden.
-2. Some operators need to change the time at which the source flows. This is for
-   instance the case of the `stretch` operator which changes the speed at
-   which a source is played or of the `crossfade` operator, which performs
-   transitions between tracks, and thus needs to compute the next track in
-   advance together with the end of a track. Such operators thus have their own
-   clock. For this reason, the script
-   
-   ```{.liquidsoap include="liq/bad/clock-alsa-crossfade.liq" from=1}
-   ```
-   
-   will not be accepted either and will raise the error
-   
-   ```
-   A source cannot belong to two clocks (alsa[], cross_65057[]).
-   ```
-   
-   indicating that you are trying to animate the source `s` both at the `alsa`
-   speed and at the crossfade speed (the number `65057` is there to give a
-   unique identifier for each crossfade operator).
+By default, Liquidsoap clocks operate in _automatic mode_: at the beginning of each
+streaming cycle, the clock inspects its source graph looking for a
+_synchronization source_\index{synchronization source}, an operator that
+controls the pace of data flow by its own means. Hardware audio operators
+(such as `input.alsa`, `output.pulseaudio`, etc.) block on the hardware timer,
+network inputs (such as `input.srt`) use the timestamps embedded in SRT packets
+to control latency. File-based and generator
+sources (e.g. `playlist`, `single`, `sine`, `blank`, etc.) declare no
+synchronization source, so the clock is led by the CPU: it tries to advance at
+real-time speed, sleeping when ahead and catching up (with log warnings) when
+behind. Clocks can also be configured explicitly — CPU-only, no sync, or passive
+(externally ticked) — but automatic mode covers the vast majority of use cases.
 
-If the speed of a source is not controlled by a particular library or operator,
-it is attached to the `main` clock, which is the default one, and animated by
-the computer's CPU.
+#### Synchronization conflicts
 
-#### Buffers
+Each synchronization source has its own pace for producing data: an ALSA source delivers
+frames according to its hardware clock, an SRT input delivers them according to
+packet timestamps. When two such sources are active at the same time in the
+same clock, the clock faces an impossible task: it cannot simultaneously honor
+two different paces and has no way to know whether it is producing data fast
+enough for both. This is the root cause of *clock conflicts*.
 
-In order to mediate between operators with two different clocks, one can use a
-buffer, which will compute the stream of a source in advance, and will thus be
-able to cope with small timeflow discrepancies. This can be achieved using the
-`buffer`\indexop{buffer} operator which takes, in addition to the source, the following optional
-arguments:
+Importantly, two synchronization sources can share a clock without conflict as
+long as only one is ever producing data at a time. A `fallback` between an SRT
+input and a local microphone works perfectly for instance:
 
-- `buffer`: how much time to buffer in advance (1 second by default),
-- `max`: how much time to buffer at most (10 seconds by default).
+```{.liquidsoap include="liq/clock-srt-alsa-fallback.liq" from=1}
+```
 
-For instance, we can make the first script above work by adding a buffer as
-follows:
+Liquidsoap will use whichever source is available, and since only one is active
+at any moment, there is no ambiguity about the pace.
+
+A conflict arises when two sources with their own latency control are
+simultaneously asked to produce data. Liquidsoap detects this, either at
+startup or dynamically when a new source is introduced into the graph (e.g.
+during a crossfade transition). As a simple static example, the script
+
+```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=1}
+```
+
+will fail with the error
+
+```
+At radio.liq, line 4, char 0-21:
+output.pulseaudio(s)
+
+Error 17: clock output.alsa has multiple synchronization sources. Do you need to set self_sync=false?
+
+Sync sources:
+ alsa from source output.alsa
+ pulseaudio from source output.pulseaudio
+```
+
+There are two ways to fix this.
+
+#### Using buffers
+
+This is is the most robust solution. The
+`buffer`\indexop{buffer} operator sits between two clocks and accumulates
+pre-computed audio, absorbing timing differences between hardware devices. It
+accepts the following optional arguments:
+
+- `buffer`: how much audio to buffer in advance (1 second by default),
+- `max`: maximum buffer size (10 seconds by default).
+
+Wrapping one side in a buffer resolves the conflict:
 
 ```{.liquidsoap include="liq/clock-alsa-pulseaudio2.liq" from=1}
 ```
 
-Note that when executing it the ALSA output will be 1 second late compared to
-the Pulseaudio one: this is the price to pay to live in peace with clocks.
+The ALSA output will now lag about 1 second behind PulseAudio — the price of
+buffering. For persistent timing differences between two devices, `buffer.adaptative`
+can compensate by adjusting the playback rate to keep the buffer full, at the
+cost of a slight pitch shift.
 
-A typical buffer can handle time discrepancies between clocks between 1 and 10
-seconds. It will not be able to handle more than this, if one source is going
-really too slow or too fast, because the buffer will be either empty or
-full. Alternatively, you can use `buffer.adaptative` which tries to slow down
-the source if it is too fast or speed it up if it is too slow. This means that
-the pitch of the source will also be changed, but this is generally not audible
-if the time discrepancy evolves slowly.
+#### Disabling self-synchronization
 
-#### Deactivating clocks
+Another solution consists in passing the argument `self_sync=false`, which tells an operator to give up its synchronization role, letting the other control the clock:
 
-Although we do not recommend it, in some situations it is possible to solve
-clock conflicts by deactivating the clock of a particular operator, often an
-input one. For instance, the script
-
-```{.liquidsoap include="liq/bad/clock_safe.liq" from=1}
+```{.liquidsoap include="liq/clock_safe2.liq" from=1}
 ```
 
-will not be accepted because the input and the output have different clocks,
-which are respectively `alsa` and `pulseaudio`. As indicated above, the standard
-way of dealing with this situation is by replacing the first line by
+Here, `input.alsa` cedes synchronization to `output.pulseaudio` and no buffer
+is needed. This will work fine in most situations, but since the two devices
+run on slightly different hardware clocks, timing drift will eventually cause
+glitches. It is not recommended for production applications.
 
-```{.liquidsoap include="liq/clock_safe.liq" from=1 to=1}
+#### Operators that require a stable clock
+
+Some operators, such as `crossfade` and `stretch`, need to control the rate at
+which audio is produced and run in their own dedicated clock. They therefore
+require that their input source does not declare a synchronization source.
+Passing a hardware source directly will fail:
+
+```{.liquidsoap include="liq/bad/clock-alsa-crossfade.liq" from=1}
 ```
 
-However, there is another possibility: we can tell the `input.alsa` operator not
-to use its own clock, by passing the argument `clock_safe=false` to it.
-
-```{.liquidsoap include="liq/clock_safe2.liq" from=1 to=1}
+```
+Error 7: Invalid value:
+This source may control its own latency and cannot be used with this operator.
 ```
 
-In this case, the output is the only operator with its own clock and will thus
-be responsible for the synchronization. This avoids using a buffer, and thus
-lowers latencies, which can be nice in a situation as above where we have a
-microphone, but this also means that we are likely to hear some glitches in the
-audio at some point, because the input might not be in perfect sync with the
-output.
+The fix is to wrap the hardware source in a `buffer()`, which decouples it from
+the downstream operator's clock:
 
-#### Dealing with clocks
-
-Apart from inserting buffers, you should almost never have to explicitly deal
-with clocks. The language however provides functions in order to manipulate
-them, in case this is needed. The function `clock` creates a new clock and
-assigns it to a source given in argument. It takes a parameter `sync` which
-indicates how the clocks synchronizes and can be either
-
-- `"cpu"`: the clock follows the one of the computer,
-- `"none"`: the clock goes as fast as possible (this is generally used for
-  sources such as `input.alsa` which take care of synchronization on their own),
-- `"auto"`: the clock follows the one of a source taking care of the
-  synchronization if there is one or to the one of the cpu by default (this is
-  mostly useful with `clock.assign_new`, see below).
-
-Some other useful functions are
-
-- `clock.assign_new`: creates a clock and assigns it to a list of sources
-  (instead of one as in the case of `clock`),
-- `clock.unify`: ensures that a list of sources have the same clock,
-- `clock.status.seconds`: returns the current time for all allocated clocks.
+```{.liquidsoap include="liq/clock-crossfade-fix.liq" from=1}
+```
 
 #### Decoupling latencies
 
-The first reason you might want to explicitly assign clocks is to precisely
-handle the various latencies that might occur in your setup, and make sure that
-delay induced by an operator do not affect other operators. Namely, two
-operators animated by two different clocks are entirely independent and can be
-thought of as being run "in parallel". For instance, suppose that you have a
-script consisting of a microphone source, which is saved in a file for backup
-purposes and streamed to Icecast for diffusion:
+Beyond avoiding conflicts, explicit clock separation is useful for isolating
+slow or unreliable I/O from the rest of the graph. Consider a microphone being
+saved to a backup file and streamed to Icecast simultaneously:
 
 ```{.liquidsoap include="liq/clock-decoupling.liq" from=1}
 ```
 
-Here, all sources are animated by the same clock, which is the `alsa` one
-(because `input.alsa` is the only operator here which is able to take care of
-the synchronization of the sources). If for some reason, the icecast output is
-slow (for instance, because of a network lag), it will slow down the `alsa`
-clock and thus all the operators will lag. This means that we might lose some
-of the microphone input, because we are not reading fast enough on it, and even
-the file output will have holes. In order to prevent from this happening, we can
-put the icecast output in its own clock:
+All sources here share the ALSA clock. If the Icecast connection is slow or
+drops, it stalls the ALSA clock — causing gaps in the backup file and
+potentially dropping microphone frames. Wrapping the Icecast output in a
+`buffer()` puts it in a separate clock:
 
 ```{.liquidsoap include="liq/clock-decoupling2.liq" from=1}
 ```
 
-In this way, the timing problems of icecast will not affect the reading on the
-microphone and the backup file will contain the whole emission for later
-replace, even if the live transmission had problems. Note that we have to put a
-`buffer` operator between `mic` and the `clock` operator, which belong to
-different clocks, otherwise Liquidsoap will issue the usual error message
-
-```
-A source cannot belong to two clocks (alsa[], input.alsa_65308[]).
-```
-
-indicating that `mic` cannot belong both to its own new clock and the icecast
-clock.
+The ALSA clock now advances independently: microphone recording and file backup
+are unaffected by network problems on the Icecast side. The `mksafe` is
+necessary because the buffered side runs in a different clock: if `mic` becomes
+unavailable, the Icecast output needs a safe fallback.
 
 #### Encoding in parallel
 
-From a technical point of view, each clock runs in its own thread and, because
-of, this two operators running in two different clocks can be run in parallel
-and exploit multiple cores. This is particularly interesting for encoding, which
-is the most CPU consuming part of the tasks: two outputs will different clocks
-will be able to encode simultaneously in two different cores of the CPU.
+Each clock runs in its own thread, so sources in different clocks can encode
+simultaneously on separate CPU cores. This is particularly valuable for video
+encoding, the most CPU-intensive part of a streaming workflow.
 
-In order to illustrate this, consider the following script which performs two
-encodings of two different video files:
+Consider encoding two video files:
 
 ```{.liquidsoap include="liq/clock-parallel-encodings.liq" from=1}
 ```
 
-If we have a look at the CPU usage, we see that only one core is used at a given
-time:
+Since `a` and `b` share the same default clock, they encode sequentially on a
+single core:
 
 ![](img/encoding1.png)
 
-(the kernel changes the core we use over time in order to better distribute the
-heat, but there is only one core used at a given time). Now, let us assign
-different clocks to the outputs, by changing the clock of the source of the
-second output, which will not be the default one anymore:
+Assigning `b` to its own clock with `clock.assign_new`:
 
 ```{.liquidsoap include="liq/clock-parallel-encodings2.liq" from=1}
 ```
 
-We see that we now often use two cores simultaneously, which makes the encoding
-twice as fast:
+allows both encoders to run in parallel, often doubling throughput:
 
 ![](img/encoding2.png)
 
-Here, things are working well because the two encoders encode different sources
-(`a` and `b`). If they encode a common source, it can still be done by using a
-buffer
+If both outputs encode a common source, a `buffer()` is still required to
+bridge the clocks:
 
 ```{.liquidsoap include="liq/clock-parallel-encodings3.liq" from=1}
 ```
 
-with the risk that there is a glitch at some point because the speed of the
-clocks differ slightly, resulting in buffer under or overflow.
+In this case, small glitches are possible if the two clocks drift enough to
+overflow or underflow the buffer.
 
 ### Offline processing {#sec:offline-processing}
 

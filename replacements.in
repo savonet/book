@@ -89,6 +89,7 @@ VP9 [vp9]{.smallcaps}
 AV1 [av1]{.smallcaps}
 GOP [gop]{.smallcaps}
 CRF [crf]{.smallcaps}
+AVC [avc]{.smallcaps}
 HEVC [hevc]{.smallcaps}
 theora Theora
 FLV [flv]{.smallcaps}

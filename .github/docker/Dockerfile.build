@@ -1,4 +1,4 @@
-FROM savonet/liquidsoap:rolling-release-v2.2.x
+FROM ghcr.io/savonet/liquidsoap:ci-build-main_amd64-ocaml4.14.2
 
 USER root
 
@@ -20,7 +20,7 @@ RUN chmod a+w to-play
 
 RUN export LIQLIB=`liquidsoap --check "print(configure.libdir)"` && \
     echo "let output.graphics = output.dummy" >> $LIQLIB/io.liq && \
-    echo "let input.v4l2 = blank" >> $LIBLIQ/ffmpeg.liq
+    echo "let input.v4l2 = blank" >> $LIQLIB/ffmpeg.liq
 
 USER liquidsoap
 

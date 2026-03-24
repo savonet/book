@@ -223,6 +223,7 @@ take over audio distribution in the near future, and Liquidsoap already has
 support for them. Their only drawback is that they are more recent and thus less
 well supported on old clients, although this tends to be less and less the case.
 
+<!--
 ### RTMP
 
 Finally, we would like to mention that, nowadays, streaming is more and more
@@ -235,6 +236,7 @@ instant where it happened) than keep its integrity (dropping small parts of the
 audio or video is considered acceptable). This protocol is quite old (it dates
 back to the days where Flash was used to make animation on webpages) and tends
 to be phased out in favor of HLS.
+-->
 
 Audio sources {#sec:audio-sources}
 -------------

@@ -10,5 +10,5 @@ def next_song()
   request.create(song)
 end
 s = request.dynamic(next_song)
-s = fade.out(fade.in(cue_cut(s)))
+s = fade.out(fade.in(s))
 output(s)

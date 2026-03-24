@@ -6,5 +6,5 @@ def log_song(m)
 end
 
 radio = playlist("~/Music")
-radio.on_track(log_song)
+radio.on_track(synchronous=false, log_song)
 output(radio)

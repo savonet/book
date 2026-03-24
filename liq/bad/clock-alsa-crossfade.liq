@@ -1,4 +1,3 @@
 #!./liquidsoap
-s = mksafe(playlist("~/Music"))
-output.alsa(s)
-output.alsa(crossfade(s))
+s = mksafe(input.srt())
+output.pulseaudio(crossfade(s))

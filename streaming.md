@@ -1131,33 +1131,29 @@ Consider the following script:
 ```{.liquidsoap include="liq/clock-alsa-file.liq" from=2}
 ```
 
-Here, the only operator to enforce the use of a particular clock is `input.alsa`
-and therefore its clock will be used for all the operators. Namely, we can
-observe in the logs that `input.alsa` uses the `alsa` clock
+At startup, Liquidsoap creates a top-level clock named after the output
+operator and logs all the sources it controls, along with their role:
 
 ```
-[input.alsa_64610:5] Clock is alsa[].
+[clock:3] Starting top-level clock output.file with sources: output.file (output), amplify (passive), track_audio_amplify (passive), input.alsa (active) and sync: auto
 ```
 
-and that the `amplify` operator is also using this clock
+Sources marked `active` are animated at every streaming cycle regardless of
+whether they are currently being pulled — `input.alsa` for instance must
+consume incoming audio continuously even when nothing is requesting it.
+Sources marked `passive` are only animated when something downstream needs data
+from them. Each operator also logs which clock it belongs to:
 
 ```
-[amplify_64641:5] Clock is alsa[].
+[amplify:5] Clock is output.file.
 ```
 
-Once all the operators created and initialized, the clock will start its
-_streaming loop_ (i.e. produce a frame, wait for some time, produce another
-frame, wait for some time, and so on):
+Once the clock detects that one of its sources controls its own latency
+(here `input.alsa`, which is driven by the ALSA hardware timer), it switches to
+self-sync mode and delegates timing control to that source:
 
 ```
-[clock.alsa:3] Streaming loop starts in auto-sync mode
-```
-
-Here, we can see that Alsa is taking care of the synchronization, this is
-indicated by the message:
-
-```
-[clock.alsa:3] Delegating synchronisation to active sources
+[clock.output.file:3] Switching to self-sync mode with sync source: alsa
 ```
 
 If we now consider a script where there is no source which enforces
@@ -1166,16 +1162,13 @@ synchronization such as
 ```{.liquidsoap include="liq/clock-sine-file.liq" from=2}
 ```
 
-we can see in the logs that the CPU clock, which is called `main`, is used
+the clock is CPU-led: no `active` sources appear in the startup message and
+the clock advances at real-time speed under CPU control. You will also see this
+message whenever a clock loses its synchronization source and falls back to
+CPU-led mode:
 
 ```
-[sine_64611:5] Clock is main[].
-```
-
-and that synchronization is taken care of by the CPU
-
-```
-[clock.main:3] Delegating synchronisation to CPU clock
+[clock.output.file:3] Switching to non self-sync mode
 ```
 
 #### Graphical representation
@@ -1202,56 +1195,36 @@ their stream at the same rate.
 
 #### Errors with clocks
 
-At startup Liquidsoap assigns a clock to each operator by applying the three
-following rules:
-
-1. we should follow the clock imposed by operators which have special requirements:
-   - `input.alsa` and `output.alsa` have to be in the `alsa` clock,
-     `input.pulseaudio` and `output.pulseaudio` have to be in the `pulseaudio`
-     clock, etc.,
-   - the sources used by `stretch`, `cross` and few other "time-sensitive"
-     operators have their own clock,
-   - the operator `clock` generates a new clock,
-2. each operator should have the same clock as the sources it is using (unless
-   for special operators such as `cross` or `buffer`): this called clock
-   _unification_\index{clock!unification},
-3. if the two above rules do not impose a clock to an operator, it is assigned to
-   the default clock `main`, which based on CPU.
-
-It should always be the case that a given operator belongs to exactly one
-clock. If, by applying the above rules, we discover that an operator should
-belong to two (or more) clocks, we raise an error. For instance, the script
+Clock conflicts occur when two operators that each control their own latency are
+simultaneously asked to produce data for the same clock. For instance, the script
 
 ```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=2}
-```
-
-will raise at startup the error
-
-```
-A source cannot belong to two clocks (alsa[], pulseaudio[]).
-```
-
-because the source `s` should be both in the `alsa` and in the
-`pulseaudio` clock, which is forbidden. This is for a good reason: the ALSA and
-the Pulseaudio libraries each have their own way of synchronizing streams and
-might lead to the source `s` being pulled at two different rates. Similarly, the
-script
-
-```{.liquidsoap include="liq/bad/clock-add-stretch.liq" from=2 to=-1}
 ```
 
 will raise the error
 
 ```
-Cannot unify two nested clocks (resample_65223[], ?(3f894ac2d35c:0)[resample_65223[]]).
+Error 17: clock output.alsa has multiple synchronization sources. Do you need to set self_sync=false?
+
+Sync sources:
+ alsa from source output.alsa
+ pulseaudio from source output.pulseaudio
 ```
 
-because the source `s` should belong to the clock used by `stretch` and the
-clock of `stretch`. When we think about it the reason should be clear: we are trying to
-add the source `s` played at normal speed and at a speed slowed down twice. This
-means that in order to compute the stream `o` at a given time _t_, we need to
-know the stream `s` both at time _t_ and at time _t/2_, which is forbidden
-because we only want to compute a source at one logical instant.
+because both ALSA and PulseAudio control their own timing, and the clock cannot
+honor two different paces at once. For more on how to resolve such conflicts, see
+[there](#sec:clocks-ex).
+
+A different kind of conflict occurs with operators such as `stretch` and `cross`,
+which must run in their own dedicated clock and require that their input has no
+synchronization source of its own. The script
+
+```{.liquidsoap include="liq/bad/clock-add-stretch.liq" from=2 to=-1}
+```
+
+will fail because `stretch` cannot accept a source that might control its own
+latency: the same source `s` would need to be produced simultaneously at two
+different rates (normal speed and half speed), which is impossible.
 
 <!--
 
@@ -1698,7 +1671,7 @@ Requests can be manipulated within the language with the following functions.
   associated resources can be freed (typically, we remove temporary files).
 - `request.id` returns the RID of the request.
 - `request.status` returns the current status of a request (idle, resolving,
-  ready, playing or destroyed) and `request.ready` indicates whether a request
+  ready, playing or destroyed) and `request.resolved` indicates whether a request
   is ready to play.
 - `request.uri` returns the initial URI which was used to create the request and
   `request.filename` returns the file to which the request resolved.
@@ -1859,7 +1832,7 @@ priority 10 by default.
 
 #### Custom decoders
 
-It is possible to add your custom decoders using the `add_decoder` function,
+It is possible to add your custom decoders using the `decoder.add` function,
 which registers an external program to decode some audio files: this program
 should read the data on standard input and write decoded audio in wav format on
 its standard output.
@@ -2028,7 +2001,7 @@ Sometimes it will fail, for instance if test.mp3 is stereo, the following script
 because we cannot implicitly convert a stereo file into 5.1
 -->
 
-Custom metadata decoders can be added with the function `add_metadata_resolver`.
+Custom metadata decoders can be added with the function `decoder.metadata.add`.
 
 Reading the source code
 -----------------------

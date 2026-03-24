@@ -10,10 +10,10 @@ streams   = [("aac_lofi",  aac_lofi ),
              ("aac_midfi", aac_midfi), 
              ("aac_hifi",  aac_hifi )]
 
-def segment_name(~position, ~extname, stream_name) =
+def segment_name({stream_name, position, extname, ...}) =
   timestamp = int_of_float(time())
   "#{stream_name}_#{timestamp}_#{position}.#{extname}"
-end             
+end
 
 output.file.hls(playlist          = "live.m3u8",
                 segment_duration  = 2.,

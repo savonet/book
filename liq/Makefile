@@ -1,6 +1,6 @@
 LIQ := $(filter-out convert2wav.liq, $(sort $(wildcard *.liq)))
 CHECKS := $(foreach l, $(LIQ), check-$(basename $l))
-CHECKS := $(filter-out check-ladspa.fastlookaheadlimiter check-frei0r check-encoder-gstreamer-1 check-encoder-gstreamer-2 check-encoder-gstreamer-3 check-encoder-gstreamer-4 check-encoder-gstreamer-5 check-encoder-gstreamer-pipeline check-input.gstreamer check-input.gstreamer2 check-http.head, $(CHECKS))
+CHECKS := $(filter-out check-ladspa.fastlookaheadlimiter check-frei0r, $(CHECKS))
 
 LIQUIDSOAP = ./liquidsoap
 
@@ -53,7 +53,7 @@ check:
 	@if [ -e failed ]; then echo; echo "***** Some tests failed! *****"; echo; cat "failed"; exit 1; fi
 
 check-%: %.liq
-	@echo -n "Checking $(basename $<)..."
+	@printf "Checking $(basename $<)..."
 	@if LIQ_LILV=false LIQ_LADSPA=false LIQ_DSSI=false $(LIQUIDSOAP) --check $< ; then echo " ok." ; else echo "$<" >> "failed" ; echo " failed!" ; fi
 
 docker-shell:
