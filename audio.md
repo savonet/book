@@ -3230,22 +3230,22 @@ format, the mountpoint and the source to encode, and it will be available at
 
   `http://localhost:8000/my-radio.mp3`
   
-for you to listen. You can protect the stream by specifying a `user` and a
-`password` argument (both need to specified) which will then be required when
-trying to listen to the stream:
+for you to listen. You can protect the stream by passing an authentication
+function in the `auth` argument: it receives the `login` and the `password`
+which the listener provided, together with their `address`, and returns whether
+access should be granted. For instance, in order to only let Bob in:
 
 ```{.liquidsoap include="liq/output.harbor2.liq" from=2}
 ```
 
-Alternatively, you can also specify an authentication function in the `auth`
-argument: this function itself takes the user and password as arguments and
-returns whether the listener should be granted access to the stream. For
-instance, the following allows listeners whose password has odd length:
+Since this is an ordinary function, we can put whatever we want in it. The
+following one logs every attempt and grants access to the listeners whose
+password has odd length:
 
 ```{.liquidsoap include="liq/output.harbor3.liq" from=2}
 ```
 
-The arguments `on_connect` and `on_disconnect` are also useful to monitor
+The methods `on_connect` and `on_disconnect` are also useful to monitor
 connections from listeners.
 
 ### HLS output {#sec:HLS-output}
