@@ -17,5 +17,5 @@ def insert_jingle(m)
   end
 end
 s.on_track(synchronous=false, insert_jingle)
-s = fallback(track_sensitive=false, [q, s])
+s = fallback([q.{track_sensitive = false}, s])
 output(s)

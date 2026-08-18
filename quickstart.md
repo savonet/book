@@ -290,10 +290,11 @@ a fallback to a local file:
 
 Note that we are using `single`\index{singleop} here instead of `playlist`: this operator plays
 a single file and ensures that the file is available before running the script
-so that we know it will not fail. The argument
-`track_sensitive=false`{.liquidsoap}\index{track!sensitive} means that we want to get back to the live
-stream as soon as it is available again, otherwise it would wait the end of the
-track for switching back from emergency playlist to the main radio. Also remark
+so that we know it will not fail. We do not have to say anything about the
+moment at which we get back to the live stream: a live source such as
+`input.http` does not wait for the end of a track, so it takes over as soon
+as it is available again, and each source decides this for itself, as
+detailed in [there](#sec:composition). Also remark
 that we are defining `s` twice: this is not a problem at all, whenever we
 reference `s`, the last definition is used, otherwise said the second definition
 replaces the first.
@@ -337,9 +338,10 @@ we can set this up as follows:
 ```
 
 By default, the `switch` operator will wait for the end of the track of a source
-before switching to the next one, but immediate switching can be achieved by
-adding the argument `track_sensitive=false`{.liquidsoap}, as for the
-`fallback` operator.
+before switching to the next one, because both of our playlists play files and
+neither is willing to be interrupted. Immediate switching can be obtained by
+setting the `track_sensitive`{.liquidsoap}\index{track!sensitive} method of a
+source to `false`, as for the `fallback` operator.
 
 ### Jingles
 
@@ -350,20 +352,20 @@ operator:
 
 ```liquidsoap
 jingles = playlist("/radio/jingles.pls")
-radio   = random(weights=[1, 4], [jingles, radio])
+radio   = random([jingles, radio.{weight = 4}])
 ```
 
 This operator randomly selects a track in a list of sources each time a new
 track has to be played (here this list contains the jingles playlist and the
-radio defined above). The `weight` argument says how many tracks of each source
-should be taken in average: here we want to take 1 jingle for 4 radio
-tracks. The selection is randomized however and it might happen that two jingles
-are played one after the other, although this should be rare. If we want to make
-sure that we play 1 jingle and then exactly 4 radio songs, we should use the
-`rotate`\indexop{rotate} operator instead:
+radio defined above). The `weight` method of a source says how many tracks of it
+should be taken in average, the default being 1: here we want to take 1 jingle
+for 4 radio tracks. The selection is randomized however and it might happen
+that two jingles are played one after the other, although this should be rare.
+If we want to make sure that we play 1 jingle and then exactly 4 radio songs,
+we should use the `rotate`\indexop{rotate} operator instead:
 
 ```liquidsoap
-radio = rotate(weights=[1, 4], [jingles, radio])
+radio = rotate([jingles, radio.{weight = 4}])
 ```
 
 ### Crossfading

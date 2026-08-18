@@ -1,4 +1,4 @@
-#!/bin/env liquidsoap
+#!/usr/bin/env liquidsoap
 # Set up the playlists
 day   = playlist("/radio/day.pls")   # Day music
 night = playlist("/radio/night.pls") # Night music
@@ -7,8 +7,8 @@ radio = switch([({8h-19h}, day), ({19h-20h}, mic), ({20h-8h}, night)])
 # Add crossfading
 radio = crossfade(fade_out=3., fade_in=3., duration=5., radio)
 # Add jingles
-jingles = playlist("/radio/jingls.pls")
-radio = random(weights=[1, 4], [jingles, radio])
+jingles = playlist("/radio/jingles.pls")
+radio = random([jingles, radio.{weight = 4}])
 # Add some audio effects
 radio = nrj(normalize(radio))
 # Just in case, a fallback

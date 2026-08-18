@@ -1,7 +1,7 @@
 #!./liquidsoap
 default = playlist("~/Music")
 queue   = request.queue()
-radio   = fallback(track_sensitive=false, [queue, default])
+radio   = fallback([queue.{track_sensitive = false}, default])
 def on_request()
   fname = string.trim(file.contents("to-play"))
   log.important("Playing #{fname}.")
