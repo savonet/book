@@ -1294,7 +1294,7 @@ latency to delegating it to the underlying sources or vice-versa. Consider for
 instance the following script:
 
 ```liquidsoap
-s = fallback(track_sensitive=false,[
+s = fallback([
   input.harbor("foo"), input.alsa()
 ])
 ```

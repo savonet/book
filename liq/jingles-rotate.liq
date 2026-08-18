@@ -1,5 +1,5 @@
 #!./liquidsoap
 jingles = playlist("jingles")
 music = playlist("~/Music")
-radio = rotate(weights=[1, 4], [jingles, music])
+radio = rotate([jingles, music.{weight = 4}])
 output(radio)

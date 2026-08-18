@@ -6,9 +6,9 @@ def on_select(request)
   http.response(data="Source #{selected()} selected.")
 end
 harbor.http.register.simple("/select", on_select)
-radio = switch(track_sensitive=false, [
-  ({selected() == "rap"},    rap),
-  ({selected() == "rock"},   rock),
-  ({selected() == "techno"}, techno)
+radio = switch([
+  ({selected() == "rap"},    rap.{track_sensitive = false}),
+  ({selected() == "rock"},   rock.{track_sensitive = false}),
+  ({selected() == "techno"}, techno.{track_sensitive = false})
 ])
 output(radio)

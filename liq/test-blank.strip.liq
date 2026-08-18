@@ -5,5 +5,5 @@ def vol()
 end
 s = amplify(vol, playlist("~/Music"))
 s = blank.strip(max_blank=2., s)
-s = fallback(track_sensitive=false, [s, sine()])
+s = fallback([s.{track_sensitive = false}, sine()])
 output(s)
