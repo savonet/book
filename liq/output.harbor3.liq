@@ -1,6 +1,6 @@
 #!./liquidsoap
 radio = mksafe(playlist("~/Music"))
-def auth(~address, login, password)
+def auth({login, password})
   log.important("Authentication from #{login} / #{password}")
   string.length(password) mod 2 == 1
 end
