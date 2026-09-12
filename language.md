@@ -2594,8 +2594,8 @@ print(1 + int_of_string("2"))
 Sooner or later our script has to read data written by somebody else: the
 settings of a playout system, the list of the shows of the week, the answer of a
 web service. The usual formats for such data are JSON, YAML\index{YAML} and
-XML\index{XML}, and Liquidsoap reads the three of them. JSON is detailed in [the
-next chapter](#chap:workflow), YAML and XML follow the same pattern. All three
+XML\index{XML}, and Liquidsoap reads the three of them. JSON is detailed in
+[there](#sec:json), YAML and XML follow the same pattern. All three
 are always available, whichever optional libraries Liquidsoap was compiled with.
 
 The parsing is driven by the type we ask for. We write `let
