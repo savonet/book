@@ -1,5 +1,6 @@
 #!./liquidsoap
-s = normalize(playlist("~/Music")) wet = interactive.float("wet", min=0., max=1., 1.) let compress.multiband = fun(s,l) -> compress.multiband(wet=wet,s,l)
+s = normalize(playlist("~/Music"))
+wet = interactive.float("wet", min=0., max=1., 1.) let compress.multiband = fun(s,l) -> compress.multiband(wet=wet,s,l)
 s = compress.multiband(s, [
   {frequency=200.,   attack=100., release=200.,
    threshold=-10.,   ratio=4.,    gain=10.},
@@ -12,4 +13,6 @@ s = compress.multiband(s, [
   {frequency=40000., attack=100., release=200.,
    threshold=-4.,    ratio=4.,    gain=6.}
 ])
-interactive.harbor() interactive.persistent("compress.params") output(s)
+interactive.harbor()
+interactive.persistent("compress.params")
+output(s)

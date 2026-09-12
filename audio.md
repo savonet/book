@@ -1539,7 +1539,7 @@ for instance to announce it on a website. This is difficult in general because
 Liquidsoap does not compute much of the stream in advance. However, if you are
 using a playlist, this can be achieved as follows:
 
-```{.liquidsoap include="liq/log-next-song.liq" from=1 to=-1}
+```{.liquidsoap include="liq/log-next-song.liq" from=1 to=-3}
 ```
 
 Here, we are (ab)using the `check_next` argument which specifies a function
@@ -2360,7 +2360,7 @@ As for most parameters of audio effects, `amplify` also accepts getters as
 coefficients, which allow modifying the value dynamically. For instance, we
 could use an interactive variable for the amplification parameter:
 
-```{.liquidsoap include="liq/amplify-interactive.liq" from=2 to=-1}
+```{.liquidsoap include="liq/amplify-interactive.liq" from=4 to=-2}
 ```
 
 this would allow changing the value of the amplification on the telnet using the
@@ -2789,7 +2789,7 @@ pleasant to listen for background music. If we want to do so, we can extract the
 low frequencies (say, below 200 Hz) from a source `s` using a low-pass filter,
 amplify them (say, by 6 dB) and add them back to the original sound:
 
-```{.liquidsoap include="liq/bass-boost.liq" from=2 to=-1}
+```{.liquidsoap include="liq/bass-boost.liq" from=4 to=-1}
 ```
 
 However, if we do things in this way, the risk is high that we are going to clip
@@ -2798,7 +2798,7 @@ pleasant solution consists in using a limiter after increasing the volume. In
 this way, we can handle a 8 dB increase of the frequencies below 200 Hz without
 any problem:
 
-```{.liquidsoap include="liq/bass-boost2.liq" from=2 to=-1}
+```{.liquidsoap include="liq/bass-boost2.liq" from=3 to=-1}
 ```
 
 This is implemented in the standard library as the `bass_boost` operator, so
@@ -2822,7 +2822,7 @@ the same principle as the above "bass booster" to all the spectrum.
 
 For instance, the script
 
-```{.liquidsoap include="liq/compress.multiband.liq" from=2 to=-1}
+```{.liquidsoap include="liq/compress.multiband.liq" from=5 to=-2}
 ```
 
 defines a `compress` function by specifying values for some of the arguments of
@@ -2839,7 +2839,7 @@ which consists in its frequency (this is the higher frequency, the lower one is
 taken from the previous band) as well as the threshold, ratio, attack and
 release time parameters of the corresponding compressor. The script
 
-```{.liquidsoap include="liq/compress.multiband2.liq" from=2 to=-1}
+```{.liquidsoap include="liq/compress.multiband2.liq" from=3 to=-3}
 ```
 
 is therefore roughly the same as the above one, excepting that we are varying
@@ -3063,7 +3063,7 @@ It takes as argument a file name (a string) and returns a function which, each
 time it is called, returns the float which is contained in the file (and this is
 done in an efficient way). This means that the following script
 
-```{.liquidsoap include="liq/amplify-file.liq" from=2 to=-1}
+```{.liquidsoap include="liq/amplify-file.liq" from=2 to=-2}
 ```
 
 will amplify the source `s` by the value indicated in the file `volume`: as soon
@@ -3087,7 +3087,7 @@ the name of the interactive variable, which we will use to modify it, as well as
 the initial value. For instance, we can amplify a source `s` by an interactive
 float named `main_volume` by
 
-```{.liquidsoap include="liq/amplify-interactive.liq" from=2 to=-1}
+```{.liquidsoap include="liq/amplify-interactive.liq" from=4 to=-2}
 ```
 
 A first way to modify such variables is through the telnet server. It can be
@@ -3265,7 +3265,7 @@ be changed by modifying the `osc.port` configuration). The function
 controller to listen to: when set, the variable will change when the
 corresponding controller updates its value. For instance, the script
 
-```{.liquidsoap include="liq/amplify-osc.liq" from=2}
+```{.liquidsoap include="liq/amplify-osc.liq" from=3}
 ```
 
 listens on the port 9000 for OSC events and changes the value of the interactive
@@ -3290,7 +3290,7 @@ manipulate OSC values:
   
 - `osc.send_float` allows sending values through OSC:
   
-  ```{.liquidsoap include="liq/osc.send_float.liq" from=2 to=-1}
+  ```{.liquidsoap include="liq/osc.send_float.liq" from=3 to=-1}
   ```
 
 Of course, similar functions exist for other types (`osc.on_int`,
@@ -3307,7 +3307,7 @@ only the dry source is played, with 1 only the wet source is played. For
 instance, if we want to test a compressor on a source `s`, we could have a setup
 such as
 
-```{.liquidsoap include="liq/dry_wet.liq" from=2}
+```{.liquidsoap include="liq/dry_wet.liq" from=3}
 ```
 
 Here, `s` is the original source and `s2` is the source with the compressor
@@ -3488,7 +3488,7 @@ list of pairs of stream names and encoding formats (remember that a stream can
 be encoded in multiple formats at once), and the source to encode. For instance,
 if  we have a stream named `radio`, the script
 
-```{.liquidsoap include="liq/output.file.hls.liq" from=2}
+```{.liquidsoap include="liq/output.file.hls.liq" from=3}
 ```
 
 will generate an HLS stream in the directory `/tmp/hls`, by encoding the source
@@ -3560,7 +3560,7 @@ as we have explained in [there](#sec:on-metadata).
 A more involved example, inspired of
 [`srt2hls`](https://github.com/mbugeia/srt2hls), is
 
-```{.liquidsoap include="liq/output.file.hls2.liq" from=2}
+```{.liquidsoap include="liq/output.file.hls2.liq" from=3}
 ```
 
 It encodes the stream in AAC format, in three different qualities, with
@@ -3589,7 +3589,7 @@ consider the internal web server harbor ready for heavy loads, but it can be
 useful to sync up with a caching system such as CloudFront. A simple setup would
 be
 
-```{.liquidsoap include="liq/output.harbor.hls.liq" from=2}
+```{.liquidsoap include="liq/output.harbor.hls.liq" from=3}
 ```
 
 which would make the stream of the `radio` source available at the url
@@ -3645,7 +3645,7 @@ on the stream which, when there is new metadata, updates the filename
 accordingly and returns `true`, which instructs to reopen the file. It will thus
 create a new file for each track, whose name is determined by the metadata.
 
-```{.liquidsoap include="liq/output.file4.liq" from=2}
+```{.liquidsoap include="liq/output.file4.liq" from=3}
 ```
 
 The argument `on_close` can be used to specify a function which is called
@@ -3653,7 +3653,7 @@ whenever we have finished writing to a file: this function takes the filename as
 argument. This is particularly useful to upload archive files to a backup
 server. For instance, in the script
 
-```{.liquidsoap include="liq/output.file5.liq" from=2}
+```{.liquidsoap include="liq/output.file5.liq" from=3}
 ```
 
 the function `on_file` is called each time an archive file is created. Here, we
@@ -3866,18 +3866,18 @@ The parameters for `%mp3.fxp` are
 
 For instance, constant 128 kbps bitrate encoding is achieved with
 
-```{.liquidsoap include="liq/encoder-mp3-1.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-mp3-1.liq" from=3 to=-1}
 ```
 
 Variable bitrate with quality 7 and samplerate of 22050 Hz is
 
-```{.liquidsoap include="liq/encoder-mp3-2.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-mp3-2.liq" from=3 to=-1}
 ```
 
 Average bitrate with mean of 128 kbps, maximun bitrate 192 kbps and ID3v2 tags
 is
 
-```{.liquidsoap include="liq/encoder-mp3-3.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-mp3-3.liq" from=3 to=-1}
 ```
 
 <!--
@@ -3888,7 +3888,7 @@ is its default value.
 
 Fixed-point encoding in stereo at 44100 Hz at 128 kbps is
 
-```{.liquidsoap include="liq/encoder-mp3-4.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-mp3-4.liq" from=3 to=-1}
 ```
 
 ### Wav
@@ -3908,7 +3908,7 @@ rather for archiving. The parameters are
   
 For instance,
 
-```{.liquidsoap include="liq/encoder-wav.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-wav.liq" from=3 to=-1}
 ```
 
 Because Liquidsoap encodes a possibly infinite stream, there is no way to know
@@ -3926,12 +3926,12 @@ streams. The currently supported encoders for the streams themselves are Opus,
 Vorbis, Speex and FLAC for audio, and Theora for video. For instance, we can
 encode an opus stream in an ogg container with the encoder
 
-```{.liquidsoap include="liq/encoder-ogg-1.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ogg-1.liq" from=3 to=-1}
 ```
 
 For convenience, it is possible to simply write
 
-```{.liquidsoap include="liq/encoder-ogg-2.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ogg-2.liq" from=3 to=-1}
 ```
 
 instead of `%ogg(%opus)`, and similarly for other encoders. All ogg encoders
@@ -3939,7 +3939,7 @@ have a `bytes_per_page` parameter, which can be used to try to limit ogg logical
 pages size, in bytes: this is the minimal amount of data which has to be read
 contiguously. For instance,
 
-```{.liquidsoap include="liq/encoder-ogg-3.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ogg-3.liq" from=3 to=-1}
 ```
 
 The usual value is between 4 kB and 8 kB.
@@ -3991,7 +3991,7 @@ The encoder is named `%opus` and its parameters are
 More information about the parameters can be found in the [opus
 documentation](http://www.opus-codec.org/docs/). A typical encoder would be
 
-```{.liquidsoap include="liq/encoder-opus.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-opus.liq" from=3 to=-1}
 ```
 
 #### Ogg/Vorbis
@@ -4027,17 +4027,17 @@ The parameters specific to `%vorbis.cbr` are
 
 For instance, a variable bitrate encoding can be achieved with
 
-```{.liquidsoap include="liq/encoder-vorbis-vbr.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-vorbis-vbr.liq" from=3 to=-1}
 ```
 
 an average bitrate encoding with
 
-```{.liquidsoap include="liq/encoder-vorbis-abr.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-vorbis-abr.liq" from=3 to=-1}
 ```
 
 and a constant bitrate encoding with
 
-```{.liquidsoap include="liq/encoder-vorbis-cbr.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-vorbis-cbr.liq" from=3 to=-1}
 ```
 
 #### Ogg/Speex
@@ -4095,7 +4095,7 @@ The parameters are
   
 For instance,
   
-```{.liquidsoap include="liq/encoder-flac.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-flac.liq" from=3 to=-1}
 ```
 
 A typical compression achieves around 75% of the original size for a rock song
@@ -4134,7 +4134,7 @@ More information about the meaning of those parameters can be found in the
 base](http://wiki.hydrogenaud.io/index.php?title=Fraunhofer_FDK_AAC). For
 instance,
 
-```{.liquidsoap include="liq/encoder-fdkaac.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-fdkaac.liq" from=3 to=-1}
 ```
 
 ### FFmpeg {#sec:ffmpeg-encoder}
@@ -4179,7 +4179,7 @@ the instantiation of the encoder.
 For instance, we can encode in AAC using the MPEG-TS muxer and the FDK AAC
 encoder, at 22050 Hz with
 
-```{.liquidsoap include="liq/encoder-ffmpeg-fdkaac.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-fdkaac.liq" from=3 to=-1}
 ```
 
 The profile `aac_he_v2` we use here stands for _high-efficiency_ version 2 and
@@ -4194,31 +4194,31 @@ is adapted for encoding at low bitrates. Here is a list of profiles you can use
 
 We can encode in AAC in variable bitrate with
 
-```{.liquidsoap include="liq/encoder-ffmpeg-fdkaac.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-fdkaac.liq" from=3 to=-1}
 ```
 
 where `vbr` specifies the quality between 1 (the lowest quality and bitrate) and 5
 (the highest quality and bitrate). We can encode mp3 at constant bitrate of 160 kbps
 with
 
-```{.liquidsoap include="liq/encoder-ffmpeg-mp3.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-mp3.liq" from=3 to=-1}
 ```
 
 We can encode mp3 in variable bitrate quality 4 with
 
-```{.liquidsoap include="liq/encoder-ffmpeg-mp3-2.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-mp3-2.liq" from=3 to=-1}
 ```
 
 where quality ranges from 0 (the highest quality, 245 kbps average bitrate) to 9
 (the lowest quality, 65 kbps average bitrate). We can encode mp3 in variable bitrate
 with 160 kbps average bitrate with
 
-```{.liquidsoap include="liq/encoder-ffmpeg-mp3-3.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-mp3-3.liq" from=3 to=-1}
 ```
 
 An encoding in Ogg/Opus with default parameters can be achieved with
 
-```{.liquidsoap include="liq/encoder-ffmpeg-opus.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-opus.liq" from=3 to=-1}
 ```
 
 Beware that the codec is `libopus` (not `opus` which is for standalone opus) and
@@ -4339,7 +4339,7 @@ format, by multiple outputs. For instance, in the following script, we have a
 `radio` source that we want to encode in mp3 and output in Icecast, in HLS and
 in a file:
 
-```{.liquidsoap include="liq/multiple-encoders.liq" from=2}
+```{.liquidsoap include="liq/multiple-encoders.liq" from=3}
 ```
 
 Because there are three outputs with `%mp3` format, Liquidsoap will encode the
@@ -4351,7 +4351,7 @@ and send the result to Icecast, HLS and the file.
 The `%mp3` encoder does not support this, but fortunately the FFmpeg encoder
 does. Recall that we can encode in mp3 using this encoder as follows:
 
-```{.liquidsoap include="liq/multiple-encoders2.liq" from=2}
+```{.liquidsoap include="liq/multiple-encoders2.liq" from=3}
 ```
 
 For now, we have not gained much: we are still encoding three times, using
@@ -4381,7 +4381,7 @@ pass on the encoded audio. Concretely, the following script will encode the
 `radio` source once in mp3, and then broadcast it using Icecast, HLS and file
 outputs:
 
-```{.liquidsoap include="liq/multiple-encoders3.liq" from=2}
+```{.liquidsoap include="liq/multiple-encoders3.liq" from=3}
 ```
 
 For technical reasons, the output of `ffmpeg.encode.audio` is always
@@ -4435,7 +4435,7 @@ The parameters of the `%external` encoder are
 For instance, we can encode in mp3 format using the `lame` binary with the
 encoder
 
-```{.liquidsoap include="liq/encoder-external.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-external.liq" from=3 to=-1}
 ```
 
 Videos can also be encoded by external programs, by passing the flag
@@ -4443,7 +4443,7 @@ Videos can also be encoded by external programs, by passing the flag
 the standard input. For instance, a compressed Matroska file (with H.264 video
 and mp3 audio) can be produced using the `ffmpeg` binary with
 
-```{.liquidsoap include="liq/encoder-external2.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-external2.liq" from=3 to=-1}
 ```
 
 Interacting with other programs {#sec:interaction}
@@ -4851,7 +4851,7 @@ to stop calling the function when the file is modified. For instance,
 As another example, we could store the volume to be applied to our `radio`
 stream in a file named `volume` as follows:
 
-```{.liquidsoap include="liq/file.watch-volume.liq" from=2 to=-1}
+```{.liquidsoap include="liq/file.watch-volume.liq" from=2 to=-2}
 ```
 
 although this is more easily achieved using the `file.getter.float` function, as
@@ -5131,7 +5131,7 @@ that we want to be able to switch between them whenever we want by typing the
 command "`select rap`", "`select rock`" or "`select techno`" on the telnet. This
 can be achieved as follows:
 
-```{.liquidsoap include="liq/server.register.liq" from=2}
+```{.liquidsoap include="liq/server.register.liq" from=5}
 ```
 
 After enabling the telnet, we declare a reference `selected` to a string
@@ -5415,7 +5415,7 @@ returning a message.
 The contents we serve might also depend on values in the script. For instance,
 the following script shows the metadata of our `radio` source encoded in JSON:
 
-```{.liquidsoap include="liq/harbor.http.register-last-track.liq" from=2 to=-1}
+```{.liquidsoap include="liq/harbor.http.register-last-track.liq" from=2 to=-2}
 ```
 
 We begin by declaring a reference `last_metadata` which contains the metadata
@@ -5462,7 +5462,7 @@ ampersand (`&`) and passed in the form `name=value`. It should also be noted
 that an URL uses a particular, standardized, coding, where `%20` represents a
 space. This can be achieved as follows:\index{queue}\indexop{request.queue}
 
-```{.liquidsoap include="liq/harbor.http.register-play.liq" from=1 to=-1}
+```{.liquidsoap include="liq/harbor.http.register-play.liq" from=1 to=-3}
 ```
 
 We begin by declaring that our radio consists of a requests queue with a
@@ -5494,7 +5494,7 @@ http://localhost:8000/play?artist=Charles%20Aznavour&title=La%20bohème
 sets the current metadata of the `radio` source accordingly (the artist will be
 "Charles Aznavour" and the title "La bohème"):\indexop{insert\_metadata}
 
-```{.liquidsoap include="liq/harbor.http.register-set-metadata.liq" from=2 to=-1}
+```{.liquidsoap include="liq/harbor.http.register-set-metadata.liq" from=2 to=-3}
 ```
 
 This kind of mechanism can be handy when using inputs such as websockets, which
@@ -5506,7 +5506,7 @@ In [an earlier section](#sec:registering-commands), we have seen how to switch
 between a `rock`, a `rap` and a `techno` source using telnet commands. Of
 course, this can also be achieved with a web service as follows:\indexop{switch}
 
-```{.liquidsoap include="liq/harbor.http.register-switch.liq" from=2 to=-1}
+```{.liquidsoap include="liq/harbor.http.register-switch.liq" from=5 to=-1}
 ```
 
 Using this script, we can switch to the rap source by going to the url
@@ -5699,13 +5699,13 @@ which is dedicated to this task. Suppose that we have two sources named `radio1`
 and `radio2` for which we want to export the RMS. We first need to declare that
 we want to use Prometheus and declare the port we want to run the server on:
 
-```{.liquidsoap include="liq/prometheus.liq" from=2 to=3}
+```{.liquidsoap include="liq/prometheus.liq" from=3 to=4}
 ```
 
 We are then going to declare a new kind of metric (here the RMS) using the
 function `prometheus.gauge` function:
 
-```{.liquidsoap include="liq/prometheus.liq" from=4 to=5}
+```{.liquidsoap include="liq/prometheus.liq" from=5 to=6}
 ```
 
 The type of `prometheus.gauge` is
@@ -5726,12 +5726,12 @@ this means that
 
 In our case, we create two instances of the RMS gauge, one for each source:
 
-```{.liquidsoap include="liq/prometheus.liq" from=6 to=7}
+```{.liquidsoap include="liq/prometheus.liq" from=7 to=8}
 ```
 
 Finally, we set the value of the gauges at regular intervals:
 
-```{.liquidsoap include="liq/prometheus.liq" from=8 to=11}
+```{.liquidsoap include="liq/prometheus.liq" from=9 to=12}
 ```
 
 We also provide two variants of the function `prometheus.gauge`:
@@ -5935,7 +5935,7 @@ instance, suppose that you have a source `s2` which is in a fallback and that
 you want to skip it every 10 seconds when it is playing (and not skip when it is
 not playing). This is achieved with
 
-```{.liquidsoap include="liq/test-source.run.liq" from=2}
+```{.liquidsoap include="liq/test-source.run.liq" from=3}
 ```
 
 In this example, the internal time of the source `s2` will not advance when it
