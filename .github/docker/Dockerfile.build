@@ -1,4 +1,4 @@
-FROM ghcr.io/savonet/liquidsoap:ci-build-main_amd64-ocaml4.14.2
+FROM ghcr.io/savonet/liquidsoap:ci-build-main_amd64-ocaml5.5.0
 
 USER root
 
