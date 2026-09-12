@@ -59,7 +59,7 @@ channels, and also MIDI channels (there is limited support for sound synthesis).
 
 ### Execution model
 
-When running a Liquidsoap program, the compiler goes through these four phases:
+When running a Liquidsoap program, the compiler goes through these five phases:
 
 1. _lexical analysis_ and _parsing_: Liquidsoap ingests your program and ensures
    that its syntax follows the rules,
@@ -275,24 +275,43 @@ architecture, they range from -4611686018427387904 to 4611686018427387903.
 The _floating point numbers_, such as `2.45`, are of type
 `float`\indexop{float}, and are in double precision, meaning that
 they are always stored on 64 bits. We always write a decimal point in them,
-so that `3` and `3.` are not the same thing: the former is an integer and the
-latter is a float. This is a source of errors for beginners, but is necessary for
-typing to work well. For instance, if we try to execute a program containing the
-instruction
+so that `3` and `3.` are not the same thing: `3` is an integer and `3.` is a
+float. Liquidsoap is lenient about the dot. Whenever the typechecker already
+knows that a float is expected and we write an integer, Liquidsoap converts the
+integer to a float for us. For instance, the frequency argument of `sine` is a
+float, and the script
 
-```{.liquidsoap include="liq/bad/sine.liq" from=0 to=0}
+```{.liquidsoap include="liq/sine.liq" from=0 to=0}
 ```
 
-it will raise the error
+is accepted: the `500` is read as `500.`. We call this an _implicit
+conversion_\index{implicit conversion}.
+
+The implicit conversion applies only where Liquidsoap already expects a float.
+When Liquidsoap has to guess the type from the values we wrote, the conversion
+does not apply and the two kinds of numbers clash. The type of a conditional is
+guessed this way, so the script
+
+```{.liquidsoap include="liq/bad/floats.liq" from=0 to=0}
+```
+
+is rejected with
 
 ```
-At line 1, char 9:
-Error 5: this value has type int but it should be a subtype of float
+At bad/floats.liq, line 1, char 25:
+x = if true then 1. else 2 end
+
+Error 5: this value has type
+  float
+but it should be a subtype of
+  int (inferred at bad/floats.liq, line 1, char 17-19)
 ```
 
-which means that the sine function expects a float as argument, but an integer
-is provided. The fix here obviously consists in replacing "`500`" by "`500.`"
-(beware of the dot).
+The error says that one branch is a float and the other one is an integer. The
+same clash occurs in a list mixing integers and floats, such as `[1., 2,
+3.]`{.liquidsoap}, and in a function returning a float in one case and an
+integer in another. The fix consists in writing the decimal point everywhere:
+"`2`" becomes "`2.`" (beware of the dot).
 
 The usual arithmetic operations are available (`+`, `-`, `*`, `/`), and work for
 both integers and floats. For floats, traditional arithmetic functions are
@@ -386,12 +405,22 @@ print("The number #{random.float()} is random.")
 will print `The number 0.663455738438 is random.` (at least it did last time I
 tried).
 
+Any expression can be interpolated, including an expression which itself
+contains a string. For instance, if `m` is a list of metadata, we can print the
+title of the song with
+
+```{.liquidsoap include="liq/interpolation-metadata.liq" from=2}
+```
+
+The quotes around `title` do not close the surrounding string: Liquidsoap reads
+the expression between `#{` and `}` on its own.
+
 #### Raw strings {#sec:raw-strings}
 
 \index{string!raw}
 
-When a string should be taken verbatim — without any interpolation or escape
-processing — you should use the _raw string_ syntax `{|...|}`\index{string!raw}:
+When a string should be taken verbatim, without any interpolation or escape
+processing, you should use the _raw string_ syntax `{|...|}`\index{string!raw}:
 
 ```liquidsoap
 print({|no interpolation: #{expr} here|})
@@ -459,8 +488,11 @@ other useful string-related function are
   ```
 - `string.contains`: test whether a string contains (or begins or ends with) a
   particular substring,
-- `string.quote`: escape shell special characters (you should always use this
-  when passing strings to external programs).
+- `string.quote`: quote a string following the JSON and JavaScript escaping
+  rules,
+- `process.quote`\indexop{process.quote}: escape the characters which are
+  special for the shell (you should always use `process.quote` when passing a
+  string to an external program).
 
 #### Regular expressions {#sec:regexp}
 
@@ -551,20 +583,23 @@ instance,
 will assign `"A"` or `"B"` to `y` depending on whether `x` is below 3 or
 not. The two branches of a conditional should always have the same return type:
 
-```liquidsoap
-x = if 1 == 2 then "A" else 5 end
+```{.liquidsoap include="liq/bad/cond.liq" from=0 to=0}
 ```
 
 will result in
 
 ```
-At line 1, char 19-21:
-Error 5: this value has type (...) -> string
-but it should be a subtype of (...) -> int
+At bad/cond.liq, line 1, char 28:
+x = if 1 == 2 then "A" else 5 end
+
+Error 5: this value has type
+  int
+but it should be a subtype of
+  string (inferred at bad/cond.liq, line 1, char 19-22)
 ```
 
-meaning that `"A"` is a string but is expected to be an integer because the
-second branch returns an integer, and the two should be of same nature. The
+meaning that `5` is an integer but is expected to be a string because the first
+branch returns a string, and the two branches should be of same nature. The
 `else` branch is optional, in which case the `then` branch should be of type
 `unit`:
 
@@ -631,8 +666,11 @@ However, the code
 gives rise to the following warning
 
 ```
-At line 2, char 2-4:
-Warning 3: This expression should have type unit.
+At bad/fun.liq, line 2, char 2-5:
+  3+5
+
+Warning 3: This expression is returning a value that is ignored. Do you
+need to use its return value? If not, you can use the `ignore()` operator.
 ```
 
 The reason is that this function is first computing the result of 3+5 and then
@@ -864,6 +902,30 @@ cannot be changed (unless we explicitly require this by using references, see
 below), so the above program does not modify the value of `n`, it is simply that
 a new `n` is defined.
 
+Masking a variable of our own, as we just did with `n`, is perfectly fine.
+Masking a variable which the standard library has already defined is generally a
+mistake, because the rest of the script can no longer reach the original
+function. Liquidsoap warns us when this happens. For instance, the standard
+library defines `time`\indexop{time}, so that the script
+
+```{.liquidsoap include="liq/masking-time.liq"}
+```
+
+prints `3` and also displays
+
+```
+At masking-time.liq, line 1, char 0-8:
+time = 3
+
+Warning 6: Top-level variable time is overridden!
+```
+
+The warning speaks of a _top-level variable_\index{variable!top-level} because
+the masked name comes from the top level of the standard library. The place
+where we mask the name does not matter: a local variable or a function argument
+named `time` produces the same warning. Liquidsoap issues the warning once per
+name, and never for the names we defined ourselves.
+
 There is an alternative syntax for declaring variables which is\indexop{def}
 
 ```liquidsoap
@@ -901,7 +963,9 @@ _unused_ variable\index{variable!unused} is found, since it is likely to be a bu
 Liquidsoap will output
 
 ```
-Line 1, character 1:
+At bad/unused.liq, line 1, char 0-9:
+n = 2 + 2
+
 Warning 4: Unused variable n
 ```
 
@@ -934,13 +998,13 @@ declares that `r` is a reference which contains `5` as initial value. Since `5`
 is an integer (of type `int`), the type of the reference `r` will be
 
 ```
-(() -> int).{set : (int) -> unit}
+(() -> int).{exchange : (int) -> int, set : (int) -> unit}
 ```
 
 It might be difficult for you to read right now (the syntax for curly brackets
 will be explained in [functions' section](#sec:functions) and [records'
 section](#sec:records) below), but all you need to know is that it indicates
-that, on such a reference, two operations are available:
+that, on such a reference, three operations are available:
 
 - one can obtain the value of the reference `r` by writing `r()`, for instance
 
@@ -959,32 +1023,52 @@ that, on such a reference, two operations are available:
   
   will assign the value 2 to `r`.
 
+- one can replace the value of the reference and read the previous one in a
+  single step, with the method `exchange`\indexop{exchange}, e.g.
+
+  ```{.liquidsoap include="liq/ref-exchange.liq" from=2 to=2}
+  ```
+
+  will assign the value 7 to `r` and give to `old` the value `r` had before.
+  A single step matters when several threads write the same reference, see
+  [there](#sec:shared-state).
+
 The behavior of references can be illustrated by the following simple
 interactive session:
 
 ```
 # r = ref(5);;
-r : (() -> int).{set : (int) -> unit} = <fun>.{set=<fun>}
+r : (() -> int).{exchange : (int) -> int, set : (int) -> unit} =
+  fun () -> (builtin).{exchange=fun (_) -> (builtin), set=fun (_) -> (builtin)}
 # r();;
 - : int = 5
 # r := 2;;
 - : unit = ()
 # r();;
 - : int = 2
+# r.exchange(7);;
+- : int = 2
+# r();;
+- : int = 7
 ```
 
 Note that the type of a reference is fixed: once `r` is declared to be a
 reference to an integer, as above, one can only put integers into it, so that
 the script
 
-```{.liquidsoap include="liq/bad/ref.liq" from=1}
+```{.liquidsoap include="liq/bad/ref.liq" from=0}
 ```
 
 will raise the error
 
 ```
-Error 5: this value has type string
-but it should be a subtype of int
+At bad/ref.liq, line 2, char 5-12:
+r := "hello"
+
+Error 5: this value has type
+  string
+but it should be a subtype of
+  int (inferred at bad/ref.liq, line 1, char 8)
 ```
 
 which can be explained as follows. On the first line, the declaration `r =
@@ -1083,17 +1167,22 @@ the variable `y` is not available after the definition.
 
 A typical use of functions in Liquidsoap is for _handlers_\index{handler}, which are functions
 to be called when a particular event occurs, specifying the actions to be taken
-when it occurs. For instance, the `source.on_metadata`\indexop{source.on\_metadata} operator allows
-registering a handler when metadata occurs in a stream. Its type is
+when it occurs. A source carries a method for each event it can report, and we
+register a handler by calling that method (methods are detailed in [records'
+section](#sec:records) below). For instance, the method
+`on_metadata`\indexop{on\_metadata} registers a handler to be called when
+metadata occurs in the stream. Its type is
 
 ```
-(source('a), (([string * string]) -> unit)) -> unit
+(synchronous : bool, (([string * string]) -> unit)) -> {release : () -> unit}
 ```
 
 and it thus takes two arguments:
 
-- the source, of type `source('a)`, see [below](#sec:source-type), whose
-  metadata are to be watched,
+- `synchronous`, a boolean, which has no default value: we always give it. With
+  `synchronous=true`, the handler runs in the streaming thread and should return
+  quickly. With `synchronous=false`, the handler runs as a separate task and can
+  take its time,
 - the handler, which is a function of type
 
   ```
@@ -1102,6 +1191,10 @@ and it thus takes two arguments:
 
   which takes as argument an association list (of type `[string * string]`)
   encoding the metadata and returns nothing meaningful (`unit`).
+
+The result of the registration is a record with one method, `release`\indexop{release}:
+calling `release()`{.liquidsoap} unregisters the handler. A script which
+registers a handler once and keeps it forever can ignore that record.
 
 When some metadata occur in the source, the handler is called with the metadata
 as argument. For instance, we can print the title of every song being played on
@@ -1112,15 +1205,14 @@ our radio (a source named `radio`) with
 
 The handler is here the function `handle_metadata`, which prints the field
 associated to `"title"` in the association list given in the argument `m`.
+Printing a line is quick, so we register it with `synchronous=true`.
 
-Other useful operators allow the registration of handlers for the following
-situations:
-
-- `blank.detect`: when a source is streaming blank (no sound has been
-  streamed for some period of time),
-- `source.on_track`: when a new track is played,
-- `source.on_end`: when a track is about to end,
-- `on_start` and `on_shutdown`: when Liquidsoap is starting or stopping.
+The other events of a source are watched in the same way, with the methods
+`on_track` (a new track is played), `on_position` (a given position in the
+current track is reached) and `on_shutdown` (the source stops). A few handlers
+are still passed to operators instead: `blank.detect` calls ours when a source
+has been streaming blank for some period of time, and `on_start` and
+`on_shutdown` call ours when Liquidsoap is starting or stopping.
 
 Many other operators also take more specific handlers as arguments. For
 instance, the operator `input.harbor`, which allows users to connect to a
@@ -1276,31 +1368,62 @@ corresponding label with "`?`"\indexop{?}, so that the type of the above functio
 (samples : float, ?duration : float) -> float
 ```
 
-<!--- \TODO{explain that non-optional arguments can have default values too} -->
+Unlabeled arguments can have a default value too, and they become optional in
+the same way. For instance,
+
+```
+# def f(x=3) = x + 1 end;;
+f : (?int) -> int = fun (x=3) -> ...
+```
+
+defines a function which we can call as `f()`{.liquidsoap}, giving 4, or as
+`f(7)`{.liquidsoap}, giving 8. The "`?`" in front of `int` marks the unlabeled
+argument as optional.
+
+Two more conveniences are available on labeled arguments. We can write the type
+of an argument next to it, which is handy when the inferred type is not the one
+we had in mind. We can also give the argument a label which differs from the
+name we use inside the function, by writing the label, a colon, then the name:
+
+```
+# def g(~request:r, ~(count:int)=1) = r ^ string(count) end;;
+g : (request : string, ?count : int) -> string =
+  fun (~request=r, ~count=1) -> ...
+```
+
+The caller passes `request` and `count`, and the body of `g` reads `r` and
+`count`. Renaming the label is useful when the natural label is already the name
+of something else, such as the `request`\indexop{request} module of the standard
+library.
 
 #### Actual examples
 
-As a more concrete example of labeled arguments, we can see that the
-type of the operator `output.youtube.live`, which outputs a video stream to
-YouTube\index{YouTube}, is
+As a more concrete example of labeled arguments, we can see that the type of the
+operator `output.youtube.live.rtmp`\indexop{output.youtube.live.rtmp}, which
+outputs a video stream to YouTube\index{YouTube}, is
 
 ```
-(?id : string, ?video_bitrate : int, ?audio_encoder : string, ?audio_bitrate : int, ?url : string, key : string, source) -> source
+(?id : string?, ?fallible : bool, ?start : bool, ?url : string,
+ key : string, encoder : format('a), source('a)) -> unit
 ```
 
-(we have only slightly simplified the type `source`, which will only be detailed
-in [a next section](#sec:source-type)). Even if we have not read the
-documentation of this function, we can still guess what it is doing:
+Even if we have not read the documentation of this function, we can still guess
+what it is doing:
 
-- there are 5 optional arguments that we should be able to ignore because they
+- there are 4 optional arguments that we should be able to ignore because they
   have reasonable default values (although we can guess the use of most of them
-  from the label, e.g. `video_bitrate` should specify the bitrate we want to
-  encode video, etc.),
+  from the label, e.g. `url` should be the address we send the stream to),
 - there is 1 mandatory argument which is labeled `key` of type `string`: it must
   be the secret key we need in order to broadcast on our YouTube account,
-- there is 1 mandatory argument, unlabeled, of type `source`: this is clearly
-  the source that we are going to broadcast to YouTube.
-  
+- there is 1 mandatory argument which is labeled `encoder`, of type
+  `format('a)`: it says in which format we want to encode the stream, see [a
+  next section](#sec:encoders),
+- there is 1 mandatory argument, unlabeled, of type `source('a)`: this is
+  clearly the source that we are going to broadcast to YouTube (the type
+  `source` is detailed in [a next section](#sec:source-type)),
+- the result is of type `unit`: an output consumes a source and gives back
+  nothing that we could plug into another operator.
+
 As we can see the types and labels of arguments already provide us with much
 information about the functions and prevent many mistakes.
 
@@ -1308,14 +1431,25 @@ If you want a more full-fledged example, have a look at the type of
 `output.icecast`:
 
 ```
-(?id : string, ?chunked : bool, ?connection_timeout : float, ?description : string, ?dumpfile : string, ?encoding : string, ?fallible : bool, ?format : string, ?genre : string, ?headers : [string * string], ?host : string, ?icy_id : int, ?icy_metadata : string, ?mount : string, ?name : string, ?on_connect : (() -> unit), ?on_disconnect : (() -> unit), ?on_error : ((string) -> float), ?on_start : (() -> unit), ?on_stop : (() -> unit), ?password : string, ?port : int, ?protocol : string, ?public : bool, ?start : bool, ?timeout : float, ?url : string, ?user : string, ?verb : string, format('a), source) -> source
+(?id : string?, ?chunked : bool, ?connection_timeout : float,
+ ?description : string?, ?dumpfile : string?, ?encoding : string?,
+ ?fallible : bool, ?format : string, ?genre : string?,
+ ?headers : [string * string], ?host : string, ?icy_metadata : [string],
+ ?icy_song : (([string * string]) -> string?), ?method : string,
+ mount : string, ?name : string?, ?password : string, ?port : int,
+ ?prefer_address : string?, ?public : bool, ?register_telnet : bool,
+ ?send_icy_metadata : bool?, ?send_last_metadata_on_connect : bool,
+ ?start : bool, ?timeout : float, ?transport : http_transport,
+ ?url : string?, ?user : string?, format('a), source('a)) -> unit
 ```
 
-Although the function has 31 arguments, it is still usable because most of them
-are optional so that they are not usually specified. In passing, we recognize
-some of the concepts introduced earlier: the headers (`header` parameter) are
-coded as an association list, and there are quite few handlers (`on_connect`,
-`on_disconnect`, etc.).
+The function has 30 arguments and 27 of them are optional, so that it stays
+usable: a typical call gives `mount`, the encoder and the source, and leaves
+the rest alone. In passing, we recognize some of the concepts introduced
+earlier: the headers (`headers` parameter) are coded as an association list,
+the `icy_song` parameter takes a function which builds a string from the
+metadata, and several parameters are nullable, such as `name` of type
+`string?`.
 
 ### Polymorphism
 
@@ -1492,7 +1626,7 @@ The type of `amplify` is thus actually
 
 and the operator will regularly call the volume function in order to have the
 current value for the volume before applying it. To be precise, it is actually
-called before each frame, which means roughly every 0.04 second. Let's see how
+called before each frame, which means roughly every 0.02 second. Let's see how
 we can use this in scripts. We can, of course, still apply a constant factor
 with
 
@@ -1592,19 +1726,21 @@ constructions. The standard library defines a function
 `metadata.getter.float`\index{metadata!getter}, whose type is
 
 ```
-(float, string, source('a)) -> source('a) * (() -> float)
+(float, string, source('a)) -> () -> float
 ```
 
-which creates a float getter with given initial value (the first argument),
-which can be updated by reading a given metadata (the second argument) on a
-given source (the third argument). Its code is
+We have simplified the type here: Liquidsoap prints a more general one, because
+the function accepts any value carrying an `on_metadata` method, not only a
+source. The function creates a float getter with given initial value (the first
+argument), which can be updated by reading a given metadata (the second
+argument) on a given source (the third argument). Its code is
 
 ```{.liquidsoap include="liq/metadata-getter.liq"}
 ```
 
-You can see that it create a reference `x`, which contains the current value,
+You can see that it creates a reference `x`, which contains the current value,
 and registers a handler for metadata, which updates the value when the metadata
-is present, i.e. `m[metadata]` is different from the empty string `""`, which is
+is present, i.e. `m[name]` is different from the empty string `""`, which is
 the default value. Given a `radio` source which contains metadata labeled
 "`liq_amplify`", we can actually change the volume of the source according to the
 metadata with
@@ -1640,6 +1776,17 @@ functions:
 - `getter.get`, of type `({'a}) -> 'a`, retrieves the current value of a getter,
 - `getter.function`, of type `({'a}) -> () -> 'a`, creates a function from a
   getter.
+
+The notation `{float}` belongs to the types Liquidsoap prints. When we write a
+type ourselves, in order to annotate an argument for instance, we spell the same
+type `getter(float)`\indexop{getter}, because the curly brackets are already
+taken by the shorthand for functions with no argument:
+
+```{.liquidsoap include="liq/getter-annotation.liq" from=1 to=3}
+```
+
+Our function `double` now accepts both `double(1.5)`{.liquidsoap} and
+`double({1.5})`{.liquidsoap}.
 
 ### Recursive functions
 
@@ -1975,18 +2122,19 @@ You should now be able to fully understand the type given to references. We
 recall for instance that the type of `ref(5)` is
 
 ```
-(() -> int).{set : (int) -> unit}
+(() -> int).{exchange : (int) -> int, set : (int) -> unit}
 ```
 
 This means that such a reference consists of a function of type `() -> int`,
 taking no argument and returning an integer (the current value of the
-reference), together with a method `set` of type `(int) -> unit`, which takes as
-argument an integer (and, when called, modifies the value of the reference
-according to the argument). Since a reference `r` can be considered as a
-function, this explains why we have been writing `r()` to get its value. In
-order to modify its value, say set it to 7, we can call the method `set` and
-write `r.set(7)`{.liquidsoap}. In fact, the syntax `r := 7`{.liquidsoap} is
-simply a shorthand for this.
+reference), together with two methods. The method `set`, of type
+`(int) -> unit`, takes as argument an integer and, when called, modifies the
+value of the reference according to the argument. The method `exchange`, of type
+`(int) -> int`, does the same and returns the previous value. Since a reference
+`r` can be considered as a function, this explains why we have been writing
+`r()` to get its value. In order to modify its value, say set it to 7, we can
+call the method `set` and write `r.set(7)`{.liquidsoap}. In fact, the syntax
+`r := 7`{.liquidsoap} is simply a shorthand for this.
 
 Patterns {#sec:patterns}
 --------
@@ -2095,6 +2243,33 @@ end
 # f : (['a]) -> 'a
 ```
 
+### Patterns without `let`
+
+The `let`{.liquidsoap} keyword is optional in front of a tuple pattern or a list
+pattern, so that a definition which destructures a value reads like any other
+definition. The same position also accepts a type annotation:
+
+```{.liquidsoap include="liq/pattern-no-let.liq" from=1 to=3}
+```
+
+Record and module patterns are the exception, and they keep their
+`let`{.liquidsoap}. The reason is that Liquidsoap reads an opening curly bracket
+as the beginning of a function with no argument, so that
+
+```{.liquidsoap include="liq/bad/pattern-record.liq" from=0 to=0}
+```
+
+is rejected with
+
+```
+At bad/pattern-record.liq, line 1, char 6:
+{title, artist} = {title = "Sing", artist = "Travis"}
+
+Error 2: Parse error
+```
+
+Writing `let {title, artist} = ...`{.liquidsoap} fixes it.
+
 Advanced values
 ---------------
 
@@ -2117,12 +2292,18 @@ the program will exit printing
 
 ```
 Error 14: Uncaught runtime error:
-type: not_found, message: "no default value for list.hd"
+type: not_found,
+message: "no default value for list.hd",
+stack: at .../libs/list.liq, line 23 char 11 - line 26 char 9,
+...
+at bad/list.hd-empty.liq, line 2, char 0-11
 ```
 
 This means that the error named "`not_found`"\indexop{not\_found} was raised, with a message
 explaining that the function did not have a reasonable default value of the head
-to provide.
+to provide. The stack below lists the calls which led to the error, starting
+inside the standard library and ending at the line of our script, here the call
+to `list.hd`.
 
 In order to avoid this, one can _catch_ exceptions with the syntax
 
@@ -2148,17 +2329,10 @@ we could equivalently write
 
 which states that we should return `0` if the call to `list.hd` raises an error.
 
-The name and message associated to an error can respectively be retrieved using
-the functions `error.kind` and `error.message`, e.g. we can write
-
-```liquidsoap
-try
-  ...
-catch err do
-  print("the error #{error.kind(err)} was raised")
-  print("the error message is #{error.message(err)}")
-end
-```
+The name and message associated to an error are carried by the error itself, as
+the methods `kind` and `message`, so that we write `err.kind`{.liquidsoap} and
+`err.message`{.liquidsoap}. The functions `error.kind`\indexop{error.kind} and
+`error.message`\indexop{error.message} give the same two values.
 
 Typically, when reading from or writing to a file, errors will be raised when a
 problem occurs (such as reading from a non-existent file or writing a file in a
@@ -2168,17 +2342,16 @@ corresponding message:
 ```{.liquidsoap include="liq/file.write-bad.liq" from=2}
 ```
 
-Specific errors can be catched with the syntax
+We can also restrict the catch to some errors, by writing a colon and the list
+of the errors we want to handle. The other errors keep propagating. A
+`finally`\indexop{finally} block can be added at the end, and Liquidsoap runs it
+in both cases, whether an error was raised or not, which is where we close a
+file or release a resource:
 
-```liquidsoap
-try
-  ...
-catch err in l do
-  ...
-end
+```{.liquidsoap include="liq/list.hd-catch-kind.liq" from=1}
 ```
 
-where `l` is a list of error names that we want to handle here.
+This prints the two messages and gives `0` to `x`.
 
 Errors can be raised from Liquidsoap with the function `error.raise`, which
 takes as arguments the error to raise and the error message. For instance:
@@ -2308,18 +2481,19 @@ liquidsoap --list-settings
 For instance, the documentation about the `frame.duration` setting is
 
 ```
-### Tentative frame duration in seconds
+### Frame duration in seconds
 
-Audio samplerate and video frame rate constrain the possible frame
-durations.This setting is used as a hint for the duration, when
-'frame.audio.size'is not provided.Tweaking frame duration is tricky but
-needed when dealing with latencyor getting soundcard I/O correctly
-synchronized with liquidsoap.
+Set frame duration, in seconds.This setting control the latency of the
+streaming system. When set toa smaller value, latency is reduced at the
+expense of more dataconsumption. When set to a larger value, CPU and memory
+usage shouldgo down but latency should increase.Tweaking frame duration is
+tricky but needed when dealing with latencyor getting soundcard I/O
+correctly synchronized with liquidsoap.
 
-settings.frame.duration := 0.04
+settings.frame.duration := 0.02
 ```
 
-The value `0.04` at the bottom indicates the default value.
+The value `0.02` at the bottom indicates the default value.
 
 ### Including other files
 
@@ -2415,6 +2589,37 @@ Most expected type conversion function are implemented with names of the form
 print(1 + int_of_string("2"))
 ```
 
+### Structured data
+
+Sooner or later our script has to read data written by somebody else: the
+settings of a playout system, the list of the shows of the week, the answer of a
+web service. The usual formats for such data are JSON, YAML\index{YAML} and
+XML\index{XML}, and Liquidsoap reads the three of them. JSON is detailed in [the
+next chapter](#chap:workflow), YAML and XML follow the same pattern. All three
+are always available, whichever optional libraries Liquidsoap was compiled with.
+
+The parsing is driven by the type we ask for. We write `let
+yaml.parse`\indexop{yaml.parse} (resp. `let xml.parse`\indexop{xml.parse}),
+then a variable annotated with the shape we expect, and Liquidsoap fills it in:
+
+```{.liquidsoap include="liq/yaml.parse.liq" from=1}
+```
+
+An integer in the data is parsed as an `int` and widens to a `float` when we ask
+for a float, so that `volume: 1` would be accepted above. Liquidsoap embeds its
+own YAML parser, which covers the subset of YAML that people write by hand: a
+file using the less common parts of the specification is refused. The other
+direction is `yaml.stringify`\indexop{yaml.stringify}, which turns any value
+into YAML.
+
+When the data we keep grows beyond a file we rewrite entirely, Liquidsoap can
+talk to an SQLite database\index{SQLite} with the `sqlite`\indexop{sqlite}
+function, which takes the path of the database file and returns methods to
+create tables, insert rows and query them:
+
+```{.liquidsoap include="liq/sqlite-playlog.liq" from=1}
+```
+
 ### Files
 
 The\index{file} whole contents of a file can be obtained with the function `file.contents`:
@@ -2488,6 +2693,15 @@ immediately stopped with the `exit`\indexop{exit} function, which allows specify
 code (the convention is that a non-zero code means that an error occurred). The
 current script can also be restarted using `restart`\indexop{restart}.
 
+The path of the script being run is given by
+`liquidsoap.script.path`\indexop{liquidsoap.script.path}, of type `string?`. The
+value is `null` when there is no script file, for instance in an interactive
+session. Combined with `path.dirname`, it lets a script find the files sitting
+next to it, wherever we copy the whole directory:
+
+```{.liquidsoap include="liq/script-path.liq" from=1 to=2}
+```
+
 In order to execute other programs\index{process} from Liquidsoap, you can use the function
 `process.read` which executes a command and returns the text it wrote in the
 standard output. For instance, in the script
@@ -2525,12 +2739,22 @@ some user-contributed data is used). This is further detailed in
 
 The function `thread.run`\indexop{thread.run} can be used to run a function asynchronously in a _thread_, meaning
 that the function will be executed in parallel to the main program and will not
-block other computations if it takes time. It takes two optional arguments:
+block other computations if it takes time. It takes five optional arguments:
 
 - `delay`: if specified, the function will not be run immediately, but after the
 specified number of seconds,
 - `every`: if specified, the function will be run regularly, every given number
-of seconds.
+of seconds,
+- `fast`: `true` by default, states that the function returns quickly. Pass
+`fast=false` for a function which waits, such as one fetching a page over the
+internet, and Liquidsoap will run it with a lower priority than the resolution
+of requests,
+- `on_error`: a handler called with the error when the function raises one. When
+we pass `on_error`, the errors raised by the function are silenced unless the
+handler raises them again,
+- `domain`: the worker of the scheduler we want the function to run on, as
+reported by `runtime.domain()`\indexop{runtime.domain}. Every rerun stays on
+that worker.
 
 #### Phone ring
 
@@ -2543,7 +2767,8 @@ follows:
 
 Here, we amplify the sine by the contents of a reference `volume` (or, more
 precisely, by a getter which returns the value of the reference). Its value is
-switched between `0.` and `1.` every second by the function `change`.
+switched between `0.` and `1.` every second by the function `change`. The switch
+is wrapped in a call to `atomic`, which we explain [below](#sec:shared-state).
 
 #### Auto-gain control
 
@@ -2560,11 +2785,12 @@ Here, we have a source `pre` which we amplify by the value of the reference
 `volume` in order to define a source `post`. On both sources, the `lufs`
 function instructs that we should measure the LUFS\index{LUFS}, which value can be obtained
 by calling the `lufs` and `lufs_momentary` methods attached to the
-sources. Regularly (10 times per second), we run the function `adjust` which
-multiplies the volume by the coefficient needed to reach -14 LUFS (to be
-precise, we actually divide the distance to -14 by 20 in order not to change the
-volume too abruptly, and we constrain the volume in the interval [0.01,10] in
-order to keep sane values).
+sources. Regularly (10 times per second), we run the function `adjust`, which
+computes in `gain` the coefficient needed to reach -14 LUFS and multiplies the
+volume by it (to be precise, we actually divide the distance to -14 by 20 in
+order not to change the volume too abruptly, and we constrain the volume in the
+interval [0.01,10] in order to keep sane values). Here again, the update of
+`volume` is wrapped in a call to `atomic`, see [below](#sec:shared-state).
 
 Of course, in practice, you do not need to implement this by hand: the operator
 `normalize`\indexop{normalize} does this for you, and more efficiently than in the above
@@ -2605,16 +2831,39 @@ beginning of every hour: this is because, by default, `thread.when` waits for
 the condition to become false before executing the function again (this can be
 altered with the `changed` parameter of `thread.when`).
 
-<!--
-#### Mutexes
+#### Sharing state between threads {#sec:shared-state}
 
-In the case where two concurrent threads access a common resource at the same
-time (for instance, if they modify the same reference).
+The two examples above share a reference between the thread we started and the
+rest of the script. Liquidsoap runs script code on several cores at once, so the
+thread which runs `change` and the thread which reads `volume` to amplify the
+sine can be busy at the very same moment. Updating a reference from its own
+value, as we do in the phone example, is two operations: we read `volume`, then
+we write the new value. Another thread can read the same old value in between,
+and the two updates then produce one single change instead of two.
 
-\TODO{speak about mutexes}
+The `atomic`\indexop{atomic} function groups operations which must not be seen
+half-done. It takes a function with no argument, runs it and returns its value,
+and no other atomic section runs during that time:
 
-`thread.mutexify`
--->
+```{.liquidsoap include="liq/hanged-phone.liq" from=5 to=5}
+```
+
+Two rules apply inside an atomic section: never wait for another thread, and
+never call a method of a source. Waiting or calling a source method holds up
+every other atomic section for as long as the call lasts.
+
+When the group is exactly "read the value, then write a new one", the method
+`exchange`\indexop{exchange} of references does it in one operation, and we do
+not need a section at all. For instance, `n.exchange(0)`{.liquidsoap} empties a
+counter and gives us the count it held, with no chance of losing what another
+thread added in the meantime.
+
+Finally, several values which have to agree with each other are best kept in a
+record, itself held in a single reference. Writing the reference replaces all
+the fields at once, so no section is needed:
+
+```{.liquidsoap include="liq/shared-record.liq" from=1}
+```
 
 ### Time
 
@@ -2692,6 +2941,14 @@ DJ connects. We recall from [there](#sec:fallible) that a source can be made
 infallible with the `mksafe` operator or by using a fallback to an infallible
 source.
 
+When we write a type ourselves and the contents do not matter, we can write
+`source(_)`\indexop{source(\_)}. Any source is accepted where `source(_)` is
+expected, and each place is checked on its own, so that sources with different
+contents can sit in the same list:
+
+```{.liquidsoap include="liq/source-any.liq" from=1}
+```
+
 ### Encoders
 
 Some outputs need to send data encoded in some particular format. For instance,
@@ -2701,13 +2958,14 @@ specified by passing special parameters called _encoders_\index{encoder}. For in
 (simplified) type of `output.file` is
 
 ```
-(?id : string, format('a), string, source('a)) -> unit
+(?id : string?, format('a), {string}, source('a)) -> unit
 ```
 
 We see that it takes the `id` parameter (a string identifying the operator), an
-encoder (the type of encoders is `format(...)`), a string (the file where we
-should save data) and a source. This means that we can play our playlist and
-record it into an mp3 file as follows:
+encoder (the type of encoders is `format(...)`), a string getter (the file where
+we should save data, a getter so that we can change the name over time, for
+instance to start a new file every hour) and a source. This means that we can
+play our playlist and record it into an mp3 file as follows:
 
 ```{.liquidsoap include="liq/output.file.liq" from=1}
 ```
@@ -2838,22 +3096,34 @@ most of the type-checking memory:
 settings.init.compact_before_start := true
 ```
 
-If you want to monitor precisely memory consumption, Liquidsoap ships with `runtime.memory()` to inspect it from within a script:
+If you want to monitor precisely memory consumption, Liquidsoap ships with
+`runtime.memory`\indexop{runtime.memory} to inspect it from within a script:
 
-```liquidsoap
-print(runtime.memory().pretty)
-# {
-#   process_virtual_memory="419 GB",
-#   process_physical_memory="389 MB",
-#   process_private_memory="72 MB",
-#   process_swapped_memory="0 B"
-# }
+```{.liquidsoap include="liq/runtime.memory.liq" from=1}
 ```
 
-The useful figure is `process_private_memory`: memory exclusive to this
-Liquidsoap process. The `process_physical_memory` figure (reported by `top` as
-RSS) includes shared memory from dynamic libraries and will look much higher
-than the memory your process actually owns.
+On my laptop this prints
+
+```
+{
+  process_managed_memory="377.39 MB",
+  total_virtual_memory="24.99 GB",
+  total_physical_memory="16.40 GB",
+  total_used_virtual_memory="15.98 GB",
+  total_used_physical_memory="14.41 GB",
+  process_virtual_memory="982.30 MB",
+  process_physical_memory="587.79 MB",
+  process_private_memory="527.38 MB",
+  process_swapped_memory="0 B"
+}
+```
+
+The four fields whose name begins with `total_` describe the machine, and the
+five others describe the Liquidsoap process. The useful figure is
+`process_private_memory`: memory exclusive to this Liquidsoap process. The
+`process_physical_memory` figure (reported by `top` as RSS) includes shared
+memory from dynamic libraries and will look much higher than the memory your
+process actually owns.
 
 If memory consumption is a concern, compile Liquidsoap without optional
 components you do not use. The FFmpeg bindings in particular add a significant
