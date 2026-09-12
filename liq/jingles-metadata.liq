@@ -1,5 +1,5 @@
 #!./liquidsoap
-set("log.level", 4)
+settings.log.level := 4
 s = single("test.mp3")
 jingle_now = ref(false)
 def metadata()

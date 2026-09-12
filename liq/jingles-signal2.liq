@@ -1,5 +1,5 @@
 #!./liquidsoap
-set("server.telnet", true)
+server.telnet()
 music = chop(playlist("~/Music"))
 jingles = playlist("jingles")
 p = predicate.signal()
