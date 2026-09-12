@@ -1,4 +1,13 @@
 #!/usr/bin/env liquidsoap
-def mksafe(s)
-  fallback([s.{track_sensitive = false}, blank()])
+def mksafe(~id="mksafe", s) =
+  fallback(
+    id=id,
+    [
+      (s : source).{
+        track_sensitive = false,
+        on_select = source.composition.legacy_on_select
+      },
+      blank(id="safe_blank").{on_select = source.composition.legacy_on_select}
+    ]
+  )
 end
