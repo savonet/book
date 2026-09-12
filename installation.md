@@ -52,8 +52,8 @@ OCaml compiler. Not all versions are supported; you can run
 opam info liquidsoap-lang
 ```
 
-to find out which OCaml versions are compatible. Then create a switch for your
-chosen version:
+to find out which OCaml versions are compatible. Liquidsoap needs at least OCaml
+5.5. Then create a switch for your chosen version:
 
 ```
 opam switch create <ocaml version>
@@ -78,7 +78,7 @@ support, etc.) out of the box. External dependencies
 to install them or guide you through the process.
 
 Most of Liquidsoap's dependencies are only optionally installed by opam. For
-instance, if you want to enable ogg/vorbis encoding and decoding after you have
+instance, if you want to enable ogg/opus encoding and decoding after you have
 already installed Liquidsoap, you should install the `opus` library by
 executing:
 
@@ -182,10 +182,8 @@ features included. You can also inspect a running installation with
 Official packages from the [Liquidsoap release
 page](https://github.com/savonet/liquidsoap/releases) are available for Debian,
 Ubuntu, and Alpine (see the supported releases table in the [versions
-section](#sec:versions)). When using these packages on Debian, you will also
-need to enable the [deb-multimedia.org](https://www.deb-multimedia.org/)
-repositories, which provide up-to-date libraries including `fdk-aac` support in
-FFmpeg.
+section](#sec:versions)). These packages ship with their own build of FFmpeg,
+including `fdk-aac` support, so no third-party repository has to be enabled.
 
 Your distribution may also carry its own `liquidsoap` package (e.g. via
 `sudo apt install liquidsoap`), though these may lag behind the latest release.
@@ -223,22 +221,22 @@ you can use to easily and securely deploy scripts.
 
 Images are tagged with:
 
-- a release version (e.g. `v2.4.2`) — note these may be updated,
+- a release version (e.g. `v2.4.5`) — note these may be updated,
 - a git commit SHA (e.g. `a24bf49`) — these are permanent,
 - a rolling-release tag (e.g. `rolling-release-v2.4.x`) — tracks the latest
   snapshot for that branch.
 
-For example, to pull release `2.4.2`:
+For example, to pull release `2.4.5`:
 
 ```
-docker pull savonet/liquidsoap:v2.4.2
+docker pull savonet/liquidsoap:v2.4.5
 ```
 
 We refer the reader to the Docker documentation for the way such images can be
 used. For instance, you can have a shell on such an image with
 
 ```
-docker run -it --entrypoint /bin/bash savonet/liquidsoap:v2.4.2
+docker run -it --entrypoint /bin/bash savonet/liquidsoap:v2.4.5
 ```
 
 By default, the docker image does not have access to the soundcard of the local
@@ -248,7 +246,7 @@ computer inside the image. For instance, you can play a sine (see
 [there](#sec:sound-sine)) by running:
 
 ```
-docker run -it -v /dev/snd:/dev/snd --privileged savonet/liquidsoap:v2.4.2 liquidsoap 'output.alsa(sine())'
+docker run -it -v /dev/snd:/dev/snd --privileged savonet/liquidsoap:v2.4.5 liquidsoap 'output.alsa(sine())'
 ```
 
 This single line should work on any computer on which Docker is installed: no
@@ -287,7 +285,7 @@ The current release status is the following one:
 | Branch  | Latest release | Supported | Rolling Release          |
 |---------|----------------|-----------|--------------------------|
 | `2.5.x` | (in dev)       | (dev)     | `main` branch            |
-| `2.4.x` | 2.4.2          | \ding{51} | `rolling-release-v2.4.x` |
+| `2.4.x` | 2.4.5          | \ding{51} | `rolling-release-v2.4.x` |
 | `2.3.x` | 2.3.3          | \ding{55} | —                        |
 
 This means that all developments and new features are brought to the 2.5.x branch, but we still support 2.4.x versions in order to let our users adapt their scripts to the new features and language improvements.
@@ -304,15 +302,17 @@ immutable links to release assets, use
 
 | OS      | Supported releases                   | Architectures       | Notes                            |
 |---------|--------------------------------------|---------------------|----------------------------------|
-| Debian  | stable (`trixie`), testing (`forky`) | `amd64`, `arm64`    | needs [deb-multimedia.org](https://www.deb-multimedia.org/) repo |
+| Debian  | stable (`trixie`), testing (`forky`) | `amd64`, `arm64`    |                                  |
 | Ubuntu  | LTS (`resolute`), latest (`plucky`)  | `amd64`, `arm64`    |                                  |
 | Alpine  | `edge`                               | `x86_64`, `aarch64` |                                  |
 | Windows | N/A                                  | 64-bit              | `.zip` archive                   |
 
 ### Supported FFmpeg versions
 
-Liquidsoap supports the last two major releases of FFmpeg. Currently, this means
-versions 7 and 8.
+The binary packages and the docker images come with their own build of FFmpeg.
+If you compile Liquidsoap yourself, the [online build
+documentation](https://www.liquidsoap.info/doc-dev/build.html) states the FFmpeg
+versions currently supported.
 
 Editor support {#sec:editors}
 --------------
@@ -396,10 +396,15 @@ All names below refer to *opam package names* — install any of them with
 corresponding feature enabled. The full list of what is compiled into a
 particular binary can be queried with `liquidsoap --build-config`.
 
-Some libraries are always required and compiled in automatically: `camomile`
-(metadata charset recoding), `curl` (HTTP downloads), `metadata` (tag reading),
-`mem_usage` (memory reporting), and `magic-mime` (file-type detection by
-content). The libraries listed below are all optional.
+Some libraries are always required and compiled in automatically:
+`camomile-embedded` (metadata charset recoding), `curl` (HTTP downloads),
+`metadata` (tag reading), `mm` (audio and video data handling), `re` (regular
+expressions), `uri` (url parsing), `mem_usage` (memory reporting), `magic-mime`
+(file-type detection by content) and `xmlm` (XML parsing). Support for the
+playlist formats based on XML is therefore always compiled in. The
+`liquidsoap-lang` package additionally
+pulls `xml-light` and `miniyaml`, so that reading XML and YAML from a script is
+always available. The libraries listed below are all optional.
 
 ### General
 
@@ -412,7 +417,8 @@ content). The libraries listed below are all optional.
 - `tls-liquidsoap`: pure-OCaml TLS alternative to `ssl`,
 - `irc-client-unix`: IRC chat output,
 - `sqlite3`: SQLite database support (useful for playlist logging and history),
-- `yaml`: YAML data parsing.
+- `ctypes-foreign`: required by the libraries which have no OCaml bindings,
+  currently NDI video input and output, and the Stereotool processor.
 
 ### Input / output
 
@@ -426,7 +432,7 @@ Soundcard input and output:
 Network and device I/O:
 
 - `ffmpeg`: input and output via FFmpeg (files, network streams, devices),
-- `bjack`: JACK support for low-latency interconnection between audio programs,
+- `jack`: JACK support for low-latency interconnection between audio programs,
 - `srt`: transport over the network using the SRT protocol.
 
 Icecast/Shoutcast streaming output is always compiled in (via the `cry`
@@ -453,10 +459,6 @@ library, which is a required dependency).
 - `shine`: fixed-point MP3 encoding (useful on low-power devices),
 - `speex`: Ogg/Speex encoding and decoding,
 - `vorbis`: Ogg/Vorbis encoding and decoding.
-
-### Playlists
-
-- `xmlplaylist`: support for playlist formats based on XML.
 
 ### Video
 

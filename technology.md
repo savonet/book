@@ -67,7 +67,7 @@ be found in "nature":
 
 - the sampling rate is typically 44.1 kHz (this is for instance the case in
   audio CDs), but the movie industry likes more 48 kHz, and recent equipment and
-  studios use higher rates for better precision (e.g. DVDs are sampled at 92
+  studios use higher rates for better precision (e.g. DVDs are sampled at 96
   kHz),
 - the representation of samples varies: Liquidsoap internally uses floats
   between -1 and 1 (stored in double precision with 64 bits), but other
@@ -135,7 +135,10 @@ streams), and a given codec can be embedded in various containers (e.g. flac and
 vorbis streams can also be embedded into Matroska containers). In particular,
 for video streams, the container typically contains multiple streams (one for
 video and one for audio), each encoded with a different codec, as well as other
-information (metadata, subtitles, etc.).
+information (metadata, subtitles, etc.). Subtitles\index{subtitle} form a
+stream of their own, with their own codec. Liquidsoap decodes, transforms and
+encodes subtitles alongside sound and images, as detailed in
+[there](#sec:subtitles).
 
 ### Metadata
 
@@ -175,6 +178,10 @@ to play if next part of the stream comes late, this is called
 _buffering_. Finally, one machine is never enough to face the whole internet, so
 we should have the possibility of distributing the workload over multiple
 servers in order to handle large amounts of simultaneous connections.
+
+Liquidsoap can also serve the listeners itself, and [there](#sec:outputs) shows
+how. Serving the listeners from Liquidsoap spares you a second program, at the
+cost of the reliability and the distribution described above.
 
 ### Icecast
 
@@ -342,7 +349,10 @@ generator can then adjust the volume on a per-song basis based on this
 information. The standard for this way of proceeding is _ReplayGain_\index{ReplayGain} and there
 are a few efficient tools to achieve this task. It is also more natural than
 basic gain control, because it takes in account the way our ears perceive sound
-in order to compute loudness.
+in order to compute loudness. Loudness is also measured in _LUFS_\index{LUFS}
+(loudness units relative to full scale), the unit of the
+EBU R 128\index{EBU R 128} recommendation. You will meet both ReplayGain and
+LUFS in the metadata of the files you are given.
 
 At this point, we should also indicate that there is a subtlety in the way we
 measure volume (and loundness). It can either be measured _linearly_, i.e. we
@@ -522,7 +532,8 @@ of the common formats are handled by high-level libraries such as _FFmpeg_\index
 solves the problem for decoding, but for encoding we are still left with many
 parameters to specify, which can have a large impact on the quality of the
 encoded video and on the speed of the compression (finding the good balance is
-somewhat of an art).
+somewhat of an art). FFmpeg spreads encoding and decoding over all the cores of
+the machine. Encoding a large video in realtime requires several cores.
 
 ### Video effects
 
