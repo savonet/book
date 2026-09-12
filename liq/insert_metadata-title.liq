@@ -1,5 +1,5 @@
 #!/usr/bin/env liquidsoap
-set("server.telnet", true)
+server.telnet()
 s = playlist("~/Music")
 def cmd(t)
   s.insert_metadata([("title", t)])

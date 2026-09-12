@@ -1,5 +1,5 @@
 #!./liquidsoap
-set("log.level", 4)
+settings.log.level := 4
 l = playlog()
 def check(r)
   m = request.metadata(r)

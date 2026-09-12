@@ -1,7 +1,7 @@
 #!./liquidsoap
 def next_song()
-  json     = process.read("./next-song-json")
-  let json.parse song = json
+  answer = process.read("./next-song-json")
+  let json.parse song = answer
   song = "annotate:\
           liq_cue_in=#{song.cue_in},liq_cue_out=#{song.cue_out},\
           liq_fade_in=#{song.fade_in},liq_fade_out=#{song.fade_out}:\

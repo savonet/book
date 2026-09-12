@@ -14,4 +14,4 @@ def play(request)
   end
 end
 harbor.http.register.simple("/play", play)
-thread.run(delay=3., {log.important("Getting url."); ignore(http.get("http://localhost:8000/play?file=test.mp3&title=La%20bohème"))}) output(radio) set("server.telnet", true)
+thread.run(delay=3., {log.important("Getting url."); ignore(http.get("http://localhost:8000/play?file=test.mp3&title=La%20bohème"))}) output(radio) server.telnet()

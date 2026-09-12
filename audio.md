@@ -222,7 +222,7 @@ parameter).
 \TODO{polish this: we can use input.ffmpeg}
 TODO: the format is optional and usually well detected, the list of supported formats can be obtained with `ffmpeg -formats`
 
-```{.liquidsoap include="liq/input.ffmpeg-hls.liq"}
+```{.liquidsoap include="liq/input.ffmpeg-hls.liq" from=1 to=-1}
 ```
 -->
 
@@ -352,6 +352,14 @@ minute has passed!"`. Because it begins by "`say:`" Liquidsoap will use a speech
 synthesis software to turn the text into audio, and we will hear "Another minute
 has passed" every minute, over the playlist (the `add` operator plays
 simultaneously all the sources in its input list).
+
+A listener sometimes changes their mind, and a request is sometimes a
+mistake. The `queue` method of `request.queue` returns the requests which are
+still waiting, and the `remove`\indexop{remove} method takes one of those
+requests back out. The `remove_request_id` method does the same from the
+request identifier which the telnet server reported when the request was
+pushed. On the telnet server itself, the command is `q.remove` followed by that
+identifier.
 
 #### Implementation of queues
 
@@ -631,6 +639,11 @@ program, such as
 ```{include="liq/darkice.cfg"}
 ```
 
+By the way, Liquidsoap can also run a full Icecast server, which accepts source
+clients on any mountpoint and relays each of them to listeners. The operator is
+`icecast.server`\indexop{icecast.server}, and we describe the operator with the
+outputs in [there](#sec:icecast-server).
+
 #### Securing harbor
 
 Since harbor exposes a server to the internet, you should be serious about
@@ -658,12 +671,27 @@ this reason, the authentication can also be done through a function, which is
 passed as the `auth` argument of `input.harbor` and is of type
 
 ```
-({user : string, password : string, address : string}) -> bool
+({user : string, password : string, address : string,
+  uri : string, query : [string * string], method : string}) -> bool
 ```
 
-It takes as argument a record containing the username, the password and the IP
-address of a client trying to log in and returns whether it should be allowed or
-not. Typically, you would like to call an external script, say `harbor-auth`,
+It takes as argument a record describing the client which is trying to log in
+and returns whether the client should be allowed or not. The record has six
+fields:
+
+- `user` and `password` are the credentials sent by the client,
+- `address` is the network address of the client,
+- `uri` is the url which the client requested, and contains the mountpoint,
+- `query` holds the parameters of that url, as a list of key / value pairs,
+  which is handy if you prefer a token in the url over a password,
+- `method` is the protocol used by the client: `"PUT"` or `"POST"` for an http
+  source, `"SOURCE"` for the historical Icecast protocol, `"ICY"` for
+  Shoutcast, `"WEBSOCKET"` for a browser sending sound, and `"GET"` for a
+  metadata update, so that you can grant streaming and refuse metadata updates
+  to the same client.
+
+Typically, you would like to call an external script, say
+`harbor-auth`,
 which will take the username and password as argument and print "`allowed`" if
 the user is allowed (such a command would usually look into a database to see
 whether the credentials match, and perhaps do additional checks such as ensuring
@@ -682,12 +710,20 @@ could easily query an external database of allowed users.
 
 Finally, the clients should be able to determine that they are really connected
 with your server and not some hacker's one. The best way to achieve that is to
-use SSL certificates, which can be handled with the `input.harbor.ssl` variant
-of the harbor source, which is present only if Liquidsoap has been compiled with
-SSL support. The certificate can be specified with the setting
-`harbor.ssl.certificate` (the setting `harbor.ssl.private_key` can also be used
-to specify the private key and `harbor.ssl.password` the password to unlock the
-private key). Obtaining a proper SSL\index{SSL} certificate can be tricky. You may want to
+use SSL certificates. Every harbor operator takes a `transport` argument, which
+describes how the connection is made. Pass it an encrypted transport and the
+server speaks https:
+
+```{.liquidsoap include="liq/input.harbor-ssl.liq" from=1 to=-1}
+```
+
+The `http.transport.ssl`\indexop{http.transport.ssl} function is present only if
+Liquidsoap has been compiled with SSL support. Its `certificate` and `key`
+arguments are both required here. You can omit `key` when the certificate file
+also contains the private key. The same transport is accepted by
+`output.harbor` and by `harbor.http.register`, so a single transport can be
+shared by the whole script. Obtaining a proper SSL\index{SSL} certificate can be
+tricky. You may want to
 start with a self-signed certificate first, which you can for instance obtain
 from [_Let's Encrypt_](https://letsencrypt.org/). Alternatively, a self-signed
 certificate for local testing you can use the following one-liner:
@@ -826,7 +862,7 @@ Note that we need to use the `buffer` operator here because SRT uses its own
 synchronization mechanism, which is different from the one on the output based
 on the Pulseaudio library, see [below](#sec:clocks-ex). The input is not
 available unless it receives some stream, which is why we pass `fallible=true`
-to `buffer`. We can send such a stream with `ffmpeg` for instance: the script
+to the output. We can send such a stream with `ffmpeg` for instance: the script
 
 ```
 ffmpeg -re -i test.mp3 -f mp3 -c:a copy srt://localhost:8000
@@ -864,11 +900,14 @@ radio = fallback([queue, playlist])
 Here, we want to play a song from the request queue when there is one, otherwise
 we play songs from the playlist. By default, if we are playing a song from the
 playlist and there is a new song in the queue, the operator will wait for the
-current playlist song to finish before playing the one from the queue: both are
-sources which play files, and such a source is not willing to be cut in the
-middle of a track. We can state that the queue is not willing to wait either, by
-setting its `track_sensitive`\index{track!sensitive} method to `false`, in which
-case the song from the queue will be immediately played:
+current playlist song to finish before playing the one from the queue. Both
+sources play files, and a source which plays files is not interrupted in the
+middle of a track by default. Every source says which of the two kinds it is
+through its `composition_type`\indexop{composition\_type} method, whose value is
+`"file"` for a playlist or a queue and `"live"` for a microphone or a harbor
+input, and Liquidsoap fills that in for us. We can state that the queue should
+not wait, by setting its `track_sensitive`\index{track!sensitive} method to
+`false`, in which case the song from the queue will be immediately played:
 
 ```liquidsoap
 radio = fallback([queue.{track_sensitive = false}, playlist])
@@ -880,8 +919,9 @@ Typically, you would use this to switch to a live show when available
 ```
 
 Here, we do not have to specify `track_sensitive`: a live source such as
-`input.harbor` does not wait for anybody, so it takes over as soon as the DJ
-connects, and the song which was playing is faded out below it, as detailed in
+`input.harbor` has `track_sensitive` set to `false` already, so it takes over as
+soon as the DJ connects, and the song which was playing is faded out first, as
+detailed in
 [there](#sec:transitions-sources). When the DJ leaves, the music comes back and
 starts on a fresh track, rather than resuming the song which had been
 interrupted half-way through. The way two sources hand over to each other is
@@ -923,6 +963,16 @@ selected. Had it not been interrupted, there would be nothing to skip and
 nothing to fade, and the handoff would simply happen at the boundary. The source
 decides this for itself, through the `on_leave` method which we describe in
 [there](#sec:composition).
+
+There is a related question on the other side of the switch. Our DJ connects,
+the harbor input sends a metadata announcing the show, the network drops for a
+second and the DJ reconnects. Without help, our listeners would see the title of
+the show once and then nothing. The `replay_metadata`\index{metadata!replay}
+method takes care of that: when a source is selected, its latest metadata is
+sent again into the stream, so the show is announced at every reconnection.
+`replay_metadata` is `true` by default and the replayed metadata never
+overwrites a value which the source provides itself. Set `replay_metadata` to
+`false` on a source whose metadata should only be announced once.
 
 ### Switching and time predicates
 
@@ -1051,6 +1101,14 @@ means that if `mic` is taken from a harbor input such as
 and the client did not connect or was disconnected, we will hear only the bed,
 as expected.
 
+The `add` operator also does something to the tracks and the metadata of its
+sources. All the sources play at once, so `add` drops their track marks and
+produces one endless track. The metadata of every source are relayed, in the
+order they arrive. Our listeners are therefore told about the jingle playing
+over the song as well as about the song itself. When only one source should
+provide the metadata of the mix, apply `source.drop.metadata` to the others, as
+described in [there](#sec:removing-tracks).
+
 #### Weights
 
 The `add` operator also offers the possibility of weighting the sources,
@@ -1114,6 +1172,23 @@ detailed in [there](#sec:composition). For instance, in the following script
 we leave `jingles` with its default weight of `1` and give `music` a weight of
 `4`: this means that we are going to play one jingle, then four music tracks,
 then one jingle, then four music tracks, and so on.
+
+The `weight` method is a getter, so we can also give it a function and let the
+proportion change while the radio runs:
+
+```{.liquidsoap include="liq/jingles-weight-getter.liq" from=3 to=-1}
+```
+
+which plays eight music tracks per jingle between midnight and 6am, and four the
+rest of the time.
+
+A jingle playlist has another method worth setting, the `single`\index{single}
+composition method. When `single` is `true`, `rotate` and `random` refuse to
+select the same source for two consecutive tracks, so we never hear two jingles
+in a row:
+
+```{.liquidsoap include="liq/jingles-single.liq" from=3 to=-1}
+```
 
 If you want something less regular, the `random`\indexop{random} operator can be used instead of
 `rotate`:
@@ -1207,6 +1282,10 @@ the jingles are not willing to wait for a track boundary:
 ```{.liquidsoap include="liq/jingles-once5.liq" from=3 to=-1}
 ```
 
+By the way, there is also `request.once`\indexop{request.once}, which plays a
+single request and then becomes unavailable. Use `request.once` when what you
+have at hand is a request rather than a source.
+
 #### Jingles at fixed time: alternative approach
 
 In the previous example, an alternative approach instead of using the `delay`
@@ -1241,6 +1320,17 @@ As another variant, if we wanted to play 3 jingles, we could write
 where `predicate.at_most` is similar to `predicate.once`, but is true a given
 number of times instead of only once (its it pointless to play 3 jingles in a
 row, but this can be quite useful for ads for instance).
+
+By the way, a schedule can also be written in the syntax of the unix
+`crontab`. The function `cron.add`\indexop{cron.add} takes a cron entry and
+a function to run at those times, so that pushing the jingle into a request
+queue at the top of every hour reads as follows:
+
+```{.liquidsoap include="liq/cron-jingle.liq" from=2 to=-1}
+```
+
+The queue is track sensitive here, so the jingle waits for the end of the
+current song, exactly as the `switch` above does.
 
 If we want to add the jingle on top of the currently playing music, we can use
 the function `source.available` which takes as arguments a source and a
@@ -1373,6 +1463,15 @@ write something like
 ```{.liquidsoap include="liq/playlist-prefix.liq" from=1 to=-1}
 ```
 
+Some music libraries store their metadata beside the files, in a small XML file
+with the same name and the `.nfo` extension, as Kodi, Emby and Jellyfin do. A
+single call to
+`enable_nfo_metadata()`\indexop{enable\_nfo\_metadata}\index{metadata!sidecar}
+makes Liquidsoap look for `Foo.nfo` whenever it opens `Foo.mp3`, and merge the
+contents of `Foo.nfo` into the metadata of the request. The tags embedded in the
+media file take precedence, so you can call
+`enable_nfo_metadata()` on a library where only some of the songs have a sidecar.
+
 ### Handling tracks {#sec:on-metadata}
 
 Every source has `on_track`\indexop{on\_track} and `on_metadata`\indexop{on\_metadata} methods, which respectively
@@ -1493,7 +1592,8 @@ is set to `true` by:
 
 The function `insert_jingle` looks at the metadata, and if present returns the
 `jingles` source, containing all the jingles, of which one track will be
-played. If the metadata is not present, we return `fail()`\indexop{fail} which is a source
+played. If the metadata is not present, we return
+`source.fail()`\indexop{source.fail} which is a source
 which is never available: in this case, prepend will simply not insert any track
 because none is ready. The function is then registered with the `prepend`
 operator.
@@ -1541,27 +1641,43 @@ thus use the filename as the title as follows:
 The function `path.basename` gives the filename without the leading path and
 `path.remove_extension` removes the extension of the file.
 
-### Removing tracks and metadata
+### Removing tracks and metadata {#sec:removing-tracks}
 
-In order to remove the tracks indications from a source, the `merge_track`
-operator can be used: it takes a source `s` as argument and returns the same
-source with the track boundaries removed.
+A source carries sound, track marks and metadata, and we can remove the track
+marks and the metadata without touching the sound. The operator
+`source.drop.track_marks`\indexop{source.drop.track\_marks} takes a source and
+returns the same source with the track boundaries removed. Use
+`source.drop.track_marks` when a playlist should be heard as one long
+uninterrupted program. Similarly,
+`source.drop.metadata`\indexop{source.drop.metadata} removes all metadata from a
+source, which is useful to "clean up" before inserting our own, as indicated
+below.
 
-Similarly, `drop_metadata` removes all metadata from a source. This can be
-useful if you want to "clean up" all the metadata before inserting your own, as
-indicated below.
+Both operators are written using a more general function,
+`source.tracks`\indexop{source.tracks}, which returns the tracks of a source as
+a record: the audio, the video if the source has one, and the `metadata` and
+`track_marks` tracks. Dropping the metadata amounts to building a source back
+from every track except the `metadata` one. We use `source.tracks` again in
+[this chapter](#chap:video) to assemble a source out of pieces of other ones.
 
 ### Inserting tracks and metadata
 
 Every source exposes an `insert_metadata` method whose type is
 
 ```
-(?new_track : bool, [string * string]) -> unit
+(?override : bool, ?new_track : bool, [string * string]) -> unit
 ```
 
-It takes an argument labeled `new_track` to indicate if some track should be
-inserted along with the metadata (by default, it is not the case) and the
-metadata itself, and inserts the metadata into the stream. For instance, suppose
+It takes the metadata to insert into the stream, plus two arguments:
+
+- `new_track` indicates whether a track should be inserted along with the
+  metadata (by default, it is not the case),
+- `override` decides what happens when the source provides a value for the same
+  field at the same moment (`true` by default, in which case the inserted value
+  is used). Set `override` to `false` to keep the value provided by the source,
+  which is what we want when we insert a default value.
+
+For instance, suppose
 that we have a source `s` and we want to set the title and artist metadata to
 "Liquidsoap" every minute. This can be achieved by
 
@@ -1585,23 +1701,27 @@ as detailed in [there](#sec:telnet): when we enter the command
 set_title New title
 ```
 
-on the telnet, the title will be set to "New title". In fact, the standard
-library offers a generic function in order to do this and we do not have to program
-this by ourselves: the function `server.insert_metadata` takes an identifier `id`
-and a source as argument and registers a command `id.insert` on the telnet which
-can be used to insert any metadata. A typical script will contain
+on the telnet, the title will be set to "New title". We can do better than one
+command per field. The `register_command`\indexop{register\_command} method of a
+source registers a command in the namespace of that source, so the command is
+named after the source. The
+`string.annotate.parse`\indexop{string.annotate.parse} function reads a string
+of metadata in the syntax of the `annotate:` protocol, so we do not have to
+split the argument by hand. A typical script will contain
 
-```{.liquidsoap include="liq/server.insert_metadata.liq" from=3 to=-1}
+```{.liquidsoap include="liq/server.insert_metadata.liq" from=2 to=-1}
 ```
 
-and we can then set the title and the artist by running the telnet command
+and since we named our source `src`, we can then set the title and the artist by
+running the telnet command
 
 ```
 src.insert title="New title",artist="Liquidsoap"
 ```
 
-(the argument of the command is of the form `key1=val1,key2=val2,key3=val3,...`
-and allows specifying the key / value pairs for the metadata).
+(the argument of the command is of the form `key1="val1",key2="val2",...` and
+allows specifying the key / value pairs for the metadata; the quotes around the
+values are what lets us put commas and spaces in them).
 
 <!--
 ### ICY metadata
@@ -1713,23 +1833,35 @@ to seek backward in time.
 
 ### End of tracks
 
-The operator `source.on_end` can be used to call a function some time before the
-end of each track. In addition to the `delay` parameter, which specifies this
-amount of time, the operator takes the source whose tracks are to be processed
-and a handler function, which is executed when a track is about to end. This
-handler function takes as arguments, the amount of remaining time and the
-metadata for the track. For instance, the following track will say the title of
-each song 10 seconds before it ends:
+Every source has an `on_position`\indexop{on\_position} method, which calls a
+function when the playing position reaches a given point in the track. The
+method takes the following arguments:
+
+- `position` is the position, in seconds, at which the function is called,
+- `remaining` says how `position` is measured: with `remaining=false` (the
+  default) the function is called once `position` seconds have elapsed since
+  the beginning of the track, and with `remaining=true` it is called once
+  `position` seconds are left before the end of the track,
+- `allow_partial` decides what happens when the track ends before `position` is
+  reached: with `allow_partial=true` the function is called anyway,
+- `synchronous` says whether the function runs in the streaming thread, which
+  we explain in [there](#sec:on-metadata).
+
+The function itself receives the position and the metadata of the track. For
+instance, the following script will say the title of each song 10 seconds
+before the song ends:
 
 ```{.liquidsoap include="liq/source.on_end.liq" from=1}
 ```
 
 You should now recognize a usual programming pattern. The main source is `s`,
-which is added to a queue `q`. We use `source.on_end` to register the handler
-function `speaker`, which inserts into the queue a request to say the title.
+which is added to a queue `q`. We call `on_position` with `remaining=true` to
+register the handler function `speaker`, which inserts into the queue a request
+to say the title.
 
-The operator `source.on_end` is also used behind the curtains to implement
-`fade.out`.
+Keep in mind that the elapsed time is exact, whereas the remaining time is an
+estimation, and a good estimation only for sources which play files. The
+`fade.out` operator is written using `on_position` in the same way.
 
 <!--
 ### Submitting tracks
@@ -1886,31 +2018,14 @@ source. For instance, it will work very well with a source generated by a
 `playlist` operator, because
 -->
 
-#### Smart crossfading
+#### Duplicate metadata
 
-The `crossfade` operator has a "secret" option called `smart` to produce more
-relevant transitions. When you set this parameter to `true`, Liquidsoap inspects
-the relative loudness of the ending track and the starting track and applies a
-different transition depending on their values. The general idea is that we want
-to fade music which is soft (i.e. not very loud) and apply no fading to more
-brutal (i.e. loud) music. In details the transitions are as follows:
-
-- if both tracks are not very loud (both are below the value specified by the
-  `medium` parameter) and the loudness are comparable (their difference is below
-  the value specified by the `margin` parameter), we apply a regular transition:
-  
-  ![](fig/transition-default.pdf)
-  
-- if both tracks are very loud (both are above the value specified by the `high`
-  parameter), we apply no transition:
-  
-  ![](fig/transition-no.pdf)
-  
-- if the first track is not loud and the second one is, we only fade the first
-
-  ![](fig/transition-left.pdf)
-  
-  and dually if the first one is loud and the second one is not.
+A crossfade plays the end of one track and the beginning of the next one at the
+same time, so the metadata of both tracks pass through the operator, and the
+metadata of the starting track often passes twice. Our listeners would then see
+the same title announced twice in a row. The `deduplicate` argument, which is
+`true` by default, removes those repetitions from the resulting source. Set
+`deduplicate` to `false` when your script relies on seeing every metadata.
 
 #### Under the hood: the `cross` operator
 
@@ -1993,81 +2108,119 @@ metadata `jingle` of the new track is set to `true`. This can be achieved with:
 ```
 
 Here, we make use of the field `metadata` of `b` which contains the metadata for
-the starting track.
+the starting track. The `cross` operator does not replay the metadata of either
+track into the transition: the metadata of the starting track is already inside
+the buffered data which `b.source` plays, and the metadata of the ending track
+was announced when that track started. A transition which needs a value from
+the metadata, such as a fade duration, must therefore read it from the
+`metadata` field, as we do here, rather than register a metadata handler on
+`a.source` or `b.source`.
 
-Finally, in the case where the current track ends unexpectedly, we might not
-have enough time to perform the transition. For instance, when we skip the
-current track of a source, we immediately go to the next track. The `minimum`
-parameter of `cross` controls how much time in advance we should have to perform
-the transition: if the remaining time of the current track is below this value,
-we simply don't apply any transition.
+A track sometimes ends earlier than expected, for instance when we skip it. The
+`cross` operator then buffers whatever is left of the track and runs the
+transition on that, which can be much shorter than `duration`. Liquidsoap also
+prints a message in the logs when the next track turns out to be shorter than
+`duration`, so watch out for that one if your jingles are shorter than your
+crossfades.
+
+Finally, in order to have the end of a track and the beginning of the next one
+at hand at the same time, `cross` runs its source in a clock of its own, which
+is allowed to run ahead of the rest of the script. The setting
+`settings.clock.child.max_buffer` caps how far ahead, in seconds (10 by
+default). Clocks are the subject of [a later section](#sec:clocks-ex).
+
+#### Crossfading according to loudness
+
+A gentle fade suits a ballad and ruins a track which ends on a beat. The
+`db_level` fields are there for that: they give the power of the two tracks, in
+decibels, measured over the `width` seconds around the transition (2 by
+default). We can read them and pick a different transition for each pair of
+tracks. When both tracks are loud, we play them one after the other with no
+transition at all:
+
+![](fig/transition-no.pdf)
+
+When the starting track is loud and the ending one is not, we fade the ending
+track out and let the starting one come in at full volume:
+
+![](fig/transition-left.pdf)
+
+And in the remaining cases, we apply the usual crossfade:
+
+![](fig/transition-default.pdf)
+
+Which gives the following transition function:
+
+```{.liquidsoap include="liq/cross-smart.liq" from=3 to=-1}
+```
+
+The threshold of -15 dB is ours to choose, and you should expect to spend an
+evening adjusting it on your own music.
 
 ### Autocue {#sec:autocue}
 
-\index{autocue}
-
-Finding the right crossfade duration for each track manually is tedious: a fast
-track needs a shorter fade than a slow one, and some tracks start or end
-abruptly. Since Liquidsoap 2.2.5, an _autocue_ mechanism is available which
-automatically analyzes the beginning and end of each track for silence or energy
-and sets the `liq_cross_duration`, `liq_fade_in` and `liq_fade_out` metadata
-accordingly, so that `crossfade` can use them without any manual tuning.
-
-Autocue requires the FFmpeg bindings. To enable it, simply call
-
-```liquidsoap
-enable_autocue_metadata()
-```
-
-before your source. For instance,
+Finding the right crossfade duration for each track by hand is tedious. A fast
+track needs a shorter fade than a slow one, some tracks begin with two seconds
+of silence, and some end on a fade which is already there. Liquidsoap can
+measure all of this for us: this is the _autocue_\index{autocue} mechanism,
+which analyzes the beginning and the end of every track for silence and for
+energy, and sets the `liq_cue_in`, `liq_cue_out`, `liq_fade_in`, `liq_fade_out`
+and crossfade duration metadata accordingly. The `crossfade` operator then reads
+those metadata, as we have seen above, and our transitions follow the music
+without us having annotated a single file:
 
 ```{.liquidsoap include="liq/autocue.liq" from=1}
 ```
 
-That's all. The `crossfade` operator picks up the metadata set by autocue
-automatically. Per-track overrides still work: annotating a file with
-`liq_cross_duration` will take precedence over the computed value.
+The only new line here is
+`enable_autocue_metadata()`\indexop{enable\_autocue\_metadata}, which must come
+before the sources it should apply to. It requires the FFmpeg
+bindings. By default the values computed by autocue take precedence over the
+tags of the file and over the annotations of the request, which you can change
+with `settings.autocue.metadata.priority`.
 
-#### CPU usage (important)
+The analysis happens when the request is resolved, which is to say just before
+the track is played, and it costs a peak of CPU and of memory for every single
+track. On a small machine, or with a large library, you will want to run the
+analysis once and for all instead, store the result in the files, and let
+Liquidsoap read it. Because the analysis takes time, `enable_autocue_metadata`
+sets `settings.request.prefetch` to `2`, so that two requests rather than one
+are prepared in advance.
 
-Autocue performs audio analysis on each track at request
-resolution time. This analysis causes a noticeable CPU and memory peak for every
-track, which can be problematic on resource-constrained systems or with large
-music libraries. Whenever possible, prefer _pre-processing_ your files: run the
-analysis once offline (for example with `ffmpeg` or a dedicated loudness tool),
-store the results as metadata directly in the files, and let Liquidsoap read them
-without recomputing. This keeps runtime overhead minimal and avoids spikes
-during live operation.
+Autocue can also be applied to one file at a time, rather than to everything the
+script plays, with the `autocue:`\index{protocol!autocue} protocol:
+
+```{.liquidsoap include="liq/autocue-protocol.liq" from=1 to=-1}
+```
+
+which is useful with the `prefix` argument of `playlist`, as we have seen for
+the `replaygain:` protocol.
 
 #### Custom autocue implementations
 
-Liquidsoap uses its built-in autocue implementation by default. If you want to
-use a different analysis engine — for instance one backed by a dedicated loudness
-tool or a remote service — you can register it with `autocue.register`:
+You might already have an analysis engine you trust, a loudness tool or a remote
+service which knows your catalogue. Register it with
+`autocue.register`\indexop{autocue.register} and Liquidsoap will call it instead
+of its own:
 
 ```{.liquidsoap include="liq/autocue.register.liq" from=1 to=-1}
 ```
 
-The callback receives the file path and two metadata dictionaries: `file_metadata`
-holds tags embedded in the file itself, and `request_metadata` holds annotations
-attached to the request (e.g. via the `annotate:` protocol or a playlist prefix).
-It must return a nullable record which is computed from those metadata.
-Returning `null` signals that this implementation has no result for the given file.
+The function receives the file name, plus `file_metadata`, the tags embedded in
+the file, and `request_metadata`, the annotations attached to the request by the
+`annotate:` protocol or by a playlist prefix. It returns a record with four
+required fields, `cue_in`, `cue_out`, `fade_in` and `fade_out`, all in seconds,
+and a handful of optional ones: `start_next` says when the next track should
+start, `amplify` is a gain such as `"-3 dB"`, `fade_in_type` and `fade_out_type`
+are fade shapes such as `"lin"` or `"log"`, `fade_in_curve` and `fade_out_curve`
+are the parameters of those shapes, and `extra_metadata` is a list of key /
+value pairs to add to the track. Returning `null` means that this
+implementation has nothing to say about this file.
 
-The returned record has four required fields — `cue_in`, `cue_out`, `fade_in`, and
-`fade_out` (all in seconds) — and several optional ones: `amplify` (a gain string,
-e.g. `"-3 dB"`), `fade_in_type` / `fade_out_type` (curve shape, e.g. `"lin"`,
-`"log"`), `fade_in_curve` / `fade_out_curve` (curve parameter), `start_next` (when
-to start the next track, in seconds from the beginning), and `extra_metadata`
-(arbitrary key/value pairs to inject into the track metadata).
+The setting `settings.autocue.preferred` names the implementation to use when
+several of them are registered:
 
-When multiple implementations are registered, `settings.autocue.preferred`
-controls which one is selected: if the named implementation is available it will
-be used, otherwise Liquidsoap picks whichever registered implementation is
-available:
-
-```liquidsoap
-settings.autocue.preferred := "my-autocue"
+```{.liquidsoap include="liq/autocue-preferred.liq" from=1 to=-1}
 ```
 
 ### Transitions between different sources {#sec:transitions-sources}
@@ -2081,20 +2234,34 @@ in [there](#sec:composition). A _transition_\index{transition} is thus described
 by a function which receives the source which is ending, the source which is
 starting, and returns the source which should be played during the handoff.
 
-By default, this function fades the ending source out below the starting one,
-over at most one second. We can change this duration globally with
+By default, this function fades the ending source out, over at most one second,
+and starts the starting source once the fade is over. We can change this
+duration globally with
 
 ```liquidsoap
 settings.source.composition.max_fade := 2.
 ```
 
-The fade only applies when the source being left carries audio and nothing else:
-video streams and encoded audio, such as the one produced by `ffmpeg.copy` and
+The fade only applies when the source being left carries audio and nothing else.
+Video streams and encoded audio, such as the one produced by `ffmpeg.copy` and
 described in [there](#sec:encoded-streams), cannot be mixed, so those switch
-immediately instead. And when nothing was interrupted, there is nothing to blend
-and the function simply returns the starting source: this is why it is given
-`ending` as a nullable source, `null` meaning that the previous source had
-reached the end of a track or had become unavailable.
+immediately instead. When the ending source had less than `max_fade` seconds
+left, the two sources are simply played one after the other. And when no source
+was interrupted, the function returns the starting source: this is why
+`on_select` is given `ending` as a nullable source, `null` meaning that the
+previous source had reached the end of a track or had become unavailable.
+
+If you prefer the switch to happen at once, with no fade, the standard library
+provides the function which was doing exactly that before the fade became the
+default:
+
+```{.liquidsoap include="liq/legacy_on_select.liq" from=2 to=-1}
+```
+
+The `source.composition.legacy_on_select`\indexop{legacy\_on\_select} function
+returns the starting source, after replaying its metadata. Our beloved `mksafe`
+uses `source.composition.legacy_on_select`, so that a source which runs out of
+data is replaced by silence without a fade.
 
 In order to illustrate this, suppose that we have two sources: `live` which is a
 live source available from time to time (for instance, a DJ connecting to an
@@ -2121,23 +2288,28 @@ let the others be:
 ```
 
 Beware that whatever we return keeps pulling from the ending source for as long
-as we let it, and that source is only released once nothing pulls from it any
-more. If we blend it in with `add`, which never stops asking for more, we should
-bound it with `max_duration`, otherwise the ending source is never released and
-never gets the chance to skip its interrupted track.
+as we let it, and that the ending source is only released once nothing pulls
+from it any more. If we blend the ending source in with `add`, which never stops
+asking for more, we should bound the ending source with `max_duration`.
+Otherwise the ending source is never released and never skips its interrupted
+track.
 
-Two more things are worth knowing about these functions. They run in the
-streaming thread, which means that they should be kept cheap: no blocking call,
-no access to a file or to the network. And they run on every single selection,
-so a callback which one of them registers on the ending or the starting source
-would pile up on sources which live much longer than the handoff does.
-Liquidsoap releases those for us when the selection ends.
+Two more things are worth knowing about transition functions. They run in the
+streaming thread, so they should be kept cheap: no blocking call, no access to a
+file or to the network. And they run on every single selection. A transition
+function which registers a callback on the ending or the starting source would
+therefore register it again at every selection, on sources which live much
+longer than the transition does. Every registration returns a
+`release`\indexop{release} function, which unregisters the callback, and
+Liquidsoap calls `release` for us at the end of the selection. The function
+doing so is `source.collect_callback_releases`, and you can use it yourself
+whenever you call the same function twice on the same sources.
 
 Finally, the counterpart of `on_select` is `on_leave`\indexop{on\_leave}, which
-belongs to the source which is being _left_ and is called once it has been
-released. It is told whether the source finished its track naturally or was cut
-into, which is precisely what the default behavior uses in order to decide to
-skip a half-played track, as we have seen in [there](#sec:fallback).
+belongs to the source which is being _left_ and is called once that source has
+been released. The `on_leave` method is told whether the source finished its
+track or was cut into, which is what the default behavior uses in order to
+decide to skip a half-played track, as we have seen in [there](#sec:fallback).
 
 ### Smooth add
 
@@ -2240,24 +2412,41 @@ as follows:
 ```{.liquidsoap include="liq/normalize_track_gain.liq" from=1 to=-1}
 ```
 
-For convenience, the `normalize_track_gain` operator (which handles both
-`replaygain_track_gain` and `r128_track_gain` / EBU R128 metadata uniformly) is
-the recommended way to apply gain correction:
+Several standards compute such a gain, and doing the amplification by hand for
+each of them becomes tiresome. We advise you to use the
+`normalize_track_gain`\indexop{normalize\_track\_gain} operator instead:
 
 ```{.liquidsoap include="liq/normalize_track_gain2.liq" from=1 to=-1}
 ```
 
-If not all your files are tagged with ReplayGain metadata you can use
+The `normalize_track_gain` operator amplifies each track according to a single
+metadata, `liq_normalize_track_gain` (the name can be changed with
+`settings.normalize_track_gain_metadata`). Whatever computes the gain writes it
+into that metadata, and `normalize_track_gain` applies it. The first line of the
+script above is what computes the gain:
+`enable_replaygain_metadata()`\indexop{enable\_replaygain\_metadata} reads the
+`replaygain_track_gain` tag of every file Liquidsoap opens, and computes the
+value with FFmpeg when the tag is missing. Pass `compute=false` to only read
+existing tags, and `ratio` to say how much faster than real time the computation
+may decode the file (50 by default).
+
+Broadcasters generally work in LUFS\index{LUFS} instead, a unit we come back to
+[below](#sec:metrics). The function to call is then
 
 ```{.liquidsoap include="liq/normalize_track_gain3.liq" from=1 to=1}
 ```
 
-to instruct Liquidsoap to compute it for every played file: for each file, it
-will run a script (called `extract-replaygain`) which will try to look if the
-replaygain metadata is present, and if not will compute it (using `ffmpeg`). If
-you want instead to perform it on a per-file basis, you can use the protocol
-`replaygain:` which instructs to compute the ReplayGain of a file, with the same
-method. For instance,
+which measures the integrated loudness of each file and writes the gain needed
+to reach `settings.lufs.track_gain_target`, -16 LUFS by default, into the same
+`liq_normalize_track_gain` metadata. It also measures the true peak of the file
+and lowers the gain when the amplified track would exceed
+`settings.lufs.true_peak_max`, which is -1 dBTP by default. The rest of the
+script is unchanged: one metadata, one `normalize_track_gain`.
+
+The two functions above analyze every single file the script plays. If you would
+rather decide file by file, the protocols
+`replaygain:`\index{protocol!replaygain} and
+`lufs_track_gain:`\index{protocol!lufs} compute the same values for one request:
 
 ```{.liquidsoap include="liq/normalize_track_gain4.liq" from=1 to=-1}
 ```
@@ -2269,9 +2458,9 @@ playlists can be used add this protocol to all the files in the playlist:
 ```{.liquidsoap include="liq/normalize_track_gain5.liq" from=1 to=-1}
 ```
 
-The operation of computing the ReplayGain for a given file is a bit costly so
-that we strongly advise to perform it once for all for your music files instead
-of using the above mechanisms.
+The operation of computing the gain for a given file is a bit costly, so we
+strongly advise to perform it once for all for your music files, with a tool
+such as `loudgain`, instead of using the above mechanisms.
 
 #### Normalization
 
@@ -2637,7 +2826,10 @@ For instance, the script
 ```
 
 defines a `compress` function by specifying values for some of the arguments of
-the original one. It then splits the sound in 5 bands: below 200 Hz, 200 to
+the original one. Liquidsoap warns us that we are hiding the `compress` of the
+standard library, which is precisely what we want here: inside the body of our
+own `compress`, the name still refers to the original one, so there is no
+recursion. It then splits the sound in 5 bands: below 200 Hz, 200 to
 800 Hz, 800 to 1500 Hz, 1500 to 8000 Hz and above 8000 Hz. Finally, it applies
 compression to each of these bands and adds back the bands.
 
@@ -2967,12 +3159,13 @@ interactive.persistent("script.params")
 you will observe that a file `script.params` has been created and its contents is
 
 ```
-[ { "main_volume": 0.5 }, [  ], [  ], [  ] ]
+{ "float": [ [ "main_volume", 0.5 ] ], "int": [], "bool": [], "string": [] }
 ```
 
-which, without entering the details, contains the value for
-`main_volume`. Moreover, it will automatically be read on next run of the
-script, so that interactive variables will keep their values across executions.
+which groups the interactive variables by type and, in the `float` group, gives
+the value `0.5` for `main_volume`. Moreover, it will automatically be read on
+next run of the script, so that interactive variables will keep their values
+across executions.
 
 There is one important caveat: the function `interactive.persistent` must be
 called _after_ all interactive values have been created (i.e. after all calls to
@@ -3248,6 +3441,31 @@ password has odd length:
 The methods `on_connect` and `on_disconnect` are also useful to monitor
 connections from listeners.
 
+#### Being the Icecast server {#sec:icecast-server}
+
+With `output.harbor` we decide, in the script, which stream lives at which
+mountpoint. Your DJs, your automation system and your other Liquidsoap
+instances would rather decide that for themselves, as they do with a real
+Icecast server. Liquidsoap can be that server, with the
+`icecast.server`\indexop{icecast.server} operator:
+
+```{.liquidsoap include="liq/icecast.server.liq" from=1}
+```
+
+That single line starts a server on port 8000. Source clients connect on any
+mountpoint with the password `hackme`, and listeners connect to those
+mountpoints. A source client connecting on `/my-radio.mp3` becomes available to
+listeners at `http://localhost:8000/my-radio.mp3`, and we did not have to
+declare the mountpoint anywhere. The server also serves a status page at `/`
+and the same information as JSON at `/status.json`. The `serve` argument turns
+both pages off. The `serve_html` and `serve_json` arguments let you write your
+own pages from the list of mountpoints, which gives for each mountpoint its
+name, its content type, its current metadata, its listeners and the time it
+started.
+
+The `icecast.server` operator relays the streams to the listeners. Use
+`input.harbor` when the script itself should play the incoming stream.
+
 ### HLS output {#sec:HLS-output}
 
 In the last few years, people have started moving away from Icecast and turn to
@@ -3289,29 +3507,6 @@ this directory, you will see that it contains
   
 Some useful arguments of the `output.file.hls` operator are the following.
 
-- `encode_metadata`: whether to add metadata or not in the stream. This is
-  disabled by default because some players assume that there will be one stream,
-  and thus stop when they see metadata.
-- `on_file_change`: this specifies a function which can be used to execute an
-  action when a file is created, updated, or deleted, which can typically be
-  used to upload segments to a webserver when they are created and remove them
-  when they are not in use anymore. This function takes an argument labeled
-  `state` and the name of the file concerned. The `state` is a string which
-  can be
-
-  - `"created"`: a new segment file has been created,
-  - `"updated"`: the playlist file has been updated,
-  - `"deleted"`: a segment file has been deleted (and could be removed from the
-    server).
-  
-  A simple example of such a function would be
-  
-  ```{.liquidsoap include="liq/output.file.hls-on_file_change.liq"}
-  ```
-  
-  Here, we are only printing but, again, we would typically copy the files
-  somewhere.
-
 - `persist_at`: this specifies a file name which stores the state of the output
   (such as the currently created segments, in JSON format) and will be used to
   properly continue the HLS playlist in the case the script is stopped and
@@ -3326,9 +3521,41 @@ Some useful arguments of the `output.file.hls` operator are the following.
   to download the files, and that they have an "old" version of the playlist,
   which will contain names for "old" segments. It is thus important to keep a
   few old segments in order to accommodate for such situations.
-- `streams_info`: can be used to specify additional information about the streams
-  such as the bandwith (in bits per second), the codecs (following RFC 6381),
-  the extension for the files, and the dimensions in pixels for video streams.
+- `reopen_on_error`: a function called when writing a segment fails. It receives
+  the error and returns the number of seconds after which the output should be
+  reopened, or `null` to raise the error instead. It waits 2 seconds by default,
+  which keeps the stream alive when the disk hiccups.
+
+Each stream of the list can carry information of its own, by decorating its
+encoder with methods: `bandwidth` (in bits per second) and `codecs` (following
+RFC 6381) are advertised in the main playlist, `video_size` gives the dimensions
+in pixels, `extname` sets the extension of the segment files, and `id3`,
+`id3_version` and `replay_id3` decide whether metadata are written into the
+segments of that stream. For instance, `("mp3-low", %mp3(bitrate=96).{id3 =
+false})` describes a stream whose segments carry no metadata, which is worth
+doing because some players stop when they see a metadata in an HLS segment.
+
+The output also has an `on_file_change`\indexop{on\_file\_change} method, which
+registers a function called whenever a file of the stream is created, updated or
+deleted. Use `on_file_change` to upload the segments to a webserver when they
+are created and remove them from the webserver when they are not in use anymore.
+The function receives a record with two fields: `path`, the full path of the
+file, and `state`, which is one of
+
+- `"created"`: a new segment file has been created,
+- `"updated"`: the playlist file has been updated,
+- `"deleted"`: a segment file has been deleted (and could be removed from the
+  server).
+
+A simple example of such a function would be
+
+```{.liquidsoap include="liq/output.file.hls-on_file_change.liq" from=3}
+```
+
+Here, we are only printing but, again, we would typically copy the files
+somewhere. The `synchronous=false` argument means that our function runs outside
+of the streaming thread, which matters here because uploading a file takes time,
+as we have explained in [there](#sec:on-metadata).
 
 A more involved example, inspired of
 [`srt2hls`](https://github.com/mbugeia/srt2hls), is
@@ -3399,12 +3626,14 @@ predicate is true. For instance, we can generate an archive per hour with:
 
 Here, the predicate `{0m}` given for the `reopen_when` argument is true whenever
 the current minute is 0, i.e. at the beginning of every hour: we will thus
-change file at the beginning of every hour. Whenever a new file is created, the
-file name is computed again and will thus be labeled according to current
-time. Also note that the directory depends on current time: Liquidsoap will take
-care of creating the required directories for us. Reopening of the file can also
-be performed by calling the `reopen` method of the output, so that the above
-example could also be rewritten by regularly launching a thread as follows:
+change file at the beginning of every hour (`cron.add`, which we have seen in
+[there](#sec:jingles), is the other way of saying this). Whenever a new file is
+created, the file name is computed again and will thus be labeled according to
+current time. Also note that the directory depends on current time: Liquidsoap
+will take care of creating the required directories for us. Reopening of the
+file can also be performed by calling the `reopen` method of the output, so
+that the above example could also be rewritten by regularly launching a thread
+as follows:
 
 ```{.liquidsoap include="liq/output.file3b.liq" from=2}
 ```
@@ -3430,6 +3659,10 @@ server. For instance, in the script
 the function `on_file` is called each time an archive file is created. Here, we
 call a command to simply copy this file to the `/radio/backup` directory, but a
 more realistic application would for instance upload it on an ftp server or so.
+Beware that an error raised inside `on_close` stops the script. Pass
+`reopen_on_error` to keep the radio on the air instead: `reopen_on_error`
+receives the error and returns the number of seconds after which the output
+should be reopened, or `null` to raise the error as before.
 
 Some other useful optional arguments of the `output.file` operator are
 
@@ -3438,11 +3671,21 @@ Some other useful optional arguments of the `output.file` operator are
 - `fallible`: when set to `true` the operator will accept fallible sources, it
   will start recording the source when it is available and stop when this is not
   the case anymore,
-- `on_start` and `on_stop` specify functions which are called whenever the
-  source starts or stops.
+- `reopen_delay`: the minimum time, in seconds, between two reopenings
+  triggered by `reopen_when` (120 by default).
 
-The `on_stop` function is particularly useful when `fallible` is set to `true`:
-this allows calling a function when the source fails, see
+The output also has `on_start`\indexop{on\_start} and
+`on_stop`\indexop{on\_stop} methods, which register functions called whenever
+the output starts or stops:
+
+```{.liquidsoap include="liq/output.file-on_stop.liq" from=2}
+```
+
+Both methods take a `synchronous` argument, which we have to give a value: with
+`synchronous=true` the function runs in the streaming thread, and with
+`synchronous=false` it runs in a thread of its own, as explained in
+[there](#sec:on-metadata). An `on_stop` function is particularly useful when
+`fallible` is set to `true`, since it is then called when the source fails, see
 [there](#sec:offline-processing) for a concrete application.
 
 ### YouTube
@@ -3896,7 +4139,11 @@ instance,
 
 ### FFmpeg {#sec:ffmpeg-encoder}
 
-The `%ffmpeg`\index{FFmpeg} encoder is a versatile meta-encoder that uses the FFmpeg library to encode in a wide variety of formats, including the ones presented above, but also many more. (Note: GStreamer support was removed in Liquidsoap 2.3.0; FFmpeg covers the same use cases.) The general syntax is
+The `%ffmpeg`\index{FFmpeg} encoder is a versatile meta-encoder that uses the
+FFmpeg library to encode in a wide variety of formats, including the ones
+presented above, but also many more. It is the encoder we reach for whenever the
+dedicated ones do not fit, and it is the only encoder for video. The general
+syntax is
 
 ```liquidsoap
 %ffmpeg(format="<format>", ...)
@@ -4153,6 +4400,14 @@ of the function `ffmpeg.encode.audio`: this means that the script
 will play the source `s`, after uselessly encoding it in mp3 and decoding it
 back to Liquidsoap's internal format for sources.
 
+One situation calls for encoding more often rather than less. All the listeners
+of an `output.harbor` share a single encoder by default, so a listener which
+connects receives a stream which started in the middle of the state of that
+encoder. The argument `dedicated_encoder=true` gives each listener a fresh
+encoder of its own. Each encoder costs what an encoder costs, so keep
+`dedicated_encoder` for outputs with few listeners, or for `%ffmpeg` in copy
+mode where nothing is encoded.
+
 ### External encoders
 
 \index{external!encoder}
@@ -4296,18 +4551,19 @@ follows:
 
 - `status`: a string describing how the program ended. It can either be
   
-  - `"exited"`: the program exited normally (this is the value usually
+  - `"exit"`: the program exited normally (this is the value usually
     returned),
   - `"stopped"`: the program was stopped (it has received a STOP signal),
   - `"killed"`: the program was killed (it has received a KILL signal),
-  - `"exception"`: program raised an exception.
+  - `"exception"`: program raised an exception,
+  - `"timeout"`: the `timeout` we gave was reached and the program was ended.
   
   This field itself has two fields detailing the return value:
   
   - `code`: this is an integer containing the return code if the program exited,
     or the signal number if the program was stopped or killed,
   - `description`: a string containing details about the exception in the case
-    the program raised one.
+    the program raised one, or the run time in the case of a timeout.
     
 - `stdout`: what the program wrote on the standard output,
 - `stderr`: what the program wrote on the standard error.
@@ -4431,7 +4687,7 @@ In this way, even if a malicious user manages to use our authentication script
 to take control of our machine, he will not be able to access more than the list
 of users.
 
-### JSON
+### JSON {#sec:json}
 
 In order to exchange data with other programs (via `process.run`, files, and so
 on), the preferred way for formatting data is _JSON_\index{JSON}, which is a
@@ -4486,9 +4742,9 @@ will store the JSON object
 into `j` instead of the associative list shown above.
 -->
 
-It is possible to create abstract JSON objects using the function `json()` on
-which we will be able to incrementally add fields using the `add` method (or
-remove using the `remove` method). For instance,
+We can also build a JSON object field by field, with the function
+`json.object()`\indexop{json.object}, whose `add` method adds a field and whose
+`remove` method removes one. For instance,
 
 ```{.liquidsoap include="liq/json.liq" from=1}
 ```
@@ -4496,7 +4752,7 @@ remove using the `remove` method). For instance,
 will print
 
 ```
-{"artist": "myself", "title": "my song"}
+{ "artist": "myself", "title": "my song" }
 ```
 
 #### Parsing JSON data
@@ -4540,6 +4796,29 @@ The cue and fade parameters are then applied automatically: `liq_cue_in` and
 
 ```{.liquidsoap include="liq/json-fade-cue.liq" from=1}
 ```
+
+#### YAML, XML and sqlite
+
+Configuration files are often written in YAML\index{YAML} rather than in JSON.
+The construction `let yaml.parse`, which we have met in [the language
+chapter](#chap:language), reads one exactly as `let json.parse` reads JSON:
+
+```{.liquidsoap include="liq/yaml.liq" from=1 to=-1}
+```
+
+The function `yaml.stringify` converts a value back into YAML. Liquidsoap
+implements a subset of the YAML specification, which covers what a configuration
+file needs and leaves out the more exotic constructions.
+
+Playlists and podcast feeds come in XML\index{XML}, which `let xml.parse` reads
+in the same way. Both YAML and XML are always available, so you do not need to
+check how Liquidsoap was compiled before using them.
+
+Finally, a radio which keeps a history of what it played, or a list of the
+requests of its listeners, is better served by a database than by a file.
+Liquidsoap talks to sqlite\index{sqlite} through the `sqlite`\indexop{sqlite}
+function, which opens a database file and returns an object with methods such
+as `exec`, `query`, `insert`, `select` and `iter`.
 
 ### Watching files
 
@@ -4639,27 +4918,40 @@ to which the server will answer with
 
 ```
 Available commands:
-| exit
-| help [<command>]
-| list
-| main.reload
-| main.skip
-| main.uri [<uri>]
-| quit
-| reqs.push <uri>
-| reqs.queue
-| reqs.skip
-| request.alive
-| request.all
-| request.metadata <rid>
-| request.on_air
-| request.resolving
-| request.trace <rid>
-| uptime
-| var.get <variable>
-| var.list
-| var.set <name> = <value>
-| version
+├─ clock.dump
+├─ clock.dump_all_sources
+├─ exit
+├─ help [<command>]
+├─ main.next
+├─ main.reload
+├─ main.skip
+├─ main.uri [<uri>]
+├─ output.pulseaudio.metadata
+├─ output.pulseaudio.remaining
+├─ output.pulseaudio.seek <seconds>
+├─ output.pulseaudio.skip
+├─ output.pulseaudio.start
+├─ output.pulseaudio.status
+├─ output.pulseaudio.stop
+├─ quit
+├─ reqs.flush_and_skip
+├─ reqs.push <uri>
+├─ reqs.queue
+├─ reqs.remove <rid>
+├─ reqs.skip
+├─ request.all
+├─ request.metadata <rid>
+├─ request.resolving
+├─ request.trace <rid>
+├─ runtime.gc.compact
+├─ runtime.gc.full_major
+├─ runtime.memory
+├─ shutdown
+├─ uptime
+├─ var.get
+├─ var.list
+├─ var.set <name> = <value>
+└─ version
 
 Type "help <command>" for more information.
 END
@@ -4678,7 +4970,7 @@ echo reqs.skip | telnet localhost 1234
 
 which will launch the `reqs.skip` command on the telnet server.
 
-If you like web interfaces more than old shell programs, you can add\indexop{server.hoarbor}\index{harbor}
+If you like web interfaces more than old shell programs, you can add\indexop{server.harbor}\index{harbor}
 
 ```{.liquidsoap include="liq/server.harbor.liq" from=1 to=-1}
 ```
@@ -4716,44 +5008,32 @@ END
   (the "usage" line explains how the command should be used, and which arguments
   are expected),
   
-- `list` details the available operators, for instance, in our example, the
-  answer would be
-
-  ```
-reqs : request.dynamic.list
-main : request.dynamic.list
-switch_65380 : switch
-pulse_out(liquidsoap:) : output.pulseaudio
-  ```
-
-  indicating that we have two `request.dynamic.list` operators name `reqs` and
-  `main`, a `switch` and an `output.pulseaudio` whose name have been
-  automatically generated,
 - `quit` is the same as `exit`,
+- `shutdown` stops the script,
 - `uptime` shows for how long the script has been running,
-- `version` displays the Liquidsoap version.
+- `version` displays the Liquidsoap version,
+- `runtime.memory` prints how much memory the process uses, and
+  `runtime.gc.compact` and `runtime.gc.full_major` ask the garbage collector to
+  do a round of work, which is useful when hunting a memory leak,
+- `clock.dump` and `clock.dump_all_sources` describe the clocks of the script
+  and the sources running in them, which we come back to in
+  [there](#sec:clocks-ex).
 
 Some commands can be used to inspect the requests manipulated by
 Liquidsoap. Those are identified by their _request identifier_, or _rid_, which
 is a number uniquely identifying the request.
 
-- `request.alive` lists all the requests which are in use, i.e. being played or
-  waiting to be played,
 - `request.all` lists all the requests used up to now,
 - `request.metadata` can be used to list the metadata associated to a particular request,
-- `request.on_air` lists all the requests which are being played,
 - `request.resolving` lists all the requests which are being resolved, such as
   distant files being downloaded,
 - `request.trace` shows the log associated to a particular request, which can be
   useful to know information about it, such as the reason why it failed to
   be resolved.
 
-In a typical telnet session, we could ask for the alive and known requests:
+In a typical telnet session, we could ask for the known requests:
 
 ```
-request.alive
-12 11
-END
 request.all
 12 11 10 9
 END
@@ -4763,20 +5043,19 @@ ask for the metadata of a particular request:
 
 ```
 request.metadata 12
-rid="12"
-on_air="2021/05/20 17:04:06"
-status="playing"
-initial_uri="/path/to/file.mp3"
-source="main"
-temporary="false"
+status="ready"
 filename="/path/to/file.mp3"
-title="My song"
+temporary="false"
+initial_uri="/path/to/file.mp3"
+rid="12"
 artist="The artist"
-kind="{audio=pcm(stereo),video=none,midi=none}"
+title="My song"
 END
 ```
 
-trace a valid request:
+The first five lines are added by Liquidsoap and the following ones come from
+the file. The `status` is one of `"idle"`, `"resolving"`, `"ready"`,
+`"destroyed"` and `"failed"`. We can also trace a valid request:
 
 ```
 request.trace 12
@@ -4811,16 +5090,17 @@ Some commands are specific to interactive variables and have been detailed in
 Above are presented the commands which are available in the telnet server of
 every script. But the operators used in a particular script also register
 additional commands. This is for instance the case for the `playlist` operator,
-which has registered the following three commands:
+which has registered the following commands:
 
 - `main.reload` reloads the playlist,
 - `main.skip` skips the current song and goes to the next track,
+- `main.next` shows the next songs which the playlist has prepared,
 - `main.uri` can be used to retrieve or change the location of the playlist.
 
 Note that the commands are prefixed with `main`, which is the `id` of the
 playlist, so that we know which operator we are referring to (no prefix
 is added if no `id` is provided). The `request.queue` operator also has
-registered three commands
+registered a few commands
 
 - `reqs.push` allows adding a new request in the queue, for instance
 
@@ -4832,7 +5112,9 @@ END
    
    where the server returns the corresponding rid (`27` in our example),
 - `reqs.queue` displays the list of requests in the queue,
-- `reqs.skip` skips the current request in the queue.
+- `reqs.remove` takes an rid out of the queue,
+- `reqs.skip` skips the current request in the queue,
+- `reqs.flush_and_skip` empties the queue and skips the current request.
 
 #### Registering commands {#sec:registering-commands}
 
@@ -5137,11 +5419,14 @@ the following script shows the metadata of our `radio` source encoded in JSON:
 ```
 
 We begin by declaring a reference `last_metadata` which contains the metadata
-for the last played track. Then, we register a callback so that whenever a new
-track occurs in `radio` we change the value of `last_metadata` according to its
-metadata. And finally, we register at the path `/metadata` a function which
-returns a JSON encoding of the last metadata we have seen. As usual, the
-metadata can be retrieved by browsing at
+for the last played track. The callback and the web handler run on different
+threads, and a single reference read or written on its own is safe, which is why
+there is nothing more to do here. Several references updated together need
+more care, as explained in [there](#sec:shared-state). Then, we register a
+callback so that whenever a new track occurs in `radio` we change the value of
+`last_metadata` according to its metadata. And finally, we register at the path
+`/metadata` a function which returns a JSON encoding of the last metadata we
+have seen. As usual, the metadata can be retrieved by browsing at
 
 ```
 http://localhost:8000/metadata
@@ -5308,9 +5593,10 @@ help:
 - `settings.harbor.bind_addrs`: list of IP addresses on which harbor should
   listen (default is `["0.0.0.0"]` which means any address),
 - `settings.harbor.max_connections`: maximum number of connections per port
-  (default is 2 in order to mitigate the possibility of DDoS attacks),
-- `settings.harbor.ssl.certificate` and `settings.harbor.ssl.private_key` should
-  also be set if you want to use https connections.
+  (128 by default),
+- the `transport` argument of the harbor operators, which should be given an
+  `http.transport.ssl` if you want https connections, as we have seen in
+  [there](#sec:input.harbor).
 
 Monitoring and testing
 ----------------------
@@ -5320,7 +5606,7 @@ tools to write the script for the radio you have always dreamed of. Now it is
 time to test this script to ensure that it performs as expected. We give here
 some functions that you can use to check that your script is running correctly.
 
-### Metrics
+### Metrics {#sec:metrics}
 
 In order to ensure that your script is running alright at all times and perform
 forensic investigation in case of a problem, it is useful to have _metrics_\index{metrics}
@@ -5366,7 +5652,24 @@ following methods:
 
 - `s.is_up`: whether Liquidsoap has required the source to get ready for streaming,
 - `s.is_ready`: whether the source has something to stream,
-- `s.time`: how much time (in seconds) the source has streamed.
+- `s.time`: how much time (in seconds) the source has streamed,
+- `s.callbacks_count`: how many callbacks the script has registered on the
+  source, as pairs of a callback name and a count. A count which keeps growing
+  is the sign of a function which registers on a source without releasing what
+  it registered, as we have described in
+  [there](#sec:transitions-sources). This one is worth watching on a radio which
+  is meant to run for months.
+
+Memory is worth watching too. The function
+`runtime.memory()`\indexop{runtime.memory} returns how much memory the process
+uses, with a `pretty` method giving the same
+figures as readable strings:
+
+```{.liquidsoap include="liq/runtime.memory.liq" from=1 to=-1}
+```
+
+The same information is available on the telnet server, with the command
+`runtime.memory`.
 
 #### Exposing metrics
 
@@ -5435,7 +5738,7 @@ We also provide two variants of the function `prometheus.gauge`:
 
 - `prometheus.counter` which increases a counter instead of setting the value of
   the gauge,
-- `prometheus.summay` which records an observation.
+- `prometheus.summary` which records an observation.
 
 Additional we provide the function `prometheus.latency` which can be used to
 monitor the internal latency of a given source.
@@ -5460,12 +5763,19 @@ information is to read the logs, and write meaningful information in those. By
 default, the logs are printed on the standard output when you run a script. You
 can also have them written to a file with
 
-```liquidsoap
-log.file := false
-log.file.path := "/tmp/liquidsoap.log"
+```{.liquidsoap include="liq/log-file.liq" from=1 to=-1}
 ```
 
-where the second line specifies the file those should be written to. A typical
+where the second line specifies the file those should be written to. On a
+server which already collects the logs of every service, you will rather want
+them in syslog\index{syslog}, which is
+
+```{.liquidsoap include="liq/log-syslog.liq" from=1 to=-1}
+```
+
+together with `settings.log.syslog.facility` (`"DAEMON"` by default),
+`settings.log.syslog.level` and `settings.log.syslog.program`, which is the name
+under which the messages appear. A typical
 log entry looks like this:
 
 ```
@@ -5581,11 +5891,31 @@ synthesize the sine!).
 
 The previous example should have made it clear that the function `thread.run` is
 quite useful to generate "events" such as pushing in a queue. Apart from the
-function to run `thread.run` takes two interesting arguments:
+function to run, `thread.run` takes the following arguments:
 
 - `delay`: after how much time (in seconds) the function should be executed,
 - `every`: how often (in seconds) the function should be called (by default, the
-  function is only called once).
+  function is only called once),
+- `fast`: whether the function returns quickly (`true` by default). Set `fast`
+  to `false` for a function which fetches data over the network or waits on a
+  process, so that the function is given a lower priority than request
+  resolutions,
+- `on_error`: a function called with the error when the function we gave raises
+  one. The error is then silenced, unless `on_error` raises it again,
+- `domain`: the worker of the scheduler on which to run the function, as
+  reported by `runtime.domain()`. Every rerun stays on that worker.
+
+Threads run on several cores at once, so two functions which share a reference
+can run at the same moment. The language chapter explains how to write that
+safely, in [there](#sec:shared-state).
+
+A word about where those threads come from. Liquidsoap keeps a pool of workers
+which pick up whatever is due, and runs at most
+`settings.scheduler.blocking_tasks` (8 by default) of the tasks declared with
+`fast=false` at the same time, so that slow network calls never take every
+worker away from the rest of the script. The setting
+`settings.scheduler.legacy` brings back the fixed queues of the older scheduler,
+and the `settings.scheduler.*_queues` settings only apply when it is set.
 
 Typically, suppose that we want to test a function `handle_metadata` which logs
 the metadata of a source `s`. In order to test it, it can be boring to wait for
@@ -5706,7 +6036,7 @@ which indicate that the script is too slow to produce the stream.
 
 A typical way to address those issues is to perform buffering, with the `buffer`
 operator, which will compute parts of the stream in advance in order not to be
-affected by small slowdowns. Liquidsoap also offers the `buffer.adptative` which
+affected by small slowdowns. Liquidsoap also offers the `buffer.adaptative` which
 will buffer and read the buffered data at low or high speed in order to
 accommodate for delays. This can be clearly heard in the following example:
 
@@ -5920,42 +6250,42 @@ _clocks_\index{clock}, which handle how time flows for operators. Their general
 role is described in [there](#sec:clocks), and we focus here on the practical
 situations where clocks require your attention.
 
-By default, Liquidsoap clocks operate in _automatic mode_: at the beginning of each
-streaming cycle, the clock inspects its source graph looking for a
-_synchronization source_\index{synchronization source}, an operator that
-controls the pace of data flow by its own means. Hardware audio operators
-(such as `input.alsa`, `output.pulseaudio`, etc.) block on the hardware timer,
-network inputs (such as `input.srt`) use the timestamps embedded in SRT packets
-to control latency. File-based and generator
-sources (e.g. `playlist`, `single`, `sine`, `blank`, etc.) declare no
-synchronization source, so the clock is led by the CPU: it tries to advance at
-real-time speed, sleeping when ahead and catching up (with log warnings) when
-behind. Clocks can also be configured explicitly — CPU-only, no sync, or passive
-(externally ticked) — but automatic mode covers the vast majority of use cases.
+By default, a clock runs in _automatic mode_\index{clock!automatic}: at the
+beginning of each streaming cycle, it looks at the sources it animates for a
+_synchronization source_\index{synchronization source}, an operator which
+imposes the pace at which data is produced. A hardware operator such as
+`input.alsa` or `output.pulseaudio` waits on the timer of the soundcard. A
+network input such as `input.srt` reads the timestamps of the packets it
+receives. Sources which read files or generate sound, such as `playlist`,
+`single`, `sine` and `blank`, impose no pace of their own, and the clock is then
+led by the CPU: it advances at real-time speed, sleeps when it is ahead, and
+catches up when it is behind, printing a warning in the logs. You can also ask
+for a given mode explicitly, with `clock.create`, but automatic mode is what you
+want in nearly every script.
 
 #### Synchronization conflicts
 
-Each synchronization source has its own pace for producing data: an ALSA source delivers
-frames according to its hardware clock, an SRT input delivers them according to
-packet timestamps. When two such sources are active at the same time in the
-same clock, the clock faces an impossible task: it cannot simultaneously honor
-two different paces and has no way to know whether it is producing data fast
-enough for both. This is the root cause of *clock conflicts*.
+Every synchronization source has its own pace. The ALSA card delivers frames at
+the rate of its own quartz, the SRT input delivers them at the rate written in
+the packets, and the two rates are never exactly equal. A clock can honor one of
+them. When two of them are producing data at the same moment in the same clock,
+the clock has no way to tell whether it is going fast enough, and Liquidsoap
+reports an error rather than pick one of the two paces.
 
-Importantly, two synchronization sources can share a clock without conflict as
-long as only one is ever producing data at a time. A `fallback` between an SRT
-input and a local microphone works perfectly for instance:
+Two synchronization sources may still share a clock, as long as only one of them
+produces data at a time. A `fallback` between an SRT input and a local
+microphone works perfectly for instance:
 
 ```{.liquidsoap include="liq/clock-srt-alsa-fallback.liq" from=1}
 ```
 
-Liquidsoap will use whichever source is available, and since only one is active
-at any moment, there is no ambiguity about the pace.
+Liquidsoap uses whichever source is available, only one of the two is ever
+active, and the pace is never ambiguous.
 
-A conflict arises when two sources with their own latency control are
-simultaneously asked to produce data. Liquidsoap detects this, either at
-startup or dynamically when a new source is introduced into the graph (e.g.
-during a crossfade transition). As a simple static example, the script
+The conflict arises when both sources are asked for data at the same moment.
+Liquidsoap detects the conflict at startup, or later on, when a new source
+enters the graph during a crossfade transition for instance. As a simple static
+example, the script
 
 ```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=1}
 ```
@@ -5973,46 +6303,59 @@ Sync sources:
  pulseaudio from source output.pulseaudio
 ```
 
+The error names the clock, and lists the two sources which are fighting over it.
 There are two ways to fix this.
 
 #### Using buffers
 
-This is is the most robust solution. The
-`buffer`\indexop{buffer} operator sits between two clocks and accumulates
-pre-computed audio, absorbing timing differences between hardware devices. It
-accepts the following optional arguments:
+This is the most robust solution. The `buffer`\indexop{buffer} operator sits
+between two clocks and accumulates precomputed audio, which absorbs the
+difference of pace between the two devices. It accepts the following optional
+arguments:
 
-- `buffer`: how much audio to buffer in advance (1 second by default),
-- `max`: maximum buffer size (10 seconds by default).
+- `buffer`: how much audio to accumulate in advance (1 second by default),
+- `max`: the maximum size of the buffer (10 seconds by default),
+- `add_track_mark`: whether to insert a track mark when the buffer becomes
+  available again after having run dry (`true` by default),
+- `replay_metadata`: whether to send the last metadata again at that moment
+  (`true` by default), so that our listeners are told what is playing after a
+  hole in the stream.
 
 Wrapping one side in a buffer resolves the conflict:
 
 ```{.liquidsoap include="liq/clock-alsa-pulseaudio2.liq" from=1}
 ```
 
-The ALSA output will now lag about 1 second behind PulseAudio — the price of
-buffering. For persistent timing differences between two devices, `buffer.adaptative`
-can compensate by adjusting the playback rate to keep the buffer full, at the
-cost of a slight pitch shift.
+The ALSA output now lags about 1 second behind PulseAudio, which is the price of
+buffering. When the two devices differ in pace for a long time, the buffer
+eventually runs dry or overflows. The operator `buffer.adaptative` then helps:
+it adjusts the playback rate to keep the buffer at the right level, at the cost
+of a slight pitch shift.
 
 #### Disabling self-synchronization
 
-Another solution consists in passing the argument `self_sync=false`, which tells an operator to give up its synchronization role, letting the other control the clock:
+Another solution consists in passing the argument `self_sync=false` to one of
+the two operators, which asks the operator to give up its synchronization role
+and let the other one lead the clock:
 
 ```{.liquidsoap include="liq/clock_safe2.liq" from=1}
 ```
 
-Here, `input.alsa` cedes synchronization to `output.pulseaudio` and no buffer
-is needed. This will work fine in most situations, but since the two devices
-run on slightly different hardware clocks, timing drift will eventually cause
-glitches. It is not recommended for production applications.
+Here, `input.alsa` cedes synchronization to `output.pulseaudio` and no buffer is
+needed. This works fine in most situations. However, the two devices run on
+slightly different quartzes, so the timing will drift and you will eventually
+hear a glitch. We do not recommend `self_sync=false` for a radio which is meant
+to run for months.
 
 #### Operators that require a stable clock
 
-Some operators, such as `crossfade` and `stretch`, need to control the rate at
-which audio is produced and run in their own dedicated clock. They therefore
-require that their input source does not declare a synchronization source.
-Passing a hardware source directly will fail:
+Some operators, such as `crossfade` and `stretch`\indexop{stretch}, need to
+produce audio at a rate which is not the rate at which they consume it: a
+crossfade reads the end of a track and the beginning of the next one at the same
+time, and `stretch` plays a source faster or slower than it arrives. Both of
+them therefore run their input in a clock of their own, which they advance at
+their own rate. A source which imposes its own pace cannot be advanced
+in this way, so passing a hardware source directly will fail:
 
 ```{.liquidsoap include="liq/bad/clock-alsa-crossfade.liq" from=1}
 ```
@@ -6022,67 +6365,76 @@ Error 7: Invalid value:
 This source may control its own latency and cannot be used with this operator.
 ```
 
-The fix is to wrap the hardware source in a `buffer()`, which decouples it from
-the downstream operator's clock:
+The fix is to wrap the hardware source in a `buffer()`, which gives the operator
+a source it can read at its own pace:
 
 ```{.liquidsoap include="liq/clock-crossfade-fix.liq" from=1}
 ```
 
 #### Decoupling latencies
 
-Beyond avoiding conflicts, explicit clock separation is useful for isolating
-slow or unreliable I/O from the rest of the graph. Consider a microphone being
-saved to a backup file and streamed to Icecast simultaneously:
+Clocks are also worth separating when no conflict is involved, in order to keep
+a slow or unreliable output away from the rest of the script. Consider a
+microphone which we save to a backup file and stream to Icecast at the same
+time:
 
 ```{.liquidsoap include="liq/clock-decoupling.liq" from=1}
 ```
 
-All sources here share the ALSA clock. If the Icecast connection is slow or
-drops, it stalls the ALSA clock — causing gaps in the backup file and
-potentially dropping microphone frames. Wrapping the Icecast output in a
-`buffer()` puts it in a separate clock:
+All the sources here share the ALSA clock. When the Icecast connection is slow
+or drops, it holds the ALSA clock back, which leaves gaps in the backup file and
+loses microphone frames. Wrapping the Icecast output in a `buffer()` puts the
+Icecast output in a clock of its own:
 
 ```{.liquidsoap include="liq/clock-decoupling2.liq" from=1}
 ```
 
-The ALSA clock now advances independently: microphone recording and file backup
-are unaffected by network problems on the Icecast side. The `mksafe` is
-necessary because the buffered side runs in a different clock: if `mic` becomes
-unavailable, the Icecast output needs a safe fallback.
+The ALSA clock now advances on its own, and the recording and the backup file
+are unaffected by whatever happens on the network. The `mksafe` is necessary
+because the buffered side runs in a different clock: when `mic` becomes
+unavailable, the Icecast output needs something to play.
 
 #### Encoding in parallel
 
-Each clock runs in its own thread, so sources in different clocks can encode
-simultaneously on separate CPU cores. This is particularly valuable for video
-encoding, the most CPU-intensive part of a streaming workflow.
+Clocks advance independently of each other, so sources which live in different
+clocks encode at the same time, on different cores. This is worth doing for video,
+which is by far the most expensive thing a streaming script does.
 
 Consider encoding two video files:
 
 ```{.liquidsoap include="liq/clock-parallel-encodings.liq" from=1}
 ```
 
-Since `a` and `b` share the same default clock, they encode sequentially on a
-single core:
+Since `a` and `b` share the same clock, they are encoded one after the other, on
+a single core:
 
 ![](img/encoding1.png)
 
-Assigning `b` to its own clock with `clock.assign_new`:
+We can give `b` a clock of its own with
+`clock.assign_new`\indexop{clock.assign\_new}:
 
 ```{.liquidsoap include="liq/clock-parallel-encodings2.liq" from=1}
 ```
 
-allows both encoders to run in parallel, often doubling throughput:
+which lets both encoders run at the same time, and often doubles the throughput:
 
 ![](img/encoding2.png)
 
-If both outputs encode a common source, a `buffer()` is still required to
-bridge the clocks:
+If both outputs encode a common source, a `buffer()` is still required to bridge
+the two clocks:
 
 ```{.liquidsoap include="liq/clock-parallel-encodings3.liq" from=1}
 ```
 
-In this case, small glitches are possible if the two clocks drift enough to
+In this case, small glitches are possible when the two clocks drift enough to
 overflow or underflow the buffer.
+
+Incidentally, the FFmpeg encoders decide by themselves how many threads they
+use, and they generally decide well. Pass `threads=1` to an encoder when you
+would rather keep the cores for something else, for instance when several
+encoders already run in parallel as above. The setting
+`settings.ffmpeg.scaling_threads` does the same for the rescaling of video
+frames, which happens outside of the encoders.
 
 ### Offline processing {#sec:offline-processing}
 
@@ -6198,6 +6550,14 @@ playlist and `s` is the source we created to play it. The `stop` command finds
 the source to stop by looking for its name in the list with `list.assoc`,
 removes it from the list with `list.assoc.remove` and then stops the source by
 calling its `shutdown` method.
+
+Two telnet commands can arrive at the same moment, on two different threads, and
+both would then read `sources` and write it back, so one of the two updates
+would be lost. This is why each of the two commands reads and writes `sources`
+inside `atomic`\indexop{atomic}, which lets only one such section run at a time.
+The `shutdown` call stays outside of the section, since a section should be
+short and should not call source methods. We come back to all of this in
+[there](#sec:shared-state).
 
 As a general rule, any dynamically created source which is not used anymore
 should be shut down using its `shutdown` method in order to avoid uselessly
