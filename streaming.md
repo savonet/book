@@ -1099,7 +1099,7 @@ because we download the requested file at startup), `input.http` is always
 fallible because the network might go down, a source `amplify(s)` has the same
 fallibility as `s`, and so on. Typically, if you try to execute the script
 
-```{.liquidsoap include="liq/bad/fallible1.liq" from=1}
+```{.liquidsoap include="liq/fallible1.liq" from=1}
 ```
 
 Liquidsoap will issue the error
@@ -1108,7 +1108,7 @@ Liquidsoap will issue the error
 Error 7: Invalid value:
 That source is fallible.
 This value was passed through the following call stack:
-at bad/fallible1.liq, line 3, char 0-20
+at fallible1.liq, line 3, char 0-20
 ```
 
 indicating that it has determined that we are trying to play the source `s`,
@@ -1271,18 +1271,18 @@ built and then quit, with the `--describe-clocks` option. On a script which
 crossfades a source, this gives
 
 ```
-Clocks dump:· output.dummy (ticks: 64, time: 1.28s, self_sync: false)
-  ├── outputs: output.dummy [output.dummy]
-  ├── active sources:
-  ├── passive sources: cross [cross, cross], crossfade [crossfade],
-  │                    crossfade.1 [crossfade.1, crossfade.1],
-  │                    track_metadata_deduplicate [track_metadata_deduplicate],
-  │                    metadata_deduplicate [metadata_deduplicate],
-  │                    cross.pre_buffer [cross.pre_buffer]
-  └── cross (ticks: 313, time: 6.26s, self_sync: false)
-      ├── outputs: mksafe.child [mksafe.child, mksafe.child]
-      ├── active sources:
-      └── passive sources: safe_blank [safe_blank], sine [sine, sine], mksafe [mksafe, mksafe],
+Clocks dump: output.dummy (ticks: 64, time: 1.28s, self_sync: false)
+  |-- outputs: output.dummy [output.dummy]
+  |-- active sources:
+  |-- passive sources: cross [cross, cross], crossfade [crossfade],
+  |                    crossfade.1 [crossfade.1, crossfade.1],
+  |                    track_metadata_deduplicate [track_metadata_deduplicate],
+  |                    metadata_deduplicate [metadata_deduplicate],
+  |                    cross.pre_buffer [cross.pre_buffer]
+  `-- cross (ticks: 313, time: 6.26s, self_sync: false)
+      |-- outputs: mksafe.child [mksafe.child, mksafe.child]
+      |-- active sources:
+      `-- passive sources: safe_blank [safe_blank], sine [sine, sine], mksafe [mksafe, mksafe],
                            sine.proxy [sine.proxy]
 ```
 
@@ -1323,7 +1323,7 @@ allowed as long as only one of the two is producing data at a time, which is why
 producing at the same time is the conflict, and Liquidsoap reports it. For
 instance, the script
 
-```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=2}
+```{.liquidsoap include="liq/clock-alsa-pulseaudio.liq" from=2}
 ```
 
 will raise the error
@@ -1391,7 +1391,7 @@ above), or defaulting the CPU clock `main`. If two distinct clocks are to be
 used, Liquidsoap issues an error and refuses to start. For instance, if we try
 to run
 
-```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=1}
+```{.liquidsoap include="liq/clock-alsa-pulseaudio.liq" from=1}
 ```
 
 we have a clock inconsistency because `output.pulseaudio` enforces the use of
@@ -1566,7 +1566,7 @@ this, we allow that the clock of their argument and their clocks are different.
 
 For instance, we have seen that the script
 
-```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=2}
+```{.liquidsoap include="liq/clock-alsa-pulseaudio.liq" from=2}
 ```
 
 is not allowed because it would require `s` to belong to two distinct

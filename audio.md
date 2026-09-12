@@ -4918,40 +4918,40 @@ to which the server will answer with
 
 ```
 Available commands:
-├─ clock.dump
-├─ clock.dump_all_sources
-├─ exit
-├─ help [<command>]
-├─ main.next
-├─ main.reload
-├─ main.skip
-├─ main.uri [<uri>]
-├─ output.pulseaudio.metadata
-├─ output.pulseaudio.remaining
-├─ output.pulseaudio.seek <seconds>
-├─ output.pulseaudio.skip
-├─ output.pulseaudio.start
-├─ output.pulseaudio.status
-├─ output.pulseaudio.stop
-├─ quit
-├─ reqs.flush_and_skip
-├─ reqs.push <uri>
-├─ reqs.queue
-├─ reqs.remove <rid>
-├─ reqs.skip
-├─ request.all
-├─ request.metadata <rid>
-├─ request.resolving
-├─ request.trace <rid>
-├─ runtime.gc.compact
-├─ runtime.gc.full_major
-├─ runtime.memory
-├─ shutdown
-├─ uptime
-├─ var.get
-├─ var.list
-├─ var.set <name> = <value>
-└─ version
+|- clock.dump
+|- clock.dump_all_sources
+|- exit
+|- help [<command>]
+|- main.next
+|- main.reload
+|- main.skip
+|- main.uri [<uri>]
+|- output.pulseaudio.metadata
+|- output.pulseaudio.remaining
+|- output.pulseaudio.seek <seconds>
+|- output.pulseaudio.skip
+|- output.pulseaudio.start
+|- output.pulseaudio.status
+|- output.pulseaudio.stop
+|- quit
+|- reqs.flush_and_skip
+|- reqs.push <uri>
+|- reqs.queue
+|- reqs.remove <rid>
+|- reqs.skip
+|- request.all
+|- request.metadata <rid>
+|- request.resolving
+|- request.trace <rid>
+|- runtime.gc.compact
+|- runtime.gc.full_major
+|- runtime.memory
+|- shutdown
+|- uptime
+|- var.get
+|- var.list
+|- var.set <name> = <value>
+`- version
 
 Type "help <command>" for more information.
 END
@@ -6287,7 +6287,7 @@ Liquidsoap detects the conflict at startup, or later on, when a new source
 enters the graph during a crossfade transition for instance. As a simple static
 example, the script
 
-```{.liquidsoap include="liq/bad/clock-alsa-pulseaudio.liq" from=1}
+```{.liquidsoap include="liq/clock-alsa-pulseaudio.liq" from=1}
 ```
 
 will fail with the error
@@ -6357,7 +6357,7 @@ them therefore run their input in a clock of their own, which they advance at
 their own rate. A source which imposes its own pace cannot be advanced
 in this way, so passing a hardware source directly will fail:
 
-```{.liquidsoap include="liq/bad/clock-alsa-crossfade.liq" from=1}
+```{.liquidsoap include="liq/clock-alsa-crossfade.liq" from=1}
 ```
 
 ```

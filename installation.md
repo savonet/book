@@ -141,7 +141,7 @@ opam upgrade liquidsoap
 ```
 
 As an alternative to pinning from source, rolling release binaries are available
-for upcoming versions — see [the section on versions and releases](#sec:versions)
+for upcoming versions, see [the section on versions and releases](#sec:versions)
 below.
 
 #### Updating libraries
@@ -221,9 +221,9 @@ you can use to easily and securely deploy scripts.
 
 Images are tagged with:
 
-- a release version (e.g. `v2.4.5`) — note these may be updated,
-- a git commit SHA (e.g. `a24bf49`) — these are permanent,
-- a rolling-release tag (e.g. `rolling-release-v2.4.x`) — tracks the latest
+- a release version (e.g. `v2.4.5`), which may be updated,
+- a git commit SHA (e.g. `a24bf49`), which is permanent,
+- a rolling-release tag (e.g. `rolling-release-v2.4.x`), which tracks the latest
   snapshot for that branch.
 
 For example, to pull release `2.4.5`:
@@ -292,7 +292,7 @@ This means that all developments and new features are brought to the 2.5.x branc
 
 ### Rolling releases
 
-A rolling release is a snapshot of a current, unpublished release — it may
+A rolling release is a snapshot of a current, unpublished release, which may
 become the next stable or bugfix release for a given major/minor version. Rolling
 release assets may be updated, added, or removed at any time. For permanent,
 immutable links to release assets, use
@@ -391,7 +391,7 @@ is also available if you want to automatically format scripts on every commit.
 Libraries used by Liquidsoap
 ----------------------------
 
-All names below refer to *opam package names* — install any of them with
+All names below refer to *opam package names*. Install any of them with
 `opam install <name>` and Liquidsoap will be automatically rebuilt with the
 corresponding feature enabled. The full list of what is compiled into a
 particular binary can be queried with `liquidsoap --build-config`.
@@ -408,7 +408,7 @@ always available. The libraries listed below are all optional.
 
 ### General
 
-- `inotify`: filesystem watch — reload playlists automatically when a file
+- `inotify`: filesystem watch, to reload playlists automatically when a file
   changes (Linux only; macOS uses a native equivalent),
 - `lo`: OSC (Open Sound Control) support via liblo, for controlling Liquidsoap
   from phone apps or hardware controllers,
@@ -424,10 +424,10 @@ always available. The libraries listed below are all optional.
 
 Soundcard input and output:
 
-- `alsa`: ALSA — the low-level Linux soundcard interface, lowest latency,
-- `ao`: AO — a cross-platform output-only library,
-- `portaudio`: PortAudio — cross-platform input and output,
-- `pulseaudio`: PulseAudio — the standard Linux audio server.
+- `alsa`: ALSA, the low-level Linux soundcard interface, lowest latency,
+- `ao`: AO, a cross-platform output-only library,
+- `portaudio`: PortAudio, cross-platform input and output,
+- `pulseaudio`: PulseAudio, the standard Linux audio server.
 
 Network and device I/O:
 
@@ -473,7 +473,7 @@ library, which is a required dependency).
 
 ### Memory
 
-- `jemalloc`: jemalloc allocator — reduces memory fragmentation on long-running
+- `jemalloc`: jemalloc allocator, which reduces memory fragmentation on long-running
   scripts,
 - `memtrace`: memory allocation tracing for diagnosing leaks.
 

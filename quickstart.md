@@ -299,7 +299,7 @@ be able to observe this behavior. For instance, if we
 try to use the operator `output.pulseaudio`, which plays a source on a soundcard
 using the pulseaudio library,
 
-```{.liquidsoap include="liq/bad/fallible1.liq" from=1}
+```{.liquidsoap include="liq/fallible1.liq" from=1}
 ```
 
 we obtain the following error:
