@@ -14,8 +14,7 @@ liquidsoap 'output(sine())'
 
 This instructs Liquidsoap to run the program
 
-```{.liquidsoap}
-output(sine())
+```{.liquidsoap include="liq/sine1.liq" from=2}
 ```
 
 which plays a sine wave at 440 Hertz. The operator `sine`{.liquidsoap}\indexop{sine} is called
@@ -59,7 +58,7 @@ by `#!` (sometimes called a _shebang_\index{shebang}) and then says that `/usr/b
 path for the `liquidsoap` executable. If you know its complete path
 (e.g. `/usr/bin/liquidsoap`) you could also directly put it:
 
-```liquidsoap
+```
 #!/usr/bin/liquidsoap
 ```
 
@@ -114,47 +113,67 @@ which will output
 ```
 Generate a sine wave.
 
-Type: (?id : string, ?amplitude : float, ?float) -> source(audio=internal('a), video=internal('b), midi=internal('c))
+Type: (?id : string?, ?amplitude : {float}, ?duration : float?, ?{float}) ->
+source(audio=pcm*)
 
-Category: Source / Input
+Category: Source / Input / Passive
 
-Parameters:
+Composition:
 
- * id : string (default: "")
-     Force the value of the source ID.
+  This source uses file composition by default.
 
- * amplitude : float (default: 1.0)
+Arguments:
+
+ * amplitude : {float} (default: 1.0)
      Maximal value of the waveform.
 
- * (unlabeled) : float (default: 440.0)
+ * duration : float? (default: null)
+     Duration in seconds (`null` means infinite).
+
+ * id : string? (default: null)
+     Force the value of the source ID.
+
+ * (unlabeled) : {float} (default: 440.0)
      Frequency of the sine.
 ```
 
 (this information is also present in [the online
 documentation](https://www.liquidsoap.info/doc-dev/reference.html)).
 
-It begins with a description of the operator, followed by its type\index{type}, category and
-arguments\index{argument} (or parameters). There is also a section for methods, which is not shown above, but
-we simply ignore it for now, as it will be detailed in [a subsequent
-section](#sec:records). Here, we see in the type that it is a function, because
-of the presence of the arrow "`->`"\indexop{->}: the type of the arguments is indicated on
-the left of the arrow and the type of the output is indicated on the right. More
-precisely, we see that it takes three arguments and returns a source with any
-number of audio, video and midi channels (the precise meaning of `source`
-is detailed in [this section](#sec:source-type)). The three
-arguments are indicated in the type and detailed in the following `Parameters` section:
+It begins with a description of the operator, followed by its type\index{type}
+and its category. The `Composition` section describes how `sine` behaves when
+several sources take turns on the same stream. We come back to composition
+below. Then come the arguments\index{argument} (or parameters). Three more
+sections follow the ones printed above: `Methods`, `Callbacks` and `Composition
+methods`. We simply ignore those three for now, as they will be detailed in [a
+subsequent section](#sec:records). Here, we see in the type that `sine` is a
+function, because of the presence of the arrow "`->`"\indexop{->}: the type of
+the arguments is indicated on the left of the arrow and the type of the output is
+indicated on the right. More precisely, we see that `sine` takes four arguments
+and returns a source with an audio track made of any number of channels of raw
+samples (the precise meaning of `source` is detailed in [this
+section](#sec:source-type)). The four arguments are indicated in the type and
+detailed in the following `Arguments` section, in alphabetical order:
 
-- the first argument is a string labeled `id`: this is the name which will be
+- the argument labeled `id` is a string: this is the name which will be
   displayed in the logs,
-- the second is a float labeled `amplitude`: this controls how loud the
+- the argument labeled `amplitude` is a float: this controls how loud the
   generated sine wave will be,
-- the third is a float with no label: this is the frequency of the sine wave.
+- the argument labeled `duration` is a float too: the sine stops after that
+  many seconds, and we leave `duration` out so that our sine plays forever,
+- the last argument carries no label: this is the frequency of the sine wave.
 
-All three arguments are optional, which means that a default value is provided
+All four arguments are optional, which means that a default value is provided
 and will be used if it is not specified. This is indicated in the type by the
 question mark "`?`" before each argument, and the default value is indicated in
-`Parameters` (e.g. the default amplitude is `1.0` and the default frequency is
-`440.` Hz).
+`Arguments` (e.g. the default amplitude is `1.0` and the default frequency is
+`440.` Hz). Incidentally, we could also have written `440` here: an integer is
+accepted wherever a float is expected. Two more notations show up in this type.
+A question mark *after* a type, as in `string?`, means that the value can also
+be `null`. The default value of `id` and of `duration` is precisely `null`.
+Braces around a type, as in `{float}`, mean that we can pass either a float or a
+function computing one. Passing a function lets us change the frequency or the
+amplitude while the stream is playing, see [there](#sec:getters).
 
 If we want to generate a sine wave of 2600 Hz with an amplitude of 0.8, we can thus
 write
@@ -194,18 +213,26 @@ directory, we can play it with
 
 As usual, the operator `playlist` has a number of interesting optional
 parameters which can be discovered by typing `liquidsoap -h playlist`. For instance, by
-default, the files are played in a random order, but if we want to play them as
-indicated in the list we should pass the argument `mode="normal"`{.liquidsoap} to
-`playlist`. Similarly, if we want to reload the playlist whenever it is changed,
-the argument `reload_mode="watch"`{.liquidsoap} should be passed.
+default, `playlist` shuffles the files and plays them in that order until every
+file has been played, and then shuffles them again. No song comes back before
+all the others have been played. If we want to play the files in the order of
+the list, we should pass the argument `mode="normal"`{.liquidsoap} to
+`playlist`. If we would rather pick a file at random every time, and accept
+repetitions, the argument is `mode="random"`{.liquidsoap}. Similarly, if we want
+to reload the playlist whenever it is changed, the argument
+`reload_mode="watch"`{.liquidsoap} should be passed.
 
 A playlist can refer to distant files (e.g. urls of the form
 `http://path/to/file.mp3`) in which case they are going to be downloaded
 beforehand. If you want to use a live stream, which can be very long or even infinite,
-the operator `input.http` should be used instead:
+the operator `input.http`\indexop{input.http} should be used instead:
 
 ```{.liquidsoap include="liq/input.http.liq" from=1}
 ```
+
+`input.http` reads the stream with FFmpeg. The operator is therefore only
+available if the `ffmpeg` package was installed alongside Liquidsoap, as
+described in [the installation chapter](#chap:installation).
 
 The playlist can also mention special sort of files, using particular
 _protocols_\index{protocol} which are proper to Liquidsoap: those do not refer to actual files,
@@ -230,8 +257,7 @@ time: in our terminology, we say that they have different _clocks_, see [a later
 section](#sec:clocks-ex). This will be detected by Liquidsoap and a script such
 as
 
-```liquidsoap
-output(input.alsa())
+```{.liquidsoap include="liq/mic-no-buffer.liq" from=3}
 ```
 
 will be rejected. This is the reason why we need to use the `buffer` operator
@@ -249,7 +275,8 @@ subject to technical difficulties (e.g. it gets disconnected from the internet
 for a short period of time). In this case, we generally want to fall back to
 another source, typically an emergency playlist consisting of local files which
 we are sure are going to be available. This can be achieved by using the
-`fallback`\indexop{fallback} operator which plays the first source which ready to generate a stream in a list of sources:
+`fallback`\indexop{fallback} operator which plays the first source which is
+ready to generate a stream in a list of sources:
 
 ```{.liquidsoap include="liq/fallback.liq" from=1}
 ```
@@ -262,10 +289,13 @@ and as `emergency` otherwise.
 Liquidsoap automatically detects that a source is fallible and issues an error
 if this is not handled, by a `fallback` for instance, in order to make sure that
 we will not unexpectedly have nothing to stream at some point. We did not see
-this up to now because `output` is an advanced operator which automatically uses
-silence as fallback, because it is primarily intended for quick and dirty
-checking of the stream.  However, if we use the primitive functions for
-outputting audio, we will be able to observe this behavior. For instance, if we
+this up to now because `output` is an operator primarily intended for quick and
+dirty checking of the stream, and it therefore passes
+`fallible=true`{.liquidsoap} for us. A fallible output stops while the source is
+unavailable and starts again when the source is ready. `output` adds no sound of
+its own. The operator which plays silence is `mksafe`{.liquidsoap}, presented
+below. However, if we use the primitive functions for outputting audio, we will
+be able to observe this behavior. For instance, if we
 try to use the operator `output.pulseaudio`, which plays a source on a soundcard
 using the pulseaudio library,
 
@@ -275,17 +305,25 @@ using the pulseaudio library,
 we obtain the following error:
 
 ```
-At line 1, char 4-27:
-Error 7: Invalid value: That source is fallible
+At fallible1.liq, line 2, char 4-28:
+s = input.http("http://...")
+
+Error 7: Invalid value:
+That source is fallible.
+This value was passed through the following call stack:
+at fallible1.liq, line 3, char 0-20
 ```
 
-This means that Liquidsoap has detected that the source declared at line 1 from
-character 4 to character 27, i.e. the `input.http`, is fallible. We could
-simply ignore this warning, by passing the parameter `fallible=true`{.liquidsoap} to the
-`output.pulseaudio`{.liquidsoap} operator, but the proper way to fix this consists in having
-a fallback to a local file:
+The error names the file, the line and the characters of the faulty value,
+prints that line, and then prints the call stack. The source declared at line 2
+from character 4 to character 28, i.e. the `input.http`, is fallible. The
+call stack tells us that this source was passed to `output.pulseaudio` at line
+3. Keep in mind that line 1 is the shebang, which we no longer print. We could
+simply ignore this error, by passing the parameter
+`fallible=true`{.liquidsoap} to the `output.pulseaudio`{.liquidsoap} operator,
+but the proper way to fix this consists in having a fallback to a local file:
 
-```{.liquidsoap include="liq/bad/fallible2.liq" from=1}
+```{.liquidsoap include="liq/fallible2.liq" from=1}
 ```
 
 Note that we are using `single`\index{singleop} here instead of `playlist`: this operator plays
@@ -337,11 +375,18 @@ we can set this up as follows:
 ```{.liquidsoap include="liq/radio.liq" from=2 to=5}
 ```
 
-By default, the `switch` operator will wait for the end of the track of a source
-before switching to the next one, because both of our playlists play files and
-neither is willing to be interrupted. Immediate switching can be obtained by
-setting the `track_sensitive`{.liquidsoap}\index{track!sensitive} method of a
-source to `false`, as for the `fallback` operator.
+Every source has a `track_sensitive`{.liquidsoap}\index{track!sensitive}
+method, and the `switch` operator reads it on both the source being played and
+the source about to be played. When both are `true`, `switch` waits for the end
+of the current track before switching. When one of them is `false`, `switch`
+switches immediately. Liquidsoap sets `track_sensitive`{.liquidsoap} to `true`
+on a source which plays files, such as our two playlists, and to `false` on a
+live source, such as our microphone. At 19h the microphone is therefore
+selected in the middle of the song being played, as we want from a live show,
+and `switch` fades the interrupted song out over one second before the
+microphone starts. We can set `track_sensitive`{.liquidsoap} ourselves on any
+source, as for the `fallback` operator, and the whole mechanism is detailed in
+[there](#sec:composition).
 
 ### Jingles
 
@@ -350,23 +395,26 @@ have a playlist consisting of all the jingles of our radio and we want to play
 roughly one jingle every 5 songs. This can be achieved by using the `random`\indexop{random}
 operator:
 
-```liquidsoap
-jingles = playlist("/radio/jingles.pls")
-radio   = random([jingles, radio.{weight = 4}])
+```{.liquidsoap include="liq/radio-jingles.liq" from=2 to=-1}
 ```
 
-This operator randomly selects a track in a list of sources each time a new
-track has to be played (here this list contains the jingles playlist and the
-radio defined above). The `weight` method of a source says how many tracks of it
-should be taken in average, the default being 1: here we want to take 1 jingle
-for 4 radio tracks. The selection is randomized however and it might happen
+The `random` operator selects a track at random in a list of sources each time a
+new track has to be played (here this list contains the jingles playlist and the
+radio defined above). The `weight`\index{weight} method of a source sets how
+likely `random` is to pick that source, the default being 1: here the radio is
+four times more likely than the jingles, so that we take roughly 1 jingle for 4
+radio tracks. The selection is randomized however and it might happen
 that two jingles are played one after the other, although this should be rare.
 If we want to make sure that we play 1 jingle and then exactly 4 radio songs,
 we should use the `rotate`\indexop{rotate} operator instead:
 
-```liquidsoap
-radio = rotate([jingles, radio.{weight = 4}])
+```{.liquidsoap include="liq/radio-rotate.liq" from=3 to=-1}
 ```
+
+The `rotate` operator goes through the list in order. For `rotate`, `weight` is
+the number of tracks played in a row from a source before moving to the next
+source. By the way, `weight` also accepts a function, so we can change it while
+the radio is running, for instance to play fewer jingles at night.
 
 ### Crossfading
 
@@ -378,8 +426,7 @@ quite abrupt whereas we would rather have a smooth chaining between two
 consecutive tracks. This can be addressed using the `crossfade`\indexop{crossfade} operator which
 will take care of this for us. If we insert the following line
 
-```liquidsoap
-radio = crossfade(fade_out=3., fade_in=3., duration=5., radio)
+```{.liquidsoap include="liq/radio-crossfade.liq" from=2 to=-1}
 ```
 
 at each end of track the song will fade out during 3 seconds, the next track
@@ -392,8 +439,7 @@ In order to make the sound more uniform, we can use plugins. For instance, the
 `normalize`\indexop{normalize} operator helps you to have a uniform volume by dynamically changing
 it, so that volume difference between songs is barely heard:
 
-```liquidsoap
-radio = normalize(radio)
+```{.liquidsoap include="liq/radio-normalize.liq" from=2 to=-1}
 ```
 
 In practice, it is better to precompute the gain of each audio track in advance
@@ -402,9 +448,13 @@ see [there](#sec:replaygain). There are also various traditional sound effects
 that can be used in order to improve the overall color and personality of the
 sound. A somewhat reasonable starting point is provided by the `nrj`\indexop{nrj} operator:
 
-```liquidsoap
-radio = nrj(radio)
+```{.liquidsoap include="liq/radio-nrj.liq" from=2 to=-1}
 ```
+
+`nrj` is one of the _extra_ operators, which come with the standard
+installation. The `-minimal` binary packages described in [the installation
+chapter](#chap:installation) leave the extra operators out, so `nrj` is missing
+there.
 
 Many more details about sound processing are given in
 [there](#sec:signal-processing).
@@ -413,8 +463,7 @@ Many more details about sound processing are given in
 
 Now that we have set up our radio, we could play it locally by adding
 
-```liquidsoap
-output(radio)
+```{.liquidsoap include="liq/radio-output.liq" from=2}
 ```
 
 at the end of the script, but we would rather stream it to the world instead of
@@ -423,7 +472,10 @@ having it only on our speakers.
 #### Installing Icecast
 
 In order to do so, we first need to set up an Icecast\index{Icecast} server which will relay the
-stream to users connecting to it. The way you should proceed with its
+stream to users connecting to it. Liquidsoap can be that server itself, with the
+`icecast.server`\indexop{icecast.server} operator, see [there](#sec:outputs).
+We use a separate Icecast server here, for the reasons given in
+[there](#sec:audio-streaming). The way you should proceed with its
 installation depends on your distribution, for instance on Ubuntu you can type
 
 ```
@@ -496,6 +548,13 @@ http://localhost:8000/admin/stats.xsl
 
 with the login for administrators (`admin` / `hackme` by default).
 
+At some point you will want the radio to keep playing once you close your
+terminal. Liquidsoap does not detach from the terminal. Use the service manager
+of your system, `systemd`\index{systemd} on most Linux distributions and
+`launchd`\index{launchd} on macOS. The service manager restarts the script if
+the script dies, collects the logs, and runs the script as the user you
+choose.
+
 #### The encoder
 
 The first argument `%mp3`, which controls the format, is called an _encoder_\index{encoder} and
@@ -512,7 +571,7 @@ By the way, support for aac is not built into the default installation. If you
 get the message
 
 ```
-Error 12: Unsupported format!
+Error 12: Unsupported encoder: %fdkaac.
 You must be missing an optional dependency.
 ```
 
