@@ -1,5 +1,5 @@
 #!./liquidsoap
-settings.log.level := 4
+log.level := 4
 s = playlist("~/Music")
 thread.run(every=10., {s.skip()})
 
