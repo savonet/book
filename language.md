@@ -527,7 +527,7 @@ Regular expression objects expose the following methods:
 
 For example, we can test whether a string `fname` corresponds to an image file with
 
-```{.liquidsoap include="liq/string.match.liq" from=2 to=-1}
+```{.liquidsoap include="liq/string.match.liq" from=3 to=-1}
 ```
 
 Named groups are also supported in `exec`:

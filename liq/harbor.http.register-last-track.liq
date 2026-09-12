@@ -7,4 +7,5 @@ def show_metadata(_)
                 data=metadata.json.stringify(last_metadata()))
 end
 harbor.http.register.simple("/metadata", show_metadata)
-thread.run(every=3., {radio.skip()}) output(radio)
+thread.run(every=3., {radio.skip()})
+output(radio)

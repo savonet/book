@@ -8,4 +8,5 @@ def update()
   log.important("New volume is #{volume()}.")
 end
 file.watch("volume", update)
-output(radio) thread.run(delay=2., {process.run("touch volume")})
+output(radio)
+thread.run(delay=2., {process.run("touch volume")})

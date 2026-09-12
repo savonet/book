@@ -390,13 +390,13 @@ Given an audio source `a` and a video source `v`, one can combine them in order
 to make a source `s` with both audio and video with the `source.mux.audio` and
 `source.mux.video` operators. Namely, in
 
-```{.liquidsoap include="liq/mux_audio.liq" from=2 to=-1}
+```{.liquidsoap include="liq/mux_audio.liq" from=3 to=-1}
 ```
 
 the `source.mux.audio` replaces the audio channel of the source `v` by the one of
 the source `a`. And we can similarly replace the video channel with
 
-```{.liquidsoap include="liq/mux_video.liq" from=2 to=-1}
+```{.liquidsoap include="liq/mux_video.liq" from=3 to=-1}
 ```
 
 For instance, we can generate a stream from a playlist of audio files and a
@@ -1078,12 +1078,12 @@ around the parameter name `x264-params` because it contains a dash).
 
 A typical setting for encoding in a file for backup would be
 
-```{.liquidsoap include="liq/encoder-ffmpeg-h264-file.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-h264-file.liq" from=3 to=-2}
 ```
 
 and for streaming in HLS it would be
 
-```{.liquidsoap include="liq/encoder-ffmpeg-h264-streaming.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-h264-streaming.liq" from=3 to=-2}
 ```
 
 <!-- See: https://obsproject.com/blog/streaming-with-x264 -->
@@ -1112,12 +1112,12 @@ parameters](https://developers.google.com/media/vp9) are
 
 A typical WebM encoding would look like this:
 
-```{.liquidsoap include="liq/encoder-ffmpeg-vp9-file.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-vp9-file.liq" from=4 to=-2}
 ```
 
 and if you are on budget with respect to CPU and bandwidth:
 
-```{.liquidsoap include="liq/encoder-ffmpeg-vp9-streaming.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-vp9-streaming.liq" from=4 to=-2}
 ```
 
 The successor of VP9 is AV1\index{AV1}, which is more efficient, and is now gaining popularity. It can
@@ -1139,7 +1139,7 @@ main parameters are
 For instance, we can encode a video in ogg with opus for the audio and Theora
 for the video with
 
-```{.liquidsoap include="liq/encoder-theora.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-theora.liq" from=3 to=-1}
 ```
 
 ### AVI
@@ -1160,7 +1160,7 @@ re-encode the resulting files afterward.
 If you want to generate AVI files with usual codecs, you should use the FFmpeg
 encoder presented above. For instance,
 
-```{.liquidsoap include="liq/encoder-ffmpeg-avi.liq" from=2 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-avi.liq" from=3 to=-1}
 ```
 
 Specific inputs and outputs

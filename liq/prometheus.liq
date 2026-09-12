@@ -1,5 +1,6 @@
 #!./liquidsoap
-radio1 = playlist("~/Music") radio2 = playlist("~/Music")
+radio1 = playlist("~/Music")
+radio2 = playlist("~/Music")
 settings.prometheus.server := true
 settings.prometheus.server.port := 9090
 rms_metric = prometheus.gauge(
