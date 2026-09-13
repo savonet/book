@@ -1,0 +1,3 @@
+#!./liquidsoap
+# header
+["a", "b"]

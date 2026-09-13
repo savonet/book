@@ -517,8 +517,8 @@ request using this protocol (both are only for documentation purposes). Once
 this defined, we can finally play songs of any artist by performing requests of
 the form
 
-```liquidsoap
-s = single("artist:Sinatra")
+```{.liquidsoap include="liq/single-artist.liq" from=header to=footer}
+
 ```
 
 and, of course, an uri such as "`artist:Nina Simone`" could also be used in a
@@ -654,8 +654,8 @@ that an exploit such as a buffer overflow is possible, but one never knows.
 First, the list of IPs which are allowed to connect to harbor can be changed
 with the following setting:
 
-```liquidsoap
-settings.harbor.bind_addrs := ["0.0.0.0"]
+```{.liquidsoap include="liq/harbor-bind_addrs.liq" from=header}
+
 ```
 
 It takes as argument a list of allowed IPs, the default one `0.0.0.0` meaning
@@ -893,8 +893,8 @@ takes as argument a list of sources, and plays the first one which is available,
 i.e. can produce some stream. We have already seen examples of this with request
 queues ([here](#sec:request.queue)) such as
 
-```liquidsoap
-radio = fallback([queue, playlist])
+```{.liquidsoap include="liq/fallback-queue.liq" from=header to=footer}
+
 ```
 
 Here, we want to play a song from the request queue when there is one, otherwise
@@ -909,8 +909,8 @@ input, and Liquidsoap fills that in for us. We can state that the queue should
 not wait, by setting its `track_sensitive`\index{track!sensitive} method to
 `false`, in which case the song from the queue will be immediately played:
 
-```liquidsoap
-radio = fallback([queue.{track_sensitive = false}, playlist])
+```{.liquidsoap include="liq/fallback-queue-track_sensitive.liq" from=header to=footer}
+
 ```
 
 Typically, you would use this to switch to a live show when available
@@ -949,8 +949,8 @@ with a fallback on blank. Since this is quite common in scripts, the function
 `mksafe`\indexop{mksafe} is defined in the standard library as a shorthand, and the above is
 equivalent to writing
 
-```liquidsoap
-s = mksafe(s)
+```{.liquidsoap include="liq/mksafe-shorthand.liq" from=header to=footer}
+
 ```
 
 #### Starting on a fresh track
@@ -1134,8 +1134,8 @@ The `sequence`\indexop{sequence} operator allows a behavior which sometimes usef
 argument a list of sources and plays one track from each source in order, and
 finally keeps on playing tracks from the last source. This means that
 
-```liquidsoap
-s = sequence([s1, s2, s3])
+```{.liquidsoap include="liq/sequence.liq" from=header to=footer}
+
 ```
 
 will play one track from `s1`, one track from `s2` and will then keep on
@@ -1307,14 +1307,14 @@ jingle in the first quarter of every hour as follows:
 As a variant, if we wanted to play a jingle every half hour, we could replace
 the second line by
 
-```liquidsoap
-    (predicate.once({00m-15m or 30m-45m}), jingles),
+```{.liquidsoap include="liq/jingles-once7.liq" from=header to=footer}
+
 ```
 
 As another variant, if we wanted to play 3 jingles, we could write
 
-```liquidsoap
-    (predicate.at_most(3, {00m-15m}), jingles),
+```{.liquidsoap include="liq/jingles-at_most.liq" from=header to=footer}
+
 ```
 
 where `predicate.at_most` is similar to `predicate.once`, but is true a given
@@ -1349,8 +1349,8 @@ most of the time, unless some other part of the program sends a "signal", in
 which case the predicate becomes true once and then false again, until the next
 signal. Concretely, we can use this function to create a predicate `p` by
 
-```liquidsoap
-p = predicate.signal()
+```{.liquidsoap include="liq/predicate.signal.liq" from=header to=footer}
+
 ```
 
 The predicate `p` is false by default, in order to make it true we can send a
@@ -1422,8 +1422,8 @@ metadata fields are: `artist`, `title`, `album`, `genre`, `year` and `comment`.
 
 In order to retrieve the title in such a list, one can use the notation
 
-```liquidsoap
-m["title"]
+```{.liquidsoap include="liq/metadata-get.liq" from=header}
+
 ```
 
 which returns the value associated to the field `title` in the metadata `m`, the
@@ -2238,8 +2238,8 @@ By default, this function fades the ending source out, over at most one second,
 and starts the starting source once the fade is over. We can change this
 duration globally with
 
-```liquidsoap
-settings.source.composition.max_fade := 2.
+```{.liquidsoap include="liq/max_fade.liq" from=header}
+
 ```
 
 The fade only applies when the source being left carries audio and nothing else.
@@ -3093,8 +3093,8 @@ float named `main_volume` by
 A first way to modify such variables is through the telnet server. It can be
 started by adding
 
-```liquidsoap
-server.telnet()
+```{.liquidsoap include="liq/server.telnet.liq" from=header}
+
 ```
 
 add the beginning of the script. We can then connect to the telnet server by
@@ -3152,8 +3152,8 @@ values again. However, this is easily solved by using the
 of all interactive variables in this file (in JSON format, which should easily
 be readable). For instance, if you end the previous script with
 
-```liquidsoap
-interactive.persistent("script.params")
+```{.liquidsoap include="liq/interactive.persistent.liq" from=header}
+
 ```
 
 you will observe that a file `script.params` has been created and its contents is
@@ -3180,8 +3180,8 @@ All this is very nice, but having to go through a telnet interface to change
 values is not very user-friendly. Fortunately, we can also get a web interface
 for free, simply by typing\indexop{interactive.harbor}\index{harbor}
 
-```liquidsoap
-interactive.harbor()
+```{.liquidsoap include="liq/interactive.harbor.liq" from=header}
+
 ```
 
 This will run a web server, which is accessible at the url
@@ -3203,9 +3203,8 @@ parameters of `interactive.float`) we moreover get a slider, and if we moreover
 set the `description` it will be displayed. This means that by changing the
 declaration of the interactive variable to
 
-```liquidsoap
-a = interactive.float("main_volume", description="Our volume",
-                      min=0., max=3., 1.)
+```{.liquidsoap include="liq/interactive.float.liq" from=header to=footer}
+
 ```
 
 the webpage will change to
@@ -4146,7 +4145,7 @@ presented above, but also many more. It is the encoder we reach for whenever the
 dedicated ones do not fit, and it is the only encoder for video. The general
 syntax is
 
-```liquidsoap
+```
 %ffmpeg(format="<format>", ...)
 ```
 
@@ -4253,16 +4252,16 @@ encode multiple times in the same format.
 
 Remember that we can encode audio in mp3 format using FFmpeg with the encoder
 
-```liquidsoap
-%ffmpeg(format="mp3", %audio(codec="libmp3lame))
+```{.liquidsoap include="liq/encoder-ffmpeg-mp3-lame.liq" from=header to=footer}
+
 ```
 
 This says that we want to generate a file in the mp3 format, and that
 we should put in audio which is encoded in mp3 with the LAME library. Now, if we
 change this to
 
-```liquidsoap
-%ffmpeg(format="mp3", %audio.copy)
+```{.liquidsoap include="liq/encoder-ffmpeg-mp3-copy.liq" from=header to=footer}
+
 ```
 
 this says that we want to generate a file in the mp3 format, and that we should
@@ -4301,8 +4300,8 @@ Again, this is mostly useful for relaying encoded data, but we loose much of the
 Liquidsoap power, which does not know how to edit encoded data. For instance, if
 we insert the line
 
-```liquidsoap
-radio = amplify(0.8, radio)
+```{.liquidsoap include="liq/bad/no-decoding3.liq" from=header to=footer}
+
 ```
 
 in the middle, in order to change the volume of the `radio`, we will obtain the
@@ -4760,8 +4759,8 @@ will print
 
 Conversely, JSON values can be converted to Liquidsoap using the syntax
 
-```liquidsoap
-let json.parse x = json
+```{.liquidsoap include="liq/json.parse-syntax.liq" from=header to=footer}
+
 ```
 
 which parses the string `json` as JSON data and assigns the result to `x`: this
@@ -4872,8 +4871,8 @@ the scripts.
 In order to start the server, one should begin by calling the `server.telnet`
 function:
 
-```liquidsoap
-server.telnet()
+```{.liquidsoap include="liq/server.telnet.liq" from=header}
+
 ```
 
 Related configuration keys can be set:
@@ -5192,14 +5191,14 @@ want to customize this (e.g. in order to support GET): it is based on
 It is also possible to run a server command from within a Liquidsoap script
 itself by using `server.execute` function such as
 
-```liquidsoap
-server.execute("title My new title")
+```{.liquidsoap include="liq/server.execute.liq" from=header-a to=footer-a}
+
 ```
 
 or
 
-```liquidsoap
-server.execute("title", "My new title")
+```{.liquidsoap include="liq/server.execute.liq" from=header-b to=footer-b}
+
 ```
 
 if you want to separate the command from the argument. This is working even if
@@ -5221,8 +5220,8 @@ We recall that Liquidsoap has integrated support distant files, in particular
 through the http and https protocols. This means that you can load a playlist on
 some web server by writing something like
 
-```liquidsoap
-radio = playlist("http://www.some-server.com/playlist")
+```{.liquidsoap include="liq/playlist-http.liq" from=header to=footer}
+
 ```
 
 and the playlist can itself consist in a list of urls of files to be played.
@@ -5800,8 +5799,8 @@ We recall that there are various levels of importance for information:
 By default, only messages with importance up to 3 are displayed, and this can be
 changed by setting the `log.level` configuration:
 
-```liquidsoap
-log.level := 5
+```{.liquidsoap include="liq/log.level.liq" from=header}
+
 ```
 
 You can log at various levels using the functions `log.critical`, `log.severe`,
@@ -6185,8 +6184,8 @@ source inherit its type, and the operators which combine several of them are
 file sources only when all of their children are. We can always ask a source
 what it settled on:
 
-```liquidsoap
-print(s.composition_type())
+```{.liquidsoap include="liq/composition_type.liq" from=header}
+
 ```
 
 In two cases, the automatic choice might not be what we want. The `buffer`

@@ -1448,10 +1448,8 @@ There also are situations where the clock may switch from controlling the
 latency to delegating it to the underlying sources or vice-versa. Consider for
 instance the following script:
 
-```liquidsoap
-s = fallback([
-  input.harbor("foo"), input.alsa()
-])
+```{.liquidsoap include="liq/clock-harbor-alsa-fallback.liq" from=header to=footer}
+
 ```
 When `input.harbor` is available, the latency is controlled by liquidsoap however,
 as soon as the `fallback` switches to `input.alsa`, latency is delegated to this source.
