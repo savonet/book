@@ -1323,7 +1323,7 @@ allowed as long as only one of the two is producing data at a time, which is why
 producing at the same time is the conflict, and Liquidsoap reports it. For
 instance, the script
 
-```{.liquidsoap include="liq/clock-alsa-pulseaudio.liq" from=2}
+```{.liquidsoap include="liq/clock-alsa-pulseaudio.liq" from=header}
 ```
 
 will raise the error
@@ -1391,7 +1391,7 @@ above), or defaulting the CPU clock `main`. If two distinct clocks are to be
 used, Liquidsoap issues an error and refuses to start. For instance, if we try
 to run
 
-```{.liquidsoap include="liq/clock-alsa-pulseaudio.liq" from=1}
+```{.liquidsoap include="liq/clock-alsa-pulseaudio-full.liq" from=header}
 ```
 
 we have a clock inconsistency because `output.pulseaudio` enforces the use of
@@ -1566,7 +1566,7 @@ this, we allow that the clock of their argument and their clocks are different.
 
 For instance, we have seen that the script
 
-```{.liquidsoap include="liq/clock-alsa-pulseaudio.liq" from=2}
+```{.liquidsoap include="liq/clock-alsa-pulseaudio.liq" from=header}
 ```
 
 is not allowed because it would require `s` to belong to two distinct
@@ -1577,7 +1577,7 @@ clocks. Graphically,
 The easy way to solve this is to insert a `buffer` operator before one of the
 two outputs, say `output.alsa`:
 
-```{.liquidsoap include="liq/clock-alsa-pulseaudio2.liq" from=2}
+```{.liquidsoap include="liq/clock-alsa-pulseaudio2.liq" from=header}
 ```
 
 which allows having two distinct clocks at the input and the output of `buffer`

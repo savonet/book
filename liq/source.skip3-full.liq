@@ -6,5 +6,4 @@ def skipper(_)
   http.response(data="The current song was skipped!")
 end
 harbor.http.register.simple(port=8000, "/skip", skipper)
-# footer
 output(s)

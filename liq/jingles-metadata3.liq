@@ -2,11 +2,11 @@
 log.level := 4
 s = single("test.mp3")
 jingle_now = ref(false)
-def metadata()
+def jingle_metadata()
   jingle_now := not jingle_now()
   if jingle_now() then [("jingle","true")] else [] end
 end
-s = chop(every=3., metadata=metadata, s)
+s = chop(every=3., metadata=jingle_metadata, s)
 
 # header
 jingles = playlist("jingles")

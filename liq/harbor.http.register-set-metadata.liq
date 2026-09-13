@@ -1,9 +1,9 @@
 #!./liquidsoap
 radio = playlist("~/Music")
 # header
-def set_metadata(request)
-  log.important("Inserting metadata: #{request.query}")
-  radio.insert_metadata(request.query)
+def set_metadata(req)
+  log.important("Inserting metadata: #{req.query}")
+  radio.insert_metadata(req.query)
   http.response(data="Done.")
 end
 harbor.http.register.simple("/set_metadata", set_metadata)

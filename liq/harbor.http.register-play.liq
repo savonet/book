@@ -3,9 +3,9 @@
 default = playlist("~/Music")
 queue   = request.queue()
 radio   = fallback([queue.{track_sensitive = false}, default])
-def play(request)
-  fname = request.query["file"]
-  title = request.query["title"]
+def play(req)
+  fname = req.query["file"]
+  title = req.query["title"]
   log.important("Serving file #{fname} whose title is #{title}.")
   if file.exists(fname) then
     queue.push.uri("annotate:title=#{string.quote(title)}:#{fname}")

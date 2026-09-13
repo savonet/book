@@ -286,7 +286,7 @@ The current release status is the following one:
 |---------|----------------|-----------|--------------------------|
 | `2.5.x` | (in dev)       | (dev)     | `main` branch            |
 | `2.4.x` | 2.4.5          | \ding{51} | `rolling-release-v2.4.x` |
-| `2.3.x` | 2.3.3          | \ding{55} | —                        |
+| `2.3.x` | 2.3.3          | \ding{55} | none                     |
 
 This means that all developments and new features are brought to the 2.5.x branch, but we still support 2.4.x versions in order to let our users adapt their scripts to the new features and language improvements.
 
@@ -436,7 +436,7 @@ Network and device I/O:
 - `srt`: transport over the network using the SRT protocol.
 
 Icecast/Shoutcast streaming output is always compiled in (via the `cry`
-library, which is a required dependency).
+library, which is bundled with Liquidsoap).
 
 ### Sound processing
 
