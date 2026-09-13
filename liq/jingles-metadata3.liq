@@ -8,6 +8,7 @@ def metadata()
 end
 s = chop(every=3., metadata=metadata, s)
 
+# header
 jingles = playlist("jingles")
 p = predicate.signal()
 def insert_jingle(m)

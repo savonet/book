@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 %ifdef output.alsa
 print("We have support for ALSA.")
 %else

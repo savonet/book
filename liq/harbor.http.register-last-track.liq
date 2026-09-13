@@ -1,5 +1,6 @@
 #!./liquidsoap
 radio = playlist("~/Music")
+# header
 last_metadata = ref([])
 radio.on_track(synchronous=true, fun (m) -> last_metadata := m)
 def show_metadata(_)
@@ -7,5 +8,6 @@ def show_metadata(_)
                 data=metadata.json.stringify(last_metadata()))
 end
 harbor.http.register.simple("/metadata", show_metadata)
+# footer
 thread.run(every=3., {radio.skip()})
 output(radio)

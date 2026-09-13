@@ -1,5 +1,6 @@
 #!./liquidsoap
 radio = mksafe(playlist("~/Music"))
+# header
 def auth({login, password})
   login == "bob" and password == "secret"
 end

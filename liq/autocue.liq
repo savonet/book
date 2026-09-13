@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 enable_autocue_metadata()
 s = playlist("~/Music")
 s = crossfade(s)

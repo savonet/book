@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 a = single("video.mkv")
 b = single("video.mkv")
 output.file(%theora, "/tmp/a.ogv", a)

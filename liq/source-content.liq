@@ -1,4 +1,5 @@
 #!/usr/bin/env liquidsoap
+# header
 s = source.mux.video(video=video.fill(color=0x0000ff, blank()), sine())
 def show_content() =
   list.iter(

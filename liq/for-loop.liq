@@ -5,4 +5,6 @@ def rec forloop(first, last, f)
     forloop(first+1, last, f)
   end
 end
+# footer-a
+# header-b
 forloop(0, 4, fun(i) -> print("This is number #{i}."))

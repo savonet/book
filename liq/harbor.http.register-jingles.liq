@@ -1,5 +1,6 @@
 #!./liquidsoap --safe
 radio        = playlist("~/Music")
+# header
 jingle_queue = request.queue()
 radio        = add(normalize=false, [jingle_queue, radio])
 def jingles(req)
@@ -14,4 +15,5 @@ def jingles(req)
   end
 end
 harbor.http.register.simple("/jingles", jingles)
+# footer
 output(radio)

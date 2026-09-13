@@ -1,5 +1,6 @@
 #!./liquidsoap
 log.level := 5
+# header
 radio = playlist("~/Music")
 def handle_metadata(m)
   h = http.post(
@@ -11,4 +12,5 @@ def handle_metadata(m)
   end
 end
 radio.on_track(synchronous=false, handle_metadata)
+# footer
 output(radio)

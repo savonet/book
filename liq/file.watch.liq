@@ -1,5 +1,6 @@
 #!./liquidsoap
 default = playlist("~/Music")
+# header
 queue   = request.queue()
 radio   = fallback([queue.{track_sensitive = false}, default])
 def on_request()
@@ -10,4 +11,5 @@ end
 file.write(data=string(time()), "to-play")
 file.watch("to-play", on_request)
 output(radio)
+# footer
 thread.run(delay=2., {log.important("touching"); file.write(data="test.mp3", "to-play")})

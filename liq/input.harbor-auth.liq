@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 def auth(login)
   ans = process.read.lines("./harbor-auth \
         #{string.quote(login.user)} #{string.quote(login.password)}")

@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 server.telnet()
 playlist = playlist("~/Music")
 queue1   = request.queue(id="q1")

@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 s = playlist("videos.playlist")
 w = source.mux.audio(audio=blank(), input.v4l2())
 w = video.scale(x=10, y=10, scale=0.1, w)

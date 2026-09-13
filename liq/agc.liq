@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 pre    = lufs(playlist("~/Music"))
 volume = ref(1.)
 post   = lufs(amplify(volume, pre))

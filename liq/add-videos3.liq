@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 s = playlist("videos")
 x = {int(10.+10.*cos(6.*time()))}
 y = {int(10.+10.*sin(6.*time()))}

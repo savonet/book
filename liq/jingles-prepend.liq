@@ -9,6 +9,7 @@ end
 jingles = playlist("jingles")
 s = chop(every=3., metadata=metadata, s)
 
+# header
 def insert_jingle(m)
   log.info("Got metadata")
   if m["jingle"] == "true" then

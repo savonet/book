@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 fname = "test.txt"
 f = file.lines.iterator(fname)
 for contents = f do

@@ -1,6 +1,7 @@
 #!./liquidsoap
 radio = mksafe(playlist("~/Music"))
 radio = source.run(radio, every=2., {radio.skip()})
+# header
 def on_file(fname)
   log.important("Making a backup of #{fname}.")
   process.run("cp #{fname} /radio/backup/")

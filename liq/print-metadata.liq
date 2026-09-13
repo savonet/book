@@ -1,4 +1,5 @@
 #!/usr/bin/env liquidsoap
+# header
 s = playlist("~/Music")
 def print_metadata(m)
   list.iter(fun (lv) -> print("- #{fst(lv)}: #{snd(lv)}"), m)

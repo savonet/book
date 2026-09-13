@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 db = sqlite("/tmp/radio.db")
 db.table.create(
   "played", preserve=true, [("title", "STRING"), ("at", "INTEGER")]

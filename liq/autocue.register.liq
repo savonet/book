@@ -1,4 +1,5 @@
 #!/usr/bin/env liquidsoap
+# header
 autocue.register(name="my-autocue",
   fun (~request_metadata, ~file_metadata, fname) ->
     {
@@ -9,4 +10,5 @@ autocue.register(name="my-autocue",
       start_next = 175.0
     }
   )
+# footer
 output(blank())

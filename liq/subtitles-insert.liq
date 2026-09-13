@@ -1,5 +1,6 @@
 #!./liquidsoap
 s = playlist("~/Music")
+# header
 s = subtitles.insert(s)
 thread.run(delay=1., {
   s.insert_subtitle({
@@ -9,4 +10,5 @@ thread.run(delay=1., {
     forced   = false
   })
 })
+# footer
 output(s)

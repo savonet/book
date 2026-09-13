@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 def playlist(~randomize=true, ~reload=true, p)
   l = ref(playlist.files(p))
   if randomize then l := list.shuffle(l()) end
@@ -14,4 +15,5 @@ def playlist(~randomize=true, ~reload=true, p)
   end
   request.dynamic(next)
 end
+# footer
 output(playlist("~/Music"))

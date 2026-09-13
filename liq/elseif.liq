@@ -1,4 +1,5 @@
 x = ""
+# header
 s = if x == "a" then 0
     else
       if x == "b" then 1
@@ -7,4 +8,5 @@ s = if x == "a" then 0
         else 3 end
       end
     end
+# footer
 ignore(s)

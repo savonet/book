@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 state = ref({volume = 1., muted = false})
 
 def mute()

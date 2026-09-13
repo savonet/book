@@ -1,4 +1,5 @@
 #!/usr/bin/env liquidsoap
+# header
 def mksafe(~id="mksafe", s) =
   fallback(
     id=id,
