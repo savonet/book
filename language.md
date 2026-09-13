@@ -238,22 +238,16 @@ integer as argument and returning an integer.
 The most common form of comment is the _single-line comment_: anything from a
 `#` character to the end of the line is ignored by the interpreter:
 
-```liquidsoap
-# This is a comment
-x = 1  # so is this
+```{.liquidsoap include="liq/comment-single.liq" from=header to=footer}
+
 ```
 
 _Multi-line comments_ are delimited by `#<` and `>#` and can span multiple
 lines. They also nest, making it easy to comment out blocks that already contain
 comments:
 
-```liquidsoap
-#< This is a comment >#
+```{.liquidsoap include="liq/comment-multiline.liq" from=header}
 
-#<
-  This is a top-level comment
-  #< This is a nested comment >#
->#
 ```
 
 Basic values {#sec:basic-values}
@@ -327,15 +321,15 @@ e.g. `"hello!"` or `'hello!'`, and are of type `string`.
 The function to output strings on the standard output is `print`\indexop{print}, as
 in
 
-```liquidsoap
-print("Hello, world!")
+```{.liquidsoap include="liq/print-hello.liq" from=header}
+
 ```
 
 Incidentally, this function can also be used to display values of any type, so
 that
 
-```liquidsoap
-print(3+2)
+```{.liquidsoap include="liq/print-int.liq" from=header}
+
 ```
 
 will display `5`, as expected. In practice, one rarely does use this functions,
@@ -379,9 +373,8 @@ before "Romain" is not shown either.
 
 The concatenation of two strings is achieved by the infix operator "`^`", as in
 
-```liquidsoap
-user = "dj"
-print("Current user is " ^ user)
+```{.liquidsoap include="liq/string-concat.liq" from=header}
+
 ```
 
 Instead of using concatenation, it is often rather convenient to use _string
@@ -391,15 +384,14 @@ the result of the evaluation of the expression `e`:
 \SM{there is another kind of string interpolation but I don't think that anybody ever used that in practice}
 -->
 
-```liquidsoap
-user = "admin"
-print("The user #{user} has just logged.")
+```{.liquidsoap include="liq/interpolation-user.liq" from=header}
+
 ```
 
 will print `The user admin has just logged.` or
 
-```liquidsoap
-print("The number #{random.float()} is random.")
+```{.liquidsoap include="liq/interpolation-random.liq" from=header}
+
 ```
 
 will print `The number 0.663455738438 is random.` (at least it did last time I
@@ -422,8 +414,8 @@ the expression between `#{` and `}` on its own.
 When a string should be taken verbatim, without any interpolation or escape
 processing, you should use the _raw string_ syntax `{|...|}`\index{string!raw}:
 
-```liquidsoap
-print({|no interpolation: #{expr} here|})
+```{.liquidsoap include="liq/raw-string.liq" from=header}
+
 ```
 
 will print `no interpolation: #{expr} here`.
@@ -431,8 +423,8 @@ will print `no interpolation: #{expr} here`.
 If the content itself contains `|}`, use a delimited form `{id|...|id}` where
 `id` is any sequence of lowercase letters and underscores:
 
-```liquidsoap
-print({foo|this |} is fine|foo})
+```{.liquidsoap include="liq/raw-string-delimited.liq" from=header}
+
 ```
 
 will print `this |} is fine`. The opening `{id|` and closing `|id}` must use
@@ -502,12 +494,8 @@ Since version 2.1.0, the recommended way to work with regular expressions is via
 the `regexp` operator or the `r/.../` syntactic sugar. The `r/.../` form is
 particularly convenient because backslashes do not need to be escaped:
 
-```liquidsoap
-# Using the regexp operator:
-r = regexp(flags=["g", "i"], "foo([\\w])+bar")
+```{.liquidsoap include="liq/regexp.liq" from=header to=footer}
 
-# Using the r/../ syntactic sugar:
-r = r/foo([\w])bar/gi
 ```
 
 The available flags are:
@@ -532,9 +520,8 @@ For example, we can test whether a string `fname` corresponds to an image file w
 
 Named groups are also supported in `exec`:
 
-```liquidsoap
-r/(foo)(?<gno>gni)?/g.exec("foogni")
-# Returns: [(2, "gni"), (1, "foo"), (0, "foogni")].{groups = [("gno", "gni")]}
+```{.liquidsoap include="liq/regexp-groups.liq" from=header}
+
 ```
 
 The older functions `string.match`\indexop{string.match} and
@@ -559,8 +546,8 @@ and return booleans:
 
 and so on (`<`, `>=`, `>`). For instance, the following is a boolean expression:
 
-```liquidsoap
-(n < 3) and not (s == "hello")
+```{.liquidsoap include="liq/boolean-expression.liq" from=header}
+
 ```
 
 The time predicates such as `10h-15h` are also booleans, which are true or false
@@ -603,8 +590,8 @@ branch returns a string, and the two branches should be of same nature. The
 `else` branch is optional, in which case the `then` branch should be of type
 `unit`:
 
-```liquidsoap
-if x == "admin" then print("Welcome admin") end
+```{.liquidsoap include="liq/cond-no-else.liq" from=header}
+
 ```
 
 In the case where you want to perform a conditional branching in the
@@ -690,8 +677,8 @@ first kind is _lists_\index{list} which are finite sequences of values, being al
 same type. They are constructed by square bracketing the sequence whose elements
 are separated by commas. For instance, the list
 
-```liquidsoap
-[1, 4, 5]
+```{.liquidsoap include="liq/list-of-integers.liq" from=header}
+
 ```
 
 is a list of three integers (1, 4 and 5), and its type is `[int]`, and the type
@@ -766,9 +753,8 @@ let [x, _, z, ...t] = [1, 2, 3, 4]
 Here, `_` ignores a value, and `...t` captures all remaining elements as a list.
 Lists can similarly be constructed using spreads:
 
-```liquidsoap
-x = [1, ...[2, 3, 4], 5, ...[6, 7]]
-# x = [1, 2, 3, 4, 5, 6, 7]
+```{.liquidsoap include="liq/list-spread.liq" from=header to=footer}
+
 ```
   
 ### Tuples
@@ -805,8 +791,8 @@ For general tuples, there is a special syntax in order to access
 their elements. For instance, if `t` is the above tuple `(3, 4.2,
 "hello")`{.liquidsoap}, we can write
 
-```liquidsoap
-let (n, x, s) = t
+```{.liquidsoap include="liq/tuple-let.liq" from=header to=footer}
+
 ```
 
 which will assign the first element to the variable `n`, the second element to
@@ -835,24 +821,24 @@ they are lists of pairs of strings, the first string being the name of the
 metadata, and the second its value. For instance, a metadata would be the
 association list
 
-```liquidsoap
-m = [("artist", "Frank Sinatra"), ("title", "Fly me to the moon")]
+```{.liquidsoap include="liq/assoc-metadata.liq" from=header to=footer}
+
 ```
 
 indicating that the artist of the song is "Frank Sinatra" and the title is "Fly
 me to the moon". For such an association list, one can obtain the value
 associated to a given key using the `list.assoc` function:
 
-```liquidsoap
-list.assoc("title", m)
+```{.liquidsoap include="liq/list.assoc.liq" from=header}
+
 ```
 
 will return `"Fly me to the moon"`, i.e. the value associated to
 `"title"`. Since this is so useful, we have a special notation for the above
 function, and it is equivalent to write
 
-```liquidsoap
-m["title"]
+```{.liquidsoap include="liq/assoc-brackets.liq" from=header}
+
 ```
 
 to obtain the `"title"` metadata. Other useful functions are
@@ -866,14 +852,14 @@ Apart from metadata, association lists are also used to store http headers
 In passing, you should note the importance of parenthesis when defining
 pairs. For instance
 
-```liquidsoap
-["a", "b"]
+```{.liquidsoap include="liq/list-of-strings.liq" from=header}
+
 ```
 
 is a list of strings, whereas
 
-```liquidsoap
-[("a", "b")]
+```{.liquidsoap include="liq/list-of-pairs.liq" from=header}
+
 ```
 
 is a list of pairs of strings, i.e. an association list.
@@ -885,7 +871,7 @@ Programming primitives
 
 We have already seen many examples of uses of _variables_\index{variable}: we use
 
-```liquidsoap
+```
 x = e
 ```
 
@@ -928,7 +914,7 @@ name, and never for the names we defined ourselves.
 
 There is an alternative syntax for declaring variables which is\indexop{def}
 
-```liquidsoap
+```
 def x =
   e
 end
@@ -972,15 +958,15 @@ Warning 4: Unused variable n
 If this situation is really wanted, you should use `ignore`\indexop{ignore} in order to fake a
 use of the variable `n` by writing
 
-```liquidsoap
-ignore(n)
+```{.liquidsoap include="liq/ignore.liq" from=header}
+
 ```
 
 Another possibility is to assign the special variable `_`\indexop{\_}, whose purpose is to
 store results which are not going to be used afterwards:
 
-```liquidsoap
-_ = 2 + 2
+```{.liquidsoap include="liq/underscore.liq" from=header}
+
 ```
 
 ### References {#sec:references}
@@ -1225,7 +1211,7 @@ disconnection of users.
 For concision in scripts, it is possible define a function\indexop{fun}\indexop{->} without giving it a
 name, using the syntax
 
-```liquidsoap
+```
 fun (x) -> ...
 ```
 
@@ -1240,7 +1226,7 @@ where we define the function directly in the argument.
 
 As a side note, this means that a definition of a function of the form
 
-```liquidsoap
+```
 def f(x) =
   ...
 end
@@ -1248,7 +1234,7 @@ end
 
 could equivalently be written
 
-```liquidsoap
+```
 f = fun (x) -> ...
 ```
 
@@ -1272,13 +1258,13 @@ You will see that it is quite common to use anonymous functions with no
 arguments. For this reason, we have introduced a special convenient syntax for
 those and allow writing
 
-```liquidsoap
+```
 {...}
 ```
 
 instead of
 
-```liquidsoap
+```
 fun () -> ...
 ```
 -->
@@ -1323,15 +1309,15 @@ Namely, in the above type, we read that the argument labeled `samples` is a
 float and similarly for the one labeled `duration`. For those arguments, we have
 to give the name of the argument when calling the function:
 
-```liquidsoap
-samplerate(samples=110250., duration=2.5)
+```{.liquidsoap include="liq/samplerate-labeled-call.liq" from=header-a to=footer-a}
+
 ```
 
 The nice byproduct is that the order of the arguments does not matter anymore, the
 following will give the same result:
 
-```liquidsoap
-samplerate(duration=2.5, samples=110250.)
+```{.liquidsoap include="liq/samplerate-labeled-call.liq" from=header-b}
+
 ```
 Of course, a function can have both labeled and non-labeled arguments.
 
@@ -1349,16 +1335,16 @@ make this become the value for the `duration` parameter:
 In this way, if we do not specify a value for the duration, its value will
 implicitly be assumed to be 2.5, so that the expression:
 
-```liquidsoap
-samplerate(samples=110250.)
+```{.liquidsoap include="liq/samplerate-optional-call.liq" from=header-a to=footer-a}
+
 ```
 
 will still evaluate to 44100. Of course, if we want to use another value for the
 duration, we can still specify it, in which case the default value will be
 ignored:
 
-```liquidsoap
-samplerate(samples=132300., duration=3.)
+```{.liquidsoap include="liq/samplerate-optional-call.liq" from=header-b}
+
 ```
 
 The presence of an optional argument is indicated in the type by prefixing the
@@ -1551,9 +1537,8 @@ its type to be
 so that we can use it to have a radio consisting of a microphone input amplified
 by a factor 1.2 by
 
-```liquidsoap
-mic   = input.alsa()
-radio = amplify(1.2, mic)
+```{.liquidsoap include="liq/amplify-mic.liq" from=header to=footer}
+
 ```
 
 In the above example, the volume 1.2 was supposedly chosen because the sound
@@ -1597,13 +1582,13 @@ interactive session, we obtain
 
 Since defining such arguments often involves expressions of the form
 
-```liquidsoap
+```
 fun () -> e
 ```
 
 which is somewhat heavy, we have introduced the alternative syntax
 
-```liquidsoap
+```
 {e}
 ```
 
@@ -1630,43 +1615,42 @@ called before each frame, which means roughly every 0.02 second. Let's see how
 we can use this in scripts. We can, of course, still apply a constant factor
 with
 
-```liquidsoap
-def volume () = 1.2 end
-radio = amplify(volume, mic)
+```{.liquidsoap include="liq/amplify-volume.liq" from=header-a to=footer-a}
+
 ```
 
 or, using anonymous functions,
 
-```liquidsoap
-radio = amplify(fun () -> 1.2, mic)
+```{.liquidsoap include="liq/amplify-volume.liq" from=header-b to=footer-b}
+
 ```
 
 which we generally write, using the alternative syntax,
 
-```liquidsoap
-radio = amplify({1.2}, mic)
+```{.liquidsoap include="liq/amplify-volume.liq" from=header-c to=footer-c}
+
 ```
 
 More interestingly, we can use the value of a float reference `v` for
 amplification:
 
-```liquidsoap
-radio = amplify({v()}, mic)
+```{.liquidsoap include="liq/amplify-volume.liq" from=header-d to=footer-d}
+
 ```
 
 when the value of the reference gets changed, the amplification will get changed
 too. Moreover, since any reference can be considered as a getter, as mentioned
 above, this can be written in an even simpler way:
 
-```liquidsoap
-radio = amplify(v, mic)
+```{.liquidsoap include="liq/amplify-volume.liq" from=header-e to=footer-e}
+
 ```
 
 However, we need to use the above syntax if we want to manipulate the value of
 the reference. For instance,
 
-```liquidsoap
-radio = amplify({2 * v()}, mic)
+```{.liquidsoap include="liq/amplify-volume.liq" from=header-f to=footer-f}
+
 ```
 
 will amplify by twice the value of `v`.
@@ -1952,8 +1936,8 @@ which indicates the fields and their respective type. In order to access a field
 of a record, we can use the syntax `record.field`. For instance, we can print
 the duration with
 
-```liquidsoap
-print("The duration of the song is #{song.duration} seconds")
+```{.liquidsoap include="liq/record-song.liq" from=header-b}
+
 ```
 
 ### Modules
@@ -2095,11 +2079,8 @@ particular field. There are two ways to handle this.
 The first uses the `x.foo ?? default` syntax, which evaluates to the field value
 when it is present or to the default otherwise:
 
-```liquidsoap
-# Adds 1 to x, or options.add if that field is present
-def f(x, options) =
-  x + (options.add ?? 1)
-end
+```{.liquidsoap include="liq/optional-field.liq" from=header to=footer}
+
 ```
 
 The type of this function reflects the optional field with `?`:
@@ -2112,8 +2093,8 @@ The second approach uses the `x?.foo` safe-navigation operator, which returns
 the field value or `null` when the field is absent. It can be chained and works
 with method calls:
 
-```liquidsoap
-x?.fn(123, "aabb")?.field
+```{.liquidsoap include="liq/safe-navigation.liq" from=header}
+
 ```
 
 ### References
@@ -2143,8 +2124,8 @@ Patterns {#sec:patterns}
 
 _Patterns_ are a concise way to extract values from structured data such as lists, tuples, and records, and assign them to variables. For instance, we have already seen the basic form
 
-```liquidsoap
-let (n, x, s) = t
+```{.liquidsoap include="liq/tuple-let.liq" from=header to=footer}
+
 ```
 
 for tuples: given a triplet `t` of values, it states that we should call `n` (resp. `x`, resp. `s`) the first (resp. second, resp. third) element before executing the rest of the code. More generally, patterns can be combined arbitrarily.
@@ -2153,18 +2134,16 @@ for tuples: given a triplet `t` of values, it states that we should call `n` (re
 
 Tuple patterns destructure each element positionally. The special placeholder `_` ignores a value:
 
-```liquidsoap
-let (x, y, _, z) = (123, "aabbcc", true, 3.14)
-# x = 123, y = "aabbcc", z = 3.14
+```{.liquidsoap include="liq/pattern-tuple.liq" from=header to=footer}
+
 ```
 
 ### List patterns
 
 List patterns can be used in order to name the elements of a list, similarly as for tuples. For instance, we can name the three elements of a list with three elements as follows:
 
-```liquidsoap
-let [x, y, z] = [1, 2, 3]
-# x = 1, y = 2, z = 3
+```{.liquidsoap include="liq/pattern-list.liq" from=header to=footer}
+
 ```
 
 In the case where we do not know in advance the precise length of the list (which is the usual situation), we can use a *spread*, which is a pattern of the form `...var`, which will collect the list of the remaining elements. For instance, in
@@ -2176,23 +2155,20 @@ let [x, y, ...l] = [1, 2, 3, 4]
 
 we state that we want to call `x` and `y` the two first elements, and `l` the tail of the list. This can also be combined with other patterns such as place holders:
 
-```liquidsoap
-let [_, x, ...l] = [1, 2, 3, 4]
-# x = 2, l = [3, 4]
+```{.liquidsoap include="liq/pattern-list-spread.liq" from=header to=footer}
+
 ```
 
 In case, we do not care about the remaining elements, we can simply use the pattern `...` (without a variable name:
 
-```liquidsoap
-let [x, ...] = [1, 2 ,3]
-# x = 1
+```{.liquidsoap include="liq/pattern-list-spread-any.liq" from=header to=footer}
+
 ```
 
 Spreads also work "backwards", i.e. we can capture the last elements of a list as follows:
 
-```liquidsoap
-let [...l, x, y] = [1, 2, 3, 4, 5]
-# l = [1, 2, 3], x = 4, y = 5
+```{.liquidsoap include="liq/pattern-list-spread-back.liq" from=header to=footer}
+
 ```
 
 ### Record and module patterns
@@ -2200,47 +2176,28 @@ let [...l, x, y] = [1, 2, 3, 4, 5]
 Record patterns extract named fields. A spread captures the remaining fields as
 a record:
 
-```liquidsoap
-let {foo, bar} = {foo = 123, bar = "baz", gni = true}
-# foo = 123, bar = "baz"
+```{.liquidsoap include="liq/pattern-record.liq" from=header to=footer}
 
-let {foo, bar, ...x} = {foo = 123, bar = "baz", gni = true}
-# foo = 123, bar = "baz", x = {gni = true}
 ```
 
 Module patterns additionally capture the base value alongside the fields:
 
-```liquidsoap
-let v.{foo, bar} = "aabbcc".{foo = 123, bar = "baz"}
-# v = "aabbcc", foo = 123, bar = 456
+```{.liquidsoap include="liq/pattern-module.liq" from=header to=footer}
+
 ```
 
 Optional fields can be captured with `?`, yielding `null` when absent:
 
-```liquidsoap
-let {foo?} = ()
-# foo = null
+```{.liquidsoap include="liq/pattern-optional.liq" from=header to=footer}
 
-let {foo?} = {foo = 123}
-# foo = 123
 ```
 
 ### Patterns in function arguments
 
 Patterns are also valid directly in function argument positions. For instance,
 
-```liquidsoap
-# Destructure a labeled argument:
-def f(~x:{gno}) =
-  gno + 1
-end
-# f : (x : 'a.{gno : int}) -> int
+```{.liquidsoap include="liq/pattern-argument.liq" from=header to=footer}
 
-# Destructure a list argument:
-def f([a, b]) =
-  a + b
-end
-# f : (['a]) -> 'a
 ```
 
 ### Patterns without `let`
@@ -2307,7 +2264,7 @@ to `list.hd`.
 
 In order to avoid this, one can _catch_ exceptions with the syntax
 
-```liquidsoap
+```
 try
   code
 catch err do
@@ -2502,8 +2459,8 @@ has become quite large, or because you want to be able to reuse common functions
 between different scripts. You can include a file `file.liq` in a script by
 writing
 
-```liquidsoap
-%include "file.liq"
+```{.liquidsoap include="liq/include.liq" from=header}
+
 ```
 
 which will be evaluated as if you had pasted the contents of the file in place
@@ -2514,13 +2471,13 @@ order to avoid risking leaking those when handing the script to some other
 people. Typically, one would have a file `passwords.liq` defining the passwords
 in variables, e.g.
 
-```liquidsoap
-radio_pass = "secretpassword"
+```{.liquidsoap include="liq/passwords.liq" from=header to=footer}
+
 ```
 
 and would then use it by including it:
 
-```liquidsoap
+```
 %include "passwords.liq"
 
 radio = ...
@@ -2577,16 +2534,16 @@ chapters.
 The string representation of any value can be obtained with the
 `string`\indexop{string} function:
 
-```liquidsoap
-print(string([1,2,3]))
+```{.liquidsoap include="liq/string-of-value.liq" from=header}
+
 ```
 
 Most expected type conversion function are implemented with names of the form
 `A_of_B`. For instance, we can convert a string to an integer with
 `int_of_string`:
 
-```liquidsoap
-print(1 + int_of_string("2"))
+```{.liquidsoap include="liq/int_of_string.liq" from=header}
+
 ```
 
 ### Structured data
@@ -3092,8 +3049,8 @@ you can still instruct Liquidsoap
 to run the OCaml memory compaction algorithm before starting, which recovers
 most of the type-checking memory:
 
-```liquidsoap
-settings.init.compact_before_start := true
+```{.liquidsoap include="liq/compact-before-start.liq" from=header}
+
 ```
 
 If you want to monitor precisely memory consumption, Liquidsoap ships with
