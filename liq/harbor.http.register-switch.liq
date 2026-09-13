@@ -3,6 +3,7 @@ rap = sine(880.)
 rock = sine(440.)
 techno = sine(220.)
 server.harbor()
+# header
 selected = ref("techno")
 def on_select(request)
   selected := request.query["source"]
@@ -14,4 +15,5 @@ radio = switch([
   ({selected() == "rock"},   rock.{track_sensitive = false}),
   ({selected() == "techno"}, techno.{track_sensitive = false})
 ])
+# footer
 output(radio)

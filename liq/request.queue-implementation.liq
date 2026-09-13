@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 def request.queue(~id="", ~queue=[])
   queue = ref(queue)
   def next()
@@ -18,4 +19,5 @@ def request.queue(~id="", ~queue=[])
   s = request.dynamic(next)
   s.{push=push}
 end
+# footer
 output(request.queue(queue=[request.create("test.mp3")]))

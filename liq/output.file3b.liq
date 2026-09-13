@@ -1,5 +1,6 @@
 #!./liquidsoap
 radio = mksafe(playlist("~/Music"))
+# header
 f = output.file(%mp3,
             {time.string("archive/%Y-%m-%d/%H-%M-%S.mp3")},
             radio)

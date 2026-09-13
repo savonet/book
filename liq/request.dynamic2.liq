@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 def next()
   uri = file.contents("song")
   if uri != "" then
@@ -8,4 +9,5 @@ def next()
   end
 end
 s = request.dynamic(retry_delay=1., next)
+# footer
 output(s)

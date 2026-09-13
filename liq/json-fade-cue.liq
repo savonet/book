@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 def next_song()
   answer = process.read("./next-song-json")
   let json.parse song = answer

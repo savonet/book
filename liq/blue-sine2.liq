@@ -1,4 +1,5 @@
 #!./liquidsoap -i
+# header
 a = sine()
 b = video.fill(color=0x0000ff, blank())
 s = source.mux.video(video=b, a)

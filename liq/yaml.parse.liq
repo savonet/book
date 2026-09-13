@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 config = '
 name: My Radio
 volume: 0.8

@@ -3,6 +3,7 @@ rap = sine(880.)
 rock = sine(440.)
 techno = sine(220.)
 server.harbor()
+# header
 server.telnet()
 selected = ref("techno")
 def on_select(x)

@@ -95,7 +95,7 @@ In order to have more readable code, one can use variables\index{variable} which
 names to sources. For instance, we can give the name `s` to our sine source and
 then play it. The above code is thus equivalent to
 
-```{.liquidsoap include="liq/sine2.liq" from=1}
+```{.liquidsoap include="liq/sine2.liq" from=header}
 ```
 
 ### Parameters
@@ -178,7 +178,7 @@ amplitude while the stream is playing, see [there](#sec:getters).
 If we want to generate a sine wave of 2600 Hz with an amplitude of 0.8, we can thus
 write
 
-```{.liquidsoap include="liq/sine3.liq" from=1}
+```{.liquidsoap include="liq/sine3.liq" from=header}
 ```
 
 Note that the parameter corresponding to id has a label `id`, which we have to
@@ -187,7 +187,7 @@ amplitude, whereas there is no label for the frequency.
 
 Finally, just for fun, we can hear an A minor chord by adding three sines:
 
-```{.liquidsoap include="liq/sine4.liq" from=1}
+```{.liquidsoap include="liq/sine4.liq" from=header}
 ```
 
 We generate three sines at frequencies 440 Hz, 440×2^3/12^ Hz and
@@ -208,7 +208,7 @@ m3u, xspf, etc.), or a directory (in which case the playlist consists of all the
 files in the directory). For instance, if our music is stored in the `~/Music`
 directory, we can play it with
 
-```{.liquidsoap include="liq/playlist.liq" from=1}
+```{.liquidsoap include="liq/playlist.liq" from=header}
 ```
 
 As usual, the operator `playlist` has a number of interesting optional
@@ -249,7 +249,7 @@ Finally, there are other types of inputs. For instance, the operator
 `input.alsa`\indexop{input.alsa} can be used to capture the sound of a microphone on a soundcard,
 with the ALSA\index{ALSA} library. This means that you should be able to hear your voice with
 
-```{.liquidsoap include="liq/mic.liq" from=1}
+```{.liquidsoap include="liq/mic.liq" from=header}
 ```
 
 The ALSA input and the output each have their own way of synchronizing with
@@ -257,7 +257,7 @@ time: in our terminology, we say that they have different _clocks_, see [a later
 section](#sec:clocks-ex). This will be detected by Liquidsoap and a script such
 as
 
-```{.liquidsoap include="liq/mic-no-buffer.liq" from=3}
+```{.liquidsoap include="liq/mic-no-buffer.liq" from=header}
 ```
 
 will be rejected. This is the reason why we need to use the `buffer` operator
@@ -278,7 +278,7 @@ we are sure are going to be available. This can be achieved by using the
 `fallback`\indexop{fallback} operator which plays the first source which is
 ready to generate a stream in a list of sources:
 
-```{.liquidsoap include="liq/fallback.liq" from=1}
+```{.liquidsoap include="liq/fallback.liq" from=header}
 ```
 
 This means that `s` will have the same contents as `stream` if it is available,
@@ -299,7 +299,7 @@ be able to observe this behavior. For instance, if we
 try to use the operator `output.pulseaudio`, which plays a source on a soundcard
 using the pulseaudio library,
 
-```{.liquidsoap include="liq/fallible1.liq" from=1}
+```{.liquidsoap include="liq/fallible1.liq" from=header}
 ```
 
 we obtain the following error:
@@ -323,7 +323,7 @@ simply ignore this error, by passing the parameter
 `fallible=true`{.liquidsoap} to the `output.pulseaudio`{.liquidsoap} operator,
 but the proper way to fix this consists in having a fallback to a local file:
 
-```{.liquidsoap include="liq/fallible2.liq" from=1}
+```{.liquidsoap include="liq/fallible2.liq" from=header}
 ```
 
 Note that we are using `single`\index{singleop} here instead of `playlist`: this operator plays
@@ -395,7 +395,7 @@ have a playlist consisting of all the jingles of our radio and we want to play
 roughly one jingle every 5 songs. This can be achieved by using the `random`\indexop{random}
 operator:
 
-```{.liquidsoap include="liq/radio-jingles.liq" from=2 to=-1}
+```{.liquidsoap include="liq/radio-jingles.liq" from=header to=footer}
 ```
 
 The `random` operator selects a track at random in a list of sources each time a
@@ -408,7 +408,7 @@ that two jingles are played one after the other, although this should be rare.
 If we want to make sure that we play 1 jingle and then exactly 4 radio songs,
 we should use the `rotate`\indexop{rotate} operator instead:
 
-```{.liquidsoap include="liq/radio-rotate.liq" from=3 to=-1}
+```{.liquidsoap include="liq/radio-rotate.liq" from=header to=footer}
 ```
 
 The `rotate` operator goes through the list in order. For `rotate`, `weight` is
@@ -426,7 +426,7 @@ quite abrupt whereas we would rather have a smooth chaining between two
 consecutive tracks. This can be addressed using the `crossfade`\indexop{crossfade} operator which
 will take care of this for us. If we insert the following line
 
-```{.liquidsoap include="liq/radio-crossfade.liq" from=2 to=-1}
+```{.liquidsoap include="liq/radio-crossfade.liq" from=header to=footer}
 ```
 
 at each end of track the song will fade out during 3 seconds, the next track
@@ -439,7 +439,7 @@ In order to make the sound more uniform, we can use plugins. For instance, the
 `normalize`\indexop{normalize} operator helps you to have a uniform volume by dynamically changing
 it, so that volume difference between songs is barely heard:
 
-```{.liquidsoap include="liq/radio-normalize.liq" from=2 to=-1}
+```{.liquidsoap include="liq/radio-normalize.liq" from=header to=footer}
 ```
 
 In practice, it is better to precompute the gain of each audio track in advance
@@ -448,7 +448,7 @@ see [there](#sec:replaygain). There are also various traditional sound effects
 that can be used in order to improve the overall color and personality of the
 sound. A somewhat reasonable starting point is provided by the `nrj`\indexop{nrj} operator:
 
-```{.liquidsoap include="liq/radio-nrj.liq" from=2 to=-1}
+```{.liquidsoap include="liq/radio-nrj.liq" from=header to=footer}
 ```
 
 `nrj` is one of the _extra_ operators, which come with the standard
@@ -463,7 +463,7 @@ Many more details about sound processing are given in
 
 Now that we have set up our radio, we could play it locally by adding
 
-```{.liquidsoap include="liq/radio-output.liq" from=2}
+```{.liquidsoap include="liq/radio-output.liq" from=header}
 ```
 
 at the end of the script, but we would rather stream it to the world instead of
@@ -520,7 +520,7 @@ up Icecast can be found on [its website](http://www.icecast.org).
 Once this is set up, you should add the following line to your script in
 order to instruct Liquidsoap to send the stream to Icecast:
 
-```{.liquidsoap include="liq/output.icecast.liq" from=2}
+```{.liquidsoap include="liq/output.icecast.liq" from=header}
 ```
 
 The parameters of the operator `output.icecast`\indexop{output.icecast} we used here are
@@ -564,7 +564,7 @@ if we want our mp3 to have a 256k bitrate, we should pass
 different formats for a single radio: if we want to also have an aac stream we
 can add the line
 
-```{.liquidsoap include="liq/output.icecast2.liq" from=2}
+```{.liquidsoap include="liq/output.icecast2.liq" from=header}
 ```
 
 By the way, support for aac is not built into the default installation. If you

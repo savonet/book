@@ -114,7 +114,7 @@ where 'b is a set of tracks to be muxed into a source
 The type of `source.drop.audio` says little, and the standard library
 definition says more:
 
-```{.liquidsoap include="liq/source-drop-audio.liq" from=1}
+```{.liquidsoap include="liq/source-drop-audio.liq" from=header}
 ```
 
 The function `source.tracks`\indexop{source.tracks} turns a source into a
@@ -274,7 +274,7 @@ This way of functioning means that if a source is not connected to an active
 source, its stream will not be produced. For instance, consider the following
 script:
 
-```{.liquidsoap include="liq/passive.liq" from=1}
+```{.liquidsoap include="liq/passive.liq" from=header}
 ```
 
 Here, the only active source is `output` which is playing the `blank`
@@ -302,7 +302,7 @@ In order to determine the type of the sources, Liquidsoap looks where they are
 used and deduces constraints on their type. For instance, consider a script of
 the following form:
 
-```{.liquidsoap include="liq/source-ti.liq" from=1}
+```{.liquidsoap include="liq/source-ti.liq" from=header}
 ```
 
 In the first line, suppose that we do not know yet what the type of the source
@@ -321,7 +321,7 @@ value 2 (stereo), which is specified in the setting
 `settings.frame.audio.channels`. If we want streams to be mono by default, we
 should type, at the beginning of the script,
 
-```{.liquidsoap include="liq/set-channels.liq" from=1}
+```{.liquidsoap include="liq/set-channels.liq" from=header}
 ```
 
 The default number of midi channels is 0, and can be changed in the setting
@@ -336,7 +336,7 @@ compatible for a given stream. In this case, an error is returned before the scr
 executed. For instance, suppose that we have a source `s` and we execute the
 following script:
 
-```{.liquidsoap include="liq/bad/encoded-amplify.liq" from=2}
+```{.liquidsoap include="liq/bad/encoded-amplify.liq" from=header}
 ```
 
 We recall that the type of `amplify` is essentially
@@ -384,7 +384,7 @@ produces an audio track and no video track. Suppose that you want to generate a
 blue screen with a sine wave as sound. You would immediately write something
 like this\indexop{add}
 
-```{.liquidsoap include="liq/bad/blue-sine.liq" from=1}
+```{.liquidsoap include="liq/bad/blue-sine.liq" from=header}
 ```
 
 We create the source `a` which is the sine wave, the source `b` which is the
@@ -423,7 +423,7 @@ It takes the source to decorate as its last argument, the source to take the
 video track from as its `video` argument, and returns the first source with the
 video track of the second grafted onto it. The correct script is therefore
 
-```{.liquidsoap include="liq/blue-sine2.liq" from=1}
+```{.liquidsoap include="liq/blue-sine2.liq" from=header}
 ```
 
 and the function `source.mux.audio` can similarly be used to add audio to a
@@ -441,7 +441,7 @@ arbitrary expressions and types, but is mostly useful for sources. For instance,
 in the following example, we play the source `s` in mono, even though the
 default number of channels is two:
 
-```{.liquidsoap include="liq/mono-output.liq" from=2}
+```{.liquidsoap include="liq/mono-output.liq" from=header}
 ```
 
 Namely, in the second line, we constrain the type of `s` to be
@@ -474,7 +474,7 @@ The encoding formats are given by _encoders_, whose name always begin with the
 [there](#sec:encoders). For instance, if we want to encode a source `s` in mp3
 format, we are going to use the encoder `%mp3` and thus write something like
 
-```{.liquidsoap include="liq/format-mp3.liq" from=2}
+```{.liquidsoap include="liq/format-mp3.liq" from=header}
 ```
 
 If we have a look at the type of the encoder `%mp3`, we see that its type is
@@ -494,7 +494,7 @@ various parameters. For instance, if we want to encode mp3 in mono, at a
 bitrate of 192 kbps, we can pass the parameters `mono` and `bitrate=192` as
 follows:
 
-```{.liquidsoap include="liq/format-mp3-mono.liq" from=2}
+```{.liquidsoap include="liq/format-mp3-mono.liq" from=header}
 ```
 
 Some of those parameters will have an influence on the type of the stream. For
@@ -511,7 +511,7 @@ all, at the time the script is loaded, and cannot be read from a variable. For
 instance, the following will not be accepted
 
 
-```{.liquidsoap include="liq/bad/format-mp3-mono.liq" from=2}
+```{.liquidsoap include="liq/bad/format-mp3-mono.liq" from=header}
 ```
 
 because the number of channels is taken from the variable `c`. Liquidsoap says
@@ -534,7 +534,7 @@ As another example of the influence of encoders, suppose that we want to encode
 our whole music library as a long mp3. We would proceed in this way:
 
 
-```{.liquidsoap include="liq/encoded-concat.liq" from=1}
+```{.liquidsoap include="liq/encoded-concat.liq" from=header}
 ```
 
 The first line creates a `playlist` source which will read all our music files
@@ -551,7 +551,7 @@ is quite CPU hungry. If our music library already consists of mp3 files, it is
 much more efficient to avoid decoding and then reencoding the files. In order to
 do so, we can use the FFmpeg encoder, by replacing the last line with
 
-```{.liquidsoap include="liq/encoded-concat2.liq" from=3}
+```{.liquidsoap include="liq/encoded-concat2.liq" from=header}
 ```
 
 Here, the encoder `fmt` states that we want to use the FFmpeg library, in order
@@ -613,13 +613,13 @@ is completed over two frames.
 
 The size of frames can be changed by instructions such as
 
-```{.liquidsoap include="liq/frame-duration.liq" from=1 to=1}
+```{.liquidsoap include="liq/frame-duration.liq" from=header to=footer}
 ```
 
 and Liquidsoap takes the requested duration as is, as long as it amounts to an
 integer number of ticks. A duration of 0.06 second, requested by
 
-```{.liquidsoap include="liq/frame-duration2.liq" from=1 to=1}
+```{.liquidsoap include="liq/frame-duration2.liq" from=header to=footer}
 ```
 
 gives
@@ -661,14 +661,14 @@ considered to be constant over a frame. For this reason, and in order to gain
 performance, expressions are evaluated only once at the beginning of each
 frame. For instance, the following script plays music at a random volume:
 
-```{.liquidsoap include="liq/random-volume.liq" from=2}
+```{.liquidsoap include="liq/random-volume.liq" from=header-b}
 ```
 
 In fact, the random number for the volume is only generated once for the whole
 frame. This can be heard if you try to run the above script by setting the frame
 duration to a "large" number such as 1 second:
 
-```{.liquidsoap include="liq/random-volume.liq" from=1 to=1}
+```{.liquidsoap include="liq/random-volume.liq" from=header-a to=footer-a}
 ```
 
 You should be able to clearly hear that volume changes only once every
@@ -686,7 +686,7 @@ which is called every time a new frame is computed, and a mandatory
 thread (`true`) or in a separate thread (`false`). For instance, the following
 script will increase the volume of the source `s` by 0.01 on every frame:
 
-```{.liquidsoap include="liq/source.on_frame.liq" from=2 to=-1}
+```{.liquidsoap include="liq/source.on_frame.liq" from=header to=footer}
 ```
 
 The duration of a frame being 0.02 s, volume will progressively be increased by
@@ -711,12 +711,12 @@ rate_ of the signal and is stored globally in the
 `settings.frame.audio.samplerate` setting. This means that we can retrieve the
 value of the samplerate with
 
-```{.liquidsoap include="liq/samplerate-get.liq" from=1 to=1}
+```{.liquidsoap include="liq/samplerate-get.liq" from=header to=footer}
 ```
 
 and set it to another value such as 48000 with
 
-```{.liquidsoap include="liq/samplerate-set.liq" from=1 to=1}
+```{.liquidsoap include="liq/samplerate-set.liq" from=header}
 ```
 
 although default samplerate of 44100 Hz is largely the most commonly in use.
@@ -737,7 +737,7 @@ which features an aspect ratio of 16:9 as commonly found on television or
 computer screens). For instance, _full HD_ or _1080p_ format would be achieved
 with
 
-```{.liquidsoap include="liq/fullhd.liq" from=1}
+```{.liquidsoap include="liq/fullhd.liq" from=header}
 ```
 
 Setting either dimension explicitly, as above, also turns the detection off. By
@@ -813,7 +813,7 @@ image lasts 1/25 second = 44100/25 ticks = 1764 ticks.
 
 However, if we change the video framerate to 24 images per second with
 
-```{.liquidsoap include="liq/frame-ticks.liq" from=1 to=1}
+```{.liquidsoap include="liq/frame-ticks.liq" from=header to=footer}
 ```
 
 we have difficulties measuring time with integers because an image now lasts
@@ -854,7 +854,7 @@ with silence, but we are not like this at Liquidsoap, especially since even such
 a short period of a silence can clearly be heard. Don't believe us? You can try
 the following script which silences the audio for one frame every second:
 
-```{.liquidsoap include="liq/glitch.liq" from=1}
+```{.liquidsoap include="liq/glitch.liq" from=header}
 ```
 
 You should clearly be able to hear a tick every second if the played music files
@@ -887,7 +887,7 @@ scripts, you can trigger a function when metadata is present with `on_metadata`,
 transform the metadata with `metadata.map` and add new metadata with
 `insert_metadata`. For instance, you can print the metadata contained in tracks:
 
-```{.liquidsoap include="liq/print-metadata.liq" from=1}
+```{.liquidsoap include="liq/print-metadata.liq" from=header}
 ```
 
 If you have a look at a typical stream, you will recognize the usual information
@@ -956,7 +956,7 @@ The standard lifecycle of a source is the following one:
 The information always flows from outputs to inputs. For instance, in a simple
 script such as
 
-```{.liquidsoap include="liq/amplify-playlist.liq" from=1}
+```{.liquidsoap include="liq/amplify-playlist.liq" from=header}
 ```
 
 at beginning Liquidsoap will ask the output to get ready, in turn the output
@@ -990,7 +990,7 @@ woken up, by using the method `is_up` which is present for any source `s`:
 calling `s.is_up()` will return a boolean indicating whether the source `s` is up
 or not. For instance,
 
-```{.liquidsoap include="liq/is_up.liq" from=1 to=-1}
+```{.liquidsoap include="liq/is_up.liq" from=header to=footer}
 ```
 
 will print, after 1 second, whether the playlist source is up or not (in this
@@ -1016,7 +1016,7 @@ of the source paired with their format, and
 `format.description`\indexop{format.description}, which turns a format into a
 record we can print:
 
-```{.liquidsoap include="liq/source-content.liq" from=1}
+```{.liquidsoap include="liq/source-content.liq" from=header}
 ```
 
 On our machine this prints
@@ -1036,7 +1036,7 @@ As explained above, once the initialization phase is over, the outputs regularly
 ask the sources they should play to fill in frames: this is called the
 _streaming loop_. Typically, in a script of the form
 
-```{.liquidsoap include="liq/streaming3.liq" from=3}
+```{.liquidsoap include="liq/streaming3.liq" from=header}
 ```
 
 the Icecast output asks the amplification operator for a frame, the
@@ -1075,7 +1075,7 @@ produce at some point. This typically happens after ending a track when there is
 no more track to play. For instance, the following source `s` will play the file
 `test.mp3` once:
 
-```{.liquidsoap include="liq/once-single.liq" from=1 to=1}
+```{.liquidsoap include="liq/once-single.liq" from=header-a to=footer-a}
 ```
 
 After the file has been played, there is nothing to play and the source
@@ -1085,7 +1085,7 @@ the `fallback` operator in order to play the first source which is ready. For
 instance, the following source will try to play the source `s`, or a sine if `s`
 is not ready:
 
-```{.liquidsoap include="liq/once-single.liq" from=2 to=2}
+```{.liquidsoap include="liq/once-single.liq" from=header-b to=footer-b}
 ```
 
 In Liquidsoap scripts, every source has a method `is_ready` which can be used to
@@ -1099,7 +1099,7 @@ because we download the requested file at startup), `input.http` is always
 fallible because the network might go down, a source `amplify(s)` has the same
 fallibility as `s`, and so on. Typically, if you try to execute the script
 
-```{.liquidsoap include="liq/fallible1.liq" from=1}
+```{.liquidsoap include="liq/fallible1.liq" from=header}
 ```
 
 Liquidsoap will issue the error
@@ -1116,12 +1116,12 @@ which might fail, and pointing at the `output.pulseaudio` call which does it.
 The way to fix this is to use the `fallback`\indexop{fallback} operator in order
 to play a file which is always going to be available in case `s` falls down:
 
-```{.liquidsoap include="liq/fallible2.liq" from=1}
+```{.liquidsoap include="liq/fallible2.liq" from=header}
 ```
 
 Or to use `mksafe`\indexop{mksafe} which is defined by
 
-```{.liquidsoap include="liq/mksafe.liq" from=1}
+```{.liquidsoap include="liq/mksafe.liq" from=header}
 ```
 
 and will play blank in case the input source is down. The `track_sensitive =
@@ -1214,7 +1214,7 @@ assigned clock.
 
 Consider the following script:
 
-```{.liquidsoap include="liq/clock-alsa-file.liq" from=2}
+```{.liquidsoap include="liq/clock-alsa-file.liq" from=header}
 ```
 
 At startup, Liquidsoap creates a top-level clock named after the output
@@ -1247,7 +1247,7 @@ logs:
 
 If we now consider a script where no source enforces synchronization, such as
 
-```{.liquidsoap include="liq/clock-sine-file.liq" from=2}
+```{.liquidsoap include="liq/clock-sine-file.liq" from=header}
 ```
 
 the clock is led by the CPU: no `active` source appears in the startup message,
@@ -1300,7 +1300,7 @@ whose vertices are the operators and there is an arrow from a vertex `op` to a
 vertex `op'` when the operator `op'` uses the stream produced by the operator
 `op`. For instance, a script such as
 
-```{.liquidsoap include="liq/two-clocks.liq" from=2}
+```{.liquidsoap include="liq/two-clocks.liq" from=header}
 ```
 
 can be represented as the following graph:
@@ -1351,7 +1351,7 @@ answer, and we cover them [there](#sec:clocks-ex).
 A different kind of conflict occurs with the operators which use a child clock,
 such as `stretch` and `cross`. The script
 
-```{.liquidsoap include="liq/clock-add-stretch.liq" from=4 to=-1}
+```{.liquidsoap include="liq/clock-add-stretch.liq" from=header to=footer}
 ```
 
 asks for the source `s` inside the child clock of `stretch` and for the same
@@ -1369,7 +1369,7 @@ An operator with a child clock also needs a child it can accelerate, and a
 synchronization source cannot be accelerated: the soundcard delivers audio at
 the pace the soundcard chooses. Feeding one to `stretch`, as in
 
-```{.liquidsoap include="liq/clock-srt-stretch.liq" from=3}
+```{.liquidsoap include="liq/clock-srt-stretch.liq" from=header}
 ```
 
 gives
@@ -1405,7 +1405,7 @@ Error 10: A source cannot belong to two clocks (alsa[], pulseaudio[]).
 which indicates it. Some network protocols such as SRT also have their own
 notion of logical time, so that the script
 
-```{.liquidsoap include="liq/bad/clock-srt-pulseaudio.liq" from=1}
+```{.liquidsoap include="liq/bad/clock-srt-pulseaudio.liq" from=header}
 ```
 
 will also fail for exactly the same reasons.
@@ -1603,7 +1603,7 @@ This can be tested with the `sleeper`\indexop{sleeper} operator, which can be us
 various audio delays. Namely, the following script simulates a source
 which takes roughly 1.1 second to generate 1 second of sound:
 
-```{.liquidsoap include="liq/sleeper.liq" from=1}
+```{.liquidsoap include="liq/sleeper.liq" from=header}
 ```
 
 When playing it you should hear regular glitches and see messages such as
@@ -1633,7 +1633,7 @@ handle temporary disturbances in production of streams for sources. You can
 explicitly add some in you script by using the `buffer` operator: for instance,
 in the above script, we would add before the output, the line
 
-```{.liquidsoap include="liq/buffer-catchup.liq" from=2 to=2}
+```{.liquidsoap include="liq/buffer-catchup.liq" from=header to=footer}
 ```
 
 which make the source store 1 second of audio (this duration can be configured
@@ -1649,7 +1649,7 @@ such as requests over the internet, which typically take time. For instance, we
 have seen in [an earlier section](#sec:harbor) that we can send the metadata of
 each track to a website with a script such as
 
-```{.liquidsoap include="liq/post-metadata.liq" from=1 to=-1}
+```{.liquidsoap include="liq/post-metadata.liq" from="# header" to="# footer"}
 ```
 
 which uses `http.post` to POST the metadata of each track to a distant
@@ -1659,7 +1659,7 @@ website to answer. Passing `synchronous=false` instead hands `handle_metadata`
 to the scheduler, which runs it on one of its own threads while the streaming
 loop carries on:
 
-```{.liquidsoap include="liq/post-metadata2.liq" from=7 to=-1}
+```{.liquidsoap include="liq/post-metadata2.liq" from=header to=footer}
 ```
 
 Every handler which can take time should be registered this way. The scheduler
@@ -1681,7 +1681,7 @@ not the error itself, you can have fewer messages by changing the
 `settings.clock.log_delay` setting which controls how often the "catchup" error
 message is displayed. For instance, with
 
-```{.liquidsoap include="liq/clock.log_delay.liq" from=1 to=1}
+```{.liquidsoap include="liq/clock.log_delay.liq" from=header to=footer}
 ```
 
 you will only see one every minute.
@@ -1706,7 +1706,7 @@ Requests
 When passing something to play to an operator, such as `test.mp3` to the
 operator `single`,
 
-```{.liquidsoap include="liq/single-file.liq" from=1 to=1}
+```{.liquidsoap include="liq/single-file.liq" from=header to=footer}
 ```
 
 it seems that the operator can simply open the file and play it on the
@@ -1886,7 +1886,7 @@ run (50 times by default).
 When resolving requests, Liquidsoap inserts metadata\index{metadata} in addition to the metadata
 already contained in the files. This can be observed with the following script:
 
-```{.liquidsoap include="liq/request-metadata.liq" from=1}
+```{.liquidsoap include="liq/request-metadata.liq" from=header}
 ```
 
 Here, we are creating a request from a file path `test.mp3`. Since we did not
@@ -1962,7 +1962,7 @@ creating requests, or that they are not properly destroyed (what we call a
 _request leak_). For instance, the following script creates 250 requests at
 once:
 
-```{.liquidsoap include="liq/request-loop.liq" from=1 to=-1}
+```{.liquidsoap include="liq/request-loop.liq" from=header to=footer}
 ```
 
 Consequently, you will therefore see in the logs messages such as
@@ -1986,7 +1986,7 @@ appropriate decoder\index{decoder}.
 
 The list of available decoders can be obtained with the script
 
-```{.liquidsoap include="liq/decoders.liq" from=1}
+```{.liquidsoap include="liq/decoders.liq" from=header}
 ```
 
 which prints here
@@ -2007,7 +2007,7 @@ of the decoders the setting
 
 For instance, for the mad decoder (mad is a library to decode mp3 files) we have
 
-```{.liquidsoap include="liq/decoder-mad-settings.liq" from=1}
+```{.liquidsoap include="liq/decoder-mad-settings.liq" from=header}
 ```
 
 The decoders with higher priorities are tried first, and the first decoder which
@@ -2032,7 +2032,7 @@ return value is therefore `annotate:metadata="value":/path/to/file.wav`.
 The choice of a decoder can be observed when setting log level to debug. For
 instance, consider the simple script
 
-```{.liquidsoap include="liq/decoder-accept.liq" from=1}
+```{.liquidsoap include="liq/decoder-accept.liq" from=header}
 ```
 
 We see the following steps in the logs:
@@ -2087,7 +2087,7 @@ We see the following steps in the logs:
 
 For comparison, consider the following variant of the script
 
-```{.liquidsoap include="liq/decoder-reject.liq" from=3}
+```{.liquidsoap include="liq/decoder-reject.liq" from=header}
 ```
 
 Here, the resolution will fail because we are trying to play the source with
@@ -2155,7 +2155,7 @@ resolving and decoding requests.
   the files. Those are not enabled by default and can be by setting the
   dedicated setting
 
-  ```{.liquidsoap include="liq/decoder-duration.liq" from=1}
+  ```{.liquidsoap include="liq/decoder-duration.liq" from=header}
   ```
 
   The reason they are not enabled is that they can take quite some time to
@@ -2166,7 +2166,7 @@ resolving and decoding requests.
   44.1 kHz). The following setting gives the list of converters, in the order in
   which they are tried:
 
-  ```{.liquidsoap include="liq/samplerate-converters.liq" from=1}
+  ```{.liquidsoap include="liq/samplerate-converters.liq" from=header}
   ```
 
   The first supported one is chosen. The `native` converter is fast and always

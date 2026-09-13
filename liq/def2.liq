@@ -4,4 +4,5 @@ def x =
   y*y
 end
 print(y)
+# footer
 ignore(x)

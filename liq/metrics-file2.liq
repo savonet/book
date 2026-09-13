@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 s = playlist("~/Music")
 s = rms(s)
 def save_metrics() = file.write(data="RMS: #{s.rms()}", "/tmp/rms") end

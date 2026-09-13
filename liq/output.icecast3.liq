@@ -1,6 +1,7 @@
 #!./liquidsoap
 rock = mksafe(playlist("~/Music"))
 techno = rock
+# header
 def out(~mount, enc, s) =
   output.icecast(host="localhost", port=8000, password="hackme",
                  mount=mount, enc, s)

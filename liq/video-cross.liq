@@ -1,5 +1,6 @@
 #!./liquidsoap
 log.level := 5
+# header
 s = playlist("videos.playlist")
 s = video.fade.out(duration=1., s)
 s = video.fade.in (duration=1., s)

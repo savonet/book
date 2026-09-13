@@ -1,4 +1,5 @@
 #!/usr/bin/env liquidsoap
+# header
 fade_duration  = 5.
 frame_duration = settings.frame.duration()
 v = ref(0.)

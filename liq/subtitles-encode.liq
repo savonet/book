@@ -1,5 +1,6 @@
 #!./liquidsoap
 s = input.ffmpeg("movie.mkv")
+# header
 output.file(
   %ffmpeg(format="matroska", %video(codec="libx264"),
           %subtitles(codec="subrip")),

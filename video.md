@@ -22,7 +22,7 @@ way you would generate an audio stream, excepting that you start from video
 files instead of audio files. For instance, you can play a video file `test.mp4`
 with\indexop{single}
 
-```{.liquidsoap include="liq/play-video.liq" from=1}
+```{.liquidsoap include="liq/play-video.liq" from=header}
 ```
 
 The operator `output.audio_video`\indexop{output.audio\_video} plays both the audio and the video of the
@@ -38,7 +38,7 @@ The videos can even be directly pulled from YouTube with the `youtube-dl`\indexo
 protocol, which requires that you have installed the
 [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) program:
 
-```{.liquidsoap include="liq/play-video-yt.liq" from=1}
+```{.liquidsoap include="liq/play-video-yt.liq" from=header}
 ```
 
 Since the whole video has to be downloaded beforehand, it can take quite some
@@ -48,7 +48,7 @@ of the default 30 seconds).
 As another example, if we have a playlist `video.playlist` of video files, it
 can be played with\indexop{playlist}
 
-```{.liquidsoap include="liq/play-video2.liq" from=1}
+```{.liquidsoap include="liq/play-video2.liq" from=header}
 ```
 
 Generally, the video will be generated from a playlist using the `playlist`
@@ -62,7 +62,7 @@ already presented in [there](#sec:inputs), nothing changes for video.
 Under Linux, it is possible to use our webcam as a source with the `input.v4l2`\indexop{input.v4l2}
 operator which reads from the webcam:
 
-```{.liquidsoap include="liq/v4l2.liq" from=1}
+```{.liquidsoap include="liq/v4l2.liq" from=header}
 ```
 
 ### Parameters of the video
@@ -126,7 +126,7 @@ recomputing every value by hand, we can express them on a _virtual canvas_ much
 larger than the actual frame, and let Liquidsoap scale them down. We provide one
 canvas per usual resolution, all in 16:9 and 10 000 virtual pixels wide:
 
-```{.liquidsoap include="liq/video-canvas.liq" from=1}
+```{.liquidsoap include="liq/video-canvas.liq" from=header}
 ```
 
 The record returned by `video.canvas.virtual_10k.actual_720p`\indexop{video.canvas} has the `width` and
@@ -148,7 +148,7 @@ of a given color, you can use the `video.fill`\indexop{video.fill} operator whic
 the source with the color specified in the `color` argument. For instance, the
 script
 
-```{.liquidsoap include="liq/video.fill.liq" from=1}
+```{.liquidsoap include="liq/video.fill.liq" from=header}
 ```
 
 will play a red image. The color should be specified in hexadecimal, in the form
@@ -165,7 +165,7 @@ that the darkening can be switched on and off during the stream.
 Images can be used as sources just as video files: they are accepted by
 operators such as `single`, `playlist`, etc. For instance,
 
-```{.liquidsoap include="liq/image.liq" from=1}
+```{.liquidsoap include="liq/image.liq" from=header}
 ```
 
 and you should see `test.png`. The image decoder also produces a silent audio
@@ -177,7 +177,7 @@ no duration, so the source shows it forever. The standard library therefore
 provides the `image`\indexop{image} operator, which creates a source from an image and takes
 the position and the size of the image as arguments:
 
-```{.liquidsoap include="liq/image3.liq" from=1}
+```{.liquidsoap include="liq/image3.liq" from=header}
 ```
 
 You are advised to use this operator when dealing with images. We pass
@@ -190,7 +190,7 @@ The operator takes four arguments to place the image in the frame: `x` and `y`
 for the position of its upper-left corner, `width` and `height` for its size,
 the image being scaled to fit. For instance,
 
-```{.liquidsoap include="liq/image-dimensions.liq" from=1}
+```{.liquidsoap include="liq/image-dimensions.liq" from=header}
 ```
 
 shows a small image of 50×50 pixels, ten pixels away from the upper-left corner
@@ -209,7 +209,7 @@ the following metadata:
 The `annotate:`\indexop{annotate} protocol is the usual way of attaching them to a file, so
 that the script
 
-```{.liquidsoap include="liq/image4.liq" from=1}
+```{.liquidsoap include="liq/image4.liq" from=header}
 ```
 
 shows a small image of 50×50 pixels too.
@@ -223,7 +223,7 @@ album into metadata. Liquidsoap has support for extracting this and provides the
 `video.cover`\indexop{video.cover} operator in order to extract the cover from an audio stream and
 generate a video stream from it. The script
 
-```{.liquidsoap include="liq/cover.liq" from=1 to=-1}
+```{.liquidsoap include="liq/cover.liq" from=header to=footer}
 ```
 
 defines an audio source `a` from our music library, generates a video track `v`
@@ -249,7 +249,7 @@ Alternatively, if the playlist contains only the paths to the images, the
 `duration` metadata can be added by using the `prefix` argument of the playlist
 operator. For instance, the script
 
-```{.liquidsoap include="liq/image-playlist.liq" from=1 to=-1}
+```{.liquidsoap include="liq/image-playlist.liq" from=header to=footer}
 ```
 
 will display for 2 seconds the images of the playlist `image.playlist`.
@@ -260,7 +260,7 @@ The path given to `image` is a getter. When the getter returns a new path, the
 source switches to the corresponding image. For instance, the following script
 shows a random image of the current directory every 2 seconds:
 
-```{.liquidsoap include="liq/image-set.liq" from=1 to=-1}
+```{.liquidsoap include="liq/image-set.liq" from=header to=footer}
 ```
 
 In more details, the `file.ls(".")` function returns a list of files in the
@@ -282,7 +282,7 @@ After the last file it returns to the first one, unless you pass
 This mechanism can also be used to change the displayed image depending on some
 metadata. For instance, consider the script
 
-```{.liquidsoap include="liq/image-metadata.liq" from=1 to=-1}
+```{.liquidsoap include="liq/image-metadata.liq" from=header to=footer}
 ```
 
 It creates a source `a` from a playlist `playlist-with-image` which contains
@@ -304,7 +304,7 @@ Our beloved `add`\indexop{add} operator also works with videos. For instance, we
 logo on top of our video source `s` by adding a scaled down version of our
 `logo.png` image:
 
-```{.liquidsoap include="liq/add-videos.liq" from=1}
+```{.liquidsoap include="liq/add-videos.liq" from=header}
 ```
 
 When taking a list of sources with video as argument, the `add` operator draws
@@ -320,13 +320,13 @@ Because one often does this, Liquidsoap provides the function `video.add_image`,
 which allows adding an image on top of another source, and the previous script
 can be more concisely written as
 
-```{.liquidsoap include="liq/add-videos2.liq" from=1}
+```{.liquidsoap include="liq/add-videos2.liq" from=header}
 ```
 
 The function `video.add_image` moreover has the advantage of allowing getters
 for the parameters, so that we can program a moving logo as follows:
 
-```{.liquidsoap include="liq/add-videos3.liq" from=1}
+```{.liquidsoap include="liq/add-videos3.liq" from=header}
 ```
 
 #### Picture in picture
@@ -351,7 +351,7 @@ squashed. Pass `proportional=false` to stretch the image to the requested size.
 For instance, the following script adds a small webcam capture on top of the
 main video:
 
-```{.liquidsoap include="liq/add-scale.liq" from=1}
+```{.liquidsoap include="liq/add-scale.liq" from=header}
 ```
 
 Here, the main source `s` is a playlist of videos and `w` is the capture of the
@@ -371,7 +371,7 @@ overall opacity of a video can be changed with the `video.opacity` operator,
 which takes a coefficient between 0 (transparent) and 1 (fully opaque) in
 addition to the source. For instance, with
 
-```{.liquidsoap include="liq/video.opacity.liq" from=3 to=-1}
+```{.liquidsoap include="liq/video.opacity.liq" from=header to=footer}
 ```
 
 we are adding the source `s1` with the source `s2` made opaque at 75%: this
@@ -390,19 +390,19 @@ Given an audio source `a` and a video source `v`, one can combine them in order
 to make a source `s` with both audio and video with the `source.mux.audio` and
 `source.mux.video` operators. Namely, in
 
-```{.liquidsoap include="liq/mux_audio.liq" from=3 to=-1}
+```{.liquidsoap include="liq/mux_audio.liq" from=header to=footer}
 ```
 
 the `source.mux.audio` replaces the audio channel of the source `v` by the one of
 the source `a`. And we can similarly replace the video channel with
 
-```{.liquidsoap include="liq/mux_video.liq" from=3 to=-1}
+```{.liquidsoap include="liq/mux_video.liq" from=header to=footer}
 ```
 
 For instance, we can generate a stream from a playlist of audio files and a
 playlist of image files with
 
-```{.liquidsoap include="liq/audio-video-playlists.liq" from=1 to=-1}
+```{.liquidsoap include="liq/audio-video-playlists.liq" from=header to=footer}
 ```
 
 The "opposite" of the muxing functions are the functions `source.drop.audio` and
@@ -410,7 +410,7 @@ The "opposite" of the muxing functions are the functions `source.drop.audio` and
 a source. For instance, we can remove the video channel of a an audio+video
 source `s` with
 
-```{.liquidsoap include="liq/source.drop.video.liq" from=2 to=-1}
+```{.liquidsoap include="liq/source.drop.video.liq" from=header to=footer}
 ```
 
 ### Multitrack: demuxing and remuxing tracks {#sec:multitrack}
@@ -429,20 +429,20 @@ metadata and the `track_marks` track carries the marks separating one track from
 the next one. The `source.tracks`\indexop{source.tracks} function returns them
 as a record:
 
-```{.liquidsoap include="liq/video-source-tracks.liq" from=2}
+```{.liquidsoap include="liq/video-source-tracks.liq" from=header}
 ```
 
 and the `source`\indexop{source} function does the converse, assembling a source from a record
 of tracks:
 
-```{.liquidsoap include="liq/video-source-rebuild.liq" from=3}
+```{.liquidsoap include="liq/video-source-rebuild.liq" from=header}
 ```
 
 so that `s2` streams exactly what `s` streams, after having been taken apart and
 put back together. Our concert is then a matter of taking the record of tracks
 of one source and overriding one of its fields:
 
-```{.liquidsoap include="liq/video-replace-audio.liq" from=3}
+```{.liquidsoap include="liq/video-replace-audio.liq" from=header}
 ```
 
 The syntax `r.{field = value}` extends a record with a new field or replaces an
@@ -453,7 +453,7 @@ have seen above are shorthands for this construction.
 Dropping a track works the same way, by destructuring the record instead of
 extending it:
 
-```{.liquidsoap include="liq/video-remove-track.liq" from=2}
+```{.liquidsoap include="liq/video-remove-track.liq" from=header}
 ```
 
 where `track_marks=_` discards that field and `...tracks` captures all the
@@ -467,7 +467,7 @@ A movie in MKV with its original soundtrack and two dubbings contains three
 audio tracks. Liquidsoap names them `audio`, `audio_2` and `audio_3`, and does
 the same for video and subtitles. An `%ffmpeg` encoder writes them all at once:
 
-```{.liquidsoap include="liq/video-multi-audio-copy.liq" from=2}
+```{.liquidsoap include="liq/video-multi-audio-copy.liq" from=header}
 ```
 
 Beware that the encoder also determines what the decoder looks for. Requesting
@@ -480,7 +480,7 @@ it.
 You can also name the streams yourself, which is more readable than counting
 them, for instance `%audio_en` for the English and `%audio_fr` for the French:
 
-```{.liquidsoap include="liq/video-multi-audio.liq" from=2}
+```{.liquidsoap include="liq/video-multi-audio.liq" from=header}
 ```
 
 Liquidsoap then determines the kind of content of such a stream, in this order.
@@ -498,7 +498,7 @@ Some operators take a track rather than a source, and they are all named
 `track.something`. For instance, `track.audio.mean`\indexop{track.audio.mean} mixes a stereo track down
 to mono:
 
-```{.liquidsoap include="liq/video-track-audio-mean.liq" from=2}
+```{.liquidsoap include="liq/video-track-audio-mean.liq" from=header}
 ```
 
 Encoding is one of those operators. The
@@ -509,14 +509,14 @@ runs on a clock of its own. The `metadata` and `track_marks` tracks of the
 original source remain on the original clock. Combining them with the encoded
 track, as in
 
-```{.liquidsoap include="liq/video-inline-encode-conflict.liq" from=2}
+```{.liquidsoap include="liq/video-inline-encode-conflict.liq" from=header}
 ```
 
 earns you a clock conflict of the kind described in [there](#sec:clocks-ex).
 Take them from the encoded track instead, with `track.metadata` and
 `track.track_marks`:
 
-```{.liquidsoap include="liq/video-inline-encode.liq" from=2}
+```{.liquidsoap include="liq/video-inline-encode.liq" from=header}
 ```
 
 Incidentally, reading and writing several tracks at once requires the FFmpeg
@@ -536,13 +536,13 @@ with audio and video. Everything we have just done with `source.tracks` and
 The simplest case is a standalone SubRip file, which Liquidsoap decodes without
 the help of FFmpeg:
 
-```{.liquidsoap include="liq/subtitles-decode-srt.liq" from=1}
+```{.liquidsoap include="liq/subtitles-decode-srt.liq" from=header}
 ```
 
 The subtitles contained in a container, such as an MKV file holding the images,
 the sound and five languages, are decoded by FFmpeg:
 
-```{.liquidsoap include="liq/subtitles-decode-ffmpeg.liq" from=1}
+```{.liquidsoap include="liq/subtitles-decode-ffmpeg.liq" from=header}
 ```
 
 FFmpeg decodes the text-based codecs, which are SubRip, ASS/SSA, WebVTT and MOV
@@ -554,7 +554,7 @@ In the two scripts above, `subtitles` is a track like any other. A source can
 carry several subtitle tracks, named `subtitles`, `subtitles_2` and so on, using
 the same convention as audio and video tracks:
 
-```{.liquidsoap include="liq/subtitles-multiple.liq" from=2 to=-1}
+```{.liquidsoap include="liq/subtitles-multiple.liq" from=header to=footer}
 ```
 
 Each entry of a subtitle track is a record of eight fields. The `text` field
@@ -567,14 +567,14 @@ give it in seconds, which are the two fields you will use in practice. Times are
 stored relatively to the position, so that subtitle tracks can be concatenated
 with `sequence`\indexop{sequence}:
 
-```{.liquidsoap include="liq/subtitles-sequence.liq" from=1 to=-1}
+```{.liquidsoap include="liq/subtitles-sequence.liq" from=header to=footer}
 ```
 
 The `on_subtitle`\indexop{on\_subtitle} function calls a function of yours each time a subtitle is
 about to be displayed, which is how you log the captions, send them to a
 translation service, or trigger anything else in sync with them:
 
-```{.liquidsoap include="liq/subtitles-on_subtitle.liq" from=2 to=-1}
+```{.liquidsoap include="liq/subtitles-on_subtitle.liq" from=header to=footer}
 ```
 
 The `subtitles.map`\indexop{subtitles.map} function goes further and changes the subtitles on their
@@ -583,7 +583,7 @@ record of the fields to update, an empty record `{}` to leave the subtitle
 unchanged, or `null` to remove it. Removing a subtitle is a decent way of
 implementing a broadcast delay on your least favourite word:
 
-```{.liquidsoap include="liq/subtitles-map.liq" from=2 to=-1}
+```{.liquidsoap include="liq/subtitles-map.liq" from=header to=footer}
 ```
 
 Finally, `subtitles.insert`\indexop{subtitles.insert} adds subtitles to a source, creating the subtitle
@@ -591,7 +591,7 @@ track when the source has none. The operator adds an `insert_subtitle` method to
 the source, which takes the `text`, its `duration` in seconds, its `format` and
 its `forced` flag:
 
-```{.liquidsoap include="liq/subtitles-insert.liq" from=2 to=-1}
+```{.liquidsoap include="liq/subtitles-insert.liq" from=header to=footer}
 ```
 
 This is how you inject the captions produced by a speech recognition engine into
@@ -603,7 +603,7 @@ Writing subtitles back to a file is the job of the `%subtitles` encoder, whose
 `codec` must be one the container accepts: `subrip` and `ass` for Matroska,
 `webvtt` for WebM, `mov_text` for mp4.
 
-```{.liquidsoap include="liq/subtitles-encode.liq" from=2}
+```{.liquidsoap include="liq/subtitles-encode.liq" from=header}
 ```
 
 Text subtitles are converted to the ASS dialogue format before being encoded.
@@ -616,7 +616,7 @@ to decode and re-encode them. The `%subtitles.copy` encoder passes the encoded
 data through as it is, which costs no CPU and loses no quality. It is also the
 only way to handle the image-based formats mentioned above:
 
-```{.liquidsoap include="liq/subtitles-copy.liq" from=2}
+```{.liquidsoap include="liq/subtitles-copy.liq" from=header}
 ```
 
 Note that the name of the encoded stream, `%subtitles`, is also the name of the
@@ -630,7 +630,7 @@ subtitle track. The only way to have the words displayed is then to draw them
 onto the images. The `track.video.add`\indexop{track.video.add} operator does it, given a video track
 and a subtitle track:
 
-```{.liquidsoap include="liq/subtitles-burn.liq" from=2}
+```{.liquidsoap include="liq/subtitles-burn.liq" from=header}
 ```
 
 The script takes the `audio`, `video` and `subtitles` tracks of the movie with
@@ -660,13 +660,13 @@ the `transition` parameter whose values can be
 Similarly, the operator `video.fade.in` add fade effects at the beginning of
 tracks:
 
-```{.liquidsoap include="liq/video.fade.in.liq" from=2 to=-1}
+```{.liquidsoap include="liq/video.fade.in.liq" from=header to=footer}
 ```
 
 Since the `add` and `cross` operators also work with video sources, this means
 that we can nicely crossfade the tracks of a video playlist as follows:
 
-```{.liquidsoap include="liq/video-cross.liq" from=2}
+```{.liquidsoap include="liq/video-cross.liq" from=header}
 ```
 
 We apply fading at the beginning and the end of the videos, and then use the
@@ -681,7 +681,7 @@ a transition. The `cross` operator does not replay it into the transition
 source, so read the `metadata` field rather than adding a metadata handler on
 `a.source` or `b.source`. As a variant, slided transitions can be achieved with
 
-```{.liquidsoap include="liq/video-cross2.liq" from=2}
+```{.liquidsoap include="liq/video-cross2.liq" from=header}
 ```
 
 ### Test sources
@@ -691,7 +691,7 @@ source, so read the `metadata` field rather than adding a metadata handler on
 In order to generate test videos, the operator `video.testsrc` can be used. For
 instance,
 
-```{.liquidsoap include="liq/video.testsrc.liq" from=1 to=-1}
+```{.liquidsoap include="liq/video.testsrc.liq" from=header to=footer}
 ```
 
 will generate a video such as
@@ -745,13 +745,13 @@ bullet yet. Those implementations are
 
 For instance,
 
-```{.liquidsoap include="liq/video.add_text.liq" from=2 to=-1}
+```{.liquidsoap include="liq/video.add_text.liq" from=header to=footer}
 ```
 
 The text is a getter which means that it can vary over times. For instance, the
 following prints the current volume\index{RMS} and BPM\index{BPM} of a song:
 
-```{.liquidsoap include="liq/video.add_text-volume-bpm.liq" from=1}
+```{.liquidsoap include="liq/video.add_text-volume-bpm.liq" from=header}
 ```
 
 and here is the output:
@@ -762,7 +762,7 @@ The position parameters are also getters, so that the position of the text can
 also be customized over time. For instance, the following will add a text moving
 along the diagonal at the speed of 10 pixels per second in each direction:
 
-```{.liquidsoap include="liq/video.add_text2.liq" from=2 to=-1}
+```{.liquidsoap include="liq/video.add_text2.liq" from=header to=footer}
 ```
 
 By the way, a frequent use of text over video is captioning, and the
@@ -801,7 +801,7 @@ are automatically detected and corresponding operators are added in the
 language. Those have names of the form `video.frei0r.*` where `*` is the name of the
 plugin. For instance, the following adds a "plasma effect" to the video:
 
-```{.liquidsoap include="liq/frei0r.liq" from=2 to=-1}
+```{.liquidsoap include="liq/frei0r.liq" from=header to=footer}
 ```
 
 Each operator (there are hundreds of them) of course has specific parameters
@@ -852,7 +852,7 @@ both audio and video:
 
 The function can then be used on a source `s` as follows:
 
-```{.liquidsoap include="liq/ffmpeg-effect4.liq" from=2}
+```{.liquidsoap include="liq/ffmpeg-effect4.liq" from=header}
 ```
 
 If you look at the type of the function `myfilter`, you will see that it is
@@ -935,7 +935,7 @@ internal format, you can use
 For instance, from the above `myfilter` function, we can define a function
 `myfilter'` which operates on usual streams as follows:
 
-```{.liquidsoap include="liq/ffmpeg-effect5.liq" from=2}
+```{.liquidsoap include="liq/ffmpeg-effect5.liq" from=header}
 ```
 
 by encoding before applying the filter and decoding afterward.
@@ -1078,12 +1078,12 @@ around the parameter name `x264-params` because it contains a dash).
 
 A typical setting for encoding in a file for backup would be
 
-```{.liquidsoap include="liq/encoder-ffmpeg-h264-file.liq" from=3 to=-2}
+```{.liquidsoap include="liq/encoder-ffmpeg-h264-file.liq" from=header to=footer}
 ```
 
 and for streaming in HLS it would be
 
-```{.liquidsoap include="liq/encoder-ffmpeg-h264-streaming.liq" from=3 to=-2}
+```{.liquidsoap include="liq/encoder-ffmpeg-h264-streaming.liq" from=header to=footer}
 ```
 
 <!-- See: https://obsproject.com/blog/streaming-with-x264 -->
@@ -1112,12 +1112,12 @@ parameters](https://developers.google.com/media/vp9) are
 
 A typical WebM encoding would look like this:
 
-```{.liquidsoap include="liq/encoder-ffmpeg-vp9-file.liq" from=4 to=-2}
+```{.liquidsoap include="liq/encoder-ffmpeg-vp9-file.liq" from=header to=footer}
 ```
 
 and if you are on budget with respect to CPU and bandwidth:
 
-```{.liquidsoap include="liq/encoder-ffmpeg-vp9-streaming.liq" from=4 to=-2}
+```{.liquidsoap include="liq/encoder-ffmpeg-vp9-streaming.liq" from=header to=footer}
 ```
 
 The successor of VP9 is AV1\index{AV1}, which is more efficient, and is now gaining popularity. It can
@@ -1139,7 +1139,7 @@ main parameters are
 For instance, we can encode a video in ogg with opus for the audio and Theora
 for the video with
 
-```{.liquidsoap include="liq/encoder-theora.liq" from=3 to=-1}
+```{.liquidsoap include="liq/encoder-theora.liq" from=header to=footer}
 ```
 
 ### AVI
@@ -1151,7 +1151,7 @@ almost nothing but also that it will not be compressed. This format should thus
 be favored for machines which are tight on CPU but not on hard disk, for backup
 purposes:
 
-```{.liquidsoap include="liq/encoder-avi.liq" from=2}
+```{.liquidsoap include="liq/encoder-avi.liq" from=header}
 ```
 
 You can expect the resulting files to be huge and you will typically want to
@@ -1160,7 +1160,7 @@ re-encode the resulting files afterward.
 If you want to generate AVI files with usual codecs, you should use the FFmpeg
 encoder presented above. For instance,
 
-```{.liquidsoap include="liq/encoder-ffmpeg-avi.liq" from=3 to=-1}
+```{.liquidsoap include="liq/encoder-ffmpeg-avi.liq" from=header to=footer}
 ```
 
 Specific inputs and outputs
@@ -1194,7 +1194,7 @@ platform](https://youtube.com/live_dashboard). The
 key. If we suppose that we have stored our key in the file `youtube-key`, we can
 stream a video source `s` to YouTube by
 
-```{.liquidsoap include="liq/video-youtube.liq" from=2 to=-1}
+```{.liquidsoap include="liq/video-youtube.liq" from=header to=footer}
 ```
 
 These settings are for quite low quality encoding. You should try to increase
@@ -1213,7 +1213,7 @@ _ingesting servers_](https://stream.twitch.tv/ingests/) is provided (the url you
 should send your stream to is obtained by appending your key to one of those
 servers). For instance:
 
-```{.liquidsoap include="liq/video-twitch.liq" from=2 to=-1}
+```{.liquidsoap include="liq/video-twitch.liq" from=header to=footer}
 ```
 
 #### Facebook
@@ -1228,7 +1228,7 @@ encoded in H.264 at at most 4000 kbps and audio in AAC in 96 or
 128 kbps. Keyframes should be sent at most every two second (the `g` parameter
 of the video codec should be at most twice the framerate). For instance,
 
-```{.liquidsoap include="liq/video-facebook.liq" from=1}
+```{.liquidsoap include="liq/video-facebook.liq" from=header}
 ```
 
 ### Saving frames
@@ -1240,5 +1240,5 @@ video stream to the file. Currently, only bitmap files are supported and the
 filename should have a `.bmp` extension. For instance, the following script will
 save a "screenshot" of the source `s` every 10 seconds:
 
-```{.liquidsoap include="liq/screenshot.liq" from=1}
+```{.liquidsoap include="liq/screenshot.liq" from=header}
 ```

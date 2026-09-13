@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 def artist_protocol(~rlog, ~maxtime, arg) =
   rlog("Finding songs of #{arg}.")
   list.hd(default=null,
@@ -7,6 +8,7 @@ end
 protocol.add("artist", artist_protocol,
              doc="Find songs by artist.",
              syntax="artist:<arist name>")
+# footer
 
 s = single("artist:Haliday")
 output(mksafe(s))

@@ -1,5 +1,6 @@
 #!./liquidsoap
 s = playlist("~/Music")
+# header
 rmsl = ref([])
 s = rms(s)
 s = source.run(s, every=0.01, {rmsl := list.add(s.rms(), rmsl())})
@@ -14,4 +15,5 @@ s = source.run(s, every=1., {print("RMS: #{mean_rms()}")})
 
 profiler.enable()
 s = source.run(s, every=10., {print("#{profiler.stats.string()}")})
+# footer
 output(s)

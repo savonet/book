@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 pls = file.ls("playlists/")
 def play(list)
   log.important("Playing #{list}.")

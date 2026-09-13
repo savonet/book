@@ -1,5 +1,6 @@
 #!./liquidsoap
 log.level := 5
+# header
 radio = playlist("~/Music")
 video = single("image.jpg")
 radio = source.mux.video(video=video, radio)

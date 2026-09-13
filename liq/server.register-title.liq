@@ -1,5 +1,6 @@
 #!./liquidsoap
 radio = playlist("~/Music")
+# header
 server.telnet()
 def on_title(t)
   radio.insert_metadata([("title", t)])
@@ -8,4 +9,5 @@ end
 server.register(usage="title <new title>",
                 description="Set the title of the radio.",
                 "title", on_title)
+# footer
 output(radio)

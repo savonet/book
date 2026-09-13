@@ -1,5 +1,7 @@
 #!./liquidsoap
+# header
 d = metronome()
+# footer
 q = request.queue()
 s = fallback([q.{track_sensitive = false}, d])
 output(s)

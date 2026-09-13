@@ -1,5 +1,6 @@
 #!./liquidsoap
 s = normalize(playlist("~/Music"))
+# header
 interactive.harbor()
 f = interactive.float("f", description="Frequency", min=0., max=1000.,
                       unit="Hz", 200.)

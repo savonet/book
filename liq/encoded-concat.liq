@@ -1,4 +1,5 @@
 #!/usr/bin/env liquidsoap
+# header
 s = playlist(loop=false, "~/Music")
 clock.assign_new(sync="none", [s])
 o = output.file(fallible=true, %mp3, "/tmp/out.mp3", s)

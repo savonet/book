@@ -1,4 +1,5 @@
 #!/usr/bin/env liquidsoap
+# header
 h = http.get("http://www.google.fr/xxx")
 if h.status_code < 400 then
   print("Contents of the webpage: #{h}")

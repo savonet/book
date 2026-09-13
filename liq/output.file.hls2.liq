@@ -1,6 +1,7 @@
 #!./liquidsoap
 radio = mksafe(playlist("~/Music"))
 file.mkdir("/tmp/hls")
+# header
 aac_lofi  = %ffmpeg(format="mpegts",
                     %audio(codec="aac", channels=2, ar=44100))
 aac_midfi = %ffmpeg(format="mpegts",

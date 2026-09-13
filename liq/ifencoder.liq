@@ -1,5 +1,6 @@
 #!/usr/bin/env liquidsoap
 s = sine()
+# header
 %ifencoder %mp3
 output.file(%mp3, "out.mp3", s)
 %endif

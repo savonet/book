@@ -78,7 +78,7 @@ In order to illustrate this fact, consider the following script (don't worry if
 you don't understand all the details for now, it uses concepts which will be
 detailed below):
 
-```{.liquidsoap include="liq/chord.liq" from=1}
+```{.liquidsoap include="liq/chord.liq" from=header}
 ```
 
 Let us explain how this script should be thought of as a way of describing how
@@ -212,7 +212,7 @@ meaning of these is detailed below. In the following, all examples starting by
 Another useful feature is the `-i` option of Liquidsoap which displays the types
 of variables in a file. For instance, if we have a file `test.liq` containing
 
-```{.liquidsoap include="liq/interactive.liq" from=0 to=1}
+```{.liquidsoap include="liq/interactive.liq" to=footer}
 ```
 
 and we run
@@ -281,7 +281,7 @@ knows that a float is expected and we write an integer, Liquidsoap converts the
 integer to a float for us. For instance, the frequency argument of `sine` is a
 float, and the script
 
-```{.liquidsoap include="liq/sine.liq" from=0 to=0}
+```{.liquidsoap include="liq/sine.liq" to=footer}
 ```
 
 is accepted: the `500` is read as `500.`. We call this an _implicit
@@ -292,7 +292,7 @@ When Liquidsoap has to guess the type from the values we wrote, the conversion
 does not apply and the two kinds of numbers clash. The type of a conditional is
 guessed this way, so the script
 
-```{.liquidsoap include="liq/bad/floats.liq" from=0 to=0}
+```{.liquidsoap include="liq/bad/floats.liq" to=footer}
 ```
 
 is rejected with
@@ -409,7 +409,7 @@ Any expression can be interpolated, including an expression which itself
 contains a string. For instance, if `m` is a list of metadata, we can print the
 title of the song with
 
-```{.liquidsoap include="liq/interpolation-metadata.liq" from=2}
+```{.liquidsoap include="liq/interpolation-metadata.liq" from=header}
 ```
 
 The quotes around `title` do not close the surrounding string: Liquidsoap reads
@@ -527,7 +527,7 @@ Regular expression objects expose the following methods:
 
 For example, we can test whether a string `fname` corresponds to an image file with
 
-```{.liquidsoap include="liq/string.match.liq" from=3 to=-1}
+```{.liquidsoap include="liq/string.match.liq" from=header to=footer}
 ```
 
 Named groups are also supported in `exec`:
@@ -569,7 +569,7 @@ depending on the current time, see [there](#sec:time-predicates).
 _Conditional branchings_\indexop{if} execute code depending on whether a condition is true
 or not. For instance, the code
 
-```{.liquidsoap include="liq/cond1.liq" from=1}
+```{.liquidsoap include="liq/cond1.liq" from=header}
 ```
 
 will print that the condition is satisfied when either `x` is between 1 and 12
@@ -577,13 +577,13 @@ or the current time is not between 10h and 15h. A conditional branching might
 return a value, which is the last computed value in the chosen branch. For
 instance,
 
-```{.liquidsoap include="liq/cond2.liq" from=1 to=1}
+```{.liquidsoap include="liq/cond2.liq" from=header to=footer}
 ```
 
 will assign `"A"` or `"B"` to `y` depending on whether `x` is below 3 or
 not. The two branches of a conditional should always have the same return type:
 
-```{.liquidsoap include="liq/bad/cond.liq" from=0 to=0}
+```{.liquidsoap include="liq/bad/cond.liq" to=footer}
 ```
 
 will result in
@@ -612,24 +612,24 @@ In the case where you want to perform a conditional branching in the
 in the following example, which assigns 0, 1, 2 or 3 to `s` depending on whether
 `x` is `"a"`, `"b"`, `"c"` or something else:
 
-```{.liquidsoap include="liq/elsif.liq" from=1 to=-1}
+```{.liquidsoap include="liq/elsif.liq" from=header to=footer}
 ```
 
 This is equivalent (but shorter to write) to the following sequence of
 imbricated conditional branchings:
 
-```{.liquidsoap include="liq/elseif.liq" from=1 to=-1}
+```{.liquidsoap include="liq/elseif.liq" from=header to=footer}
 ```
 
 Finally, we should mention that the notation `c?a:b` is also available as a
 shorthand for `if c then a else b end`{.liquidsoap}, so that the expression
 
-```{.liquidsoap include="liq/cond2.liq" from=1 to=1}
+```{.liquidsoap include="liq/cond2.liq" from=header to=footer}
 ```
 
 can be shortened to
 
-```{.liquidsoap include="liq/cond3.liq" from=1 to=1}
+```{.liquidsoap include="liq/cond3.liq" from=header to=footer}
 ```
 
 (and people will think that you are a cool guy).
@@ -940,14 +940,14 @@ will be assigned to `x`, see also [next section](#sec:functions). This is
 particularly useful to use local variables when defining a value. For instance,
 we can assign to `x` the square of sin(2) by
 
-```{.liquidsoap include="liq/def1.liq" to=-1}
+```{.liquidsoap include="liq/def1.liq" to=footer}
 ```
 
 Note that we first compute sin(2) in a variable `y` and then multiply `y` by
 itself, which avoids computing sin(2) twice. Also, the variable `y` is _local_:
 it is defined only until the next `end`, so that
 
-```{.liquidsoap include="liq/def2.liq" to=-1}
+```{.liquidsoap include="liq/def2.liq" to=footer}
 ```
 
 will print `5`: outside the definition of `x`, the definition of `y` one on the
@@ -991,7 +991,7 @@ Those can be seen as memory cells, containing values of a given fixed type,
 which can be modified during the execution of the program. They are created with
 the `ref`\indexop{ref} function, with the initial value of the cell as argument. For instance,
 
-```{.liquidsoap include="liq/ref1.liq" to=0}
+```{.liquidsoap include="liq/ref1.liq" to=footer}
 ```
 
 declares that `r` is a reference which contains `5` as initial value. Since `5`
@@ -1026,7 +1026,7 @@ that, on such a reference, three operations are available:
 - one can replace the value of the reference and read the previous one in a
   single step, with the method `exchange`\indexop{exchange}, e.g.
 
-  ```{.liquidsoap include="liq/ref-exchange.liq" from=2 to=2}
+  ```{.liquidsoap include="liq/ref-exchange.liq" from=header to=footer}
   ```
 
   will assign the value 7 to `r` and give to `old` the value `r` had before.
@@ -1056,7 +1056,7 @@ Note that the type of a reference is fixed: once `r` is declared to be a
 reference to an integer, as above, one can only put integers into it, so that
 the script
 
-```{.liquidsoap include="liq/bad/ref.liq" from=0}
+```{.liquidsoap include="liq/bad/ref.liq"}
 ```
 
 will raise the error
@@ -1200,7 +1200,7 @@ When some metadata occur in the source, the handler is called with the metadata
 as argument. For instance, we can print the title of every song being played on
 our radio (a source named `radio`) with
 
-```{.liquidsoap include="liq/on_meta1.liq" from=2 to=-1}
+```{.liquidsoap include="liq/on_meta1.liq" from=header to=footer}
 ```
 
 The handler is here the function `handle_metadata`, which prints the field
@@ -1233,7 +1233,7 @@ This is called an _anonymous function_\index{function!anonymous}, and it is typi
 specify short handlers in arguments. For instance, the above example for
 printing the title in metadatas could equivalently be rewritten as
 
-```{.liquidsoap include="liq/on_meta2.liq" from=2 to=-1}
+```{.liquidsoap include="liq/on_meta2.liq" from=header to=footer}
 ```
 
 where we define the function directly in the argument.
@@ -1262,7 +1262,7 @@ expression. If you intend to use multiple ones (for instance, in order to
 perform a sequence of actions), you can use the `begin ... end`{.liquidsoap}\indexop{begin}
 syntax, which allows grouping multiple expressions as one. For instance,
 
-```{.liquidsoap include="liq/on_meta3.liq" from=2 to=-1}
+```{.liquidsoap include="liq/on_meta3.liq" from=header to=footer}
 ```
 
 <!--
@@ -1292,7 +1292,7 @@ becomes difficult to keep track of their order and their order matter! For
 instance, the following function computes the sample rate given a number of
 samples in a given period of time:
 
-```{.liquidsoap include="liq/samplerate1.liq" from=0 to=0}
+```{.liquidsoap include="liq/samplerate1.liq" to=footer}
 ```
 
 which is of type
@@ -1310,7 +1310,7 @@ give _labels_ to arguments in order to prevent this, which forces explicitly
 naming the arguments. This is indicated by prefixing the arguments with a tilde
 "`~`":
 
-```{.liquidsoap include="liq/samplerate2.liq" from=0 to=0}
+```{.liquidsoap include="liq/samplerate2.liq" to=footer}
 ```
 
 The labels will be indicated as follows in the type:
@@ -1343,7 +1343,7 @@ for such arguments, the default value will be used. For instance, if for some
 reason we tend to generally measure samples over a period of 2.5 seconds, we can
 make this become the value for the `duration` parameter:
 
-```{.liquidsoap include="liq/samplerate3.liq" from=0 to=0}
+```{.liquidsoap include="liq/samplerate3.liq" to=footer}
 ```
 
 In this way, if we do not specify a value for the duration, its value will
@@ -1678,7 +1678,7 @@ to interact with it, as detailed in [a later section](#sec:telnet)), or
 `osc.float` which reads a float value from an external controller using the OSC
 library. For instance, with the script
 
-```{.liquidsoap include="liq/interactive-float1.liq" from=1 to=-1}
+```{.liquidsoap include="liq/interactive-float1.liq" from=header to=footer}
 ```
 
 the volume can be modified by issuing the telnet command
@@ -1691,7 +1691,7 @@ You should remember that getters are regular functions. For instance, if we
 expect that the volume on telnet to be expressed in decibels, we can convert it
 to an actual amplification coefficient as follows:
 
-```{.liquidsoap include="liq/interactive-float2.liq" from=1 to=-1}
+```{.liquidsoap include="liq/interactive-float2.liq" from=header to=footer}
 ```
 
 <!--
@@ -1714,7 +1714,7 @@ the volume raise from 0 to 1, we should increase it by `frame_duration /
 fade_duration` at each call. If you execute the following script, you should
 thus hear a sine which is getting louder and louder during the 5 first seconds:
 
-```{.liquidsoap include="liq/getter-fade-in.liq" from=1}
+```{.liquidsoap include="liq/getter-fade-in.liq" from=header}
 ```
 
 Of course, this is for educational purposes only, and the actual way one would
@@ -1745,7 +1745,7 @@ the default value. Given a `radio` source which contains metadata labeled
 "`liq_amplify`", we can actually change the volume of the source according to the
 metadata with
 
-```{.liquidsoap include="liq/metadata-getter-ex.liq" from=2 to=-1}
+```{.liquidsoap include="liq/metadata-getter-ex.liq" from=header to=footer}
 ```
 
 <!--
@@ -1782,7 +1782,7 @@ type ourselves, in order to annotate an argument for instance, we spell the same
 type `getter(float)`\indexop{getter}, because the curly brackets are already
 taken by the shorthand for functions with no argument:
 
-```{.liquidsoap include="liq/getter-annotation.liq" from=1 to=3}
+```{.liquidsoap include="liq/getter-annotation.liq" from=header to=footer}
 ```
 
 Our function `double` now accepts both `double(1.5)`{.liquidsoap} and
@@ -1820,7 +1820,7 @@ traditional languages: this is why those constructions are not available as
 primitive constructions in Liquidsoap. For instance, the for loop is implemented
 in the standard library as
 
-```{.liquidsoap include="liq/for-loop.liq" to=-1}
+```{.liquidsoap include="liq/for-loop.liq" to=footer-a}
 ```
 
 This function successively calls the function `f` given as last argument, with
@@ -1835,7 +1835,7 @@ for (i = first; i <= last; i++) {
 
 in languages such as C or Java. As an illustration of its use, the program
 
-```{.liquidsoap include="liq/for-loop.liq" from=-1}
+```{.liquidsoap include="liq/for-loop.liq" from=header-b}
 ```
 
 will print
@@ -1903,7 +1903,7 @@ A typical use of this is when providing arguments which are functions. For
 instance, if we want to print all the elements of a list without new lines
 between them, we can do
 
-```{.liquidsoap include="liq/list-print1.liq" from=1}
+```{.liquidsoap include="liq/list-print1.liq" from=header}
 ```
 
 Here, the function `print`\indexop{print} is of type
@@ -1938,7 +1938,7 @@ would of course be worse if there were more fields. In order to overcome this,
 one can use a _record_\index{record} which is basically the same as a tuple, excepting that
 fields are named. In our case, we can store a song as
 
-```{.liquidsoap include="liq/record-song.liq" to=-1}
+```{.liquidsoap include="liq/record-song.liq" to=footer}
 ```
 
 which is a record with three fields respectively named `filename`, `duration`
@@ -1980,7 +1980,7 @@ If you often use the functions of a specific module, the `open`\indexop{open} ke
 using its fields without having to prefix them by the module name. For instance,
 in the following example
 
-```{.liquidsoap include="liq/list.last3.liq" from=1 to=-1}
+```{.liquidsoap include="liq/list.last3.liq" from=header to=footer}
 ```
 
 the `open list` directive allows directly using the functions in this module: we
@@ -1994,7 +1994,7 @@ A unique feature of the Liquidsoap language is that it allows adding fields to
 any value. We also call them _methods_\indexop{method} by analogy with object-oriented
 programming. For instance, we can write
 
-```{.liquidsoap include="liq/meth-song.liq" from=0 to=0}
+```{.liquidsoap include="liq/meth-song.liq" to=footer-a}
 ```
 
 which defines a string (`"test.mp3"`) with two methods (`duration` and
@@ -2006,18 +2006,18 @@ string.{duration : float, bpm : float}
 
 and behaves like a string, e.g. we can concatenate it with other strings:
 
-```{.liquidsoap include="liq/meth-song.liq" from=1 to=1}
+```{.liquidsoap include="liq/meth-song.liq" from=header-b to=footer-b}
 ```
 
 but we can also invoke its methods like a record or a module:
 
-```{.liquidsoap include="liq/meth-song.liq" from=2 to=2}
+```{.liquidsoap include="liq/meth-song.liq" from=header-c to=footer-c}
 ```
 
 The construction `def replaces`{.liquidsoap} allows changing the main value
 while keeping the methods unchanged, so that
 
-```{.liquidsoap include="liq/meth-song.liq" from=3 to=4}
+```{.liquidsoap include="liq/meth-song.liq" from=header-d}
 ```
 
 will print
@@ -2044,7 +2044,7 @@ It returns a string (the contents of the webpage) with fields specifying the
 returned headers, the status message and the version used by the protocol. A
 typical use is
 
-```{.liquidsoap include="liq/http.get.liq" from=1}
+```{.liquidsoap include="liq/http.get.liq" from=header}
 ```
 
 Another typical example is the `rms`\index{RMS} operator, which takes a source as argument,
@@ -2054,7 +2054,7 @@ intensity). The RMS of a source can thus be logged every second in a file as
 follows (functions concerning files and threads are explained in
 [there](#sec:stdlib)):
 
-```{.liquidsoap include="liq/metrics-file2.liq" from=1}
+```{.liquidsoap include="liq/metrics-file2.liq" from=header}
 ```
 
 When the return type of a function has methods, the help of Liquidsoap displays
@@ -2249,14 +2249,14 @@ The `let`{.liquidsoap} keyword is optional in front of a tuple pattern or a list
 pattern, so that a definition which destructures a value reads like any other
 definition. The same position also accepts a type annotation:
 
-```{.liquidsoap include="liq/pattern-no-let.liq" from=1 to=3}
+```{.liquidsoap include="liq/pattern-no-let.liq" from=header to=footer}
 ```
 
 Record and module patterns are the exception, and they keep their
 `let`{.liquidsoap}. The reason is that Liquidsoap reads an opening curly bracket
 as the beginning of a function with no argument, so that
 
-```{.liquidsoap include="liq/bad/pattern-record.liq" from=0 to=0}
+```{.liquidsoap include="liq/bad/pattern-record.liq" to=footer}
 ```
 
 is rejected with
@@ -2285,7 +2285,7 @@ specifying a default value (with the optional parameter `default`), an error wil
 By default, this error will stop the script, which is usually not a desirable
 behavior. For instance, if you try to run a script containing
 
-```{.liquidsoap include="liq/bad/list.hd-empty.liq" from=1}
+```{.liquidsoap include="liq/bad/list.hd-empty.liq" from=header}
 ```
 
 the program will exit printing
@@ -2319,12 +2319,12 @@ This will execute the instructions `code`: if an error is raised at some point
 during this, the code `handler` is executed, with `err` being the error. For
 instance, instead of writing
 
-```{.liquidsoap include="liq/list.hd-default.liq" to=-1}
+```{.liquidsoap include="liq/list.hd-default.liq" to=footer}
 ```
 
 we could equivalently write
 
-```{.liquidsoap include="liq/list.hd-catch.liq" to=-1}
+```{.liquidsoap include="liq/list.hd-catch.liq" to=footer}
 ```
 
 which states that we should return `0` if the call to `list.hd` raises an error.
@@ -2339,7 +2339,7 @@ problem occurs (such as reading from a non-existent file or writing a file in a
 non-existent directory) and one should always check for those and log the
 corresponding message:
 
-```{.liquidsoap include="liq/file.write-bad.liq" from=2}
+```{.liquidsoap include="liq/file.write-bad.liq" from=header}
 ```
 
 We can also restrict the catch to some errors, by writing a colon and the list
@@ -2348,7 +2348,7 @@ of the errors we want to handle. The other errors keep propagating. A
 in both cases, whether an error was raised or not, which is where we close a
 file or release a resource:
 
-```{.liquidsoap include="liq/list.hd-catch-kind.liq" from=1}
+```{.liquidsoap include="liq/list.hd-catch-kind.liq" from=header}
 ```
 
 This prints the two messages and gives `0` to `x`.
@@ -2375,7 +2375,7 @@ value is said to be _nullable_. For instance, we could redefine the `list.hd`
 function in order to return null (instead of raising an error) when the list is
 empty:
 
-```{.liquidsoap include="liq/list.hd-null.liq" from=0 to=2}
+```{.liquidsoap include="liq/list.hd-null.liq" to=footer-a}
 ```
 
 whose type would be
@@ -2391,7 +2391,7 @@ In order to use a nullable value, one typically uses the construction `x ?? d`
 which is the value `x` excepting when it is null, in which case it is the
 default value `d`. For instance, with the above head function:
 
-```{.liquidsoap include="liq/list.hd-null.liq" from=4 to=5}
+```{.liquidsoap include="liq/list.hd-null.liq" from=header-b}
 ```
 
 Some other useful functions include
@@ -2427,7 +2427,7 @@ TODO......
 
 see #1252
 
-```{.liquidsoap include="liq/file.iterator.liq" from=1}
+```{.liquidsoap include="liq/file.iterator.liq" from=header}
 ```
 -->
 
@@ -2453,18 +2453,18 @@ change its value by using the `:=` syntax. For instance, the samplerate used for
 audio in Liquidsoap is controlled by the `settings.frame.audio.samplerate`
 setting. We can thus display its current value with
 
-```{.liquidsoap include="liq/samplerate-get-print.liq" from=1}
+```{.liquidsoap include="liq/samplerate-get-print.liq" from=header}
 ```
 
 and change its value to 48kHz (the default being 44.1kHz) by adding the
 following command at the beginning of our script:
 
-```{.liquidsoap include="liq/set.liq" from=1}
+```{.liquidsoap include="liq/set.liq" from=header}
 ```
 
 Or we can increase the verbosity of the log messages with
 
-```{.liquidsoap include="liq/set2.liq" from=1}
+```{.liquidsoap include="liq/set2.liq" from=header}
 ```
 
 which sets the maximum level of shown log messages to 4, the default being 3. We
@@ -2536,7 +2536,7 @@ Liquidsoap embeds a preprocessor which allows including or not part of the code
 depending on some conditions. For instance, the following script will print
 something depending on whether the function `input.alsa` is defined or not:
 
-```{.liquidsoap include="liq/ifdef.liq" from=1}
+```{.liquidsoap include="liq/ifdef.liq" from=header}
 ```
 
 This is useful in order to have some code being executed depending on the
@@ -2550,13 +2550,13 @@ above. For instance, suppose that we want to encode a file in mp3, if Liquidsoap
 was compiled with support for it, and otherwise default to wave. This can be
 achieved with
 
-```{.liquidsoap include="liq/ifencoder.liq" from=2}
+```{.liquidsoap include="liq/ifencoder.liq" from=header}
 ```
 
 Finally, the command `%ifversion` can be used to execute some code
 conditionally, depending on the version of Liquidsoap:
 
-```{.liquidsoap include="liq/ifversion.liq" from=1}
+```{.liquidsoap include="liq/ifversion.liq" from=header}
 ```
 
 This is quite useful in order to provide a script which is compatible with
@@ -2602,7 +2602,7 @@ The parsing is driven by the type we ask for. We write `let
 yaml.parse`\indexop{yaml.parse} (resp. `let xml.parse`\indexop{xml.parse}),
 then a variable annotated with the shape we expect, and Liquidsoap fills it in:
 
-```{.liquidsoap include="liq/yaml.parse.liq" from=1}
+```{.liquidsoap include="liq/yaml.parse.liq" from=header}
 ```
 
 An integer in the data is parsed as an `int` and widens to a `float` when we ask
@@ -2617,7 +2617,7 @@ talk to an SQLite database\index{SQLite} with the `sqlite`\indexop{sqlite}
 function, which takes the path of the database file and returns methods to
 create tables, insert rows and query them:
 
-```{.liquidsoap include="liq/sqlite-playlog.liq" from=1}
+```{.liquidsoap include="liq/sqlite-playlog.liq" from=header}
 ```
 
 ### Files
@@ -2665,7 +2665,7 @@ and so on.
 Distant files can be retrieved over http using `http.get`. For instance, the
 following script will fetch and display the list of changes in Liquidsoap:
 
-```{.liquidsoap include="liq/https.get.liq" from=1}
+```{.liquidsoap include="liq/https.get.liq" from=header}
 ```
 
 Other useful functions are
@@ -2699,14 +2699,14 @@ value is `null` when there is no script file, for instance in an interactive
 session. Combined with `path.dirname`, it lets a script find the files sitting
 next to it, wherever we copy the whole directory:
 
-```{.liquidsoap include="liq/script-path.liq" from=1 to=2}
+```{.liquidsoap include="liq/script-path.liq" from=header to=footer}
 ```
 
 In order to execute other programs\index{process} from Liquidsoap, you can use the function
 `process.read` which executes a command and returns the text it wrote in the
 standard output. For instance, in the script
 
-```{.liquidsoap include="liq/process.read.liq" from=1}
+```{.liquidsoap include="liq/process.read.liq" from=header}
 ```
 
 we use the `find` command to find files in the `~/Music` directory and pipe it
@@ -2714,7 +2714,7 @@ through `wc -l` which will count the number of printed lines, and thus the
 number of files. In passing, in practice you would do this in pure Liquidsoap
 with
 
-```{.liquidsoap include="liq/process.read2.liq" from=1 to=1}
+```{.liquidsoap include="liq/process.read2.liq" from=header to=footer}
 ```
 
 There is also the quite useful variant called `process.read.lines`, which
@@ -2723,7 +2723,7 @@ that we have a script `generate-playlist` which outputs a list of files to play,
 one per line. We can play it by feeding it to `playlist.list` which plays a list
 of files:
 
-```{.liquidsoap include="liq/process.read.lines.liq" from=1}
+```{.liquidsoap include="liq/process.read.lines.liq" from=header}
 ```
 
 The more elaborate variant `process.run` allows retrieving the return code of
@@ -2778,7 +2778,7 @@ standard sound loudness measure. One way to do this is to regularly check its
 value and increase or lower the volume depending on whether we are below or above
 the threshold:
 
-```{.liquidsoap include="liq/agc.liq" from=1}
+```{.liquidsoap include="liq/agc.liq" from=header}
 ```
 
 Here, we have a source `pre` which we amplify by the value of the reference
@@ -2807,7 +2807,7 @@ named "`song`" containing the path to a song, and we want that each time we
 change the contents of this file, the new song is played. This can be achieved
 as follows:
 
-```{.liquidsoap include="liq/thread.when.liq" from=1}
+```{.liquidsoap include="liq/thread.when.liq" from=header}
 ```
 
 We begin by creating `q` which is a request queue, i.e. some source on which we
@@ -2820,7 +2820,7 @@ is the case, actually push the song on the request queue.
 As a variation on previous example, we can program a clock which will read the
 time at the beginning of every hour as follows:
 
-```{.liquidsoap include="liq/thread.when2.liq" from=2}
+```{.liquidsoap include="liq/thread.when2.liq" from=header}
 ```
 
 Namely, the condition `0m` is true when the minute of the current time is zero,
@@ -2862,7 +2862,7 @@ Finally, several values which have to agree with each other are best kept in a
 record, itself held in a single reference. Writing the reference replaces all
 the fields at once, so no section is needed:
 
-```{.liquidsoap include="liq/shared-record.liq" from=1}
+```{.liquidsoap include="liq/shared-record.liq" from=header}
 ```
 
 ### Time
@@ -2873,7 +2873,7 @@ January 1970, which is mostly useful to measure duration by considering the
 difference between two points in time. For instance, we can compute the time
 taken by the execution of a function `f` with
 
-```{.liquidsoap include="liq/time-duration.liq" from=2}
+```{.liquidsoap include="liq/time-duration.liq" from=header}
 ```
 
 which stores the time before and after the execution of `f` and displays the
@@ -2887,7 +2887,7 @@ information (year, month, day, hour, etc.), respectively according to the
 current time zone and the Greenwich median time. For instance, we can print the
 current date with
 
-```{.liquidsoap include="liq/time.liq" from=1}
+```{.liquidsoap include="liq/time.liq" from=header}
 ```
 
 If you do not need to manipulate time components and only print time, this can
@@ -2895,13 +2895,13 @@ also be more conveniently done with the `time.string`\indexop{time.string} funct
 string as argument and replaces `%Y` by the year, `%m` by the month and so on,
 so that we can do
 
-```{.liquidsoap include="liq/time2.liq" from=1}
+```{.liquidsoap include="liq/time2.liq" from=header}
 ```
 
 Finally, we mention here that the time zone can be retrieved and changed with
 the `time.zone`\indexop{time.zone} function:
 
-```{.liquidsoap include="liq/time.zone.liq" from=1}
+```{.liquidsoap include="liq/time.zone.liq" from=header}
 ```
 
 Streams in Liquidsoap {#sec:quick-streams}
@@ -2946,7 +2946,7 @@ When we write a type ourselves and the contents do not matter, we can write
 expected, and each place is checked on its own, so that sources with different
 contents can sit in the same list:
 
-```{.liquidsoap include="liq/source-any.liq" from=1}
+```{.liquidsoap include="liq/source-any.liq" from=header}
 ```
 
 ### Encoders
@@ -2993,7 +2993,7 @@ use `list.iter` to apply this function `play` on all the mp3 files of the
 current directory. The following script will thus play all the mp3 files in the
 current directory:\indexop{request.queue}
 
-```{.liquidsoap include="liq/request.queue-ls.liq" from=1}
+```{.liquidsoap include="liq/request.queue-ls.liq" from=header}
 ```
 
 ### Main functions

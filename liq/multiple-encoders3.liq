@@ -1,6 +1,7 @@
 #!./liquidsoap
 radio = mksafe(playlist("~/Music"))
 file.mkdir("hls")
+# header
 radio = ffmpeg.encode.audio(%ffmpeg(%audio(codec="libmp3lame")), radio)
 # From there the radio source is in mp3 format
 output.icecast(fallible=true, format="audio/mpeg",

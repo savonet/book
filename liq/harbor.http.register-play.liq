@@ -1,4 +1,5 @@
 #!./liquidsoap --safe
+# header
 default = playlist("~/Music")
 queue   = request.queue()
 radio   = fallback([queue.{track_sensitive = false}, default])
@@ -14,6 +15,7 @@ def play(request)
   end
 end
 harbor.http.register.simple("/play", play)
+# footer
 thread.run(delay=3., {log.important("Getting url."); ignore(http.get("http://localhost:8000/play?file=test.mp3&title=La%20bohème"))})
 output(radio)
 server.telnet()

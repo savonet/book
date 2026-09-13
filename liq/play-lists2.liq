@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 server.telnet()
 sources = ref([])
 def play(pl)
@@ -19,4 +20,5 @@ def stop(pl)
 end
 server.register("play", play)
 server.register("stop", stop)
+# footer
 output.dummy(blank())

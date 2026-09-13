@@ -1,4 +1,5 @@
 #!./liquidsoap
+# header
 s = single("video.mkv")
 key = string.trim(file.contents("facebook-key"))
 url = "rtmps://live-api-s.facebook.com:443/rtmp/#{key}"

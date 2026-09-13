@@ -1,5 +1,6 @@
 #!./liquidsoap
 data = "bla"
+# header
 try
   file.write(data=data, "/non/existent/path")
 catch err do
