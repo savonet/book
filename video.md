@@ -432,8 +432,11 @@ as a record:
 ```{.liquidsoap include="liq/video-source-tracks.liq" from=header}
 ```
 
-and the `source`\indexop{source} function does the converse, assembling a source from a record
-of tracks:
+Liquidsoap warns us here that the variables `audio`, `video` and `metadata`
+hide the modules of the same name. The warning is harmless in a script this
+short, and the field names are the point of the example, so we keep them. The
+`source`\indexop{source} function does the converse, assembling a source from a
+record of tracks:
 
 ```{.liquidsoap include="liq/video-source-rebuild.liq" from=header}
 ```
@@ -959,7 +962,7 @@ of the encoder\index{encoder} which indicates that we want to use sources with v
 The encoder of choice for video is FFmpeg\index{FFmpeg}, that we have already seen in
 [here](#sec:ffmpeg-encoder). The general syntax is
 
-```liquisoap
+```
 %ffmpeg(format="...", %audio(...), %video(...))
 ```
 

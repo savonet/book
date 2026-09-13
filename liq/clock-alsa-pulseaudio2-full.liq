@@ -1,5 +1,5 @@
 #!./liquidsoap
-s = mksafe(playlist("~/Music"))
 # header
+s = mksafe(playlist("~/Music"))
 output.alsa(fallible=true, buffer(s))
 output.pulseaudio(s)

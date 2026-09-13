@@ -14,7 +14,7 @@ liquidsoap 'output(sine())'
 
 This instructs Liquidsoap to run the program
 
-```{.liquidsoap include="liq/sine1.liq" from=2}
+```{.liquidsoap include="liq/output-sine.liq" from=header}
 ```
 
 which plays a sine wave at 440 Hertz. The operator `sine`{.liquidsoap}\indexop{sine} is called
@@ -227,7 +227,7 @@ A playlist can refer to distant files (e.g. urls of the form
 beforehand. If you want to use a live stream, which can be very long or even infinite,
 the operator `input.http`\indexop{input.http} should be used instead:
 
-```{.liquidsoap include="liq/input.http.liq" from=1}
+```{.liquidsoap include="liq/input.http-full.liq" from=header}
 ```
 
 `input.http` reads the stream with FFmpeg. The operator is therefore only
@@ -372,7 +372,7 @@ am and 8 pm if you like this better). This means that if we have two playlists,
 one for the day and one for the night, and want a live show between 19h and 20h,
 we can set this up as follows:
 
-```{.liquidsoap include="liq/radio.liq" from=2 to=5}
+```{.liquidsoap include="liq/radio-switch.liq" from=header to=footer}
 ```
 
 Every source has a `track_sensitive`{.liquidsoap}\index{track!sensitive}

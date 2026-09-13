@@ -660,7 +660,7 @@ them fit on one line, i.e., the above can equivalently be written
 
 However, the code
 
-```{.liquidsoap include="liq/bad/fun.liq"}
+```{.liquidsoap include="liq/fun.liq"}
 ```
 
 gives rise to the following warning
@@ -957,7 +957,7 @@ When we define a variable, it is generally to use its value: otherwise, why
 bothering defining it? For this reason, Liquidsoap issues a warning when an
 _unused_ variable\index{variable!unused} is found, since it is likely to be a bug. For instance, on
 
-```{.liquidsoap include="liq/bad/unused.liq"}
+```{.liquidsoap include="liq/unused.liq"}
 ```
 
 Liquidsoap will output
@@ -2762,7 +2762,7 @@ For instance, we can simulate the sound of a hanged phone by playing a sine and
 switching the volume on and off every second. This is easily achieved as
 follows:
 
-```{.liquidsoap include="liq/hanged-phone.liq" from=1}
+```{.liquidsoap include="liq/hanged-phone.liq" from=header}
 ```
 
 Here, we amplify the sine by the contents of a reference `volume` (or, more
@@ -2845,7 +2845,7 @@ The `atomic`\indexop{atomic} function groups operations which must not be seen
 half-done. It takes a function with no argument, runs it and returns its value,
 and no other atomic section runs during that time:
 
-```{.liquidsoap include="liq/hanged-phone.liq" from=5 to=5}
+```{.liquidsoap include="liq/atomic.liq" from=header to=footer}
 ```
 
 Two rules apply inside an atomic section: never wait for another thread, and
@@ -2967,7 +2967,7 @@ we should save data, a getter so that we can change the name over time, for
 instance to start a new file every hour) and a source. This means that we can
 play our playlist and record it into an mp3 file as follows:
 
-```{.liquidsoap include="liq/output.file.liq" from=1}
+```{.liquidsoap include="liq/output.file-full.liq" from=header}
 ```
 
 Here, `%mp3` is an encoder specifying that we want to encode into the mp3
@@ -3099,7 +3099,7 @@ settings.init.compact_before_start := true
 If you want to monitor precisely memory consumption, Liquidsoap ships with
 `runtime.memory`\indexop{runtime.memory} to inspect it from within a script:
 
-```{.liquidsoap include="liq/runtime.memory.liq" from=1}
+```{.liquidsoap include="liq/runtime.memory-full.liq" from=header}
 ```
 
 On my laptop this prints
