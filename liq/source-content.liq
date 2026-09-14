@@ -3,7 +3,7 @@
 s = source.mux.video(video=video.fill(color=0x0000ff, blank()), sine())
 def show_content() =
   list.iter(
-    fun (tf) -> print("#{fst(tf)}: #{format.description(snd(tf))}"),
+    fun ((name, fmt)) -> print("#{name}: #{format.description(fmt)}"),
     source.content(s)
   )
 end

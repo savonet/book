@@ -179,10 +179,6 @@ _buffering_. Finally, one machine is never enough to face the whole internet, so
 we should have the possibility of distributing the workload over multiple
 servers in order to handle large amounts of simultaneous connections.
 
-Liquidsoap can also serve the listeners itself, and [there](#sec:outputs) shows
-how. Serving the listeners from Liquidsoap spares you a second program, at the
-cost of the reliability and the distribution described above.
-
 ### Icecast
 
 Historically, Icecast\index{Icecast} was the main open-source server used in order to serve
@@ -197,6 +193,9 @@ limits (on clients or bandwidth), and so on. Icecast servers support relaying
 streams from other servers, which is useful in order to distribute listening
 clients across multiple physical machines, when many of them are expected to
 connect simultaneously.
+
+Liquidsoap can also emulate an Icecast server itself, and serve the listeners
+without a second program, as described in [there](#sec:icecast-server).
 
 ### HLS {#sec:HLS}
 

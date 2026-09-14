@@ -29,8 +29,8 @@ Each source\index{source} carries a number of _tracks_:
 - _track marks_: indicating when a track is ending.
 
 The midi data is much less used in practice in Liquidsoap, so that we will
-mostly forget about it. Subtitles get a section of their own in [the video
-chapter](#chap:video). The audio and video tracks can either contain
+mostly forget about it. Subtitles got a section of their own in
+[there](#sec:subtitles). The audio and video tracks can either contain
 
 - _raw_ data: this data is in an internal format (usually obtained by decoding
   compressed files), suitable for manipulation by operators within Liquidsoap,
@@ -64,11 +64,10 @@ source(audio=pcm*)
 
 We see that it takes 4 optional arguments (the identifier, the amplitude, the
 duration and the frequency) and returns a source, as indicated by the type of
-the returned value: `source(...)`. Every source operator takes an `id`
-argument, which names the source in the logs, and we will not comment on it
-again. The returned source has one track, `audio`, whose contents is written
-`pcm*`\indexop{pcm}: raw audio, in any of the supported sample formats, with
-any number of channels. Video and midi do not appear in the type, which means
+the returned value: `source(...)`. The returned source has one track, `audio`,
+whose contents is written `pcm*`\indexop{pcm}: raw audio, with any number of
+channels, stored in one of the three sample formats which Liquidsoap handles
+internally and which we detail below. Video and midi do not appear in the type, which means
 that `sine` produces neither of them.
 
 An operator which passes a track through without looking at it uses a _row
@@ -82,7 +81,7 @@ where 'b is a set of tracks to be muxed into a source,
   'a is a track and a track of type: pcm, pcm_s16 or pcm_f32
 ```
 
-The two lines after `where` read the two variables aloud for us. The variable
+The two lines after `where` read the two row variables aloud for us. The variable
 `'a` is the audio track. Since `amplify` multiplies samples, `'a` has to be raw
 audio, in one of the three sample formats `pcm`, `pcm_s16` or `pcm_f32`. The
 variable `'b` is announced as "a set of tracks to be muxed into a source", and
@@ -102,27 +101,10 @@ therefore reads "a source with two channels of raw audio, plus any other
 tracks". You will meet `source(_)` on its own in error messages: that is a
 source about which nothing has been decided yet.
 
-As another example, consider the type of the operator
-`source.drop.audio`\indexop{source.drop.audio}, which removes the audio track of
-a source:
-
-```
-(?id : string?, source(audio='a, 'b)) -> source(audio='a, 'b)
-where 'b is a set of tracks to be muxed into a source
-```
-
-The type of `source.drop.audio` says little, and the standard library
-definition says more:
-
-```{.liquidsoap include="liq/source-drop-audio.liq" from=header}
-```
-
-The function `source.tracks`\indexop{source.tracks} turns a source into a
-record of its tracks, the pattern `{audio = _, ...tracks}` binds every track
-but the audio one to `tracks`, and `source`\indexop{source} builds a source
-back from a record of tracks. The operator `source.drop.video` removes the
-video track in the same way, and `source.drop.midi`, `source.drop.metadata`
-and `source.drop.track_marks` remove the remaining ones.
+The operators `source.drop.audio`\indexop{source.drop.audio},
+`source.drop.video`, `source.drop.metadata` and `source.drop.track_marks`
+remove one track from a source, as described in
+[there](#sec:removing-tracks).
 
 ### Internal contents
 
@@ -292,7 +274,7 @@ source.
 The above story is entirely not precise on one point. We will see in [a section
 below](#sec:clocks) that it is not the exactly the active sources themselves
 which are responsible for initiating computation of data, but rather the
-associated clocks.
+associated *clocks*.
 
 ### Type inference
 
@@ -421,7 +403,9 @@ where 'c is a set of tracks to be muxed into a source, 'a is a track
 
 It takes the source to decorate as its last argument, the source to take the
 video track from as its `video` argument, and returns the first source with the
-video track of the second grafted onto it. The correct script is therefore
+video track of the second grafted onto it. The row variable `'b` of the
+`video` argument does not appear in the result: every track of that source
+other than its video track is dropped. The correct script is therefore
 
 ```{.liquidsoap include="liq/blue-sine2.liq" from=header}
 ```
@@ -460,9 +444,8 @@ want to produce. The (simplified) type of this operator is
 ```
 
 We see that the second argument is the name of the file and the third argument
-is the source we want to dump. The file name is a getter, `{string}` rather
-than `string`, so that a new name can be computed every time the file is
-reopened. The first argument is the encoding format, of type `format('a)`.
+is the source we want to dump. The first argument is the encoding format, of
+type `format('a)`.
 Observe that `format` takes a type variable `'a` as argument, and `'a` is also
 the argument of the source taken as argument: the tracks required from the
 input source depend on the chosen format.
@@ -506,9 +489,10 @@ format(audio=pcm(mono))
 
 and thus imposes that `s` should have mono audio.
 
-The parameters which have such an influence on types are fixed once and for
-all, at the time the script is loaded, and cannot be read from a variable. For
-instance, the following will not be accepted
+Because they have such an influence on types, encoders are not values as any
+other in Liquidsoap, and specific restrictions have to be imposed. In
+particular, you cannot use variables or complex expressions in the parameters
+for the encoders. For instance, the following will not be accepted
 
 
 ```{.liquidsoap include="liq/bad/format-mp3-mono.liq" from=header}
@@ -742,7 +726,7 @@ with
 
 Setting either dimension explicitly, as above, also turns the detection off. By
 the way, a script which uses no video at all pays nothing for any of this: video
-is disabled unless the script asks for it, and the setting
+is disabled unless the script asks for it. The setting
 `settings.frame.video.default` forces video on when set to `true`.
 
 Each pixel has a color and a transparency, also sometimes called an _alpha
@@ -766,12 +750,15 @@ internal contents for video is called `yuv420p`\indexop{yuv420p} in source
 types: Y, U and V for the three channels, and 420 for the way the chroma
 channels are shared between neighbors.
 
-The transparency is not part of `yuv420p`, and this is why the name carries no
-final "a". A video track holds a _canvas_\index{canvas}: a stack of layers,
-each one a `yuv420p` image placed at a given position, each one with its own
-alpha channel. Superimposing a logo over a video adds a layer to the canvas
-instead of rewriting the image below it, which is what makes operators such as
-`video.add_image` cheap.
+A video track does not hold one image per frame but a _canvas_\index{canvas}:
+a list of images, each one stored in the YUV420 format with an optional
+transparency channel, and each one placed at a position in the frame. The
+canvas is composited into a single image only when an operator needs the
+pixels, for instance when encoding. Superimposing a logo over a video adds an
+image to the canvas instead of rewriting the pixels below it, which is what
+makes operators such as `video.add_image` cheap. Liquidsoap no longer stores
+images in the RGBA format internally: an RGBA image, from a PNG file for
+instance, is converted to YUV420 when it is decoded.
 
 #### MIDI
 
@@ -919,9 +906,11 @@ default value is
  "metadata_block_picture", "coverart"]
 ```
 
-The last five of those carry cover art rather than text. The setting
-`settings.encoder.metadata.cover` lists the metadata which encoders treat as
-cover art, and its default value is
+The last five of those carry cover art rather than text: their value is the
+picture itself. The setting `settings.encoder.metadata.cover` lists the
+metadata which encoders treat as cover art, and embed as a picture in the
+formats which support it, such as mp3 and flac, instead of writing them as
+text. Its default value is
 
 ```
 ["pic", "apic", "metadata_block_picture", "cover"]
@@ -1001,8 +990,8 @@ example it will always be the case).
 \index{contents}
 
 The wake-up message above carries two pieces of information which look like the
-same thing. The _frame type_ is what the typechecker inferred, and the frame
-type may still contain variables. The _content type_ is what the source will
+same thing. The _frame type_ is what the typechecker inferred, and may still
+contain variables. The _content type_ is what the source will
 actually produce, with every parameter fixed: `{audio=pcm(stereo)}` says two
 channels of raw audio and nothing else. Liquidsoap drops types during execution
 for efficiency reasons, so the content type is computed again at wake up, from
@@ -1180,7 +1169,6 @@ from an end of track with the beginning of the next one, the crossing
 operator needs twice as much stream data. After ten tracks, with a crossing
 duration of six seconds, one more minute will have passed for the source
 compared to the time of the crossing operator.
-
 An operator of this kind puts its input in a _child clock_\index{clock!child}
 and pulls from that child clock faster than its own clock advances. The data
 pulled ahead has to be kept somewhere, and the setting
@@ -1449,7 +1437,6 @@ latency to delegating it to the underlying sources or vice-versa. Consider for
 instance the following script:
 
 ```{.liquidsoap include="liq/clock-harbor-alsa-fallback.liq" from=header to=footer}
-
 ```
 When `input.harbor` is available, the latency is controlled by liquidsoap however,
 as soon as the `fallback` switches to `input.alsa`, latency is delegated to this source.
@@ -2208,7 +2195,7 @@ In order to guide you through the source, let us briefly describe the main
 folders and files. All the files referred to here are in the `src` directory of
 the source, where all the code lies. The code is split in two halves: `src/lang/`
 holds the language, which knows nothing about audio, and `src/core/` holds
-everything which streams. The main folders of `src/lang/` are
+everything related to streams. The main folders of `src/lang/` are
 
 - `parser/`: the lexer and the grammar,
 - `ast/`: the abstract syntax tree, that is the internal representation of
@@ -2230,7 +2217,8 @@ And the main folders of `src/core/` are
 - `request/`: requests and playlist parsers,
 - `builtins/`: the builtins which do need a stream,
 - `operators/`: where most operators such as sound processing are,
-- `sources/`: input sources, and `outputs/`: outputs,
+- `sources/`: input sources,
+- `outputs/`: outputs,
 - `media/`: decoders, samplerate converters and image converters,
 - `decoders/`: the decoders which need no external library,
 - `encoder/`: the encoders, and the support in the language for the `%` syntax,
@@ -2239,6 +2227,13 @@ And the main folders of `src/core/` are
 - `optionals/`: one folder per optional library, from `alsa/` to `xmlplaylist/`,
   each one holding the inputs, outputs, decoders and encoders that library
   provides.
+
+Two more directories matter. The standard library, that is the part of
+Liquidsoap written in Liquidsoap, lives in `src/libs/`, one file per topic
+(`playlist.liq`, `fades.liq`, `switches.liq`, and so on). The OCaml libraries
+we maintain for Liquidsoap but which can be useful on their own live in
+`src/modules/`; the ones in `src/modules/synced/` are automatically exported
+to their own repositories and published as opam packages.
 
 The most important files are the following ones:
 

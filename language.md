@@ -239,7 +239,6 @@ The most common form of comment is the _single-line comment_: anything from a
 `#` character to the end of the line is ignored by the interpreter:
 
 ```{.liquidsoap include="liq/comment-single.liq" from=header to=footer}
-
 ```
 
 _Multi-line comments_ are delimited by `#<` and `>#` and can span multiple
@@ -247,7 +246,6 @@ lines. They also nest, making it easy to comment out blocks that already contain
 comments:
 
 ```{.liquidsoap include="liq/comment-multiline.liq" from=header}
-
 ```
 
 Basic values {#sec:basic-values}
@@ -278,7 +276,8 @@ float, and the script
 ```{.liquidsoap include="liq/sine.liq" to=footer}
 ```
 
-is accepted: the `500` is read as `500.`. We call this an _implicit
+is accepted: the `500` is read as `500.` and no error is raised. We call this
+an _implicit
 conversion_\index{implicit conversion}.
 
 The implicit conversion applies only where Liquidsoap already expects a float.
@@ -322,14 +321,12 @@ The function to output strings on the standard output is `print`\indexop{print},
 in
 
 ```{.liquidsoap include="liq/print-hello.liq" from=header}
-
 ```
 
 Incidentally, this function can also be used to display values of any type, so
 that
 
 ```{.liquidsoap include="liq/print-int.liq" from=header}
-
 ```
 
 will display `5`, as expected. In practice, one rarely does use this functions,
@@ -374,7 +371,6 @@ before "Romain" is not shown either.
 The concatenation of two strings is achieved by the infix operator "`^`", as in
 
 ```{.liquidsoap include="liq/string-concat.liq" from=header}
-
 ```
 
 Instead of using concatenation, it is often rather convenient to use _string
@@ -385,13 +381,11 @@ the result of the evaluation of the expression `e`:
 -->
 
 ```{.liquidsoap include="liq/interpolation-user.liq" from=header}
-
 ```
 
 will print `The user admin has just logged.` or
 
 ```{.liquidsoap include="liq/interpolation-random.liq" from=header}
-
 ```
 
 will print `The number 0.663455738438 is random.` (at least it did last time I
@@ -415,7 +409,6 @@ When a string should be taken verbatim, without any interpolation or escape
 processing, you should use the _raw string_ syntax `{|...|}`\index{string!raw}:
 
 ```{.liquidsoap include="liq/raw-string.liq" from=header}
-
 ```
 
 will print `no interpolation: #{expr} here`.
@@ -424,7 +417,6 @@ If the content itself contains `|}`, use a delimited form `{id|...|id}` where
 `id` is any sequence of lowercase letters and underscores:
 
 ```{.liquidsoap include="liq/raw-string-delimited.liq" from=header}
-
 ```
 
 will print `this |} is fine`. The opening `{id|` and closing `|id}` must use
@@ -495,7 +487,6 @@ the `regexp` operator or the `r/.../` syntactic sugar. The `r/.../` form is
 particularly convenient because backslashes do not need to be escaped:
 
 ```{.liquidsoap include="liq/regexp.liq" from=header to=footer}
-
 ```
 
 The available flags are:
@@ -521,7 +512,6 @@ For example, we can test whether a string `fname` corresponds to an image file w
 Named groups are also supported in `exec`:
 
 ```{.liquidsoap include="liq/regexp-groups.liq" from=header}
-
 ```
 
 The older functions `string.match`\indexop{string.match} and
@@ -547,7 +537,6 @@ and return booleans:
 and so on (`<`, `>=`, `>`). For instance, the following is a boolean expression:
 
 ```{.liquidsoap include="liq/boolean-expression.liq" from=header}
-
 ```
 
 The time predicates such as `10h-15h` are also booleans, which are true or false
@@ -591,7 +580,6 @@ branch returns a string, and the two branches should be of same nature. The
 `unit`:
 
 ```{.liquidsoap include="liq/cond-no-else.liq" from=header}
-
 ```
 
 In the case where you want to perform a conditional branching in the
@@ -657,7 +645,8 @@ At bad/fun.liq, line 2, char 2-5:
   3+5
 
 Warning 3: This expression is returning a value that is ignored. Do you
-need to use its return value? If not, you can use the `ignore()` operator.
+need to use its return value? If not, you can use the `ignore()`
+operator.
 ```
 
 The reason is that this function is first computing the result of 3+5 and then
@@ -678,7 +667,6 @@ same type. They are constructed by square bracketing the sequence whose elements
 are separated by commas. For instance, the list
 
 ```{.liquidsoap include="liq/list-of-integers.liq" from=header}
-
 ```
 
 is a list of three integers (1, 4 and 5), and its type is `[int]`, and the type
@@ -754,7 +742,6 @@ Here, `_` ignores a value, and `...t` captures all remaining elements as a list.
 Lists can similarly be constructed using spreads:
 
 ```{.liquidsoap include="liq/list-spread.liq" from=header to=footer}
-
 ```
   
 ### Tuples
@@ -792,7 +779,6 @@ their elements. For instance, if `t` is the above tuple `(3, 4.2,
 "hello")`{.liquidsoap}, we can write
 
 ```{.liquidsoap include="liq/tuple-let.liq" from=header to=footer}
-
 ```
 
 which will assign the first element to the variable `n`, the second element to
@@ -822,7 +808,6 @@ metadata, and the second its value. For instance, a metadata would be the
 association list
 
 ```{.liquidsoap include="liq/assoc-metadata.liq" from=header to=footer}
-
 ```
 
 indicating that the artist of the song is "Frank Sinatra" and the title is "Fly
@@ -830,7 +815,6 @@ me to the moon". For such an association list, one can obtain the value
 associated to a given key using the `list.assoc` function:
 
 ```{.liquidsoap include="liq/list.assoc.liq" from=header}
-
 ```
 
 will return `"Fly me to the moon"`, i.e. the value associated to
@@ -838,7 +822,6 @@ will return `"Fly me to the moon"`, i.e. the value associated to
 function, and it is equivalent to write
 
 ```{.liquidsoap include="liq/assoc-brackets.liq" from=header}
-
 ```
 
 to obtain the `"title"` metadata. Other useful functions are
@@ -853,13 +836,11 @@ In passing, you should note the importance of parenthesis when defining
 pairs. For instance
 
 ```{.liquidsoap include="liq/list-of-strings.liq" from=header}
-
 ```
 
 is a list of strings, whereas
 
 ```{.liquidsoap include="liq/list-of-pairs.liq" from=header}
-
 ```
 
 is a list of pairs of strings, i.e. an association list.
@@ -959,14 +940,12 @@ If this situation is really wanted, you should use `ignore`\indexop{ignore} in o
 use of the variable `n` by writing
 
 ```{.liquidsoap include="liq/ignore.liq" from=header}
-
 ```
 
 Another possibility is to assign the special variable `_`\indexop{\_}, whose purpose is to
 store results which are not going to be used afterwards:
 
 ```{.liquidsoap include="liq/underscore.liq" from=header}
-
 ```
 
 ### References {#sec:references}
@@ -1310,14 +1289,12 @@ float and similarly for the one labeled `duration`. For those arguments, we have
 to give the name of the argument when calling the function:
 
 ```{.liquidsoap include="liq/samplerate-labeled-call.liq" from=header-a to=footer-a}
-
 ```
 
 The nice byproduct is that the order of the arguments does not matter anymore, the
 following will give the same result:
 
 ```{.liquidsoap include="liq/samplerate-labeled-call.liq" from=header-b}
-
 ```
 Of course, a function can have both labeled and non-labeled arguments.
 
@@ -1336,7 +1313,6 @@ In this way, if we do not specify a value for the duration, its value will
 implicitly be assumed to be 2.5, so that the expression:
 
 ```{.liquidsoap include="liq/samplerate-optional-call.liq" from=header-a to=footer-a}
-
 ```
 
 will still evaluate to 44100. Of course, if we want to use another value for the
@@ -1344,7 +1320,6 @@ duration, we can still specify it, in which case the default value will be
 ignored:
 
 ```{.liquidsoap include="liq/samplerate-optional-call.liq" from=header-b}
-
 ```
 
 The presence of an optional argument is indicated in the type by prefixing the
@@ -1379,7 +1354,7 @@ g : (request : string, ?count : int) -> string =
 
 The caller passes `request` and `count`, and the body of `g` reads `r` and
 `count`. Renaming the label is useful when the natural label is already the name
-of something else, such as the `request`\indexop{request} module of the standard
+of something else, such as the `request` module of the standard
 library.
 
 #### Actual examples
@@ -1538,7 +1513,6 @@ so that we can use it to have a radio consisting of a microphone input amplified
 by a factor 1.2 by
 
 ```{.liquidsoap include="liq/amplify-mic.liq" from=header to=footer}
-
 ```
 
 In the above example, the volume 1.2 was supposedly chosen because the sound
@@ -1616,26 +1590,22 @@ we can use this in scripts. We can, of course, still apply a constant factor
 with
 
 ```{.liquidsoap include="liq/amplify-volume.liq" from=header-a to=footer-a}
-
 ```
 
 or, using anonymous functions,
 
 ```{.liquidsoap include="liq/amplify-volume.liq" from=header-b to=footer-b}
-
 ```
 
 which we generally write, using the alternative syntax,
 
 ```{.liquidsoap include="liq/amplify-volume.liq" from=header-c to=footer-c}
-
 ```
 
 More interestingly, we can use the value of a float reference `v` for
 amplification:
 
 ```{.liquidsoap include="liq/amplify-volume.liq" from=header-d to=footer-d}
-
 ```
 
 when the value of the reference gets changed, the amplification will get changed
@@ -1643,14 +1613,12 @@ too. Moreover, since any reference can be considered as a getter, as mentioned
 above, this can be written in an even simpler way:
 
 ```{.liquidsoap include="liq/amplify-volume.liq" from=header-e to=footer-e}
-
 ```
 
 However, we need to use the above syntax if we want to manipulate the value of
 the reference. For instance,
 
 ```{.liquidsoap include="liq/amplify-volume.liq" from=header-f to=footer-f}
-
 ```
 
 will amplify by twice the value of `v`.
@@ -1937,7 +1905,6 @@ of a record, we can use the syntax `record.field`. For instance, we can print
 the duration with
 
 ```{.liquidsoap include="liq/record-song.liq" from=header-b}
-
 ```
 
 ### Modules
@@ -2080,7 +2047,6 @@ The first uses the `x.foo ?? default` syntax, which evaluates to the field value
 when it is present or to the default otherwise:
 
 ```{.liquidsoap include="liq/optional-field.liq" from=header to=footer}
-
 ```
 
 The type of this function reflects the optional field with `?`:
@@ -2094,7 +2060,6 @@ the field value or `null` when the field is absent. It can be chained and works
 with method calls:
 
 ```{.liquidsoap include="liq/safe-navigation.liq" from=header}
-
 ```
 
 ### References
@@ -2125,7 +2090,6 @@ Patterns {#sec:patterns}
 _Patterns_ are a concise way to extract values from structured data such as lists, tuples, and records, and assign them to variables. For instance, we have already seen the basic form
 
 ```{.liquidsoap include="liq/tuple-let.liq" from=header to=footer}
-
 ```
 
 for tuples: given a triplet `t` of values, it states that we should call `n` (resp. `x`, resp. `s`) the first (resp. second, resp. third) element before executing the rest of the code. More generally, patterns can be combined arbitrarily.
@@ -2135,7 +2099,6 @@ for tuples: given a triplet `t` of values, it states that we should call `n` (re
 Tuple patterns destructure each element positionally. The special placeholder `_` ignores a value:
 
 ```{.liquidsoap include="liq/pattern-tuple.liq" from=header to=footer}
-
 ```
 
 ### List patterns
@@ -2143,7 +2106,6 @@ Tuple patterns destructure each element positionally. The special placeholder `_
 List patterns can be used in order to name the elements of a list, similarly as for tuples. For instance, we can name the three elements of a list with three elements as follows:
 
 ```{.liquidsoap include="liq/pattern-list.liq" from=header to=footer}
-
 ```
 
 In the case where we do not know in advance the precise length of the list (which is the usual situation), we can use a *spread*, which is a pattern of the form `...var`, which will collect the list of the remaining elements. For instance, in
@@ -2156,19 +2118,16 @@ let [x, y, ...l] = [1, 2, 3, 4]
 we state that we want to call `x` and `y` the two first elements, and `l` the tail of the list. This can also be combined with other patterns such as place holders:
 
 ```{.liquidsoap include="liq/pattern-list-spread.liq" from=header to=footer}
-
 ```
 
 In case, we do not care about the remaining elements, we can simply use the pattern `...` (without a variable name:
 
 ```{.liquidsoap include="liq/pattern-list-spread-any.liq" from=header to=footer}
-
 ```
 
 Spreads also work "backwards", i.e. we can capture the last elements of a list as follows:
 
 ```{.liquidsoap include="liq/pattern-list-spread-back.liq" from=header to=footer}
-
 ```
 
 ### Record and module patterns
@@ -2177,19 +2136,16 @@ Record patterns extract named fields. A spread captures the remaining fields as
 a record:
 
 ```{.liquidsoap include="liq/pattern-record.liq" from=header to=footer}
-
 ```
 
 Module patterns additionally capture the base value alongside the fields:
 
 ```{.liquidsoap include="liq/pattern-module.liq" from=header to=footer}
-
 ```
 
 Optional fields can be captured with `?`, yielding `null` when absent:
 
 ```{.liquidsoap include="liq/pattern-optional.liq" from=header to=footer}
-
 ```
 
 ### Patterns in function arguments
@@ -2197,7 +2153,6 @@ Optional fields can be captured with `?`, yielding `null` when absent:
 Patterns are also valid directly in function argument positions. For instance,
 
 ```{.liquidsoap include="liq/pattern-argument.liq" from=header to=footer}
-
 ```
 
 ### Patterns without `let`
@@ -2440,11 +2395,11 @@ For instance, the documentation about the `frame.duration` setting is
 ```
 ### Frame duration in seconds
 
-Set frame duration, in seconds.This setting control the latency of the
-streaming system. When set toa smaller value, latency is reduced at the
-expense of more dataconsumption. When set to a larger value, CPU and memory
-usage shouldgo down but latency should increase.Tweaking frame duration is
-tricky but needed when dealing with latencyor getting soundcard I/O
+Set frame duration, in seconds. This setting controls the latency of the
+streaming system. When set to a smaller value, latency is reduced at the
+expense of more data consumption. When set to a larger value, CPU and memory
+usage should go down but latency should increase. Tweaking frame duration is
+tricky but needed when dealing with latency or getting soundcard I/O
 correctly synchronized with liquidsoap.
 
 settings.frame.duration := 0.02
@@ -2460,7 +2415,6 @@ between different scripts. You can include a file `file.liq` in a script by
 writing
 
 ```{.liquidsoap include="liq/include.liq" from=header}
-
 ```
 
 which will be evaluated as if you had pasted the contents of the file in place
@@ -2472,7 +2426,6 @@ people. Typically, one would have a file `passwords.liq` defining the passwords
 in variables, e.g.
 
 ```{.liquidsoap include="liq/passwords.liq" from=header to=footer}
-
 ```
 
 and would then use it by including it:
@@ -2535,7 +2488,6 @@ The string representation of any value can be obtained with the
 `string`\indexop{string} function:
 
 ```{.liquidsoap include="liq/string-of-value.liq" from=header}
-
 ```
 
 Most expected type conversion function are implemented with names of the form
@@ -2543,38 +2495,6 @@ Most expected type conversion function are implemented with names of the form
 `int_of_string`:
 
 ```{.liquidsoap include="liq/int_of_string.liq" from=header}
-
-```
-
-### Structured data
-
-Sooner or later our script has to read data written by somebody else: the
-settings of a playout system, the list of the shows of the week, the answer of a
-web service. The usual formats for such data are JSON, YAML\index{YAML} and
-XML\index{XML}, and Liquidsoap reads the three of them. JSON is detailed in
-[there](#sec:json), YAML and XML follow the same pattern. All three
-are always available, whichever optional libraries Liquidsoap was compiled with.
-
-The parsing is driven by the type we ask for. We write `let
-yaml.parse`\indexop{yaml.parse} (resp. `let xml.parse`\indexop{xml.parse}),
-then a variable annotated with the shape we expect, and Liquidsoap fills it in:
-
-```{.liquidsoap include="liq/yaml.parse.liq" from=header}
-```
-
-An integer in the data is parsed as an `int` and widens to a `float` when we ask
-for a float, so that `volume: 1` would be accepted above. Liquidsoap embeds its
-own YAML parser, which covers the subset of YAML that people write by hand: a
-file using the less common parts of the specification is refused. The other
-direction is `yaml.stringify`\indexop{yaml.stringify}, which turns any value
-into YAML.
-
-When the data we keep grows beyond a file we rewrite entirely, Liquidsoap can
-talk to an SQLite database\index{SQLite} with the `sqlite`\indexop{sqlite}
-function, which takes the path of the database file and returns methods to
-create tables, insert rows and query them:
-
-```{.liquidsoap include="liq/sqlite-playlog.liq" from=header}
 ```
 
 ### Files
@@ -2614,6 +2534,45 @@ module:
 - `path.home`: home directory of user,
 
 and so on.
+
+### Structured data
+
+Sooner or later our script has to read data written by somebody else: the
+settings of a playout system, the list of the shows of the week, the answer of a
+web service. The usual formats for such data are JSON, YAML\index{YAML} and
+XML\index{XML}, and Liquidsoap reads the three of them. JSON is detailed in
+[there](#sec:json), YAML and XML follow the same pattern. All three
+are always available, whichever optional libraries Liquidsoap was compiled with.
+
+Suppose that we have a YAML configuration file `config.yaml` which contains
+
+```
+name: My Radio
+volume: 0.8
+```
+
+The parsing is driven by the type we ask for. We write `let
+yaml.parse`\indexop{yaml.parse} (resp. `let xml.parse`\indexop{xml.parse}),
+then a variable annotated with the shape we expect, and Liquidsoap fills it in
+from the contents of the file:
+
+```{.liquidsoap include="liq/yaml.parse.liq" from=header}
+```
+
+An integer in the data is parsed as an `int` and widens to a `float` when we ask
+for a float, so that `volume: 1` would be accepted above. Liquidsoap embeds its
+own YAML parser, which covers the subset of YAML that people write by hand: a
+file using the less common parts of the specification is refused. The other
+direction is `yaml.stringify`\indexop{yaml.stringify}, which turns any value
+into YAML.
+
+When the data we keep grows beyond a file we rewrite entirely, Liquidsoap can
+talk to an SQLite database\index{SQLite} with the `sqlite`\indexop{sqlite}
+function, which takes the path of the database file and returns methods to
+create tables, insert rows and query them:
+
+```{.liquidsoap include="liq/sqlite-playlog.liq" from=header}
+```
 
 ### HTTP
 
@@ -3050,7 +3009,6 @@ to run the OCaml memory compaction algorithm before starting, which recovers
 most of the type-checking memory:
 
 ```{.liquidsoap include="liq/compact-before-start.liq" from=header}
-
 ```
 
 If you want to monitor precisely memory consumption, Liquidsoap ships with
