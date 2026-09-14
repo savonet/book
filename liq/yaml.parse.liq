@@ -1,8 +1,5 @@
 #!./liquidsoap
 # header
-config = '
-name: My Radio
-volume: 0.8
-'
-let yaml.parse (c : {name : string, volume : float}) = config
-print("#{c.name} plays at volume #{c.volume}")
+let yaml.parse (config : {name : string, volume : float}) =
+  file.contents("config.yaml")
+print("#{config.name} plays at volume #{config.volume}")

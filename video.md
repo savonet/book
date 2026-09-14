@@ -74,9 +74,12 @@ configuration keys:
 - `settings.frame.video.height`: height of videos (in pixels),
 - `settings.frame.video.framerate`: number of images per seconds.
 
-Most of the time you do not have to touch them. Liquidsoap reads the dimensions\index{dimensions}
-of the first video file it decodes and uses them for the whole stream. A 1080p
-file is thus streamed in 1080p, and not downscaled to some other format. The
+When all your files share one format, you do not have to touch them.
+Liquidsoap reads the dimensions\index{dimensions} of the first video file it
+decodes and uses them for the whole stream. A 1080p file is thus streamed in
+1080p, and not downscaled to some other format. When your files come in
+different formats, set the dimensions yourself, otherwise the first file
+decoded decides for all the others. The
 setting `settings.frame.video.detect_dimensions` controls this behaviour and is
 enabled by default. The logs say so when the stream starts:
 
@@ -195,10 +198,11 @@ the image being scaled to fit. For instance,
 
 shows a small image of 50×50 pixels, ten pixels away from the upper-left corner
 of the frame. The four arguments are getters, so that their value can change
-over time, as we will see when [adding a moving logo](#sec:video-add) to a
-video.
+over time, as we will see in [there](#sec:video-add) when adding a moving logo
+to a video.
 
-The same can be specified with metadata, which is convenient when the images
+The same can also be specified with metadata, which is convenient when the
+images
 come from a playlist and each entry needs its own size. Decoders take in account
 the following metadata:
 
@@ -443,7 +447,8 @@ record of tracks:
 
 so that `s2` streams exactly what `s` streams, after having been taken apart and
 put back together. Our concert is then a matter of taking the record of tracks
-of one source and overriding one of its fields:
+of the video source `v` and overriding its audio field by the audio track of
+the source `music` with the clean audio:
 
 ```{.liquidsoap include="liq/video-replace-audio.liq" from=header}
 ```

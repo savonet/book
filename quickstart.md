@@ -553,7 +553,26 @@ terminal. Liquidsoap does not detach from the terminal. Use the service manager
 of your system, `systemd`\index{systemd} on most Linux distributions and
 `launchd`\index{launchd} on macOS. The service manager restarts the script if
 the script dies, collects the logs, and runs the script as the user you
-choose.
+choose. For instance, the following unit file, saved as
+`/etc/systemd/system/radio.service`, starts our script at boot, restarts it
+when it dies and runs it as the user `liquidsoap`:
+
+```
+[Unit]
+Description=My radio
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/liquidsoap /etc/liquidsoap/radio.liq
+Restart=always
+User=liquidsoap
+
+[Install]
+WantedBy=multi-user.target
+```
+
+The command `systemctl enable --now radio` then starts the radio and registers
+it for the next boots.
 
 #### The encoder
 

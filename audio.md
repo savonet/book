@@ -355,7 +355,7 @@ simultaneously all the sources in its input list).
 
 A listener sometimes changes their mind, and a request is sometimes a
 mistake. The `queue` method of `request.queue` returns the requests which are
-still waiting, and the `remove`\indexop{remove} method takes one of those
+still waiting, and the `remove` method takes one of those
 requests back out. The `remove_request_id` method does the same from the
 request identifier which the telnet server reported when the request was
 pushed. On the telnet server itself, the command is `q.remove` followed by that
@@ -518,7 +518,6 @@ this defined, we can finally play songs of any artist by performing requests of
 the form
 
 ```{.liquidsoap include="liq/single-artist.liq" from=header to=footer}
-
 ```
 
 and, of course, an uri such as "`artist:Nina Simone`" could also be used in a
@@ -639,10 +638,12 @@ program, such as
 ```{include="liq/darkice.cfg"}
 ```
 
-By the way, Liquidsoap can also run a full Icecast server, which accepts source
-clients on any mountpoint and relays each of them to listeners. The operator is
-`icecast.server`\indexop{icecast.server}, and we describe the operator with the
-outputs in [there](#sec:icecast-server).
+By the way, Liquidsoap can also run a full Icecast-compatible server, which
+accepts source clients on any mountpoint and relays each of them to listeners.
+It is provided directly by Liquidsoap itself and thus does not require the
+installation of an Icecast server. The operator is
+`icecast.server`\indexop{icecast.server}, and we describe it with the outputs
+in [there](#sec:icecast-server).
 
 #### Securing harbor
 
@@ -655,7 +656,6 @@ First, the list of IPs which are allowed to connect to harbor can be changed
 with the following setting:
 
 ```{.liquidsoap include="liq/harbor-bind_addrs.liq" from=header}
-
 ```
 
 It takes as argument a list of allowed IPs, the default one `0.0.0.0` meaning
@@ -676,8 +676,8 @@ passed as the `auth` argument of `input.harbor` and is of type
 ```
 
 It takes as argument a record describing the client which is trying to log in
-and returns whether the client should be allowed or not. The record has six
-fields:
+and returns whether the client should be allowed or not. The fields of the
+record are the following ones:
 
 - `user` and `password` are the credentials sent by the client,
 - `address` is the network address of the client,
@@ -894,7 +894,6 @@ i.e. can produce some stream. We have already seen examples of this with reques
 queues ([here](#sec:request.queue)) such as
 
 ```{.liquidsoap include="liq/fallback-queue.liq" from=header to=footer}
-
 ```
 
 Here, we want to play a song from the request queue when there is one, otherwise
@@ -910,7 +909,6 @@ not wait, by setting its `track_sensitive`\index{track!sensitive} method to
 `false`, in which case the song from the queue will be immediately played:
 
 ```{.liquidsoap include="liq/fallback-queue-track_sensitive.liq" from=header to=footer}
-
 ```
 
 Typically, you would use this to switch to a live show when available
@@ -950,7 +948,6 @@ with a fallback on blank. Since this is quite common in scripts, the function
 equivalent to writing
 
 ```{.liquidsoap include="liq/mksafe-shorthand.liq" from=header to=footer}
-
 ```
 
 #### Starting on a fresh track
@@ -1135,7 +1132,6 @@ argument a list of sources and plays one track from each source in order, and
 finally keeps on playing tracks from the last source. This means that
 
 ```{.liquidsoap include="liq/sequence.liq" from=header to=footer}
-
 ```
 
 will play one track from `s1`, one track from `s2` and will then keep on
@@ -1227,11 +1223,6 @@ variant, we can add the jingle on top of the currently playing music with
 ```{.liquidsoap include="liq/jingles-delay2.liq" from=header to=footer}
 ```
 
-<!--
-\TODO{this is useful for non-track-sensitive switches to play one track, but
-ensuring that is won't last longer, see https://github.com/savonet/liquidsoap/issues/1544 }
--->
-
 #### Jingles at fixed time
 
 Instead of inserting jingles regularly, you might want to insert them at fixed
@@ -1282,9 +1273,10 @@ the jingles are not willing to wait for a track boundary:
 ```{.liquidsoap include="liq/jingles-once5.liq" from=header to=footer}
 ```
 
-By the way, there is also `request.once`\indexop{request.once}, which plays a
-single request and then becomes unavailable. Use `request.once` when what you
-have at hand is a request rather than a source.
+By the way, `once` takes a source. When what we have is a request, for
+instance one created with `request.create`, the
+`request.once`\indexop{request.once} operator plays that request once and then
+becomes unavailable.
 
 #### Jingles at fixed time: alternative approach
 
@@ -1308,29 +1300,16 @@ As a variant, if we wanted to play a jingle every half hour, we could replace
 the second line by
 
 ```{.liquidsoap include="liq/jingles-once7.liq" from=header to=footer}
-
 ```
 
 As another variant, if we wanted to play 3 jingles, we could write
 
 ```{.liquidsoap include="liq/jingles-at_most.liq" from=header to=footer}
-
 ```
 
 where `predicate.at_most` is similar to `predicate.once`, but is true a given
 number of times instead of only once (its it pointless to play 3 jingles in a
 row, but this can be quite useful for ads for instance).
-
-By the way, a schedule can also be written in the syntax of the unix
-`crontab`. The function `cron.add`\indexop{cron.add} takes a cron entry and
-a function to run at those times, so that pushing the jingle into a request
-queue at the top of every hour reads as follows:
-
-```{.liquidsoap include="liq/cron-jingle.liq" from=header to=footer}
-```
-
-The queue is track sensitive here, so the jingle waits for the end of the
-current song, exactly as the `switch` above does.
 
 If we want to add the jingle on top of the currently playing music, we can use
 the function `source.available` which takes as arguments a source and a
@@ -1350,7 +1329,6 @@ which case the predicate becomes true once and then false again, until the next
 signal. Concretely, we can use this function to create a predicate `p` by
 
 ```{.liquidsoap include="liq/predicate.signal.liq" from=header to=footer}
-
 ```
 
 The predicate `p` is false by default, in order to make it true we can send a
@@ -1423,7 +1401,6 @@ metadata fields are: `artist`, `title`, `album`, `genre`, `year` and `comment`.
 In order to retrieve the title in such a list, one can use the notation
 
 ```{.liquidsoap include="liq/metadata-get.liq" from=header}
-
 ```
 
 which returns the value associated to the field `title` in the metadata `m`, the
@@ -1658,7 +1635,8 @@ Both operators are written using a more general function,
 a record: the audio, the video if the source has one, and the `metadata` and
 `track_marks` tracks. Dropping the metadata amounts to building a source back
 from every track except the `metadata` one. We use `source.tracks` again in
-[this chapter](#chap:video) to assemble a source out of pieces of other ones.
+[this chapter](#chap:video) to assemble a source out of pieces of other ones,
+and the tracks themselves are described in [there](#sec:source-type).
 
 ### Inserting tracks and metadata
 
@@ -1851,7 +1829,7 @@ The function itself receives the position and the metadata of the track. For
 instance, the following script will say the title of each song 10 seconds
 before the song ends:
 
-```{.liquidsoap include="liq/source.on_end.liq" from=header}
+```{.liquidsoap include="liq/source.on_position.liq" from=header}
 ```
 
 You should now recognize a usual programming pattern. The main source is `s`,
@@ -2239,7 +2217,6 @@ and starts the starting source once the fade is over. We can change this
 duration globally with
 
 ```{.liquidsoap include="liq/max_fade.liq" from=header}
-
 ```
 
 The fade only applies when the source being left carries audio and nothing else.
@@ -2412,8 +2389,9 @@ as follows:
 ```{.liquidsoap include="liq/normalize_track_gain.liq" from=header to=footer}
 ```
 
-Several standards compute such a gain, and doing the amplification by hand for
-each of them becomes tiresome. We advise you to use the
+Several standards compute such a gain (ReplayGain or EBU R 128 for instance),
+and properly doing the amplification for each of them becomes tiresome. We
+advise you to use the
 `normalize_track_gain`\indexop{normalize\_track\_gain} operator instead:
 
 ```{.liquidsoap include="liq/normalize_track_gain2.liq" from=header to=footer}
@@ -2428,7 +2406,7 @@ script above is what computes the gain:
 `replaygain_track_gain` tag of every file Liquidsoap opens, and computes the
 value with FFmpeg when the tag is missing. Pass `compute=false` to only read
 existing tags, and `ratio` to say how much faster than real time the computation
-may decode the file (50 by default).
+may decode the file (50 times faster by default).
 
 Broadcasters generally work in LUFS\index{LUFS} instead, a unit we come back to
 [below](#sec:metrics). The function to call is then
@@ -3094,7 +3072,6 @@ A first way to modify such variables is through the telnet server. It can be
 started by adding
 
 ```{.liquidsoap include="liq/server.telnet.liq" from=header}
-
 ```
 
 add the beginning of the script. We can then connect to the telnet server by
@@ -3153,7 +3130,6 @@ of all interactive variables in this file (in JSON format, which should easily
 be readable). For instance, if you end the previous script with
 
 ```{.liquidsoap include="liq/interactive.persistent.liq" from=header}
-
 ```
 
 you will observe that a file `script.params` has been created and its contents is
@@ -3181,7 +3157,6 @@ values is not very user-friendly. Fortunately, we can also get a web interface
 for free, simply by typing\indexop{interactive.harbor}\index{harbor}
 
 ```{.liquidsoap include="liq/interactive.harbor.liq" from=header}
-
 ```
 
 This will run a web server, which is accessible at the url
@@ -3204,7 +3179,6 @@ set the `description` it will be displayed. This means that by changing the
 declaration of the interactive variable to
 
 ```{.liquidsoap include="liq/interactive.float.liq" from=header to=footer}
-
 ```
 
 the webpage will change to
@@ -3625,8 +3599,7 @@ predicate is true. For instance, we can generate an archive per hour with:
 
 Here, the predicate `{0m}` given for the `reopen_when` argument is true whenever
 the current minute is 0, i.e. at the beginning of every hour: we will thus
-change file at the beginning of every hour (`cron.add`, which we have seen in
-[there](#sec:jingles), is the other way of saying this). Whenever a new file is
+change file at the beginning of every hour. Whenever a new file is
 created, the file name is computed again and will thus be labeled according to
 current time. Also note that the directory depends on current time: Liquidsoap
 will take care of creating the required directories for us. Reopening of the
@@ -3675,8 +3648,8 @@ Some other useful optional arguments of the `output.file` operator are
 - `reopen_delay`: the minimum time, in seconds, between two reopenings
   triggered by `reopen_when` (120 by default).
 
-The output also has `on_start`\indexop{on\_start} and
-`on_stop`\indexop{on\_stop} methods, which register functions called whenever
+The output also has `on_start` and `on_stop` methods, which register functions
+called whenever
 the output starts or stops:
 
 ```{.liquidsoap include="liq/output.file-on_stop.liq" from=header}
@@ -4253,7 +4226,6 @@ encode multiple times in the same format.
 Remember that we can encode audio in mp3 format using FFmpeg with the encoder
 
 ```{.liquidsoap include="liq/encoder-ffmpeg-mp3-lame.liq" from=header to=footer}
-
 ```
 
 This says that we want to generate a file in the mp3 format, and that
@@ -4261,7 +4233,6 @@ we should put in audio which is encoded in mp3 with the LAME library. Now, if we
 change this to
 
 ```{.liquidsoap include="liq/encoder-ffmpeg-mp3-copy.liq" from=header to=footer}
-
 ```
 
 this says that we want to generate a file in the mp3 format, and that we should
@@ -4301,7 +4272,6 @@ Liquidsoap power, which does not know how to edit encoded data. For instance, if
 we insert the line
 
 ```{.liquidsoap include="liq/bad/no-decoding3.liq" from=header to=footer}
-
 ```
 
 in the middle, in order to change the volume of the `radio`, we will obtain the
@@ -4555,7 +4525,7 @@ follows:
     returned),
   - `"stopped"`: the program was stopped (it has received a STOP signal),
   - `"killed"`: the program was killed (it has received a KILL signal),
-  - `"exception"`: program raised an exception,
+  - `"exception"`: the program raised an exception,
   - `"timeout"`: the `timeout` we gave was reached and the program was ended.
   
   This field itself has two fields detailing the return value:
@@ -4760,7 +4730,6 @@ will print
 Conversely, JSON values can be converted to Liquidsoap using the syntax
 
 ```{.liquidsoap include="liq/json.parse-syntax.liq" from=header to=footer}
-
 ```
 
 which parses the string `json` as JSON data and assigns the result to `x`: this
@@ -4872,7 +4841,6 @@ In order to start the server, one should begin by calling the `server.telnet`
 function:
 
 ```{.liquidsoap include="liq/server.telnet.liq" from=header}
-
 ```
 
 Related configuration keys can be set:
@@ -4918,21 +4886,12 @@ to which the server will answer with
 
 ```
 Available commands:
-|- clock.dump
-|- clock.dump_all_sources
 |- exit
 |- help [<command>]
 |- main.next
 |- main.reload
 |- main.skip
 |- main.uri [<uri>]
-|- output.pulseaudio.metadata
-|- output.pulseaudio.remaining
-|- output.pulseaudio.seek <seconds>
-|- output.pulseaudio.skip
-|- output.pulseaudio.start
-|- output.pulseaudio.status
-|- output.pulseaudio.stop
 |- quit
 |- reqs.flush_and_skip
 |- reqs.push <uri>
@@ -4943,8 +4902,6 @@ Available commands:
 |- request.metadata <rid>
 |- request.resolving
 |- request.trace <rid>
-|- runtime.gc.compact
-|- runtime.gc.full_major
 |- runtime.memory
 |- shutdown
 |- uptime
@@ -4956,6 +4913,9 @@ Available commands:
 Type "help <command>" for more information.
 END
 ```
+
+(we have left out of this list the commands specific to the output and to the
+garbage collector)
 
 The answer to a command can be arbitrary text, but always ends with a line
 containing only `END`, which is convenient when automating communications
@@ -5012,12 +4972,7 @@ END
 - `shutdown` stops the script,
 - `uptime` shows for how long the script has been running,
 - `version` displays the Liquidsoap version,
-- `runtime.memory` prints how much memory the process uses, and
-  `runtime.gc.compact` and `runtime.gc.full_major` ask the garbage collector to
-  do a round of work, which is useful when hunting a memory leak,
-- `clock.dump` and `clock.dump_all_sources` describe the clocks of the script
-  and the sources running in them, which we come back to in
-  [there](#sec:clocks-ex).
+- `runtime.memory` prints how much memory the process uses.
 
 Some commands can be used to inspect the requests manipulated by
 Liquidsoap. Those are identified by their _request identifier_, or _rid_, which
@@ -5192,13 +5147,11 @@ It is also possible to run a server command from within a Liquidsoap script
 itself by using `server.execute` function such as
 
 ```{.liquidsoap include="liq/server.execute.liq" from=header-a to=footer-a}
-
 ```
 
 or
 
 ```{.liquidsoap include="liq/server.execute.liq" from=header-b to=footer-b}
-
 ```
 
 if you want to separate the command from the argument. This is working even if
@@ -5221,7 +5174,6 @@ through the http and https protocols. This means that you can load a playlist on
 some web server by writing something like
 
 ```{.liquidsoap include="liq/playlist-http.liq" from=header to=footer}
-
 ```
 
 and the playlist can itself consist in a list of urls of files to be played.
@@ -5800,7 +5752,6 @@ By default, only messages with importance up to 3 are displayed, and this can be
 changed by setting the `log.level` configuration:
 
 ```{.liquidsoap include="liq/log.level.liq" from=header}
-
 ```
 
 You can log at various levels using the functions `log.critical`, `log.severe`,
@@ -6185,7 +6136,6 @@ file sources only when all of their children are. We can always ask a source
 what it settled on:
 
 ```{.liquidsoap include="liq/composition_type.liq" from=header}
-
 ```
 
 In two cases, the automatic choice might not be what we want. The `buffer`
