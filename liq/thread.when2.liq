@@ -1,7 +1,7 @@
 #!./liquidsoap
 log.level := 4
 # header
-q    = request.queue()
+q = request.queue()
 def read_time()
   text = time.string("It is %H hours, %M minutes and %S seconds")
   q.push(request.create("say:#{text}"))
