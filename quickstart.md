@@ -379,14 +379,19 @@ Every source has a `track_sensitive`{.liquidsoap}\index{track!sensitive}
 method, and the `switch` operator reads it on both the source being played and
 the source about to be played. When both are `true`, `switch` waits for the end
 of the current track before switching. When one of them is `false`, `switch`
-switches immediately. Liquidsoap sets `track_sensitive`{.liquidsoap} to `true`
+switches immediately. By default, Liquidsoap sets `track_sensitive`{.liquidsoap} to `true`
 on a source which plays files, such as our two playlists, and to `false` on a
 live source, such as our microphone. At 19h the microphone is therefore
 selected in the middle of the song being played, as we want from a live show,
 and `switch` fades the interrupted song out over one second before the
 microphone starts. We can set `track_sensitive`{.liquidsoap} ourselves on any
 source, as for the `fallback` operator, and the whole mechanism is detailed in
-[there](#sec:composition).
+[there](#sec:composition). For instance, adding
+
+```{.liquidsoap include="liq/track-sensitive.liq" from=header to=footer}
+```
+
+before the definition of `radio` will change `day` to an non-track sensitive source.
 
 ### Jingles
 
