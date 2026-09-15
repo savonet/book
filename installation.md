@@ -323,7 +323,7 @@ code formatting, and more.
 
 ### VSCode
 
-The VSCode editor is one of the most popular these days. Support for Liquidsoap is most easily added by installing the [savonet.vscode-liquidsoap](https://marketplace.visualstudio.com/items?itemName=savonet.vscode-liquidsoap) extension from the VSCode marketplace. It provides syntax highlighting and automatic code formatting with no additional configuration needed -- just install and start writing.
+The VSCode editor is one of the most popular these days. Support for Liquidsoap is most easily added by installing the [`savonet.vscode-liquidsoap`](https://marketplace.visualstudio.com/items?itemName=savonet.vscode-liquidsoap) extension from the VSCode marketplace. It provides syntax highlighting and automatic code formatting with no additional configuration needed -- just install and start writing.
 
 ### Emacs
 
