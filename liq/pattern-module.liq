@@ -1,7 +1,7 @@
 #!./liquidsoap
 # header
 let v.{foo, bar} = "aabbcc".{foo = 123, bar = "baz"}
-# v = "aabbcc", foo = 123, bar = 456
+# v = "aabbcc", foo = 123, bar = "baz"
 # footer
 ignore(v)
 ignore(foo)
