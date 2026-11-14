@@ -387,8 +387,8 @@ only. Liquidsoap supports many protocols and even the possibility of adding your
 own.
 
 For instance, the `youtube-dl` protocol allows the use of the
-`youtube-dl`\indexop{youtube-dl} program (or its more recent alternative
-`yt-dlp`) in order to download files from YouTube.
+`yt-dlp`\indexop{youtube-dl} program (or the older `youtube-dl`, by changing
+`settings.protocol.youtube_dl.path`) in order to download files from YouTube.
 
 ```{.liquidsoap include="liq/youtube-dl.liq" from=header to=footer}
 ```
@@ -689,7 +689,8 @@ record are the following ones:
   source, `"SOURCE"` for the historical Icecast protocol, `"ICY"` for
   Shoutcast, `"WEBSOCKET"` for a browser sending sound, and `"GET"` for a
   metadata update, so that you can grant streaming and refuse metadata updates
-  to the same client.
+  to the same client,
+- `headers` is the list of the http headers sent by the client.
 
 Typically, you would like to call an external script, say
 `harbor-auth`,
@@ -709,6 +710,18 @@ the security discussion in [there](#sec:shell-security)). The `process.read.line
 of lines returned by our script and our function returns `true` or `false`
 depending on whether this first line is "`allowed`" or not. In this way you
 could easily query an external database of allowed users.
+
+The function `auth` can only answer yes or no. When we want to tell the client
+why it is refused, for instance so that a DJ understands that the mountpoint is
+already in use rather than thinking that their password is wrong, the `accept`
+argument of `input.harbor` gives a finer answer. It receives the same record,
+after `auth` has granted access, and returns `null` to admit the client, or a
+record whose `refuse` field gives the http status and the reason sent back to
+the client. For instance, we can refuse the metadata updates, which are sent
+with the `GET` method:
+
+```{.liquidsoap include="liq/input.harbor-accept.liq" from=header to=footer}
+```
 
 Finally, the clients should be able to determine that they are really connected
 with your server and not some hacker's one. The best way to achieve that is to
@@ -1583,10 +1596,8 @@ is set to `true` by:
 
 The function `insert_jingle` looks at the metadata, and if present returns the
 `jingles` source, containing all the jingles, of which one track will be
-played. If the metadata is not present, we return
-`source.fail()`\indexop{source.fail} which is a source
-which is never available: in this case, prepend will simply not insert any track
-because none is ready. The function is then registered with the `prepend`
+played. If the metadata is not present, we return `null`, meaning that there
+is nothing to insert for this track. The function is then registered with the `prepend`
 operator.
 
 Of course, there is a dual operator `append`\indexop{append} which allows appending a track for
@@ -2495,6 +2506,10 @@ in order to control the way the normalization is performed:
   less sensitive to local variations of the sound, but also less reactive.
 - `lookahead` specifies how many seconds of sound we look at in advance (beware
   that this will introduce that amount of delay in the output stream).
+- `lufs`, when set to `true`, measures the loudness in LUFS, as explained in
+  [there](#sec:metrics), instead of the RMS volume: this is closer to the
+  loudness perceived by listeners, and the unit in which streaming platforms
+  express their recommendations.
 
 For instance, in the script
 
@@ -3655,6 +3670,17 @@ somewhere. The `synchronous=false` argument means that our function runs outside
 of the streaming thread, which matters here because uploading a file takes time,
 as we have explained in [there](#sec:on-metadata).
 
+When the segments are served from another place than the playlists, such as a
+content delivery network, the `prefix` argument is put in front of every file
+name in the playlists. The playlists can also carry tags for the players and
+the ad servers, such as `#EXT-X-CUE-OUT` which announces an advertisement
+break: the `insert_tag` method of the output adds one in front of the next
+segment. Here, we register a telnet command which announces a 30 seconds ad
+break:
+
+```{.liquidsoap include="liq/output.file.hls-cdn.liq" from=header}
+```
+
 A more involved example, inspired of
 [`srt2hls`](https://github.com/mbugeia/srt2hls), is
 
@@ -3832,9 +3858,10 @@ the `output.url` operator to send our stream `radio` encoded with the encoder
 
 ### SRT
 
-In order to send a stream on a local network, we recommend the use of the SRT\index{SRT}
-protocol, using the `output.srt`\indexop{output.srt} operator, which has a low latency and can cope
-with network problems. This operator has two modes, which are specified by the
+In order to send a stream to another machine, be it on a local network or
+across the internet, we recommend the use of the SRT\index{SRT} protocol, using
+the `output.srt`\indexop{output.srt} operator, which has a low latency and was
+designed to cope with network problems such as lost packets. This operator has two modes, which are specified by the
 `mode` argument.
 
 - In `"caller"` mode, which is the default one, it initiates a connection to a
@@ -3860,6 +3887,9 @@ with network problems. This operator has two modes, which are specified by the
   ```
   ffplay srt://localhost:8000
   ```
+
+  Several clients can connect at the same time, and the `max_clients` argument
+  limits their number (there is no limit by default).
 
 ## Encoding formats {#sec:encoders}
 
@@ -4272,7 +4302,9 @@ The `%audio` and `%audio.raw` streams all take as parameters
 - `samplerate`: the number of samples per second,
 
 as well as parameters specific to the codec (any option supported by FFmpeg can
-be passed here). If an option is not recognized, it will raise an error during
+be passed here). For `%audio.raw`, the parameters which are not given are taken
+from the first frame of the stream: a mono source stays mono unless we pass
+`channels=2`. If an option is not recognized, it will raise an error during
 the instantiation of the encoder.
 
 For instance, we can encode in AAC using the MPEG-TS muxer and the FDK AAC

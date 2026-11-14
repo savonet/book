@@ -2272,6 +2272,16 @@ file or release a resource:
 
 This prints the two messages and gives `0` to `x`.
 
+The `catch` part is optional. A `try` with only a `finally` runs its cleanup
+and lets the error propagate to the caller, which can then handle it where it
+makes more sense:
+
+```{.liquidsoap include="liq/try-finally.liq" from=header}
+```
+
+prints that the configuration is opened, then closed, and finally that it could
+not be read.
+
 Errors can be raised from Liquidsoap with the function `error.raise`, which
 takes as arguments the error to raise and the error message. For instance:
 
