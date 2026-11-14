@@ -129,8 +129,14 @@ instruct opam to install Liquidsoap from this directory with the following
 commands:
 
 ```
-opam pin add liquidsoap .
+cd liquidsoap
+opam pin -ny .
+opam install liquidsoap
 ```
+
+The first command declares all the packages of the repository to opam, without
+installing them yet: Liquidsoap is split in several packages which have to be
+of the same version, and the second command installs it with them.
 
 From time to time you can update your version by downloading the latest code and
 then asking opam to rebuild Liquidsoap:
@@ -146,12 +152,16 @@ below.
 
 #### Updating libraries
 
-If you also need a cutting-edge version of a library in the Liquidsoap ecosystem
-(say, `ocaml-ffmpeg`), you can clone it and pin it directly with opam:
+Most libraries of the Liquidsoap ecosystem, such as the bindings to FFmpeg,
+ALSA, LAME or SRT, are developed in the Liquidsoap repository itself, in the
+`src/modules/synced/` directory, and published separately on opam from
+there. A recent checkout of Liquidsoap thus already contains their latest
+version. For a library which is developed elsewhere, you can clone it and pin it
+directly with opam, for instance
 
 ```
-git clone https://github.com/savonet/ocaml-ffmpeg.git
-cd ocaml-ffmpeg
+git clone https://github.com/savonet/ocaml-metadata.git
+cd ocaml-metadata
 opam pin add .
 ```
 
@@ -180,9 +190,13 @@ features included. You can also inspect a running installation with
 ### Linux
 
 Official packages are available for Debian, Ubuntu, Fedora and Alpine (see the
-supported releases table in the [versions section](#sec:versions)). These
-packages ship with their own build of FFmpeg, including `fdk-aac` support, so no
-third-party repository has to be enabled.
+supported releases table in the [versions section](#sec:versions)). The Debian,
+Ubuntu and Alpine packages ship with their own build of FFmpeg, including
+`fdk-aac` support, so no third-party repository has to be enabled. The Fedora
+packages use the FFmpeg of Fedora, which leaves out patent-encumbered codecs
+such as the H.264 encoder: installing the full FFmpeg from
+[RPM Fusion](https://rpmfusion.org/Howto/Multimedia) adds them, without having
+to reinstall Liquidsoap.
 
 The simplest way to get them is to add our package repository to your system,
 which the following command does for you:
@@ -209,8 +223,11 @@ is opam, as described above.
 
 Pre-built binaries are provided on the [releases
 page](https://github.com/savonet/liquidsoap/releases) in a file with a name of
-the form `liquidsoap-vN.N.N-win64.zip`. It contains directly the program, no
-installer is provided at the moment.
+the form `liquidsoap-N.N.N-win64.zip`. It contains directly the program, no
+installer is provided at the moment. On Windows, the encoders other than
+`%ffmpeg` are disabled, because they cannot be linked together with FFmpeg's
+libraries, so that `%ffmpeg` should be used for all encoding, for instance
+`%ffmpeg(format="mp3", %audio(codec="libmp3lame"))` for mp3.
 
 Building from source
 --------------------
@@ -228,27 +245,30 @@ Docker image
 
 [Docker](https://www.docker.com/)\index{Docker} images are provided as `savonet/liquidsoap`
 on [Docker Hub](https://hub.docker.com/r/savonet/liquidsoap). These are
-Debian-based images with Liquidsoap pre-installed (kept minimal for size), which
-you can use to easily and securely deploy scripts.
+Debian-based images with Liquidsoap pre-installed, which you can use to easily
+and securely deploy scripts. Each tag also exists in a `-minimal` variant (e.g.
+`v2.5.0-rc1-minimal`), Alpine-based images are provided as
+`savonet/liquidsoap-alpine`, and all of them are also available from
+`ghcr.io/savonet/`.
 
 Images are tagged with:
 
-- a release version (e.g. `v2.4.5`), which may be updated,
+- a release version (e.g. `v2.5.0-rc1`), which may be updated,
 - a git commit SHA (e.g. `a24bf49`), which is permanent,
-- a rolling-release tag (e.g. `rolling-release-v2.4.x`), which tracks the latest
+- a rolling-release tag (e.g. `rolling-release-v2.5.x`), which tracks the latest
   snapshot for that branch.
 
-For example, to pull release `2.4.5`:
+For example, to pull release `2.5.0-rc1`:
 
 ```
-docker pull savonet/liquidsoap:v2.4.5
+docker pull savonet/liquidsoap:v2.5.0-rc1
 ```
 
 We refer the reader to the Docker documentation for the way such images can be
 used. For instance, you can have a shell on such an image with
 
 ```
-docker run -it --entrypoint /bin/bash savonet/liquidsoap:v2.4.5
+docker run -it --entrypoint /bin/bash savonet/liquidsoap:v2.5.0-rc1
 ```
 
 By default, the docker image does not have access to the soundcard of the local
@@ -258,7 +278,7 @@ computer inside the image. For instance, you can play a sine (see
 [there](#sec:sound-sine)) by running:
 
 ```
-docker run -it -v /dev/snd:/dev/snd --privileged savonet/liquidsoap:v2.4.5 liquidsoap 'output.alsa(sine())'
+docker run -it -v /dev/snd:/dev/snd --privileged savonet/liquidsoap:v2.5.0-rc1 'output.alsa(sine())'
 ```
 
 This single line should work on any computer on which Docker is installed: no
@@ -316,6 +336,7 @@ immutable links to release assets, use
 |---------|--------------------------------------|---------------------|----------------------------------|
 | Debian  | stable (`trixie`), testing (`forky`) | `amd64`, `arm64`    |                                  |
 | Ubuntu  | LTS (`resolute`), latest (`plucky`)  | `amd64`, `arm64`    |                                  |
+| Fedora  | latest (45)                          | `x86_64`, `aarch64` | full codecs need RPM Fusion      |
 | Alpine  | `edge`                               | `x86_64`, `aarch64` |                                  |
 | Windows | N/A                                  | 64-bit              | `.zip` archive                   |
 
@@ -421,7 +442,8 @@ always available. The libraries listed below are all optional.
 ### General
 
 - `inotify`: filesystem watch, to reload playlists automatically when a file
-  changes (Linux only; macOS uses a native equivalent),
+  changes (Linux only; elsewhere, files are checked periodically for changes),
+- `posix-time2`: high-precision system clock, recommended for accurate timing,
 - `lo`: OSC (Open Sound Control) support via liblo, for controlling Liquidsoap
   from phone apps or hardware controllers,
 - `osc-unix`: pure-OCaml OSC alternative to `lo`,
@@ -498,8 +520,8 @@ library, which is bundled with Liquidsoap).
 These are used by Liquidsoap at runtime if present on the system; they do not
 affect compilation:
 
-- `ffmpeg` CLI: used by some operators for external processing (e.g. ReplayGain
-  analysis),
+- `ffmpeg` CLI: used by some operators for external processing (e.g. the
+  `ffmpeg:` protocol and the external decoders),
 - `awscli`: enables the `s3://` and `polly://` protocols for Amazon Web Services,
 - `yt-dlp` (or `youtube-dl`): enables downloading from YouTube and other
-  video platforms via the `youtube://` protocol.
+  video platforms via the `youtube-dl:` and `youtube-pl:` protocols.

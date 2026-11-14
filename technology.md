@@ -322,8 +322,9 @@ interpolation between the two closest. This is what Liquidsoap is doing if you
 don't have the right libraries enabled and, believe it or not (or better try
 it!), it sounds quite bad. Resampling is a complicated task to get right, and
 can be costly in terms of CPU if you want to achieve good quality. Whenever
-possible Liquidsoap uses `libsamplerate` library to achieve this task, which
-provides much better results than the naive implementation.
+possible Liquidsoap uses the `libsamplerate` library, or else the resampler of
+FFmpeg, to achieve this task, which provides much better results than the naive
+implementation.
 
 ### Normalization
 

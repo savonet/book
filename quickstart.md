@@ -478,7 +478,9 @@ having it only on our speakers.
 
 In order to do so, we first need to set up an Icecast\index{Icecast} server which will relay the
 stream to users connecting to it. Liquidsoap can be that server itself, with the
-`icecast.server`\indexop{icecast.server} operator, see [there](#sec:outputs).
+`icecast.server`\indexop{icecast.server} operator, see [there](#sec:icecast-server),
+which is one of the extra operators and is thus missing from the `-minimal`
+packages.
 We use a separate Icecast server here, for the reasons given in
 [there](#sec:audio-streaming). The way you should proceed with its
 installation depends on your distribution, for instance on Ubuntu you can type
