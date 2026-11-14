@@ -2,6 +2,6 @@
 # header
 server.telnet()
 playlist = playlist("~/Music")
-queue    = request.queue()
+queue    = request.queue(id="queue")
 radio    = fallback([queue.{track_sensitive = false}, playlist])
 output(radio)

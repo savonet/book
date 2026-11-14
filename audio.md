@@ -234,8 +234,8 @@ from users from the web or a database, or you might have a neural network
 deciding for you which song is the best to be played next). In order to proceed
 in this way, you should use the `request.dynamic`\indexop{request.dynamic} operator, which takes as
 argument a function returning the next song to be played: this function has type
-`() -> request('a)`, meaning that it takes no argument and returns a
-request. For instance, suppose that we have a script called `next-song`, which
+`() -> request?`, meaning that it takes no argument and returns a
+request, or `null` when there is nothing to play. For instance, suppose that we have a script called `next-song`, which
 echoes on the standard output the next song to be played on the standard
 output. A degenerate example of such a script, using the shell, could be
 
@@ -258,7 +258,7 @@ played is present in a file named `song`. We can play it as follows:
 ```{.liquidsoap include="liq/request.dynamic2.liq" from=header to=footer}
 ```
 
-The `check` function now reads the contents of the file `song` and creates a
+The `next` function now reads the contents of the file `song` and creates a
 request from it. In the case where the file is empty, there is no song to play,
 and we return the value `null` to indicate it. The `retry_delay` parameter of
 `request.dynamic` indicates that, in such an event, we should wait for 1 second
@@ -499,19 +499,17 @@ takes as arguments
 - a duration `maxtime` in seconds which the resolution should not exceed (you
   should be careful about it when querying distant servers which might take a
   long time for instance),
-- the request,
+- the argument of the request, i.e. what comes after `artist:`,
 
-and returns a list of file names corresponding to the request. Liquidsoap will
-play the first file available in this list, and those file names might actually
-also use Liquidsoap protocols. In our example, we can implement the protocol as
+and returns the uri the request resolves to, or `null` when it cannot be
+resolved, and this uri might actually also use Liquidsoap protocols. In our example, we can implement the protocol as
 
 ```{.liquidsoap include="liq/add_protocol2.liq" from=header to=footer}
 ```
 
 We use the `protocol.add` function to register our protocol `artist`, where the
-function `artist_protocol`, which returns the list of files corresponding to a
-request, simply returns the list of all the files printed by the command
-`find_by_artist`. The `doc` parameter is free form documentation for the
+function `artist_protocol` simply returns the first of the files printed by the
+command `find_by_artist`. The `doc` parameter is free form documentation for the
 protocol and the `syntax` parameter provides an illustration of a typical
 request using this protocol (both are only for documentation purposes). Once
 this defined, we can finally play songs of any artist by performing requests of
@@ -652,14 +650,16 @@ security and think thoroughly about who should be having access to this
 server. The fact that the server is programmed in OCaml makes it quite unlikely
 that an exploit such as a buffer overflow is possible, but one never knows.
 
-First, the list of IPs which are allowed to connect to harbor can be changed
-with the following setting:
+First, the addresses on which harbor listens can be changed with the following
+setting:
 
 ```{.liquidsoap include="liq/harbor-bind_addrs.liq" from=header}
 ```
 
-It takes as argument a list of allowed IPs, the default one `0.0.0.0` meaning
-that every IP is allowed.
+It takes as argument a list of local addresses, the default one `0.0.0.0`
+meaning that harbor listens on all the network interfaces of the machine. This
+does not filter the clients: in order to accept clients only from some IPs, we
+can check their address in the authentication function described below.
 
 In practice, it is often quite difficult to know in advance the IPs of all the
 clients, so that the main security is given by the password which is passed as
@@ -671,8 +671,9 @@ this reason, the authentication can also be done through a function, which is
 passed as the `auth` argument of `input.harbor` and is of type
 
 ```
-({user : string, password : string, address : string,
-  uri : string, query : [string * string], method : string}) -> bool
+({user : string, password : string, address : string, uri : string,
+  query : [string * string], method : string, headers : [string * string]})
+  -> bool
 ```
 
 It takes as argument a record describing the client which is trying to log in
@@ -725,9 +726,9 @@ also contains the private key. The same transport is accepted by
 `output.harbor` and by `harbor.http.register`, so a single transport can be
 shared by the whole script. Obtaining a proper SSL\index{SSL} certificate can be
 tricky. You may want to
-start with a self-signed certificate first, which you can for instance obtain
-from [_Let's Encrypt_](https://letsencrypt.org/). Alternatively, a self-signed
-certificate for local testing you can use the following one-liner:
+obtain a free certificate from [_Let's Encrypt_](https://letsencrypt.org/).
+For local testing, a self-signed certificate can be generated with the
+following one-liner:
 
 ```
 openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout server.key -out server.crt -subj "/CN=localhost" -days 3650
@@ -1030,13 +1031,16 @@ predicates are
 `{12h}`         between 12h00 and 12h59
 `{12h00}`       at 12h00
 `{00m}`         on the first minute of every hour
-`{00m-09m}`     on the first 10 minutes of every hour
+`{00m-10m}`     on the first 10 minutes of every hour
 `{2w}`          on Tuesday
-`{6w-7w}`       on weekends
+`{1w-6w}`       from Monday to Friday
+`{6w or 7w}`    on weekends
 -------------   -------------------------------------
 
 Above, `w` stands for weekday: 1 is Monday, 2 is Tuesday, and so on. Sunday is
-both 0 and 7.
+both 0 and 7. An interval includes its start and excludes its end:
+`{11h15-13h}` stops at 13h00 and `{1w-6w}` stops when Saturday begins. A single
+value covers its whole unit: `{12h}` lasts until 12h59.
 
 #### Other predicates
 
@@ -1682,7 +1686,7 @@ Similarly, we can add a telnet command to change the title metadata of a source 
 
 We begin by defining a function `cmd` which takes the title as argument, inserts
 it into the stream of `s`, and returns a message saying that the title was
-inserted. We then register this command as `set_metadata` on the telnet server,
+inserted. We then register this command as `set_title` on the telnet server,
 as detailed in [there](#sec:telnet): when we enter the command
 
 ```
@@ -1783,9 +1787,8 @@ we can hear the first 5 seconds of each track of `s` with
 ```
 
 We could also easily use this to register a telnet command, but this done by
-default with the `playlist` operator: you can always use the `skip` telnet
-command (or `id.skip` if an identifier `id` was specified for the source) to
-skip the current song. For instance, with the script
+default with the `playlist` operator: you can always use the `id.skip` telnet
+command, where `id` is the identifier of the source, to skip the current song. For instance, with the script
 
 ```{.liquidsoap include="liq/source.skip2.liq" from=header}
 ```
@@ -2165,7 +2168,10 @@ The only new line here is
 before the sources it should apply to. It requires the FFmpeg
 bindings. By default the values computed by autocue take precedence over the
 tags of the file and over the annotations of the request, which you can change
-with `settings.autocue.metadata.priority`.
+with `settings.autocue.metadata.priority`. However, a track whose metadata
+already gives its cue or fade points, such as `liq_cue_in` or `liq_fade_out`, is
+not analyzed at all: the points we chose by hand are kept, and the metadata
+`liq_disable_autocue` disables the analysis explicitly.
 
 The analysis happens when the request is resolved, which is to say just before
 the track is played, and it costs a peak of CPU and of memory for every single
@@ -2181,8 +2187,8 @@ script plays, with the `autocue:`\index{protocol!autocue} protocol:
 ```{.liquidsoap include="liq/autocue-protocol.liq" from=header to=footer}
 ```
 
-which is useful with the `prefix` argument of `playlist`, as we have seen for
-the `replaygain:` protocol.
+which is useful with the `prefix` argument of `playlist`, as we will see for
+the `replaygain:` protocol in [there](#sec:replaygain).
 
 #### Custom autocue implementations
 
@@ -2355,7 +2361,7 @@ this would allow changing the value of the amplification on the telnet using the
 command
 
 ```
-set main_volume 1.2
+var.set main_volume = 1.2
 ```
 
 We could also fetch the value of the volume from the contents of the `volume`
@@ -2526,7 +2532,7 @@ converted to decibels with `dB_of_lin`. For instance, the script
 prints the loudness and volume every second.
 
 Finally, if you need more customization over the operator, you can have a look
-at its code and modify it. It is written in Liquidsoap, in the `sound.liq` file
+at its code and modify it. It is written in Liquidsoap, in the `audio.liq` file
 of the standard library.
 
 ### Handling silence
@@ -2563,7 +2569,7 @@ fallback:
 ```{.liquidsoap include="liq/blank.strip.liq" from=header to=footer}
 ```
 
-The `max_blank` parameter states that we wait for 1 second of silence before
+The `max_blank` parameter states that we wait for 2 seconds of silence before
 making the source unavailable and the `threshold` parameter means that we
 consider anything below -20 dB as silence. The `min_noise` parameter means that
 we require that there is 0.1 s of noise before making the source available
@@ -2672,7 +2678,7 @@ This operator has a number of useful parameters:
 - the `ratio` of compression (in input dB per output dB, as illustrated above),
 - the amplification by `pre_gain` and `gain` of the signal, respectively before
   and after compressing,
-- the `attack` and `realease` time (in ms), which are the time it takes to
+- the `attack` and `release` time (in ms), which are the time it takes to
   respectively lower and increase the volume (those operations are generally not
   performed instantly in order to smoothen the variations and make them more
   natural),
@@ -2680,7 +2686,8 @@ This operator has a number of useful parameters:
 
   ![](fig/compressor-knee.pdf)
 
-- the `window` (in ms) used to smoothen the computation of the input level,
+- the `window` (in seconds) over which the RMS level of the input is computed
+  (the default `0.` uses the peak level instead),
 - the `lookahead` (in ms), i.e. how much time we look at the signal in the
   future (this is similar to what we already saw for `normalize`).
   
@@ -2856,8 +2863,8 @@ Liquidsoap. You are advised to have a look at the documentation to discover
 them.
 
 In particular, there are some effects on stereo stream such as left/right
-_panning_ (the `pan` operator) or modifying the width of the signal (the `width`
-operator, which takes a float parameter such that -1 turns the original source
+_panning_ (the `stereo.pan` operator) or modifying the width of the signal (the
+`stereo.width` operator, which takes a float parameter such that -1 turns the original source
 into mono, 0 returns the original source and a value greater than 0 returns the
 source with "widened" sound). There are some traditional effects used in music
 such as `echo` or `flanger`. And finally, there are some effects which operate
@@ -3045,7 +3052,7 @@ parameters from external sources. For instance, the function `file.getter.float`
 has type
 
 ```
-(string) -> () -> float
+(?default : float, string) -> {float}
 ```
 
 It takes as argument a file name (a string) and returns a function which, each
@@ -3593,7 +3600,7 @@ this directory, you will see that it contains
   is able to choose),
 - files `mp3-low.m3u8` and `mp3-hi.m3u8`: these are the playlists respectively
   corresponding to the stream in low and high quality,
-- files `mp3-low_XX.mp3` and `mp3hi_XX.mp3`, where `XX` are numbers: these are
+- files `mp3-low_XX.mp3` and `mp3-hi_XX.mp3`, where `XX` are numbers: these are
   the encoded segments, which are created and removed as the stream goes by.
   
 Some useful arguments of the `output.file.hls` operator are the following.
@@ -3659,23 +3666,23 @@ some custom parameters set up.
 
 #### Encoders
 
-Any encoder (see [below](#sec:encoders)) can be used for encoding HLS streams in
-Liquidsoap. However, the
-[HLS specification](https://tools.ietf.org/html/rfc8216) enforces that the
-codecs used should be mp3 and aac, so that you should restrict to those for
-maximum compatibility with players. Furthermore, in order to improve
-compatibility, it is recommended that sent data encapsulated in an `MPEG-TS`
-container: currently, the only encoder capable of doing this in Liquidsoap is
-`%ffmpeg`, as illustrated above.
+The [HLS specification](https://tools.ietf.org/html/rfc8216) only defines a
+few formats for the segments, and a player meeting anything else cannot play
+it. Liquidsoap thus only accepts the encoders (see [below](#sec:encoders)) which
+produce one of them: `%mp3` and `%shine` for MP3 segments, `%fdkaac` for AAC,
+and `%ffmpeg` with the `mpegts`, `mp4` (written as fragmented MP4), `adts`,
+`mp3`, `ac3` or `eac3` formats. Any other one, such as `%wav` or `%ogg`, is
+refused when the script starts. The `MPEG-TS` container (`format="mpegts"` with
+`%ffmpeg`, as illustrated above) plays almost everywhere and suits most streams.
 
 #### Serving with Liquidsoap
 
 It is possible to have Liquidsoap directly serve the files for the HLS stream
-with its internal web server with the operator `output.harbor.hls` (and
-`output.harbor.hls.ssl` for encrypting with SSL). The arguments of this operator
-are the same as those of `output.file.hls`, excepting `port` and `path` which
-respectively specify the port of the server, and the path where the stream is
-served. It is not recommended for listener-facing setup, because we do not
+with its internal web server with the operator `output.harbor.hls`. The
+arguments of this operator are the same as those of `output.file.hls`, excepting
+`port` and `path` which respectively specify the port of the server, and the
+path where the stream is served, and `transport`, which can be set to
+`http.transport.ssl(...)` in order to serve it over https. It is not recommended for listener-facing setup, because we do not
 consider the internal web server harbor ready for heavy loads, but it can be
 useful to sync up with a caching system such as CloudFront. A simple setup would
 be
@@ -3922,7 +3929,7 @@ The parameters common to all variants are
 - `stereo` is either `false` or `true`: encode in mono or stereo (default is
   `stereo`),
 - `stereo_mode` is either `"stereo"` or `"joint_stereo"` or `"default"`: encode
-  left and right channels separately or conjointly (default is `"default"`),
+  left and right channels separately or conjointly (default is `"joint_stereo"`),
 - `samplerate` is an integer: number of samples per seconds in the encoded
   stream (default is `44100`),
 - `internal_quality` is an integer between 0 and 9: controls the quality of the
@@ -3947,7 +3954,7 @@ The parameters for `%mp3.abr` are
 - `bitrate`: average bitrate (kbps),
 - `min_bitrate`: minimun bitrate (kbps),
 - `max_bitrate`: maximun bitrate (kbps),
-- `hard_min`: minimal bitrate to enforce (kbps).
+- `hard_min`: when `true`, strictly enforce `min_bitrate`.
 
 The parameters for `%mp3.fxp` are
 
@@ -4054,20 +4061,21 @@ The encoder is named `%opus` and its parameters are
   respectively),
 - `vbr` specifies whether we want variable bitrate or not: it can either be
   `"none"` (for constant bitrate), `"constrained"` (for variable bitrate with
-  constraints such as average target bitrate) or `"unconstrained"` (for
-  unconstrained variable bitrate, which is the default),
+  constraints such as average target bitrate, which is the default) or
+  `"unconstrained"` (for unconstrained variable bitrate),
 - `bitrate`: encoding bitrate, in kilobits per second (between 5 and 512, can
   also be `"auto"` to leave the decision to the encoder which is the default),
 - `signal`: can either be `"music"` or `"voice"` to specify the kind of input
   (this will influence the parameters of the encoder, by default the encoder
   regularly automatically determines the kind of input),
 - `complexity`: the computational complexity between 0 (the fastest encoding, the lowest
-  quality) and 10 (the slowest encoding and highest quality, which is the default),
+  quality) and 10 (the slowest encoding and highest quality), by default the one
+  chosen by the Opus library,
 - `frame_size`: encoding frame size, in milliseconds (must be one of `2.5`,
   `5.`, `10.`, `20.`, `40.` or `60.`), smaller frame sizes lower latency but
   degrade quality, default is 20,
-- `application` specifies the target application: `"audio"` (the encoder
-  determines it automatically, the default), `"voip"` (transmit voice over the
+- `application` specifies the target application: `"audio"` (general audio
+  and music, the default), `"voip"` (transmit voice over the
   internet) or `"restricted_lowdelay"` (lower the encoding delay down to 5 ms),
 - `max_bandwidth` specifies the bandwidth of the sound to encode: can be
   `"narrow_band"` (for 3--4000 Hz), `"medium_band"` (for 3--6000 Hz),
@@ -4103,7 +4111,7 @@ The common parameters are
 
 The parameters specific to `%vorbis` are
 
-- `quality`: the quality of the stream between -0.1 (the lowest quality and smallest
+- `quality`: the quality of the stream between -0.2 (the lowest quality and smallest
   files) and 1 (the highest quality and largest files).
   <!-- The `aotuv` implementation of vorbis can even go down to -0.2. -->
   
@@ -4285,7 +4293,7 @@ is adapted for encoding at low bitrates. Here is a list of profiles you can use
 
 We can encode in AAC in variable bitrate with
 
-```{.liquidsoap include="liq/encoder-ffmpeg-fdkaac.liq" from=header to=footer}
+```{.liquidsoap include="liq/encoder-ffmpeg-fdkaac-vbr.liq" from=header to=footer}
 ```
 
 where `vbr` specifies the quality between 1 (the lowest quality and bitrate) and 5
@@ -4317,12 +4325,11 @@ that the default samplerate of 44100 is not supported in the Opus format (which
 is why we force the use of 48000 instead).
 
 Some encoding formats, such as wav, avi or mp4, require rewinding their stream
-and write a header after the encoding of the current track is over. For
-historical reasons, such formats cannot be used with `output.file`. To remedy
-that, we have introduced the `output.url` operator. When using this operator,
-the encoder is fully in charge of the output file and can thus write headers
-after the encoding. The `%ffmpeg` encoder is one such encoder that can be used
-with this operator.
+and write a header after the encoding of the current track is over. With the
+`%ffmpeg` encoder, `output.file` (as well as `output.url`) leaves FFmpeg in
+charge of the output file, so that it can write such headers after the encoding.
+Those formats can thus be used for files, but not for streams, which cannot be
+rewound: they cannot be sent to Icecast for instance.
 
 ### Encoded streams {#sec:encoded-streams}
 
@@ -4381,9 +4388,9 @@ as explained above as follows:
 Here, since we use the FFmpeg encoder with `%audio.copy`, Liquidsoap knows that
 we want `radio` to contain encoded data, and it will propagate this information
 to the `playlist` operator, which will thus not try to decode the audio
-files. Note that the `output.icecast` operator cannot determine the MIME type
-from the encoder anymore, we thus have to specify it by hand with
-`format="audio/mpeg"`.
+files. The `output.icecast` operator guesses the MIME type of the stream from
+the container of the `%ffmpeg` encoder, and its `format` argument can be used to
+specify it by hand for the containers it does not know.
 
 Again, this is mostly useful for relaying encoded data, but we loose much of the
 Liquidsoap power, which does not know how to edit encoded data. For instance, if
@@ -4397,14 +4404,15 @@ error
 
 ```
 Error 5: this value has type
-  source(audio=pcm(_),...)
+  source(audio='A, _)
+  where 'A is a track and a track of type: pcm, pcm_s16 or pcm_f32 (inferred at bad/no-decoding3.liq, line 4, char 8-27)
 but it should be a subtype of
-  source(audio=ffmpeg.audio.copy(_),...)
+  source(audio=ffmpeg.copy(containers=mp3), _)
 ```
 
 which says that `amplify` is only able to manipulate audio data in internal
-format (`audio=pcm(_)`) whereas we have here encoded data
-(`audio=ffmpeg.audio.copy(_)`).
+format (`pcm`, `pcm_s16` or `pcm_f32`) whereas we have here encoded data
+(`audio=ffmpeg.copy(...)`).
 
 Now, suppose that, in addition to transmitting the mp3 files through Icecast, we
 also want to provide another version of the stream in opus. In this, case we
@@ -4472,9 +4480,7 @@ outputs:
 ```{.liquidsoap include="liq/multiple-encoders3.liq" from=header}
 ```
 
-For technical reasons, the output of `ffmpeg.encode.audio` is always
-fallible. We thus now have to pass the argument `fallible=true` to all outputs
-in order to have them accept this. As expected, Liquidsoap also provides the
+As expected, Liquidsoap also provides the
 variants `ffmpeg.encode.video` and `ffmpeg.encode.audio_video` of the
 `ffmpeg.encode.audio` function in order to encode video sources or sources with
 both audio and video.
@@ -4937,7 +4943,7 @@ and we play the `default` source if there is no request:\indexop{request.queue}
 In order to do so, we use the `file.watch` function, which registers a function
 to be called whenever a file changes: here, when the file `to-play` is modified, the
 function `on_request` is called, which reads the contents of the file and pushes
-a corresponding request on the queue. Of course, we could easily be combined this
+a corresponding request on the queue. Of course, we could easily combine this
 with the techniques of previous paragraph and store the file in JSON format to
 add additional information about the request.
 
@@ -5321,8 +5327,8 @@ The value returned by the function `http.get` also features the following
 fields, which can be used to obtain more information about the request:
 
 - `headers` is the list of headers and their value,
-- `protocol_version` is the version of the http protocol we used (typically
-  `"HTTP/1.1"`)
+- `http_version` is the version of the http protocol we used (typically
+  `"1.1"`)
 - `status_code` is a standard code for the http protocol indicating the status
   of the answer (for instance, `200` means that everything went on fine and
   `404` means that the page was not found),
@@ -5419,10 +5425,12 @@ request. The argument of the handler is a record describing the request. Its
 main fields are
 
 - `headers`: a list of headers for the request,
-- `data`: the input data (for POST requests),
+- `body`: a function returning the input data (for POST requests), which we call
+  as `request.body()`,
 - `method`: the method used to issued the request (`"GET"`, `"POST"`, etc.),
 - `path`: the path on which the request was made,
-- `query`: the arguments passed on the url.
+- `query`: the arguments passed on the url,
+- `ip`: the address of the client.
 
 For instance, if we go to `http://localhost:8000/test?a=2&b=3`, the `path` will
 be `"/test"` and the `query` will be the list `[("a","2"),("b","3")]`. The
@@ -5444,8 +5452,12 @@ prints `It works!` as answer. You can test it by browsing the url
 http://localhost:8000/test
 ```
 
-and you will see the message. We can also easily provide an answer formatted in
-HTML:
+and you will see the message. The function `harbor.http.register.simple` returns
+a value whose method `remove` removes the handler, which is useful for a script
+which only serves a page for some time. Registering twice a handler for the same
+path and method on a port raises an error, so that the old handler should be
+removed before registering a new one. We can also easily provide an answer
+formatted in HTML:
 
 ```{.liquidsoap include="liq/harbor.http.register2.liq" from=header to=footer}
 ```
@@ -5649,7 +5661,7 @@ jingles (and the method to play them is then `play` instead of `push`).
 An alternative API for handling requests, more in the node/express style, is
 provided by the function `harbor.http.register` (note that there is no `.simple`
 in the end). The arguments are pretty similar to those of
-`harbor.http.register.simple` excepting that the handler now takes to arguments:
+`harbor.http.register.simple` excepting that the handler now takes two arguments:
 
 - the request as before, and
 - a response record whose fields can be called to build the answer.
@@ -5675,8 +5687,8 @@ help:
 
 - `settings.harbor.bind_addrs`: list of IP addresses on which harbor should
   listen (default is `["0.0.0.0"]` which means any address),
-- `settings.harbor.max_connections`: maximum number of connections per port
-  (128 by default),
+- `settings.harbor.max_connections`: maximum number of pending connections per
+  port, which have not been accepted yet (128 by default),
 - the `transport` argument of the harbor operators, which should be given an
   `http.transport.ssl` if you want https connections, as we have seen in
   [there](#sec:input.harbor).
@@ -5862,12 +5874,12 @@ under which the messages appear. A typical
 log entry looks like this:
 
 ```
-2021/04/26 09:18:46 [request.dynamic_65:3] Prepared "test.mp3" (RID 0).
+2021/04/26 09:18:46 [request.dynamic.1:3] Prepared "test.mp3" (RID 0).
 ```
 
 It states that on the given day and time, an operator `request.dynamic` (the
-suffix `_65` was added in case there are multiple operators, to distinguish
-between them) has issued a message at level `3` (important) and the message is
+suffix `.1` was added because there are multiple operators of this kind, to
+distinguish between them) has issued a message at level `3` (important) and the message is
 "`Prepared "test.mp3" (RID 0).`", which means here that a request to the file
 `test.mp3` is about to be played and has rid 0.
 
@@ -6102,7 +6114,7 @@ seconds, by amplifying with 1 or 0, in order to test `blank.strip` for instance:
 
 In order to simulate sources which are slow to produce a stream (because of a
 high CPU load, because of a network lag, etc.), one can use the `sleeper`\indexop{sleeper}
-operator. It takes a `delay` operator which indicates how much time it should
+operator. It takes a `delay` argument which indicates how much time it should
 take to produce 1 second of audio. For instance, in the script
 
 ```{.liquidsoap include="liq/sleeper.liq" from=header}
@@ -6113,7 +6125,7 @@ sound production is slower than realtime, you will soon hear glitches in the
 audio, as well as see log messages such as
 
 ```
-2020/07/29 11:13:05 [clock.pulseaudio:2] We must catchup 0.86 seconds!
+2020/07/29 11:13:05 [clock.output.pulseaudio:2] Latency is too high: we must catchup 0.86 seconds!
 ```
 
 which indicate that the script is too slow to produce the stream.
@@ -6170,8 +6182,7 @@ rms in a list `rmsl` every 0.01 second. Every second, we call a function
 `mean_rms` which computes the average of the list of `rmsl` and print the
 result. Every 10 seconds, we print the profiling statistics. You will see that,
 because the list `rmsl` grows over time, the script spends more and more time in
-the function `+` (in order to compute the average) and in the function `aux`
-(which is an internal function used to define `list.iter`).
+the function `+` (in order to compute the average).
 
 Going further {#sec:further-workflow}
 -------------
@@ -6181,8 +6192,8 @@ Going further {#sec:further-workflow}
 A great way to learn more Liquidsoap tricks is to read the code of the standard
 library. For instance, we have already mentioned that even advanced functions
 are defined in there such as the `playlist` operator (in `playlist.liq`),
-interactive values (in `interactive.liq`) or the `normalize` operator (in
-`sound.liq`). In this section, we present some more advanced topics.
+interactive values (in `extra/interactive.liq`) or the `normalize` operator (in
+`audio.liq`). In this section, we present some more advanced topics.
 
 ### Operations on sources {#sec:source-methods}
 
