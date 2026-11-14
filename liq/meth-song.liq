@@ -9,3 +9,4 @@ print("the duration is #{song.duration}")
 # header-d
 def replaces song = "newfile.mp3" end
 print(song)
+print(song.duration)

@@ -221,11 +221,12 @@ and we run
 liquidsoap -i test.liq
 ```
 
-it will display the types for `x` and `f`:
+it will display the types of all the variables, those of the standard library
+first, ending with the types for `x` and `f`:
 
 ```
-x : float
-f : (int) -> int
+x     : float
+f     : (int) -> int
 ```
 
 meaning that `x` is a floating point number and `f` is a function taking an
@@ -538,7 +539,7 @@ and return booleans:
 
 - `==`\indexop{==}: compares for equality,
 - `!=`\indexop{!=}: compares for inequality,
-- `<=`: compares for inequality,
+- `<=`: less than or equal,
 
 and so on (`<`, `>=`, `>`). For instance, the following is a boolean expression:
 
@@ -647,12 +648,10 @@ However, the code
 gives rise to the following warning
 
 ```
-At bad/fun.liq, line 2, char 2-5:
+At fun.liq, line 2, char 2-5:
   3+5
 
-Warning 3: This expression is returning a value that is ignored. Do you
-need to use its return value? If not, you can use the `ignore()`
-operator.
+Warning 3: This expression is returning a value that is ignored. Do you need to use its return value? If not, you can use the `ignore()` operator.
 ```
 
 The reason is that this function is first computing the result of 3+5 and then
@@ -739,7 +738,6 @@ empty list). Other useful functions are
 Elements of a list can also be extracted using _splat_ patterns\index{list!splat} with `let`:
 
 ```
-# list.hd([1, 4, 5]);;
 let [x, _, z, ...t] = [1, 2, 3, 4]
 # x = 1, z = 3, t = [4]
 ```
@@ -833,7 +831,7 @@ function, and it is equivalent to write
 to obtain the `"title"` metadata. Other useful functions are
 
 - `list.assoc.mem`: determine whether there is an entry with a given key,
-- `list.assoc.remove`: remove all entries with given key.
+- `list.assoc.remove`: remove the first entry with given key.
 
 Apart from metadata, association lists are also used to store http headers
 (e.g. in `http.get`).
@@ -936,7 +934,7 @@ _unused_ variable\index{variable!unused} is found, since it is likely to be a bu
 Liquidsoap will output
 
 ```
-At bad/unused.liq, line 1, char 0-9:
+At unused.liq, line 1, char 0-9:
 n = 2 + 2
 
 Warning 4: Unused variable n
@@ -1087,7 +1085,7 @@ between songs.
 ### Basics
 
 A function is a construction which takes a bunch of arguments and produces a
-result. For instance, we can define a function `f` taking two float arguments,
+result. For instance, we can define a function `f` taking two integer arguments,
 prints the first and returns the result of adding twice the first to the second:\indexop{def}
 
 ```{.liquidsoap include="liq/fun4.liq"}
@@ -1122,7 +1120,7 @@ above example, for instance:
 
 ```
 # def f(s, x) = string.length(s) + int_of_float(x) end;;
-f : (string, float) -> int = <fun>
+f : (string, float) -> int = fun (s, x) -> ...
 ```
 
 As explained earlier, declarations of variables made inside the definition of a
@@ -1180,10 +1178,11 @@ Printing a line is quick, so we register it with `synchronous=true`.
 
 The other events of a source are watched in the same way, with the methods
 `on_track` (a new track is played), `on_position` (a given position in the
-current track is reached) and `on_shutdown` (the source stops). A few handlers
-are still passed to operators instead: `blank.detect` calls ours when a source
-has been streaming blank for some period of time, and `on_start` and
-`on_shutdown` call ours when Liquidsoap is starting or stopping.
+current track is reached) and `on_shutdown` (the source stops). Some operators
+add events of their own: `blank.detect` provides the methods `on_blank` and
+`on_noise`, which call ours when a source has been streaming blank for some
+period of time, and when it starts streaming sound again. Finally, the functions
+`on_start` and `on_shutdown` call ours when Liquidsoap is starting or stopping.
 
 Many other operators also take more specific handlers as arguments. For
 instance, the operator `input.harbor`, which allows users to connect to a
@@ -1980,7 +1979,8 @@ while keeping the methods unchanged, so that
 will print
 
 ```
-"newfile.mp3".{duration = 123., bpm = 120.}
+newfile.mp3
+123.0
 ```
 
 (note that the string is modified but not the fields `duration` and `bpm`).
@@ -1990,11 +1990,12 @@ will print
 The `http.get`\indexop{http.get} function, which retrieves a webpage over http, has the type:
 
 ```
-(?headers : [string * string], ?timeout : float, string) ->
+(?headers : [string * string], ?http_version : string?, ?redirect : bool,
+ ?timeout : float?, ?normalize_url : bool?, string) ->
 string.{headers : [string * string],
-        status_message : string,
+        http_version : string,
         status_code : int,
-        protocol_version : string}
+        status_message : string}
 ```
 
 It returns a string (the contents of the webpage) with fields specifying the
@@ -2030,7 +2031,7 @@ we can observe this: the help displays, among other,
 ```
 Methods:
 
- * reload : (?uri : string) -> unit
+ * reload : (?empty_queue : bool, ?uri : string?) -> unit
      Reload the playlist.
 
  * skip : () -> unit
@@ -2058,7 +2059,7 @@ when it is present or to the default otherwise:
 The type of this function reflects the optional field with `?`:
 
 ```
-f : (int, 'a.{add? : int}) -> int = <fun>
+f : (int, 'a.{add? : int}) -> int = fun (x, options) -> ...
 ```
 
 The second approach uses the `x?.foo` safe-navigation operator, which returns
@@ -2214,7 +2215,7 @@ type: not_found,
 message: "no default value for list.hd",
 stack: at .../libs/list.liq, line 23 char 11 - line 26 char 9,
 ...
-at bad/list.hd-empty.liq, line 2, char 0-11
+at bad/list.hd-empty.liq, line 3, char 0-11
 ```
 
 This means that the error named "`not_found`"\indexop{not\_found} was raised, with a message
@@ -2303,7 +2304,7 @@ whose type would be
 ```
 
 since it takes as argument a list whose elements are of type `'a` and returns a
-list whose elements are `'a` or `null`.
+value which is either of type `'a` or `null`.
 
 In order to use a nullable value, one typically uses the construction `x ?? d`
 which is the value `x` excepting when it is null, in which case it is the
@@ -2537,7 +2538,7 @@ module:
 - `file.temp`: generate a fresh temporary filename,
 - `path.dirname`: get the directory of a path,
 - `path.basename`: get the file name without the directory from a path,
-- `path.home`: home directory of user,
+- `path.home.unrelate`: expand a leading `~` into the home directory of the user,
 
 and so on.
 
@@ -2824,7 +2825,7 @@ beginning of its execution.
 In order to retrieve time in more usual notations, you can use the functions
 `time.local` and `time.utc` which return a record containing the usual
 information (year, month, day, hour, etc.), respectively according to the
-current time zone and the Greenwich median time. For instance, we can print the
+current time zone and the Greenwich mean time. For instance, we can print the
 current date with
 
 ```{.liquidsoap include="liq/time.liq" from=header}
@@ -3004,7 +3005,7 @@ The current cache directory can be retrieved at runtime with
 #### Cache maintenance and security
 
 A maintenance routine deletes cache files older than 10 days and caps the
-cache at 200 files. It can be triggered manually with
+cache at 20 files. It can be triggered manually with
 `liquidsoap.cache.maintenance(mode=<mode>)`.
 
 Cache files are *not encrypted*. User cache files may contain secrets such as
@@ -3022,7 +3023,7 @@ The cache behavior can be tuned with the following environment variables:
 - `LIQ_CACHE_SYSTEM_DIR` / `LIQ_CACHE_USER_DIR`: override the cache directories,
 - `LIQ_CACHE_MAX_DAYS`: maximum age of a cache file before it is eligible for
   deletion (default: 10 days),
-- `LIQ_CACHE_MAX_FILES`: maximum number of cache files to keep (default: 200).
+- `LIQ_CACHE_MAX_FILES`: maximum number of cache files to keep (default: 20).
 
 #### Monitoring memory usage
 
