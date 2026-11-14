@@ -344,19 +344,19 @@ audio track of `t` would have to be raw audio and encoded FFmpeg data at the
 same time, which is impossible. Liquidsoap therefore raises the following error
 
 ```
-At bad/encoded-amplify.liq, line 4, char 24:
+At bad/encoded-amplify.liq, line 5, char 24:
 u = ffmpeg.decode.audio(t)
 
 Error 5: this value has type
   source(audio='A, _)
-  where 'A is a track and a track of type: pcm, pcm_s16 or pcm_f32 (inferred at bad/encoded-amplify.liq, line 3, char 4-18)
+  where 'A is a track and a track of type: pcm, pcm_s16 or pcm_f32 (inferred at bad/encoded-amplify.liq, line 4, char 4-18)
 but it should be a subtype of
   source(audio=ffmpeg.copy('A), _)
 ```
 
 which is a formal way of stating the above explanation. The error quotes the
 offending line, `u = ffmpeg.decode.audio(t)`, and it also says where the type it
-complains about came from: line 3, characters 4 to 18, which is the call to
+complains about came from: line 4, characters 4 to 18, which is the call to
 `amplify`.
 
 ### Muxing tracks
@@ -504,7 +504,7 @@ because the number of channels is taken from the variable `c`. Liquidsoap says
 Error 14: Uncaught runtime error:
 type: encoder,
 message: "Invalid value c for channels mode. Only static numbers are allowed.",
-stack: at bad/format-mp3-mono.liq, line 4, char 26
+stack: at bad/format-mp3-mono.liq, line 5, char 26
 ```
 
 The parameters which do not change the type, such as `bitrate`, do accept
@@ -857,7 +857,7 @@ considered as a _track_ boundary. In Liquidsoap, tracks are encoded as breaks in
 frames which are not at the end: this mechanism is typically used to mark the
 limit between two successive songs in a stream. In scripts, you can detect when
 a track occurs using the `on_track` method that all sources have, and you can
-insert track by using the method provided by the `insert_metadata` function.
+insert a track by using their `insert_metadata` method with `new_track=true`.
 
 #### Metadata
 
@@ -871,8 +871,8 @@ passed on into Liquidsoap streams (e.g. when using the `playlist`
 operator). They are also used by output operators such as `output.icecast` to
 provide information about the currently playing song to the listener. In
 scripts, you can trigger a function when metadata is present with `on_metadata`,
-transform the metadata with `metadata.map` and add new metadata with
-`insert_metadata`. For instance, you can print the metadata contained in tracks:
+transform the metadata with `metadata.map` and add new metadata with the
+`insert_metadata` method of sources. For instance, you can print the metadata contained in tracks:
 
 ```{.liquidsoap include="liq/print-metadata.liq" from=header}
 ```
@@ -884,7 +884,6 @@ that Liquidsoap adds internal information such as
 - `filename`: the name of the file being played,
 - `temporary`: whether the file is temporary, i.e. has been downloaded from the
   internet and should be deleted after having been played,
-- `source`: the name of the source which has produced the stream,
 - `initial_uri`: the URI the request was created from,
 - `rid`: the identifier of the request, as explained [below](#sec:requests),
 - `status`: where the request stands in its lifecycle.
@@ -906,7 +905,8 @@ default value is
  "metadata_block_picture", "coverart"]
 ```
 
-The last five of those carry cover art rather than text: their value is the
+The metadata `apic`, `pic`, `metadata_block_picture` and `coverart` carry cover
+art rather than text: their value is the
 picture itself. The setting `settings.encoder.metadata.cover` lists the
 metadata which encoders treat as cover art, and embed as a picture in the
 formats which support it, such as mp3 and flac, instead of writing them as
@@ -973,8 +973,8 @@ and when it goes to sleep it emits
 ```
 
 where `sine` is the identifier of the source (which can be changed by passing an
-argument labeled `id` when creating the source), and `output.dummy` is the clock
-the source was woken up from. You can also determine whether a source has been
+argument labeled `id` when creating the source), and `output.dummy` is the
+source which woke it up, i.e. the one using it downstream. You can also determine whether a source has been
 woken up, by using the method `is_up` which is present for any source `s`:
 calling `s.is_up()` will return a boolean indicating whether the source `s` is up
 or not. For instance,
@@ -1094,10 +1094,13 @@ fallibility as `s`, and so on. Typically, if you try to execute the script
 Liquidsoap will issue the error
 
 ```
+At fallible1.liq, line 3, char 4-28:
+s = input.http("http://...")
+
 Error 7: Invalid value:
 That source is fallible.
 This value was passed through the following call stack:
-at fallible1.liq, line 3, char 0-20
+at fallible1.liq, line 4, char 0-20
 ```
 
 indicating that it has determined that we are trying to play the source `s`,
@@ -1209,7 +1212,7 @@ At startup, Liquidsoap creates a top-level clock named after the output
 operator, and logs every source that clock controls along with its role:
 
 ```
-[clock:3] Starting top-level clock output.file with sources: output.file (output), amplify (passive), track_audio_amplify (passive), input.alsa (active) and sync: auto
+[clock.output.file:3] Starting top-level clock, sync: auto, sources: input.alsa (active), track_audio_amplify (passive), amplify (passive), output.file (output), animated by a task (rests)
 ```
 
 A source marked `active` is animated at every streaming cycle, whether or not
@@ -1223,15 +1226,21 @@ it belongs to:
 [amplify:5] Clock is output.file.
 ```
 
-The `sync: auto` at the end of the first message is the clock's sync mode. In
-`auto` mode, the clock waits to see whether one of its sources controls its own
-latency. Here `input.alsa` does, because ALSA blocks until the soundcard has
-audio to hand over. The clock therefore hands timing over to `input.alsa` and
-logs:
+The `sync: auto` in the first message is the clock's sync mode. In `auto` mode,
+the clock waits to see whether one of its sources controls its own latency. Here
+`input.alsa` does, because ALSA blocks until the soundcard has audio to hand
+over. The clock therefore hands timing over to `input.alsa` and logs:
 
 ```
-[clock.output.file:3] Switching to self-sync mode (alsa)
+[clock.output.file:3] Now paced by sync source alsa
 ```
+
+A sound card _paces_ the clock: the clock simply follows the rhythm at which it
+delivers data. Other synchronization sources, such as `input.srt`, rather give
+timestamps that the clock _follows_, within some latency, and the message then
+reads `Now following sync source srt (latency: ..., maximum latency: ...)`.
+The end of the startup message says what runs the streaming loop: here a
+scheduler task, which rests between ticks.
 
 If we now consider a script where no source enforces synchronization, such as
 
@@ -1239,12 +1248,17 @@ If we now consider a script where no source enforces synchronization, such as
 ```
 
 the clock is led by the CPU: no `active` source appears in the startup message,
-and the clock sleeps between ticks to keep real time. You will also see the
+
+```
+[clock.output.file:3] Starting top-level clock, sync: auto, sources: sine (passive), output.file (output), animated by a task (rests)
+```
+
+and the clock rests between ticks to keep real time. You will also see the
 following message whenever a clock loses its synchronization source and goes
 back to being led by the CPU:
 
 ```
-[clock.output.file:3] Switching to non-self-sync mode
+[clock.output.file:3] Sync source alsa left: the clock paces the stream (latency: ..., maximum latency: ...)
 ```
 
 A clock can be created explicitly with `clock.create`\indexop{clock.create},
@@ -1259,27 +1273,30 @@ built and then quit, with the `--describe-clocks` option. On a script which
 crossfades a source, this gives
 
 ```
-Clocks dump: output.dummy (ticks: 64, time: 1.28s, self_sync: false)
-  |-- outputs: output.dummy [output.dummy]
-  |-- active sources:
-  |-- passive sources: cross [cross, cross], crossfade [crossfade],
-  |                    crossfade.1 [crossfade.1, crossfade.1],
-  |                    track_metadata_deduplicate [track_metadata_deduplicate],
-  |                    metadata_deduplicate [metadata_deduplicate],
-  |                    cross.pre_buffer [cross.pre_buffer]
-  `-- cross (ticks: 313, time: 6.26s, self_sync: false)
-      |-- outputs: mksafe.child [mksafe.child, mksafe.child]
-      |-- active sources:
-      `-- passive sources: safe_blank [safe_blank], sine [sine, sine], mksafe [mksafe, mksafe],
-                           sine.proxy [sine.proxy]
+Clocks dump:output.dummy [started, auto, task: rests]
+  ticks: 9  time: 0.18s  lateness: -0.006s
+  tick: mean 8.0ms max 71.8ms (slowest: output.dummy)
+  held: producing 0.1s  resting 0.0s  released 0.0s  no worker 0.0s
+  outputs: output.dummy [output.dummy]
+  active: -
+  passive: cross [crossfade, crossfade.1], cross.pre_buffer [cross], ...
+  └─ cross [started, passive, controlled by source cross]
+       ticks: 258  time: 5.16s  lateness: -
+       tick: mean 0.0ms max 0.4ms (slowest: sine.child)
+       held: producing 0.0s  resting 0.0s  released 0.0s  no worker 0.0s
+       outputs: sine.child [cross, sine.child]
+       active: -
+       passive: sine [sine.child, cross]
 ```
 
 We see the two clocks, one nested inside the other, and we can check that the
-child clock of `cross` has ticked 313 times where the top-level clock has ticked
-64 times: the child clock is running ahead, which is exactly what `cross` needs
-it for. The companion option `--describe-sources` prints the same tree from the
-point of view of the sources. Both options run your script for a second before
-printing, which you can change with `--dump-delay`, and both are experimental.
+child clock of `cross` has ticked 258 times where the top-level clock has ticked
+9 times: the child clock is running ahead, which is exactly what `cross` needs
+it for. The first line of each clock tells whether it is started, its sync mode,
+and what runs it, and the `held` line tells where its time went. The companion
+option `--describe-sources` prints the same tree from the point of view of the
+sources. Both options run your script for a tenth of a second before printing,
+which you can change with `--dump-delay`, and both are experimental.
 
 #### Graphical representation
 
@@ -1317,17 +1334,16 @@ instance, the script
 will raise the error
 
 ```
-Error 17: clock output.alsa has multiple synchronization sources. Do you need to set self_sync=false?
-
+Error 17: Clock output.alsa has multiple synchronization sources. Do you need to set self_sync=false?
 Sync sources:
- alsa from source output.alsa
- pulseaudio from source output.pulseaudio
-
-Stack traces:
-...
+  alsa, from output.alsa
+    ...
+  pulseaudio, from output.pulseaudio
+    ...
 ```
 
-followed by the place in the script where each of the two sources was created.
+where each synchronization source is followed by the place in the script where
+it was created.
 Both ALSA and PulseAudio control their own timing, and the clock cannot honor
 two different paces at once. The question in the error message is worth taking
 literally: every operator which can be a synchronization source takes a
@@ -1347,10 +1363,7 @@ source `s` in the clock of `add`. The source `s` would have to produce data at
 normal speed and at half speed at the same time, so Liquidsoap refuses to start:
 
 ```
-Error 11: Cannot unify two nested clocks
-(clock(id=stretch,sync=stopped,pending=auto),
-clock(id=stretch,sync=stopped,pending=passive)). Do you need to set
-`settings.output.use_default_clock := false`?
+Error 11: Clocks stretch and stretch cannot be unified: one is nested in the other.
 ```
 
 An operator with a child clock also needs a child it can accelerate, and a
@@ -1594,12 +1607,18 @@ which takes roughly 1.1 second to generate 1 second of sound:
 When playing it you should hear regular glitches and see messages such as
 
 ```
-[clock.pulseaudio:2] Latency is too high: we must catchup 0.86 seconds! Check if your system can process your stream fast enough (CPU usage, disk access, etc) or if your stream should be self-sync (can happen when using `input.ffmpeg`). Refer to the latency control section of the documentation for more info.
+[clock.output.pulseaudio:2] Latency is too high: we must catchup 0.86 seconds!
+[clock.output.pulseaudio:3] Since the last warning: 51 ticks, producing 1.176s, resting 0.820s, released 0.000s, no worker 0.007s, slowest source: output.pulseaudio
 ```
 
 This means Liquidsoap took _n_+0.86 seconds to produce _n_ seconds of audio, and
 is thus "late". In such a situation, it will try to produce audio faster than
-realtime in order to "catch up" the delay.
+realtime in order to "catch up" the delay. The second message helps finding out
+why we are late: it tells how long the clock spent producing the stream and
+resting since the last warning, as well as the source whose ticks took the
+longest. A clock which
+spends most of its time producing is limited by the CPU, whereas time spent
+with `no worker` means that the scheduler had no worker available to run it.
 
 Two settings decide when that message appears. The clock stays quiet until the
 delay reaches `settings.clock.log_delay_threshold` (0.2 second by default), and
@@ -1608,7 +1627,7 @@ it then repeats the message at most once every `settings.clock.log_delay`
 default) the clock gives up on catching up, resets its active sources, and logs
 
 ```
-[clock.pulseaudio:2] Too much latency! Resetting active sources...
+[clock.output.pulseaudio:2] Too much latency! Resetting active sources...
 ```
 
 #### Coping with catch up errors
@@ -1656,9 +1675,11 @@ Clocks themselves run as scheduler tasks rather than as threads of their own, so
 a clock which is ahead of real time parks and lets the scheduler wake it up
 instead of holding a thread asleep. The setting `settings.clock.task` turns that
 off, and `settings.scheduler.legacy` restores the single-core scheduler of the
-older versions if a script of yours misbehaves on several cores. A `jack` input
-or output keeps a thread of its own whatever `settings.clock.task` says, because
-the JACK library requires calls from the thread which set it up.
+older versions if a script of yours misbehaves on several cores. A clock which
+waits on a blocking synchronization source, such as a soundcard, `input.srt` or
+JACK, keeps a thread of its own whatever `settings.clock.task` says, since the
+scheduler cannot take a worker back from a call which blocks, and so does a
+clock which runs without synchronization.
 
 A last way of dealing with the situation is by simply ignoring it. If the only
 thing which is disturbing you is the error messages that pollute your log and
@@ -1783,14 +1804,11 @@ two steps:
 
 1. some computations are performed (e.g. sound in produced by a text-to-speech
    library for `say`),
-2. a list of URI, called _indicators_\index{indicator}, is returned.
+2. a URI, called an _indicator_\index{indicator}, is returned, or `null` if the
+   resolution failed.
 
-Generally, only one URI is returned: for instance, the `say` protocol generates
-audio in a temporary file and returns the path to the file it produced. When
-multiple URI are returned, Liquidsoap is free to pick any of them and will
-actually pick the first working one. Typically, a "database" protocol could
-return multiple locations of a given file on multiple servers for increased
-resiliency.
+For instance, the `say` protocol generates audio in a temporary file and returns
+the path to the file it produced.
 
 When a request is indicated as _persistent_ is can be played multiple times
 (this is typically the case for local files). Otherwise, a request should only be
@@ -1920,7 +1938,7 @@ using the `protocol.add` function which registers a new protocol. This function
 takes as argument a function `proto` of type
 
 ```
-(rlog : ((string) -> unit), maxtime : float, string) -> [string]
+(rlog : ((string) -> unit), maxtime : float, string) -> string?
 ```
 
 which indicates how to perform the resolution: this function takes as arguments
@@ -1929,7 +1947,7 @@ which indicates how to perform the resolution: this function takes as arguments
 - `maxtime` the maximal duration resolution should take,
 - the URI to resolve,
 
-and returns a list of URI it resolves to. Additionally, the function
+and returns the URI it resolves to, or `null` on failure. Additionally, the function
 `protocol.add` takes arguments to document the function (`syntax` describes the
 URI accepted by this protocol and `doc` is freeform description of the protocol)
 as well as indicate whether the protocol is `static` or not and whether the
@@ -1977,7 +1995,7 @@ The list of available decoders can be obtained with the script
 which prints here
 
 ```
-["wav", "aiff", "pcm/basic", "srt", "raw audio", "midi", "image", "aac", "mp4", "ffmpeg", "flac", "ogg", "mad"]
+["wav", "aiff", "pcm/basic", "srt", "raw audio", "midi", "image", "ffmpeg", "flac", "ogg", "mad"]
 ```
 
 indicating the available decoders. The choice of the decoder is performed on the
