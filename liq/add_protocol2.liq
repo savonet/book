@@ -3,7 +3,8 @@
 def artist_protocol(~rlog, ~maxtime, arg) =
   rlog("Finding songs of #{arg}.")
   list.hd(default=null,
-          process.read.lines("./find_by_artist #{string.quote(arg)}"))
+          process.read.lines(
+            process.quote.command(args=[arg], "./find_by_artist")))
 end
 protocol.add("artist", artist_protocol,
              doc="Find songs by artist.",

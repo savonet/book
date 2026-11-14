@@ -701,9 +701,10 @@ that the user has the right to connect at the given time).
 ```
 
 Here, our function `auth` begins by executing the script `harbor-auth` with the
-username and password as argument. Note that we use `string.quote` to escape
-shell special characters, so that the user cannot introduce shell commands in
-his username for instance... The `process.read.lines` function returns the list
+username and password as arguments. Note that we build the command with
+`process.quote.command`, which quotes each of its `args` for the shell, so that
+the user cannot introduce shell commands in their username for instance (see
+the security discussion in [there](#sec:shell-security)). The `process.read.lines` function returns the list
 of lines returned by our script and our function returns `true` or `false`
 depending on whether this first line is "`allowed`" or not. In this way you
 could easily query an external database of allowed users.
@@ -4712,18 +4713,31 @@ Here, `l` contains the list of all our files in the `~/Music` directory. We use
 `list.length`) and finally pass it to the `playlist.list` operator which will
 play all the files.
 
-#### Security
+#### Security {#sec:shell-security}
 
 As usual in the modern world, extra care should be taken when passing data from
 external users to applications, in order to mitigate the possibility of
 executing malicious code. This is typically the case if we use an external
-script in order to validate credentials for `input.harbor`. In such situations,
-one should always apply the function `string.quote`\index{string!escaping} to the users' data, in order
-to remove the possibility that some parts of it are interpreted as bash
-commands. For instance,
+script in order to validate credentials for `input.harbor`. The command is run
+by a shell, so if we simply inserted the login of the user in it, with
+`"./harbor-auth #{login.user}"`, a user calling themselves `$(rm -rf ~)` would
+have the shell run this command for us! Escaping the string with `string.quote`
+is not enough either: it follows the conventions of JSON, not those of the
+shell, which still interprets `$(...)` inside double quotes.
+
+The safe way is to never insert the users' data in the command ourselves, and
+to give it instead as a list of arguments to
+`process.quote.command`\indexop{process.quote.command}\index{string!escaping},
+which quotes each of them for the shell, so that it is always received as one
+argument by the program, whatever characters it contains:
 
 ```{.liquidsoap include="liq/input.harbor-auth2.liq" from=header to=footer}
 ```
+
+When a single value has to be quoted, the function `process.quote` does the same
+for one string. The parts of a command which we write ourselves can be written
+as raw strings (see [there](#sec:raw-strings)): since a raw string performs no
+interpolation, nothing can be inserted in it.
 
 Following this practice should make your script pretty secure, but there is no
 way to be 100% sure that a corner case was not missed. In order to further
@@ -5549,8 +5563,8 @@ answers that this has been performed.
 
 Here, we validate the request by ensuring that the corresponding file
 exists. Generally, you should always validate data coming from users (even if
-you trust them, you never know), especially when passing data in requests
-without `string.quote` as it is the case here for `fname`.
+you trust them, you never know), especially when their data ends up in a request,
+as it is the case here for `fname`.
 
 #### Setting metadata
 
