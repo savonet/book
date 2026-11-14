@@ -405,6 +405,11 @@ the expression between `#{` and `}` on its own.
 
 \index{string!raw}
 
+Interpolation is convenient, but it can also be a trap. A string which contains
+`#{`, backslashes or quotes for its own reasons, such as a shell command, a
+regular expression or a piece of JavaScript, has to be escaped carefully, and an
+interpolated string built from data we do not control can end up containing
+something we did not intend, which matters when it is a command to be executed.
 When a string should be taken verbatim, without any interpolation or escape
 processing, you should use the _raw string_ syntax `{|...|}`\index{string!raw}:
 
@@ -475,8 +480,9 @@ other useful string-related function are
 - `string.quote`: quote a string following the JSON and JavaScript escaping
   rules,
 - `process.quote`\indexop{process.quote}: escape the characters which are
-  special for the shell (you should always use `process.quote` when passing a
-  string to an external program).
+  special for the shell (you should always use `process.quote`, or
+  `process.quote.command`, when passing a string to an external program, and
+  never `string.quote`, which does not protect against the shell).
 
 #### Regular expressions {#sec:regexp}
 
