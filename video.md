@@ -43,7 +43,7 @@ protocol, which requires that you have installed the
 
 Since the whole video has to be downloaded beforehand, it can take quite some
 time, which is why we specify a "large" `timeout` parameter (10 minutes instead
-of the default 30 seconds).
+of the default 29 seconds).
 
 As another example, if we have a playlist `video.playlist` of video files, it
 can be played with\indexop{playlist}
@@ -738,15 +738,18 @@ takes the following optional arguments:
   around, and is the place to pick the next headline.
 
 This function uses one of the various basic implementations we provide, the
-first one available among camlimages, SDL, FFmpeg, gd and the native one. You
-should actually try them in order to reach what you want: they have various
+first one available among camlimages, SDL, gd and the native one, and the
+setting `settings.video.text` forces the choice of one of them. You should
+actually try them in order to reach what you want: they have various
 quality and functionalities, and unfortunately we have not found the silver
 bullet yet. Those implementations are
 
 - `video.add_text.camlimages`: renders with the camlimages library, which is the
   one picked first when it is there,
-- `video.add_text.sdl` / `video.add_text.ffmpeg` / `video.add_text.gd`:
-  synthesize the text using the SDL, FFmpeg or GD libraries,
+- `video.add_text.sdl` / `video.add_text.gd`: synthesize the text using the SDL
+  or GD libraries,
+- `video.add_text.ffmpeg`: draws the text with an FFmpeg filter; it is never
+  picked automatically and has to be called explicitly,
 - `video.add_text.native`: the native implementation. It always works and does
   not rely on any external library, but uses a hand-made, hard-coded, low-fi
   font.
