@@ -1,4 +1,6 @@
-FROM ghcr.io/savonet/liquidsoap:ci-build-main_amd64-ocaml5.5.2
+# CI passes the OCaml version liquidsoap's main branch builds with.
+ARG OCAML_VERSION=5.5.2
+FROM ghcr.io/savonet/liquidsoap:ci-build-main_amd64-ocaml${OCAML_VERSION}
 
 USER root
 
