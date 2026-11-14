@@ -104,7 +104,7 @@ offers very strong guarantees.
   that a source of sound might fail (e.g. the server on which the files are
   stored gets disconnected), Liquidsoap imposes that there should be a fallback
   source of sound.
-- We ensure that we correctly handle [synchronization issues](#clocks). Two
+- We ensure that we correctly handle [synchronization issues](#sec:clocks). Two
   sources of sound (such as two soundcards) generally produce the sound at
   slightly different rates (the promised 44100 samples per seconds might
   actually be 44100.003 for one and 44099.99 for the other). While slightly
@@ -261,14 +261,12 @@ touch with the community and obtain help\index{help} to get your problem solved:
 2. the [Liquidsoap discord
   chat](http://chat.liquidsoap.info)\index{discord}\index{chat} is a public chat
   where you can have instantaneous discussions,
-3. the [Liquidsoap mailing-list](savonet-users@lists.sf.net) is there if you
-  would rather discuss by mail (how old are you?),
-4. the [Liquidsoap github
+3. the [Liquidsoap github
   page](https://github.com/savonet/liquidsoap/issues)\index{github} is the place
   to report bugs,
-5. there is also a [Liquidsoap discussion
+4. there is also a [Liquidsoap discussion
    board](https://github.com/savonet/liquidsoap/discussions),
-6. we regularly organize a workshop called
+5. we regularly organize a workshop called
    [Liquidshop](http://www.liquidsoap.info/liquidshop/) where you can discuss
    with creators and users of Liquidsoap; the videos of the presentations are
    also made available afterward.
@@ -309,7 +307,7 @@ numerous contributors over the years, the first of them being David Baelde who
 was a leading creator and designer of the language, but also the students of the
 MIM1 (big up to Florent Bouchez, Julien Cristau, Stéphane Gimenez and Sattisvar
 Tandabany), and our fellow users Gilles Pietri, Clément Renard and Vincent
-Tabard (who also designed the logo), as well as all the regulars of slack and the
+Tabard (who also designed the logo), as well as all the regulars of the chat and the
 mailing-list. Many thanks also to the many people who helped to improve the
 language by reporting bugs or suggesting ideas, and to the Radio France team who
 were enthusiastic about the project and motivated some new developments (hello
