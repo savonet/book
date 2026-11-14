@@ -3443,6 +3443,106 @@ listeners, its current metadata and its history.
 The `icecast.server` operator relays the streams to the listeners. Use
 `input.harbor` when the script itself should play the incoming stream.
 
+**Mountpoints.** Most radios have more than one mountpoint: the live show, an
+automated backup, a members-only stream, a low-bitrate version, and each of
+those needs its own credentials, limits or fallback. All of this is given by a
+single function, the `mount` field of the parameters, which the server calls
+with the path of a mountpoint and which returns the parameters of that
+mountpoint, or `null` when it has none of its own:
+
+```{.liquidsoap include="liq/icecast.server-mounts.liq" from=header}
+```
+
+Here, the DJ streaming on `/live.mp3` logs in with their own credentials, at
+most 100 listeners are accepted, and when the DJ disconnects, the listeners are
+switched to the `/autodj.mp3` mountpoint without noticing it: their connection
+stays the same and they come back to the live show as soon as it returns. The
+test mountpoints are hidden from the status pages and disconnect their listeners
+after ten minutes. Since `mount` is an ordinary function, wildcards, defaults
+shared by several mountpoints, or a lookup in a table of our own are just code.
+
+**Feeding a mountpoint from the script.** The `/autodj.mp3` mountpoint above
+does not need an external source client: our script can feed it with one of its
+own sources, so that the automated programming is served next to the live
+mountpoints. The `attach_source` method of the server does this, from a source
+of encoded content (see [there](#sec:encoded-streams)):
+
+```{.liquidsoap include="liq/icecast.server-attach.liq" from=header}
+```
+
+The `format` argument is the encoder which writes the content for the listeners,
+here a simple copy of the MP3 data, and `headers` are the headers describing the
+stream that a source client would have sent.
+
+**Deciding on listeners.** Paid streams, members areas or geo-restricted
+contents all require deciding, for each listener, whether they should be let in
+before the stream starts. This is the role of the `listener_decision` field of a
+mountpoint, a function which receives the request of the listener and returns
+what to do with it: refusing or redirecting it, limiting the duration of its
+session, or sending it a short file, such as a jingle or an ad, before the
+stream. The standard library provides ready-made decisions, which
+`icecast.server.decision.all` combines, the first refusal winning:
+
+```{.liquidsoap include="liq/icecast.server-decisions.liq" from=header}
+```
+
+Here, listeners of `/members.mp3` are refused when their address is in a list of
+banned ones, when they do not provide a login and password from an `htpasswd`
+file, or before 6 pm. If you already have a web service authenticating your
+listeners for Icecast, `icecast.server.decision.url_auth` asks it with the same
+protocol as Icecast does, so that it can be kept as it is.
+
+**Following the listeners.** Listener statistics, royalty reports and dashboards
+all rely on knowing who connects and when. The server reports those events to
+the functions we register with its methods `on_listener_connect`,
+`on_listener_disconnect`, `on_source_connect`, `on_source_disconnect` and
+`on_metadata`:
+
+```{.liquidsoap include="liq/icecast.server-events.liq" from=header}
+```
+
+The record received by the listener handlers describes the listener, with the
+mountpoint, the user agent, and when it leaves, the `duration` of its session
+and the number of `bytes_sent`. Since the address of a listener is personal
+data, it is hashed before any of those see it, which still allows counting
+unique listeners: the `address_hash` field of the parameters changes how. The
+`stats()` method gives the same information about all the mountpoints at once.
+
+**Logs and administration.** Log analyzers and statistics tools read the files
+that Icecast writes, and `icecast.server` can write the same access, playlist
+and error logs. When an `admin_password` is given, the server also serves
+administration pages, under `/admin/`, where we can watch each mountpoint and
+its listeners, update the metadata of a mountpoint or disconnect its source:
+
+```{.liquidsoap include="liq/icecast.server-logs.liq" from=header}
+```
+
+Log files are usually rotated by a tool such as `logrotate`, which moves them and
+then sends the `SIGHUP` signal to the program in order to have it open them
+again. The function `on_signal`\indexop{on\_signal} registers a function to be
+called when the process receives a signal, and here we use it to call the
+`reopen_logs` method of the server.
+
+**Moving from Icecast.** If you are already running an Icecast server, you do
+not have to translate its configuration by hand:
+`icecast.server.config.load` reads an Icecast XML configuration file and returns
+the corresponding parameters. Moreover, a running server usually has sources and
+listeners connected, and restarting it in order to change a password or a
+fallback would disconnect all of them. The `reload` method instead replaces the
+parameters of the running server, without disconnecting anyone. The new
+parameters are checked first, and an error is raised, leaving the server as it
+was, if they are invalid. We can thus reload the configuration file each time we
+receive the `SIGHUP` signal, as Icecast does:
+
+```{.liquidsoap include="liq/icecast.server-reload.liq" from=header}
+```
+
+Note that the parameters are computed by a function, which is called both when
+the server starts and when it is reloaded. In this way, any change we make to
+the parameters read from the file, such as
+`icecast.server.config.load(config).{max_clients = 500}`, is applied again
+at each reload.
+
 ### HLS output {#sec:HLS-output}
 
 In the last few years, people have started moving away from Icecast and turn to
