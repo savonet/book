@@ -2566,6 +2566,24 @@ file using the less common parts of the specification is refused. The other
 direction is `yaml.stringify`\indexop{yaml.stringify}, which turns any value
 into YAML.
 
+Often the data we read is data we wrote ourselves: a script which saves its
+state to a file, in order to find it again after a restart, has to read it back
+with the type of that state. Writing this type by hand is tedious, and we would
+have to remember to change it each time the state changes. Instead, the
+annotation `%typeof(...)`\indexop{\%typeof} stands for the type of an
+expression. Here, we keep the history of the tracks we played in a JSON file:
+
+```{.liquidsoap include="liq/typeof.liq" from=header to=footer}
+```
+
+The type of `history()` is only known once `save_track` adds records to it,
+which happens after the annotation in the script. This is not a problem:
+Liquidsoap uses the type as it ends up once the whole script has been checked,
+here `[{artist : string, title : string}]`. The expression inside `%typeof(...)`
+is never evaluated, so that `history()` is not called when the file is read. It
+can be any expression, so that `%typeof(x.foo)` and `%typeof(x).foo` both stand
+for the type of the field `foo` of `x`.
+
 When the data we keep grows beyond a file we rewrite entirely, Liquidsoap can
 talk to an SQLite database\index{SQLite} with the `sqlite`\indexop{sqlite}
 function, which takes the path of the database file and returns methods to
