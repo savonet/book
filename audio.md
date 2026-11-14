@@ -5865,10 +5865,12 @@ can run at the same moment. The language chapter explains how to write that
 safely, in [there](#sec:shared-state).
 
 A word about where those threads come from. Liquidsoap keeps a pool of workers
-which pick up whatever is due, and runs at most
-`settings.scheduler.blocking_tasks` (8 by default) of the tasks declared with
-`fast=false` at the same time, so that slow network calls never take every
-worker away from the rest of the script. The setting
+which pick up whatever is due. It starts with two of them, which is all most
+scripts ever need, and adds one whenever tasks keep finding every worker busy,
+up to `settings.scheduler.domains`, which is the number of cores by default. It
+also runs at most `settings.scheduler.blocking_tasks` (64 by default) of the
+tasks declared with `fast=false` at the same time, so that slow network calls
+never take every worker away from the rest of the script. The setting
 `settings.scheduler.legacy` brings back the fixed queues of the older scheduler,
 and the `settings.scheduler.*_queues` settings only apply when it is set.
 
