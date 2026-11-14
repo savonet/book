@@ -2204,7 +2204,7 @@ specifying a default value (with the optional parameter `default`), an error wil
 By default, this error will stop the script, which is usually not a desirable
 behavior. For instance, if you try to run a script containing
 
-```{.liquidsoap include="liq/bad/list.hd-empty.liq" from=header}
+```{.liquidsoap include="liq/list.hd-empty.liq" from=header}
 ```
 
 the program will exit printing
@@ -2215,7 +2215,7 @@ type: not_found,
 message: "no default value for list.hd",
 stack: at .../libs/list.liq, line 23 char 11 - line 26 char 9,
 ...
-at bad/list.hd-empty.liq, line 3, char 0-11
+at list.hd-empty.liq, line 4, char 0-11
 ```
 
 This means that the error named "`not_found`"\indexop{not\_found} was raised, with a message
@@ -2275,14 +2275,14 @@ This prints the two messages and gives `0` to `x`.
 Errors can be raised from Liquidsoap with the function `error.raise`, which
 takes as arguments the error to raise and the error message. For instance:
 
-```{.liquidsoap include="liq/bad/error.raise.liq"}
+```{.liquidsoap include="liq/error.raise.liq" from=header}
 ```
 
 Finally, we should mention that all the errors should be declared in advance
 with the function `error.register`, which takes as argument the name of the new
 error to register:
 
-```{.liquidsoap include="liq/bad/error.register.liq"}
+```{.liquidsoap include="liq/error.register.liq" from=header}
 ```
 
 ### Nullable values
