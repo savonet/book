@@ -1,3 +1,3 @@
 #!./liquidsoap
 # header
-icecast.server(port=8000, password="hackme")
+icecast.server({source_password = "hackme"})

@@ -1182,7 +1182,7 @@ has been streaming blank for some period of time, and `on_start` and
 Many other operators also take more specific handlers as arguments. For
 instance, the operator `input.harbor`, which allows users to connect to a
 Liquidsoap instance and send streams, has `on_connect` and `on_disconnect`
-arguments which allow the registration of handlers for the connection and
+methods which allow the registration of handlers for the connection and
 disconnection of users.
 
 ### Anonymous functions

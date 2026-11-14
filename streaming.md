@@ -377,13 +377,13 @@ cannot contain heterogeneous elements, and `a` and `b` do not have the same
 tracks: `a` has audio only and `b` has video only. Liquidsoap says
 
 ```
-At bad/blue-sine.liq, line 4, char 12:
+At bad/blue-sine.liq, line 5, char 12:
 s = add([a, b])
 
 Error 5: this value has type
-  _.{composition_type : _, on_select : (...) -> source(audio=_)} (inferred at bad/blue-sine.liq, line 3, char 4-39)
-but it should be a subtype of the type of the value at bad/blue-sine.liq, line 4, char 8-14
-  _.{composition_type : _, on_select : (...) -> source(audio=_, video=_, _)} (inferred at bad/blue-sine.liq, line 2, char 4-10)
+  _.{composition_type : _, on_select : (...) -> source(audio=_)} (inferred at bad/blue-sine.liq, line 4, char 4-39)
+but it should be a subtype of the type of the value at bad/blue-sine.liq, line 5, char 8-14
+  _.{composition_type : _, on_select : (...) -> source(audio=_, video=_, _)} (inferred at bad/blue-sine.liq, line 3, char 4-10)
 ```
 
 The part to read is the `source(...)` at the end of each of the two types: one
@@ -1648,9 +1648,9 @@ loop carries on:
 ```
 
 Every handler which can take time should be registered this way. The scheduler
-keeps `settings.scheduler.blocking_tasks` threads (8 by default) for the
-handlers which block on something, and raising that number is the answer if you
-register a lot of them and see them queue up behind each other.
+runs at most `settings.scheduler.blocking_tasks` (64 by default) of the handlers
+which block on something at the same time, and raising that number is the answer
+if you register a lot of them and see them queue up behind each other.
 
 Clocks themselves run as scheduler tasks rather than as threads of their own, so
 a clock which is ahead of real time parks and lets the scheduler wake it up
