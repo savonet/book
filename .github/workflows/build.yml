@@ -54,4 +54,6 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./site/public
     - name: Test scripts
-      run: docker build . -f .github/docker/Dockerfile.build
+      run: |
+        OCAML_VERSION=$(curl -fsSL https://raw.githubusercontent.com/savonet/liquidsoap/main/.github/ocaml-version)
+        docker build . -f .github/docker/Dockerfile.build --build-arg OCAML_VERSION="$OCAML_VERSION"
