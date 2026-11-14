@@ -739,11 +739,11 @@ perform a "complex setup" such as installing Liquidsoap or run `darkice`. For
 this reason, we have developed a protocol which allows streaming sound directly
 from the browser, be it from music files or the microphone, without having to
 install anything: this protocol is called _webcast_\index{webcast} and we provide a [JavaScript
-implementation `webcast.js`](https://github.com/webcast/webcast.js), which
-should be easy to integrate in your own website, based on websockets and media
-recorder API. Of course, `input.harbor` has support for it and will accept
-clients using the webcast protocol in addition to the traditional Icecast
-protocol.
+implementation `webcast.js`](https://github.com/webcast/webcast.js), based on
+websockets and on the media recorder API of browsers. It is published on npm as
+the `@webcast.js/socket` module, which should be easy to integrate in your own
+website. Of course, `input.harbor` has support for it and will accept clients
+using the webcast protocol in addition to the traditional Icecast protocol.
 
 A full-fledged website based on this library, called _Webcaster_, [is
 available](https://webcast.github.io/webcaster/). It provides a web interface which
@@ -751,23 +751,36 @@ looks like this:
 
 ![](img/webcaster.png)
 
-As you can see, it allows performing simple DJ interventions, by mixing between
-two playlists and the microphone input. And should you need more, [the source
-code is available](https://github.com/webcast/webcaster). In the lower-left corner
-is the URI we should connect to, in the following form:
+As you can see, it allows performing simple DJ interventions: it mixes two
+playlists with a crossfader, together with the microphone, and can also stream
+the camera. The microphone has a line-in mode, which turns off the voice
+processing of the browser (echo cancellation, noise suppression, automatic gain)
+when the input is an external mixing desk rather than a voice. The metadata
+of the stream can be updated live. The browser encodes the stream, in Opus, AAC
+or even lossless PCM depending on what it supports, and Liquidsoap receives it
+as any other harbor input, so that the format sent to the listeners is chosen in
+our script, as usual. And should you need more, [the source
+code is available](https://github.com/webcast/webcaster): the mixing and
+streaming part is published on npm as `@webcast.js/webcaster`, so that you can
+build your own client on top of it. The destination we should connect to is
+given as a URI of the following form:
 
 ```
-ws://username:password@host:port/mountpoint
+ws://user:password@host:port/mountpoint
 ```
 
 For instance, with the above harbor input example, we should thus use the URI
 
 ```
-ws://user:hackme@localhost:8000/live
+ws://source:hackme@localhost:8000/live
 ```
 
-(the username is not taken in account when using the basic password
-authentication).
+The user and the password have to match the `user` and `password` arguments of
+`input.harbor`, and the user is `source` by default. Browsers refuse `ws://`
+connections from a page served over https, which is the case of the online
+version of Webcaster. You then have to secure the harbor input, as explained
+above, and use a `wss://` URI instead, or serve the page of Webcaster yourself
+over plain http.
 
 ### External inputs
 
