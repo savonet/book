@@ -836,10 +836,6 @@ possibility is to use the Icecast protocol:
 This solution is not entirely satisfactory because the sound has to be
 compressed (the Icecast protocol does not allow sending uncompressed data such
 as wav, it can however send lossless compressed data with the FLAC codec).
-
-#### UDP
-
-`input.udp` and `output.udp`
 -->
 
 #### SRT
@@ -2143,7 +2139,7 @@ of silence, and some end on a fade which is already there. Liquidsoap can
 measure all of this for us: this is the _autocue_\index{autocue} mechanism,
 which analyzes the beginning and the end of every track for silence and for
 energy, and sets the `liq_cue_in`, `liq_cue_out`, `liq_fade_in`, `liq_fade_out`
-and crossfade duration metadata accordingly. The `crossfade` operator then reads
+and `liq_cross_duration` metadata accordingly. The `crossfade` operator then reads
 those metadata, as we have seen above, and our transitions follow the music
 without us having annotated a single file:
 
@@ -2219,11 +2215,12 @@ duration globally with
 ```{.liquidsoap include="liq/max_fade.liq" from=header}
 ```
 
-The fade only applies when the source being left carries audio and nothing else.
-Video streams and encoded audio, such as the one produced by `ffmpeg.copy` and
-described in [there](#sec:encoded-streams), cannot be mixed, so those switch
-immediately instead. When the ending source had less than `max_fade` seconds
-left, the two sources are simply played one after the other. And when no source
+When the ending source had less than `max_fade` seconds left, the two sources
+are simply played one after the other. Both behaviors only apply when the source
+being left carries audio and nothing else. Video streams and encoded audio, such
+as the one produced by `ffmpeg.copy` and described in
+[there](#sec:encoded-streams), cannot be mixed, so those switch immediately
+instead. And when no source
 was interrupted, the function returns the starting source: this is why
 `on_select` is given `ending` as a nullable source, `null` meaning that the
 previous source had reached the end of a track or had become unavailable.
@@ -3412,7 +3409,10 @@ password has odd length:
 ```
 
 The methods `on_connect` and `on_disconnect` are also useful to monitor
-connections from listeners.
+connections from listeners: the function they register receives a record
+describing the listener, with its `ip` address, and on disconnection, the
+`duration` of its session and the number of `bytes_sent` to it. The `listeners`
+method returns the list of listeners currently connected.
 
 #### Being the Icecast server {#sec:icecast-server}
 
@@ -3425,16 +3425,20 @@ Icecast server. Liquidsoap can be that server, with the
 ```{.liquidsoap include="liq/icecast.server.liq" from=header}
 ```
 
-That single line starts a server on port 8000. Source clients connect on any
-mountpoint with the password `hackme`, and listeners connect to those
-mountpoints. A source client connecting on `/my-radio.mp3` becomes available to
-listeners at `http://localhost:8000/my-radio.mp3`, and we did not have to
-declare the mountpoint anywhere. The server also serves a status page at `/`
-and the same information as JSON at `/status.json`. The `serve` argument turns
-both pages off. The `serve_html` and `serve_json` arguments let you write your
-own pages from the list of mountpoints, which gives for each mountpoint its
-name, its content type, its current metadata, its listeners and the time it
-started.
+The server is described by a single record, its _parameters_. Every field is
+optional and takes a default value when it is missing, so that a server needs
+little more than a password for the sources. That single line starts a server on
+port 8000. Source clients connect on any mountpoint with the user `source` and
+the password `hackme`, and listeners connect to those mountpoints. A source
+client connecting on `/my-radio.mp3` becomes available to listeners at
+`http://localhost:8000/my-radio.mp3`, and we did not have to declare the
+mountpoint anywhere. The server also serves a status page at `/`, the same
+information as JSON at `/status.json`, and the JSON that Icecast provides at
+`/status-json.xsl`, which players and website widgets read. Setting
+`status_page = false` in the parameters turns these pages off, and the
+`status_html` and `status_json` fields let you write your own pages from the
+statistics of the server, which give for each mountpoint its name, its
+listeners, its current metadata and its history.
 
 The `icecast.server` operator relays the streams to the listeners. Use
 `input.harbor` when the script itself should play the incoming stream.

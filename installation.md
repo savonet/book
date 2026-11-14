@@ -179,11 +179,23 @@ features included. You can also inspect a running installation with
 
 ### Linux
 
-Official packages from the [Liquidsoap release
-page](https://github.com/savonet/liquidsoap/releases) are available for Debian,
-Ubuntu, and Alpine (see the supported releases table in the [versions
-section](#sec:versions)). These packages ship with their own build of FFmpeg,
-including `fdk-aac` support, so no third-party repository has to be enabled.
+Official packages are available for Debian, Ubuntu, Fedora and Alpine (see the
+supported releases table in the [versions section](#sec:versions)). These
+packages ship with their own build of FFmpeg, including `fdk-aac` support, so no
+third-party repository has to be enabled.
+
+The simplest way to get them is to add our package repository to your system,
+which the following command does for you:
+
+```
+curl -fsSL https://repo.liquidsoap.info/setup.sh | sudo sh
+```
+
+It asks which release to follow, after which Liquidsoap is installed and
+upgraded with the rest of the system, by `apt-get install liquidsoap`,
+`dnf install liquidsoap` or `apk add liquidsoap` depending on your distribution.
+The packages can also be downloaded by hand from the [Liquidsoap release
+page](https://github.com/savonet/liquidsoap/releases).
 
 Your distribution may also carry its own `liquidsoap` package (e.g. via
 `sudo apt install liquidsoap`), though these may lag behind the latest release.
@@ -282,13 +294,13 @@ before deploying them in production.
 
 The current release status is the following one:
 
-| Branch  | Latest release | Supported | Rolling Release          |
-|---------|----------------|-----------|--------------------------|
-| `2.5.x` | (in dev)       | (dev)     | `main` branch            |
-| `2.4.x` | 2.4.5          | \ding{51} | `rolling-release-v2.4.x` |
-| `2.3.x` | 2.3.3          | \ding{55} | none                     |
+| Branch  | Latest release | Supported     | Rolling Release          |
+|---------|----------------|---------------|--------------------------|
+| `2.5.x` | 2.5.0-rc1      | (pre-release) | `rolling-release-v2.5.x` |
+| `2.4.x` | 2.4.6          | (sunset)      | `rolling-release-v2.4.x` |
+| `2.3.x` | 2.3.3          | \ding{55}     | none                     |
 
-This means that all developments and new features are brought to the 2.5.x branch, but we still support 2.4.x versions in order to let our users adapt their scripts to the new features and language improvements.
+This means that all developments and new features are brought to the 2.5.x branch, which is now in its release candidate phase. The 2.4.x branch is being sunset: it still receives fixes until 2.5.0 is released, which leaves some time to adapt scripts to the new features and language improvements.
 
 ### Rolling releases
 
@@ -448,7 +460,6 @@ library, which is bundled with Liquidsoap).
 
 ### Audio file formats
 
-- `faad`: AAC decoding,
 - `fdkaac`: AAC-LC/HE-AAC encoding via the Fraunhofer FDK library,
 - `ffmpeg`: encoding and decoding of all FFmpeg-supported formats,
 - `flac`: native FLAC encoding and decoding,

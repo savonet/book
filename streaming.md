@@ -377,13 +377,13 @@ cannot contain heterogeneous elements, and `a` and `b` do not have the same
 tracks: `a` has audio only and `b` has video only. Liquidsoap says
 
 ```
-At bad/blue-sine.liq, line 4, char 12:
+At bad/blue-sine.liq, line 5, char 12:
 s = add([a, b])
 
 Error 5: this value has type
-  _.{composition_type : _, on_select : (...) -> source(audio=_)} (inferred at bad/blue-sine.liq, line 3, char 4-39)
-but it should be a subtype of the type of the value at bad/blue-sine.liq, line 4, char 8-14
-  _.{composition_type : _, on_select : (...) -> source(audio=_, video=_, _)} (inferred at bad/blue-sine.liq, line 2, char 4-10)
+  _.{composition_type : _, on_select : (...) -> source(audio=_)} (inferred at bad/blue-sine.liq, line 4, char 4-39)
+but it should be a subtype of the type of the value at bad/blue-sine.liq, line 5, char 8-14
+  _.{composition_type : _, on_select : (...) -> source(audio=_, video=_, _)} (inferred at bad/blue-sine.liq, line 3, char 4-10)
 ```
 
 The part to read is the `source(...)` at the end of each of the two types: one
