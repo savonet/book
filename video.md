@@ -411,8 +411,11 @@ playlist of image files with
 
 The "opposite" of the muxing functions are the functions `source.drop.audio` and
 `source.drop.video`, which respectively remove the audio and video channels from
-a source. For instance, we can remove the video channel of a an audio+video
-source `s` with
+a source. This is needed whenever an audio and video source also feeds an
+audio-only output, such as an mp3 Icecast mountpoint: the tracks of a source
+must match those of the format it is encoded with, as explained
+[there](#sec:matching-tracks). For instance, we can remove the video channel of
+an audio+video source `s` with
 
 ```{.liquidsoap include="liq/source.drop.video.liq" from=header to=footer}
 ```

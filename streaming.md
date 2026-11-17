@@ -359,7 +359,7 @@ offending line, `u = ffmpeg.decode.audio(t)`, and it also says where the type it
 complains about came from: line 4, characters 4 to 18, which is the call to
 `amplify`.
 
-### Muxing tracks
+### Muxing tracks {#sec:muxing-tracks}
 
 A source type lists the tracks the source produces, and nothing else: `sine`
 produces an audio track and no video track. Suppose that you want to generate a
@@ -488,6 +488,57 @@ format(audio=pcm(mono))
 ```
 
 and thus imposes that `s` should have mono audio.
+
+#### Tracks must match {#sec:matching-tracks}
+
+\index{track}
+
+The "nothing else" above is strict: an encoder encodes exactly the tracks its
+format names, so the source it is given must have those tracks and no others.
+This matters as soon as one source feeds several outputs. Suppose that we
+archive a video stream, and also want to offer its sound on an audio-only
+Icecast mountpoint:
+
+```{.liquidsoap include="liq/bad/video-audio-only-output.liq" from=header}
+```
+
+The archive needs the video track of `s`, and the `%mp3` encoder has no use for
+it. Instead of silently throwing the video away, which is easy to do by mistake
+and hard to notice, Liquidsoap refuses the script:
+
+```
+At bad/video-audio-only-output.liq, line 9, char 36:
+output.icecast(%mp3, mount="radio", s)
+
+Error 5: a source with a `video` track is used where a source without one is expected.
+  Drop it with `source.drop.video`.
+  Used:     source(audio=pcm(stereo), video=yuv420p('A))
+  Expected: source(audio=pcm(stereo))
+```
+
+The fix is to say that we do mean to drop the video, with
+`source.drop.video`\indexop{source.drop.video}, for the output which does not
+want it:
+
+```{.liquidsoap include="liq/video-audio-only-output.liq" from=header}
+```
+
+The same rule applies to the elements of a list, which all have one type. All
+the variants of an HLS output encode the same source, so they must all have
+video, or none of them: an audio-only rendition of a video stream goes in a
+second output, fed with `source.drop.video(s)`. Similarly, the sources of a
+`fallback` or a `switch` must have the same tracks. Falling back from a video
+source to an audio-only playlist is refused, because the playlist has no video
+to give when it is selected. We give it one with `source.mux.video`, presented
+[above](#sec:muxing-tracks), for instance a still image:
+
+```{.liquidsoap include="liq/fallback-mux-video.liq" from=header to=footer}
+```
+
+A source whose tracks are not decided yet, such as a `playlist` or a `single`,
+takes the tracks it is used with. This is why `playlist("~/Music")` can be sent
+to `%mp3` without dropping anything. All its uses must then agree, which is
+exactly what fails for `s` in the archive example.
 
 Because they have such an influence on types, encoders are not values as any
 other in Liquidsoap, and specific restrictions have to be imposed. In
