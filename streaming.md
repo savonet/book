@@ -1370,7 +1370,7 @@ pulls from `playlist` ahead of time in order to compute transitions, whereas all
 other operators belong the same clock `clock₁` and will produce their stream at
 the same rate.
 
-#### Errors with clocks
+#### Errors with clocks {#sec:clock-errors}
 
 At most one source per clock may be a synchronization source at any given
 moment\index{clock!synchronization source}. Two of them in the same clock is
@@ -1432,6 +1432,28 @@ This source may control its own latency and cannot be used with this operator.
 ```
 
 and the fix is to put a `buffer` between the two, which we detail just below.
+
+All these errors are found when the script starts, before anything is streamed.
+Sources can also be created while the script runs, for instance from a telnet
+command, and a conflict found then cannot stop a radio which is already on air.
+It is raised as an error of kind `error.clock` instead, which we can catch like
+any other error, as explained [there](#sec:errors). In the following script, the
+sources `a` and `b` are already streaming, each in its own clock, by the time
+the command `combine` tries to put them in the same `switch`:
+
+```{.liquidsoap include="liq/clock-catch-conflict.liq" from=header}
+```
+
+The command then logs
+
+```
+[lang:3] Could not combine the sources: Clocks output.dummy and output.dummy.1 cannot be unified: a source cannot belong to two clocks.
+```
+
+and the script keeps running. Catching the error does not undo what was done
+before the conflict was found, though: clocks which were merged while creating
+the failing source stay merged. Use it to log the problem and keep the radio
+running, not to try other combinations of the same sources.
 
 <!--
 

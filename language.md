@@ -2196,7 +2196,7 @@ In this section, we detail some more advanced values than the ones presented in
 [previous sections](#sec:basic-values). You are not expected to be understanding
 those in details for basic uses of Liquidsoap.
 
-### Errors
+### Errors {#sec:errors}
 
 In the case where a function does not have a sensible result to return, it can raise an
 _error_\index{error}. Typically, if we try to take the head of the empty list without
@@ -2294,6 +2294,100 @@ error to register:
 
 ```{.liquidsoap include="liq/error.register.liq" from=header}
 ```
+
+#### Errors raised by Liquidsoap
+
+The errors above are raised by scripts, including the standard library. Most
+errors raised by Liquidsoap itself can be caught in the same way. This matters
+as soon as a value only known while the script runs ends up as the parameter of
+an operator: a setting read from the environment, a value sent over the telnet
+server, the answer of a web service. If the value is wrong, we would rather log
+it and carry on than see the whole radio stop. For instance, `filter.rc` only
+accepts `"low"` and `"high"` as `mode`, and here we take it from an environment
+variable:
+
+```{.liquidsoap include="liq/error-catch-invalid.liq" from=header to=footer}
+```
+
+If `FILTER_MODE` holds something else, the error is caught and we play the
+music without the filter, after logging
+
+```
+[lang:3] Invalid filter: Invalid value: valid values are low|high
+```
+
+Without the `try`, Liquidsoap would refuse to start, as it always does for an
+invalid parameter. The kinds of errors raised by Liquidsoap are
+
+- `error.invalid`: an invalid value for a parameter,
+- `error.clock`: a clock conflict, such as two sources which are already
+  running in different clocks being combined, see
+  [there](#sec:clock-errors),
+- `error.not_found`, `error.failure`, `error.system` (for errors coming from the
+  operating system, such as a missing file) and `error.eval` for the general
+  errors of Liquidsoap's internals.
+
+Restricting the `catch` to the kinds we expect, as above, is a good habit: an
+error of another kind is not ours to handle, and it keeps propagating as if the
+`try` was not there. Errors which do not mean that the script did something
+wrong, such as the internal signal used to stop Liquidsoap or a bug in
+Liquidsoap itself, cannot be caught.
+
+#### Reading uncaught errors
+
+An error which nobody catches in the main script stops Liquidsoap before it
+starts streaming, with an error message such as the one for `list.hd` above. An
+error raised later, in a function run by `thread.run` or in a callback such as
+the handler of a telnet command, cannot stop the script, which is already
+streaming: Liquidsoap logs it and only that function is aborted. Consider the
+following script, where a telnet command `filter` sets the mode of a new filter:
+
+```{.liquidsoap include="liq/error-thread-uncaught.liq" from=header}
+```
+
+Running `filter foo` on the telnet server logs
+
+```
+[runtime:1] Uncaught error.invalid: Invalid value: valid values are low|high
+[runtime:1]   at error-thread-uncaught.liq, line 6, char 30-36
+[runtime:1]   at .../libs/thread.liq, line 21, char 11-14
+[runtime:1]   at error-thread-uncaught.liq, line 6, char 15-61
+```
+
+The first line gives the kind of the error and its message. The following lines
+give the positions in the script which led to the error. The first one is the
+value which was refused, here `mode()` on line 6, and the next ones are the
+calls through which it was passed, here the one to `thread.run` in the standard
+library and the one to `filter.rc`.
+
+When the error comes from Liquidsoap's internals, as here, the log also says,
+at level 4, which internal error it comes from and where in the code of
+Liquidsoap it was raised:
+
+```
+[runtime:4] Raised from OCaml exception: Liquidsoap_lang_values__Error.Invalid_value(_, "valid values are low|high", _)
+[runtime:4] Raised at Filter_rc.(fun) in file "src/core/operators/filter_rc.ml", lines 119-120, characters 14-77
+[runtime:4] Called from ...
+```
+
+Those lines are mostly useful to the developers of Liquidsoap, and they are the
+ones to include when reporting a bug, by setting `settings.log.level := 4` if
+needed. In a script, the internal error is also given by the `origin` method of
+the error, which is `null` for the errors raised by scripts.
+
+Instead of letting the error reach the log, we can pass a handler to
+`thread.run` with its `on_error` argument. It receives the error, whose kind
+says what went wrong:
+
+```{.liquidsoap include="liq/error-on_error.liq" from=header}
+```
+
+Finally, the function `error.on_error`\indexop{error.on_error} registers a
+function which is called on every error raised while the script runs, with the
+error and its methods `kind`, `message`, `trace` and `origin`, whether it is
+caught or not. This is useful to report errors to a monitoring system, but
+beware that the standard library raises and catches some errors for its own
+purposes, so the function should only act on the kinds it is interested in.
 
 ### Nullable values
 
